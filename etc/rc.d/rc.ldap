@@ -1,0 +1,112 @@
+#!/bin/bash
+
+if [ ! "`pidof saslauthd`" ];then
+  /usr/bin/nice -19 /usr/sbin/saslauthd -a pam -n 0 > /dev/null 2>&1
+fi;
+
+if [ "`pidof slapd`" ] || [ "`pidof slapindex`" ] || [ "`pidof slapadd`" ];then
+  exit;
+fi;
+
+if [ ! -d /var/spool/ldap ];then
+  /bin/mkdir /var/spool/ldap;
+fi;
+
+if [ ! -e /var/spool/ldap/DB_CONFIG ];then
+(cat <<__EOF__
+set_cachesize           0 20971520 0
+set_lg_regionmax        5242880
+set_lg_max              1048576
+set_lg_bsize            524288
+set_lg_dir              /var/spool/ldap/logs
+__EOF__
+)>/var/spool/ldap/DB_CONFIG
+fi;
+
+#Redundant Log Move
+if [ ! -d /var/spool/ldap/logs ];then
+  /bin/mkdir -p /var/spool/ldap/logs
+  /bin/mv /var/spool/ldap/log.* /var/spool/ldap/logs > /dev/null 2>&1
+fi;
+
+if [ -d /etc/openldap ] && [ ! -e /etc/.install ] && [ -d /var/spool/apache/htdocs/ns/config ];then
+  /bin/cp -p /var/spool/apache/htdocs/ns/config/slapd.conf /etc/openldap/slapd.conf
+  /bin/chmod 400 /etc/openldap/slapd.conf
+fi;
+
+if [ ! -d /var/log/ldap ];then
+  /bin/mkdir /var/log/ldap;
+fi;
+
+if [ ! -d /var/log/ldap/logs ];then
+  /bin/mkdir -p /var/log/ldap/logs
+fi;
+
+if [ ! -e /var/log/ldap/DB_CONFIG ];then
+(cat <<__EOF__
+set_cachesize           0 20971520 0
+set_lg_regionmax        5242880
+set_lg_max              1048576
+set_lg_bsize            524288
+set_lg_dir              /var/log/ldap/logs
+__EOF__
+)>/var/log/ldap/DB_CONFIG
+fi;
+
+if [ -e /var/log/ldap/id2entry.bdb ];then
+  /usr/bin/db_recover -h /var/log/ldap > /dev/null 2>&1
+ else
+(cat <<EOF
+dn: ou=Log
+objectClass: organizationalUnit
+ou: Log
+EOF
+) |/usr/sbin/slapadd -b "ou=log" > /dev/null 2>&1
+fi;
+
+if [ ! -e /var/spool/ldap/id2entry.bdb ] && [ ! -e /var/spool/ldap/id2entry.dbb ] && [ ! -e /etc/.install ];then
+  /bin/touch /var/spool/ldap/usehdb
+  if [ ! -s /var/spool/apache/htdocs/ns/config/ldap.replica ];then 
+    /usr/sbin/slapadd -b "" -l /etc/openldap/startup.ldif >/dev/null 2>&1
+  fi;
+fi;
+
+if [ -e /var/spool/ldap/id2entry.bdb ] && [ -e /var/spool/ldap/dn2id.bdb ];then
+  /usr/bin/db_recover -h /var/spool/ldap > /dev/null 2>&1
+  if [ "$?" == "0" ];then
+    /usr/libexec/safe_slapd &
+  fi;
+ else
+  /bin/touch /var/spool/ldap/usehdb
+  /bin/rm /var/spool/ldap/*.bdb > /dev/null 2>&1
+  if [ ! -s /var/spool/apache/htdocs/ns/config/ldap.replica ];then 
+    /usr/sbin/slapadd -b "" -l /etc/openldap/startup.ldif >/dev/null 2>&1
+  fi;
+  /usr/libexec/safe_slapd &
+fi;
+
+/usr/bin/sleep 2
+
+if [ ! -s /root/.ssh/authorized_keys ];then
+  ldapadd -U admin -Y PLAIN -w "`cat /etc/mail/ldap`" -cf /var/spool/update/remote.keys >/dev/null 2>&1
+  gensshauth > /root/.ssh/authorized_keys
+fi;
+
+#Set the ldap NSS conf
+diff /etc/nsswitch.conf.ldap /etc/nsswitch.conf > /dev/null 2>&1
+if [ $? != 0 ];then
+  /usr/sbin/socktest 127.0.0.1 389 >/dev/null 2>&1
+  if [ $? == 0 ];then
+    if [ -e /etc/nsswitch.conf.boot ] && [ -e /etc/nsswitch.conf.ldap ];then
+      if [ ! -e /etc/nsswitch.conf.local ];then
+        cp /etc/nsswitch.conf.ldap /etc/nsswitch.conf
+       else
+        cp /etc/nsswitch.conf.local /etc/nsswitch.conf
+      fi;
+    fi;
+  fi;
+fi
+
+(/usr/bin/db_checkpoint -1 -h /var/spool/ldap 
+/usr/bin/db_checkpoint -1 -h /var/log/ldap ) >/dev/null 2>&1
+

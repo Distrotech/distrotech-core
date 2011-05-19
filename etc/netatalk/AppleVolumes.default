@@ -1,0 +1,7 @@
+:DEFAULT: options:noadouble,mswindows,usedots
+/var/spool/samba/netlogon NETLOGON allow:@smbadm,@users,nobody rwlist:@smbadm
+/var/spool/samba/profiles PROFILES allow:@users
+/var/spool/samba/share SHAREDFILES allow:@users,@smbadm rwlist:@smbadm
+/var/spool/samba/ftp FTP allow:@users,nobody rolist:nobody
+~ $u allow:@users
+/var/spool/apache/vhosts WEBSITES allow:@www

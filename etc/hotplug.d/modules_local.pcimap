@@ -1,0 +1,4 @@
+# pci module         vendor     device     subvendor  subdevice  class      class_mask driver_data
+hfcpci               0x00001397 0x00002bd0 0xffffffff 0xffffffff 0x00000000 0x00000000 0x0
+hfcpci               0x0000114f 0x00000071 0xffffffff 0xffffffff 0x00000000 0x00000000 0x0
+

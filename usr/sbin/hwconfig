@@ -1,0 +1,78 @@
+#!/bin/bash
+
+if [ -e /etc/netsentry-version ];then
+  eval `cat /etc/netsentry-version`
+ else
+  eval `cat /install/netsentry-version`
+fi;
+
+/usr/bin/dialog --backtitle "$BT" --separate-output --title "Wireless Network Cards"\
+  --checklist "Please Select Your Network Card(s) Bellow If Not Auto Probed" 18 75 11\
+   "wavelan_cs" "AT&T/Lucent old WaveLAN Pcmcia" off\
+   "netwave_cs" "Xircom Netwave AirSurfer" off\
+   "ray_cs" "Aviator/Raytheon 2.4MHz" off\
+   "orinoco_cs" "Hermes chipset 802.11b support PCMCIA" off\
+   "orinoco_plx" "Hermes in PLX9052 based PCI adaptor" off\
+   "orinoco_tmd" "Hermes in TMD7160 based PCI adaptor" off\
+   "orinoco_pci" "Prisim 2.5 True PCI adaptor" off\
+   "atmel_cs" "Atmel at76c502/at76c504 PCMCIA" off\
+   "atmel_pci" "Atmel at76c506 PCI" off\
+   "hermes" "Hermes PCMCIA Driver" off\
+   "wl3501_cs" "Planet WL3501 PCMCIA cards" off\
+   "airo_cs" "Cisco/Aironet 34X/35X/4500/4800 PCMCIA" off\
+   "prisim54" "Intersil Prism GT/Duette/Indigo PCI/Cardbus" off\
+   "ath_pci" "Atheros PCI/Cardbus cards" off 2> /tmp/menu.$$
+
+RETVAL=$?;
+if [ $RETVAL == "0" ];then
+  ETH_CARDS=`cat /tmp/menu.$$ `
+ else
+  ETH_CARDS="";
+fi;
+
+/usr/bin/dialog --backtitle "$BT" --separate-output --title "USB Host Controller"\
+  --radiolist "Please Select Your USB Host Controller Bellow" 10 75 3\
+   ehci-hcd "Enhanced Host Controller Interface USB2.0" off\
+   uhci-hcd "Universal Host Controller Interface (Intel)" off\
+   ohci-hcd "Open Host Controller Interface (USB1.1)" off 2>/tmp/menu.$$
+
+RETVAL=$?
+
+if [ $RETVAL == "0" ];then
+  USB_CONT=`cat /tmp/menu.$$ `
+ else
+  USB_CONT="";
+fi;
+
+
+/usr/bin/dialog --backtitle "$BT" --separate-output --title "ISDN Controler Card"\
+  --checklist "Please Select Your ISDN Controler Card" 12 75 5\
+   "hfcpci" "HFC PCI Based Card" off\
+   "hfcmulti" "HFC PCI Multiport Card" off\
+   "ztd-eth" "TDM Over Ethernet" off 2>/tmp/menu.$$
+
+RETVAL=$?
+
+if [ $RETVAL == "0" ];then
+  ISDN_CARD=`cat /tmp/menu.$$ `
+ else
+  ISDN_CARD="";
+fi;
+
+(cat << _EOF_
+BRAND="$BRAND";
+VERSION="$VERSION";
+KERNEL="$KERNEL";
+SMP_KERNEL="\$KERNEL-smp";
+NOSMP_KERNEL="\$KERNEL-nosmp";
+INSTALL_KERNEL="\$KERNEL-install";
+IP_ADDR="$IP_ADDR";
+SN_ADDR="$SN_ADDR";
+HN_ADDR="$HN_ADDR";
+DOM_ADDR="$DOM_ADDR";
+BT="\$BRAND V\$VERSION Linux V\$KERNEL Install";
+ETH_CARDS="$ETH_CARDS";
+USB_CONT="$USB_CONT";
+ISDN_CARD="$ISDN_CARD";
+_EOF_
+)>/etc/netsentry-version

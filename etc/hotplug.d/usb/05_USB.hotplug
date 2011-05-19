@@ -1,0 +1,222 @@
+#!/bin/sh
+
+cd /etc/hotplug.d
+. ./hotplug.functions
+
+MAP_CURRENT=$MODULE_DIR/modules.usbmap
+MAP_USERMAP=$HOTPLUG_DIR/usb.usermap
+
+if [ "$ACTION" = "" ]; then
+    mesg Bad USB agent invocation, no action
+    exit 1
+fi
+
+SYSFS=/sys
+if [ "$PRODUCT" = "" ]; then
+  if [ "$DEVPATH" = "" ]; then
+    mesg Bad USB agent invocation
+    exit 1
+  fi
+  if [ $ACTION = 'remove' ]; then
+    exit 0
+  fi
+  if [ ! -f $SYSFS/$DEVPATH/bNumConfigurations ]; then
+    sleep 2
+  fi
+  if [ ! -f $SYSFS/$DEVPATH/bNumConfigurations ]; then
+   exit 0
+  fi
+  TMP=$(cat $SYSFS/$DEVPATH/bNumConfigurations)
+  if [ $TMP -ne 1 ] && [ "$ACTION" = add ]; then
+    mesg Keeping default configuration with $SYSFS/$DEVPATH
+  fi
+  exit 0
+fi
+
+DEFAULT_IFS="$IFS"
+
+usb_convert_vars () {
+  PRODUCT=`echo $PRODUCT | sed -e "s+\.\([0-9]\)$+.\10+" -e "s/\.$/00/" \
+                               -e "s+/\([0-9]\)\.\([0-9][0-9]\)+/0\1\2+" \
+			       -e "s+/\([0-9][0-9]\)\.\([0-9][0-9]\)+/\1\2+"`
+  set $(echo $PRODUCT | sed -e 's+\([^/]*\)/\([^/]*\)/\(.*\)+\1 \2 \3+')
+  usb_idVendor=$((0x$1))
+  usb_idProduct=$((0x$2))
+  usb_bcdDevice=$((0x$3))
+
+  if [ "$TYPE" != "" ]; then
+    IFS=/
+    set $TYPE ''
+    usb_bDeviceClass=$1
+    usb_bDeviceSubClass=$2
+    usb_bDeviceProtocol=$3
+    IFS="$DEFAULT_IFS"
+   elif [ -r $SYSFS/$DEVPATH/bDeviceClass ]; then
+    usb_bDeviceClass=$((0x$(cat $SYSFS/$DEVPATH/bDeviceClass)))
+    usb_bDeviceSubClass=$((0x$(cat $SYSFS/$DEVPATH/bDeviceSubClass)))
+    usb_bDeviceProtocol=$((0x$(cat $SYSFS/$DEVPATH/bDeviceProtocol)))
+   else
+    usb_bDeviceClass=1000
+    usb_bDeviceSubClass=1000
+    usb_bDeviceProtocol=1000
+  fi
+
+  if [ "$INTERFACE" != "" ]; then
+    IFS=/
+    set $INTERFACE ''
+    usb_bInterfaceClass=$1
+    usb_bInterfaceSubClass=$2
+    usb_bInterfaceProtocol=$3
+    IFS="$DEFAULT_IFS"
+   elif [ -r $SYSFS/$DEVPATH/bInterfaceClass ]; then
+    usb_bInterfaceClass=$((0x$(cat $SYSFS/$DEVPATH/bInterfaceClass)))
+    usb_bInterfaceSubClass=$((0x$(cat $SYSFS/$DEVPATH/bInterfaceSubClass)))
+    usb_bInterfaceProtocol=$((0x$(cat $SYSFS/$DEVPATH/bInterfaceProtocol)))
+   else
+    usb_bInterfaceClass=1000
+    usb_bInterfaceSubClass=1000
+    usb_bInterfaceProtocol=1000
+  fi
+}
+
+USB_MATCH_VENDOR=$((0x0001))
+USB_MATCH_PRODUCT=$((0x0002))
+USB_MATCH_DEV_LO=$((0x0004))
+USB_MATCH_DEV_HI=$((0x0008))
+USB_MATCH_DEV_CLASS=$((0x0010))
+USB_MATCH_DEV_SUBCLASS=$((0x0020))
+USB_MATCH_DEV_PROTOCOL=$((0x0040))
+USB_MATCH_INT_CLASS=$((0x0080))
+USB_MATCH_INT_SUBCLASS=$((0x0100))
+USB_MATCH_INT_PROTOCOL=$((0x0200))
+
+usb_map_modules () {
+  while read line;do
+    case "$line" in
+      \#*) continue ;;
+      "") continue ;;
+    esac
+
+    set $line
+
+    module=$1
+    match_flags=$(($2))
+
+    idVendor=$(($3))
+    idProduct=$(($4))
+    bcdDevice_lo=$(($5))
+    bcdDevice_hi=$(($6))
+
+    bDeviceClass=$(($7))
+    bDeviceSubClass=$(($8))
+    bDeviceProtocol=$(($9))
+
+    shift 9
+    bInterfaceClass=$(($1))
+    bInterfaceSubClass=$(($2))
+    bInterfaceProtocol=$(($3))
+
+    : checkmatch $module
+
+    : idVendor $idVendor $usb_idVendor
+      if [ $USB_MATCH_VENDOR -eq $(( $match_flags & $USB_MATCH_VENDOR )) ] && [ $idVendor -ne $usb_idVendor ]; then
+        continue
+      fi
+
+    : idProduct $idProduct $usb_idProduct
+      if [ $USB_MATCH_PRODUCT -eq $(( $match_flags & $USB_MATCH_PRODUCT )) ] && [ $idProduct -ne $usb_idProduct ]; then
+        continue
+      fi
+
+    : bcdDevice range $bcdDevice_hi $bcdDevice_lo actual $usb_bcdDevice
+      if [ $USB_MATCH_DEV_LO -eq $(( $match_flags & $USB_MATCH_DEV_LO )) ] && [ $usb_bcdDevice -lt $bcdDevice_lo ]; then
+        continue
+      fi
+      if [ $USB_MATCH_DEV_HI -eq $(( $match_flags & $USB_MATCH_DEV_HI )) ] && [ $usb_bcdDevice -gt $bcdDevice_hi ]; then
+        continue
+      fi
+
+    : bDeviceClass $bDeviceClass $usb_bDeviceClass
+      if [ $USB_MATCH_DEV_CLASS -eq $(( $match_flags & $USB_MATCH_DEV_CLASS )) ] && [ $bDeviceClass -ne $usb_bDeviceClass ]; then
+        continue
+      fi
+    : bDeviceSubClass $bDeviceSubClass $usb_bDeviceSubClass
+      if [ $USB_MATCH_DEV_SUBCLASS -eq $(( $match_flags & $USB_MATCH_DEV_SUBCLASS )) ] && [ $bDeviceSubClass -ne $usb_bDeviceSubClass ]; then
+        continue
+      fi
+    : bDeviceProtocol $bDeviceProtocol $usb_bDeviceProtocol
+      if [ $USB_MATCH_DEV_PROTOCOL -eq $(( $match_flags & $USB_MATCH_DEV_PROTOCOL )) ] && [ $bDeviceProtocol -ne $usb_bDeviceProtocol ]; then
+        continue
+      fi
+
+    : bInterfaceClass $bInterfaceClass $usb_bInterfaceClass
+      if [ $USB_MATCH_INT_CLASS -eq $(( $match_flags & $USB_MATCH_INT_CLASS )) ] && [ $bInterfaceClass -ne $usb_bInterfaceClass ]; then
+        continue
+      fi
+    : bInterfaceSubClass $bInterfaceSubClass $usb_bInterfaceSubClass
+      if [ $USB_MATCH_INT_SUBCLASS -eq $(( $match_flags & $USB_MATCH_INT_SUBCLASS )) ] && [ $bInterfaceSubClass -ne $usb_bInterfaceSubClass ]; then
+        continue
+      fi
+    : bInterfaceProtocol $bInterfaceProtocol $usb_bInterfaceProtocol
+      if [ $USB_MATCH_INT_PROTOCOL -eq $(( $match_flags & $USB_MATCH_INT_PROTOCOL )) ] && [ $bInterfaceProtocol -ne $usb_bInterfaceProtocol ]; then
+        continue
+      fi
+      DRIVERS="$module $DRIVERS"
+    : drivers $DRIVERS
+  done
+}
+
+#
+# declare a REMOVER name that the add action can use to create a
+# remover, or that the remove action can use to execute a remover.
+#
+
+if [ "$DEVPATH" != "" ]; then
+  REMOVER=/var/run/usb/$(readlink -f $SYSFS/$DEVPATH | sed -e 's;/;%;g')
+fi
+export REMOVER
+
+case $ACTION in
+  add)
+    usb_convert_vars
+
+    FOUND=false
+    if [ -f $SYSFS/$DEVPATH/manufacturer ]; then
+	LABEL="USB `cat $SYSFS/$DEVPATH/manufacturer` `cat $SYSFS/$DEVPATH/product`"
+    else
+	LABEL="USB product $PRODUCT"
+    fi
+    if [ -e "$REMOVER" ]; then
+	rm -f "$REMOVER"
+    fi
+    load_drivers usb $MAP_CURRENT "$LABEL"
+    if [ "$DRIVERS" != "" ]; then
+	FOUND=true
+    fi
+
+    # some devices have user-mode drivers (no kernel module, but config)
+    # or specialized user-mode setup helpers 
+    MODPROBE=:
+    for MAP in $MAP_USERMAP $HOTPLUG_DIR/usb/*.usermap
+    do
+        if [ -r $MAP ]; then
+	    load_drivers usb $MAP "$LABEL"
+	    if [ "$DRIVERS" != "" ]; then
+		FOUND=true
+	    fi
+	fi
+    done
+    if [ "$FOUND" = "false" ]; then
+	exit 2
+    fi;;
+  remove)
+    if [ -x $REMOVER ]; then
+	$REMOVER
+    fi
+    rm -f $REMOVER
+
+    if [ -x /usr/sbin/updfstab ]; then
+        /usr/sbin/updfstab
+    fi;;
+  *)exit 1;;
+esac

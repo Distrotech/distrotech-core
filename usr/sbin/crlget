@@ -1,0 +1,16 @@
+
+#!/bin/bash
+
+lynx --dump $1 > /tmp/tmp-crl.pem
+
+HASH=`openssl crl -hash -in /tmp/tmp-crl.pem |head -1`
+
+if [ "$?" == 0 ];then 
+  if [ -e /etc/ipsec.d/certs/$HASH.r0 ];then
+    rm /etc/ipsec.d/certs/$HASH.r0
+  fi;
+  mv /tmp/tmp-crl.pem /etc/ipsec.d/certs/$HASH.r0
+  openssl crl -in /etc/ipsec.d/certs/$HASH.r0 -noout -text
+ else
+  rm /tmp/tmp-crl.pem
+fi;

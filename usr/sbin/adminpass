@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [ "$1" == "" ];then
+  echo -n Enter Password: 
+  /usr/bin/stty -echo
+  read NPASS
+  echo
+  /usr/bin/stty echo
+ else
+  NPASS=$1
+fi;
+
+sed -e "s/IP LDAP Password .*/IP LDAP Password $NPASS/" /var/spool/apache/htdocs/ns/config/netsentry.conf > /tmp/netsentry.conf
+cp /tmp/netsentry.conf /var/spool/apache/htdocs/ns/config/netsentry.conf
+rm /tmp/netsentry.conf
+
+/usr/sbin/genconf
+/usr/sbin/servconfig
+

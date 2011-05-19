@@ -1,0 +1,502 @@
+#!/bin/bash
+
+#(/usr/sbin/genconf
+#/usr/sbin/servconfig
+#/usr/sbin/sqlpasswd)> /dev/null 2>&1
+
+
+touch /etc/autofs.conf /etc/dhcpd.conf /etc/freshclam.conf /etc/hosts /etc/mgetty.config /etc/popper.conf /etc/rsyncd.conf 
+touch /etc/asterisk/agents.conf /etc/asterisk/iax.conf /etc/ppp/diald.scr /etc/ppp/ip-down /etc/ppp/options 
+touch /etc/ppp/secret /etc/racoon/racoon.conf /etc/radiusclient/port-id-map /etc/radiusclient/radiusclient.conf 
+touch /etc/radiusclient/servers /etc/rc.d/rc.mount /etc/rc.d/rc.tunnels /etc/squid/filter.cnf /etc/squid/filter.conf
+
+ROPTS="-avOuHKSzP --exclude-from=/var/spool/apache/htdocs/ns/config/exclude.nfs"
+RROPTS="-R ${ROPTS}"
+RTIMEOUT=60
+RERR=0;
+DEFSERV="rsync.distrotech.co.za";
+DEFVER="10.10.1";
+DEFKERN="2.6.35.7-x86"
+NOKERN=0;
+
+if [ -e /etc/netsentry-version ];then
+  eval `cat /etc/netsentry-version`
+  if [ "$1" == "" ] || [ -d /var/spool/rsync/programs ];then
+    NOKERN=1;
+    KERNEL=`uname -r |awk -F- '$2 == "i386" || $2 == "x86" {print $1"-"$2}'`
+    if [ "$KERNEL" == "" ];then
+      KERNEL=`uname -r |awk -F- '$3 == "i386"  || $3 == "x86" {print $1"-"$2"-"$3}'`  
+    fi;
+   else
+    KERNEL=$1
+    SMP_KERNEL="$KERNEL-smp";
+    if [ -d /var/spool/rsync/kernuser ];then
+      rsync $ROPTS --timeout=$RTIMEOUT 127.0.0.1::kernuser/kernel-${SMP_KERNEL} /var/spool/rsync/kernuser/
+    fi;
+  fi
+  LKERNEL=$KERNEL
+
+  if [ "$VERSION" == "" ];then
+    LVERSION="${DEFVER}"
+   else
+    LVERSION=$VERSION
+  fi;
+
+  if [ "$RSERV" == "" ];then
+    LSERV="${DEFSERV}";
+   else
+    LSERV=$RSERV;
+  fi;
+
+  if [ ! "$CDDEV" ];then
+    CDDEV="0,0,0";
+  fi;
+
+  if [ ! "$CDSPEED" ];then
+    CDSPEED="8";
+  fi;
+
+  if [ ! "$KERNOPTS" ];then
+    if [ "`uname -r |grep nosmp`" ] || [ -e "/etc/.bootnosmp" ];then
+      KERNOPTS="nosmp"
+    fi;
+  fi;
+ else
+  if [ ! -d /var/spool/vbox ];then
+    mkdir -p /var/spool/vbox
+  fi;
+fi;
+
+/usr/sbin/socktest  127.0.0.1 873 > /dev/null 2>&1 
+if [ $? != 0 ];then
+  if [ ! -d /mnt/update ];then
+    mkdir -p /mnt/update
+  fi;
+  mount -L UPGRADE /mnt/update > /dev/null 2>&1
+  if [ $? != 0 ];then
+    echo "Needs local Upgrade Disk - No Upgrade Partition"
+    exit 255;
+  fi;
+  if [ ! -d /mnt/update/mnt/dev ];then
+    mkdir -p /mnt/update/mnt/dev
+  fi;
+  mount -L INSTALL /mnt/update/mnt/dev > /dev/null 2>&1
+  if [ $? != 0 ];then
+    umount /mnt/update
+    echo "Needs local Upgrade Disk - No Install Partition"
+    exit 255;
+  fi;
+  /usr/bin/rsync --daemon --config /mnt/update/mnt/dev/etc/rsyncd-update.conf > /dev/null 2>&1
+  /usr/sbin/socktest  127.0.0.1 873 > /dev/null 2>&1 
+  if [ $? != 0 ];then
+    umount /mnt/update/mnt/dev
+    umount /mnt/update
+    echo "Needs local Upgrade Disk - Service Failure"
+    exit 255;
+  fi;
+  RSYNCK=1;
+ else
+  RSYNCK=0;
+fi;
+
+if [ "$1" != "" ] && [ ! -d /var/spool/rsync/programs ] && [ -e /etc/netsentry-version ];then
+  (cat <<__EOF__
+BRAND="$BRAND";
+VERSION="$LVERSION";
+KERNEL="$LKERNEL";
+SMP_KERNEL="\$KERNEL-smp";
+INSTALL_KERNEL="\$KERNEL-install";
+IP_ADDR="$IP_ADDR";
+SN_ADDR="$SN_ADDR";
+HN_ADDR="$HN_ADDR";
+DOM_ADDR="$DOM_ADDR";
+BT="\$BRAND V\$VERSION Linux V\$KERNEL Install";
+CDDEV="$CDDEV";
+CDSPEED="$CDSPEED";
+KERNOPTS="$KERNOPTS";
+EXTRA_DEV="$EXTRA_DEV";
+RSERV="$LSERV";
+USBSLEEP="$USBSLEEP";
+__EOF__
+) > /etc/netsentry-version
+  touch /var/spool/apache/htdocs/ns/config/exclude.nfs
+ else
+  LSERV=${DEFSERV}
+  LKERNEL=${DEFKERN}
+fi;
+
+RSERV="$LSERV";
+KERNEL="$LKERNEL";
+SMP_KERNEL="$KERNEL-smp";
+INSTALL_KERNEL="$KERNEL-install";
+
+KERNEX="--include=/$INSTALL_KERNEL/** \
+        --include=/$SMP_KERNEL/** \
+        --include=/$INSTALL_KERNEL/ \
+        --include=/$SMP_KERNEL/ \
+        --include=/*$INSTALL_KERNEL \
+        --include=/*$SMP_KERNEL \
+        --exclude=/* \
+        --exclude=*"
+
+
+if [ ! "`psql -V |head -1|grep "8.2.3"`" ] && [ ! -d /var/spool/rsync/programs ] && [ -e /etc/netsentry-version ];then
+  /usr/bin/pg_dumpall -U pgsql -h 127.0.0.1 -c |gzip -c > /var/tmp/pgsql.sql
+  if [ $? != 0 ];then
+    echo "Upgrade Not Done !!!!"
+    exit -1
+  fi;
+  /usr/bin/pg_dumpall -U postgres -p 5433 -h 127.0.0.1 -c |gzip -c > /var/tmp/cubit.sql
+  if [ $? != 0 ];then
+    echo "Upgrade Not Done !!!!"
+    exit -1
+  fi;
+
+  if [ -s /var/tmp/pgsql.sql ] && [ -s /var/tmp/cubit.sql ];then
+    /usr/bin/killall -9 crond > /dev/null 2>&1
+    /usr/bin/killall -9 asterisk > /dev/null 2>&1
+    /bin/su pgsql -c "pg_ctl -D /var/spool/pgsql -m immediate stop" > /dev/null 2>&1
+    /bin/su postgres -c "pg_ctl -D /var/spool/cubit -m immediate stop" > /dev/null 2>&1
+    /usr/bin/killall -9 postmaster > /dev/null 2>&1
+
+    /usr/bin/rsync $RROPTS --timeout=$RTIMEOUT 127.0.0.1::postgresql /
+    if [ $? != 0 ];then
+      echo "Upgrade Not Done !!!!"
+      exit -1
+    fi;
+
+    /bin/rm -rf /var/spool/pgsql
+    /bin/rm -rf /var/spool/cubit
+
+    /etc/rc.d/rc.exchange > /dev/null 2>&1
+    /usr/bin/zcat /var/tmp/pgsql.sql |psql -U pgsql -h 127.0.0.1 -f - asterisk > /dev/null 2>&1
+    /etc/rc.d/rc.cubit > /dev/null 2>&1
+    /usr/bin/sleep 5
+    /usr/bin/zcat /var/tmp/cubit.sql |psql -U postgres -h 127.0.0.1 -p 5433 -f - template1 > /dev/null 2>&1
+    /usr/sbin/crond >> /var/log/cron 2>&1
+
+    sed -e "s/#listen_addresses.*/listen_addresses = '*'/" -e "s/#ssl.*/ssl= on/" "/var/spool/pgsql/postgresql.conf" > /tmp/pg.cnf
+    cp /tmp/pg.cnf "/var/spool/pgsql/postgresql.conf"
+    rm /tmp/pg.cnf
+
+   else
+    echo "Upgrade Not Done !!!!"
+  fi;
+fi;
+
+if [ -d /var/spool/vbox ];then
+  if [ ! -e /var/spool/vbox/sentry.img ];then
+    dd if=/dev/zero of=/var/spool/vbox/sentry.img count=1024 bs=1M
+    mke2fs -F -O none -O filetype,sparse_super -I 128 /var/spool/vbox/sentry.img
+  fi;
+
+  if [ ! -d /mnt/dev ];then
+    mkdir /mnt/dev/
+  fi;
+
+  if [ ! -e /mnt/dev/lost+found ];then
+    mount /var/spool/vbox/sentry.img /mnt/dev -o loop
+  fi;
+
+  if [ ! -d /mnt/dev/dev ];then
+    mkdir /mnt/dev/dev 
+  fi;
+
+  if [ ! -d /mnt/dev/sys ];then
+    mkdir /mnt/dev/sys
+  fi;
+
+  if [ ! -d /mnt/dev/proc ];then
+    mkdir /mnt/dev/proc
+  fi;
+
+  if [ ! -d /mnt/dev/dev/udevdb ];then
+    mount --bind /dev /mnt/dev/dev
+  fi;
+
+  if [ ! -e /mnt/dev/proc/1 ];then
+    mount -t proc none /mnt/dev/proc
+  fi;
+
+  if [ ! -d /mnt/dev/sys/module ];then
+    mount -t sysfs none /mnt/dev/sys
+  fi;
+
+  if [ ! -d /var/spool/rsync/programs ];then
+    if [ ! -d /mnt/dev/install ];then
+      rsync $RROPTS --timeout=$RTIMEOUT 127.0.0.1::install/install/filelist /mnt/dev/
+      if [ -e /mnt/dev/install/filelist ];then
+        grep -vE "(^sys)|(^dev)|(^proc)|(/$)" /mnt/dev/install/filelist > /tmp/filelist
+        cd /
+        tar --use-compress-program=bzip2 -T /tmp/filelist  -cf /mnt/dev/install/install.tbz
+        cd
+        rm /tmp/filelist     
+        tar -C /mnt/dev --use-compress-program=bunzip2 -xf /mnt/dev/install/install.tbz
+        rsync $RROPTS -c --timeout=$RTIMEOUT --exclude /install --exclude /boot --exclude /lib/modules 127.0.0.1::install /mnt/dev      
+      fi;
+    fi;
+    if [ -d /lib/modules/${INSTALL_KERNEL} ];then
+      if [ ! -d /mnt/dev/lib/modules/${INSTALL_KERNEL} ];then 
+        mkdir /mnt/dev/lib/modules/${INSTALL_KERNEL}
+      fi;
+      if [ -e /etc/netsentry/version ];then
+        rsync $ROPTS /lib/modules/${INSTALL_KERNEL}/* /mnt/dev/lib/modules/${INSTALL_KERNEL}/
+      fi;
+    fi;
+    rsync $RROPTS --exclude /proc --exclude /sys --exclude /dev --exclude /lost+found --exclude /install/kernel.tar.bz2 --exclude /install/install.tbz --delete 127.0.0.1::install /mnt/dev
+    if [ ! -d /var/spool/rsync/kernuser ];then
+      mkdir -p /var/spool/rsync/kernuser
+    fi;
+    rsync $ROPTS --timeout=$RTIMEOUT 127.0.0.1::kernuser/kernel-${SMP_KERNEL} /var/spool/rsync/kernuser/
+
+    for rdatain in "install/ /mnt/dev/" "iso/ /var/spool/vbox/";do
+      echo $rdatain
+      rsync ${RROPTS} --timeout=$RTIMEOUT 127.0.0.1::$rdatain
+      if [ $? != 0 ];then
+        RERR=255;
+      fi;
+      echo;echo
+    done;
+  fi;
+fi;
+
+#rm /usr/lib/asterisk/modules-1.4/chan_zap* > /dev/null 2>&1
+if [ ! -d /var/spool/rsync/programs ] && [ -e /etc/netsentry-version ];then
+  for rdatain in "vbox /"  "share /var/spool/samba/share/" "programs /" "manuals /var/spool/apache/htdocs/" "asterisk /" "astsound /var/lib/asterisk/sounds" "avirus /var/spool/avirus";do 
+    echo $rdatain
+    rsync $RROPTS --timeout=$RTIMEOUT 127.0.0.1::$rdatain
+    if [ $? != 0 ];then
+      RERR=255;
+    fi;
+    echo;echo
+  done;
+
+  #Sync Asterisk Modules
+  rsync $RROPTS --delete --timeout=$RTIMEOUT 127.0.0.1::asterisk/usr/lib/asterisk/modules-1.8 /
+  if [ $? != 0 ];then
+    RERR=255;
+  fi;
+fi;
+
+#ZAP_VER=`cat /sys/module/zaptel/version `
+#ZAP_MOD="/usr/lib/asterisk/modules-1.4/chan_zap-$ZAP_VER.so"
+#ls $ZAP_MOD > /dev/null 2>&1
+#if [ $? = 0 ];then
+#  cp $ZAP_MOD /usr/lib/asterisk/modules-1.4/chan_zap.so
+#fi
+#rm /usr/lib/asterisk/modules-1.4/chan_zap-* > /dev/null 2>&1
+
+if [ -e /etc/netsentry-version ];then
+  ldconfig
+  /usr/sbin/genconf
+  #/usr/sbin/servconfig
+  #/usr/sbin/asterisk -rx "reload"
+fi;
+
+if [ "$NOKERN" != "1" ] && [ ! -d /var/spool/rsync/programs ] && [ -e /etc/netsentry-version ];then
+  KERR=0;
+  for rdatain in "kernel /boot/" "kernmod /lib/modules/";do
+    echo $rdatain
+    rsync -c $RROPTS $KERNEX --timeout=$RTIMEOUT 127.0.0.1::$rdatain
+    if [ $? != 0 ];then
+      KERR=1;
+    fi;
+    echo;echo
+  done;
+  echo kernuser/kernel-${SMP_KERNEL} /
+  rsync -c $ROPTS --timeout=$RTIMEOUT 127.0.0.1::kernuser/kernel-${SMP_KERNEL}*/* /
+  rsync -c $ROPTS 127.0.0.1::kernmod/${SMP_KERNEL} /lib/modules/
+  rsync -c $ROPTS 127.0.0.1::kernmod/${INSTALL_KERNEL} /lib/modules/
+  if [ $? == 0 ] &&  [ $KERR == 0 ];then
+    echo;echo
+    /usr/sbin/mkinitrd
+   else
+    RERR=255;
+  fi;
+fi;
+
+
+if [ -d /var/spool/vbox ];then
+  cd /mnt/dev
+
+  dd if=/dev/zero of=/mnt/dev/install/install-etc bs=1k count=4096
+  mke2fs -Fi 1024 /mnt/dev/install/install-etc 4096  > /dev/null 2>&1
+  rm -rf /mnt/dev/install/mnt
+  mkdir /mnt/dev/install/mnt
+  mount /mnt/dev/install/install-etc /mnt/dev/install/mnt -o loop
+  cp /mnt/dev/install/10-udev.rules /mnt/dev/etc/udev/rules.d
+  cp -Rp /mnt/dev/etc/* /mnt/dev/install/mnt/
+  sed -e "s/^PasswordAuthentication/PasswordAuthentication yes/" /mnt/dev/etc/sshd_config > /mnt/dev/install/mnt/sshd_config
+  cp /mnt/dev/install/nsswitch.conf /mnt/dev/install/mnt/
+  echo "smbadm::139:" >> /mnt/dev/install/mnt/group
+  touch /mnt/dev/install/mnt/.networksentry-lite
+  rm /mnt/dev/install/mnt/mtab*
+  if [ -e /mnt/dev/install/mnt/HOSTNAME ];then
+    rm /mnt/dev/install/mnt/HOSTNAME
+  fi;
+  touch /mnt/dev/install/mnt/mtab
+  if [ -e /mnt/dev/install/mnt/openssl/ca.conf ];then
+    rm /mnt/dev/install/mnt/openssl/ca.conf
+  fi;
+  touch /mnt/dev/install/mnt/.install
+
+  if [ -e /mnt/etc/HOSTNAME ];then
+    rm /mnt/etc/HOSTNAME
+  fi;
+
+  sed -e "s/^.*agetty.*//" /mnt/dev/etc/inittab > /mnt/dev/install/mnt/inittab
+  sed -e "s/^#skip-innodb$/skip-innodb/" /mnt/dev/etc/my.cnf > /mnt/dev/install/mnt/my.cnf
+  sed -e "s/\(suggested-size.*\)20011/\1211/" /etc/nscd.conf > /mnt/dev/install/mnt/nscd.conf
+
+  echo "*.*                                       /dev/tty5" > /mnt/dev/install/mnt/syslog.conf
+  echo "telnet          stream  tcp     nowait  root    /usr/sbin/in.telnetd" > /mnt/dev/install/mnt/inetd.conf
+
+  sed -e "s/^\(PasswordAuthentication\) no/\1 yes/" /etc/sshd_config > /mnt/dev/install/mnt/sshd_config
+
+  touch /mnt/dev/install/mnt/fstab
+  mkdir -p /mnt/dev/install/mnt/etc/udev/rules.d
+
+  umount /mnt/dev/install/mnt
+  rm -rf /mnt/dev/install/mnt
+  mkdir /mnt/dev/install/mnt
+
+  gzip /mnt/dev/install/install-etc
+  mv /mnt/dev/install/install-etc.gz /mnt/dev/install/etc.gz
+
+  tar -czf install/htdocs.tgz var/spool/apache/htdocs/*.* var/spool/apache/htdocs/ldap \
+           var/spool/apache/htdocs/images var/spool/apache/htdocs/ns/status \
+           var/spool/apache/htdocs/ns/*.* var/spool/apache/htdocs/ssl \
+           var/spool/apache/cgi-bin var/spool/apache/htdocs/logs var/spool/apache/htdocs/radius \
+           var/spool/apache/htdocs/auth var/spool/apache/htdocs/snom var/spool/apache/htdocs/polyxml
+
+  tar --use-compress-program=bzip2 -cvf install/install.tbz bin boot/memtest.bin boot/grub boot/boot_base.tgz etc home initrd lib/evms lib/cpp lib/*so* man mnt root sbin share tmp usr var > install/filelist
+  rsync $ROPTS --timeout=$RTIMEOUT /var/spool/rsync/programs/var/spool/update /mnt/dev/install/
+
+  cd
+  if [ ! -e /mnt/dev/install/kernel.tar.bz2 ];then
+    /mnt/dev/install/tarkernel
+  fi;
+
+  umount /mnt/dev/proc
+  umount /mnt/dev/dev
+  umount /mnt/dev/sys
+  umount /mnt/dev
+
+  e2fsck -Dfy /var/spool/vbox/sentry.img
+#  if [ ! -e /mnt/dev/etc/.cdrom ];then
+#    mkisofs -quiet -r -J -b boot/boot.img -c boot/boot.cat -o /var/spool/vbox.iso /var/spool/vbox
+#    cdrecord dev=${CDDEV} speed=${CDSPEED} -v /var/spool/vbox.iso
+#  fi;
+
+  if [ ! -e /mnt/dev/lost+found ];then
+    mount /var/spool/vbox/sentry.img /mnt/dev -o loop
+  fi;
+  if [ ! -d /mnt/dev/udevdb ];then
+    mount --bind /dev /mnt/dev/dev
+  fi;
+  if [ ! -e /mnt/dev/proc/1 ];then
+    mount -t proc none /mnt/dev/proc
+  fi;
+  if [ ! -d /mnt/dev/sys/module ];then
+    mount -t sysfs none /mnt/dev/sys
+  fi;
+
+  CHKCMD=`mount -vfL INSTALL /mnt/floppy |grep mount |awk '{printf "e2fsck -fy %s\n",$3}'`
+  if [ "${CHKCMD}" ];then
+    $CHKCMD
+    if [ $? == 0 ];then
+      mount -L INSTALL /mnt/floppy
+      rsync ${ROPTS} --exclude /dev --exclude /proc --exclude /sys /mnt/dev/* /mnt/floppy/
+      rsync ${ROPTS} /var/spool/samba/share/openoffice /mnt/floppy/install
+      if [ ! -d /mnt/floppy/proc ];then
+        mkdir /mnt/floppy/proc
+      fi;
+      if [ ! -d /mnt/floppy/dev ];then
+        mkdir /mnt/floppy/dev
+      fi;
+      if [ ! -d /mnt/floppy/sys ];then
+        mkdir /mnt/floppy/sys
+      fi;
+      umount /mnt/floppy
+    fi;
+  fi;
+fi;
+
+if [ -e /etc/netsentry-version ];then
+  chmod 1777 /var/run
+  /usr/bin/rebuild-info
+fi;
+
+#pear channel-update pear.php.net;pear upgrade-all
+
+if [ -d /var/spool/update ] && [ -e /etc/netsentry-version ] && [ ${RERR} == 0 ];then
+  for I in /var/spool/update/*.sql ; do
+    if test $I -nt /etc/asterisk/astschema.psql.gz ;then
+      cat $I |psql -U asterisk -h 127.0.0.1
+    fi
+  done;
+  touch /etc/asterisk/astschema.psql.gz
+
+  for I in /var/spool/update/*.esql ; do
+    if test $I -nt /var/spool/pgsql/exchange.db ;then
+      cat $I |psql -U exchange -h 127.0.0.1
+    fi
+  done;
+  touch /var/spool/pgsql/exchange.db
+
+  if [ /var/spool/update/remote.keys -nt /root/.ssh/authorized_keys ] || [ ! -e /root/.ssh/authorized_keys ] || [ ! -s /root/.ssh/authorized_keys ];then
+    (/usr/bin/ldapmodify -U admin -Y PLAIN -w "`cat /etc/mail/ldap`" -cf /var/spool/update/remote.keys
+    /usr/bin/gensshauth > /root/.ssh/authorized_keys.tmp
+    if [ ! -d /root/.ssh ];then
+      mkdir /root/.ssh
+      chmod 700 /root/.ssh
+    fi;
+    if [ -s /root/.ssh/authorized_keys.tmp ];then
+      cp /root/.ssh/authorized_keys.tmp /root/.ssh/authorized_keys
+    fi) > /dev/null 2>&1
+  fi;
+fi;
+
+if [ $RSYNCK == 1 ];then
+  while [ `pidof rsync` ];do
+    killall rsync
+  done
+  umount /mnt/update/mnt/dev
+  umount /mnt/update
+fi;
+
+#while [ "`pidof slapd`" ] && [ "$RUN5" != "XXXXX" ];do
+#  sleep 2
+#  killall slapd
+#  RUN5=${RUN5}X
+#done;
+#slapindex -b "" -vvvvv
+
+#if [ ! -e /var/run/sogo_20000.pid ];then
+#  RUN5=""
+#  while [ "`pidof sogod`" ] && [ "$RUN5" != "XXXXX" ];do
+#    sleep 2
+#    killall -9 sogod
+#    RUN5=${RUN5}X
+#  done;
+#  if [ -x /usr/sbin/safe_sogo ];then
+#    /usr/sbin/safe_sogo
+#  fi;
+#fi;
+
+/usr/sbin/asterisk -rx "dialplan reload"
+
+if [ ${RERR} == 0 ];then
+  if [ -d /var/boot ];then
+    BOOTDIR=/var/boot
+   else
+    BOOTDIR=/boot
+  fi;
+
+  if [ ! -e ${BOOTDIR}/grub/core.img ] || [ /usr/lib/grub/i386-pc/ -nt ${BOOTDIR}/grub/core.img ];then
+    (grub-install --force --no-floppy --recheck --boot-directory=${BOOTDIR} "(hd0)"
+     mkinitrd) > /dev/null 2>&1
+  fi
+fi;
+
+exit $RERR

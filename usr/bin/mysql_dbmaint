@@ -1,0 +1,31 @@
+#!/usr/bin/php -d safe_mode=no
+<%
+include "/var/spool/apache/htdocs/ldap/myauth.inc";
+
+/*
+ * Check,Repair And Optomise Databases
+ */
+
+$dblist=mysql_list_dbs($db);
+while($row=mysql_fetch_object($dblist)) {
+  $dbnme=$row->Database;
+  $tables=mysql_query("SHOW TABLES FROM " . $dbnme);
+  while($tblo=mysql_fetch_row($tables)) {
+    $res=mysql_query("CHECK TABLE " . $dbnme . "." . $tblo[0]);
+    print $dbnme . "." . $tblo[0] . " => " . mysql_errno($db) . "\n";
+    $res=mysql_query("OPTIMIZE TABLE " . $dbnme . "." . $tblo[0]);
+    print $dbnme . "." . $tblo[0] . " => " . mysql_errno($db) . "\n";
+    $res=mysql_query("REPAIR TABLE " . $dbnme . "." . $tblo[0]);
+    print $dbnme . "." . $tblo[0] . " => " . mysql_errno($db) . "\n";
+  }
+}
+
+/*
+ * Delete Packet Logs
+ */
+mysql_select_db("networksentry_log");
+$res=mysql_query("create index oob_time_sec_index ON packet_filter (oob_time_sec)");
+$res=mysql_query("delete from packet_filter where oob_time_sec < unix_timestamp()-86400*14");
+$deleted=mysql_affected_rows($db);
+print "Rows Removed: " . $deleted . "\n";
+%>

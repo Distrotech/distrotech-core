@@ -1,0 +1,95 @@
+#!/bin/bash
+
+if [ -e /tmp/device.map ];then
+  rm /tmp/device.map
+fi;
+
+if [ -x /usr/sbin/grub-mkdevicemap ];then
+  /usr/sbin/grub-mkdevicemap --device-map=/tmp/device.map --no-floppy > /dev/null 2>&1
+ else
+  echo "quit"| grub --batch --no-floppy --device-map=/tmp/device.map  > /dev/null 2>&1
+fi;
+
+if [ -e /etc/netsentry-version ];then
+  eval `cat /etc/netsentry-version`
+ else
+  eval `cat /install/netsentry-version`
+fi;
+
+DSKS=`awk '{printf "%s ",$2}' /tmp/device.map`
+DCNT=0;
+LCNT=0;
+IDISK="";
+for hdisk in $DSKS;do
+  if [ "`/sbin/e2label ${hdisk}1 2>/dev/null`" != "INSTALL" ];then
+    DISK="$DISK hd$DCNT $hdisk off";
+    if [ ! "${FDISK}" ];then
+      FDISK="hd$DCNT";
+    fi;
+    if [ -e ${hdisk}2 ];then
+      if [ "`/sbin/e2label ${hdisk}2 2>/dev/null`" != "boot" ];then
+        IDISK="hd$DCNT";
+      fi;
+    fi;
+    let LCNT++;
+  fi;
+  let DCNT++;
+done;
+
+if (( $LCNT > 1 )) && [ ! -e /etc/.firstboot ];then
+  /usr/bin/dialog --backtitle "$BT" --title "Boot Device"\
+                  --radiolist "Select Disk To Install Boot MBR (Boot Disk) One Must Be Selected Or The Boot Loader Needs To Be Manualy Loaded."\
+                  10 70 3 $DISK 2> /tmp/menu.tmp.$$
+
+  RETVAL=$?;
+  RTMBR=`cat /tmp/menu.tmp.$$`;
+  rm /tmp/menu.tmp.$$;
+ else
+  RETVAL=0
+  if [ "${IDISK}" ];then
+    RTMBR=$IDISK;
+   else
+    RTMBR=$FDISK;
+  fi;
+fi;
+
+if [ "$RETVAL" != "0" ] || [ "$RTMBR" == "" ];then
+  RETVAL=1;
+  while [ "$RETVAL" != "0" ];do
+    /usr/bin/dialog  --backtitle "$BT" --title "No Device Was Chosen."\
+                     --yesno "Would You Like To Select The Boot Drive Now ?." 6 35
+    RETVAL=$?
+    if [ "$RETVAL" == "1" ];then
+      RETVAL=0;
+     else
+      /usr/bin/dialog --backtitle "$BT" --title "Boot Device"\
+                      --radiolist "Select Disk To Install Boot MBR (Boot Disk) One Must Be Selected Or The Boot Loader Needs To Be Manualy Loaded."\
+                      10 70 3 $DISK 2> /tmp/menu.tmp.$$
+     RETVAL=$?;
+     RTMBR=`cat /tmp/menu.tmp.$$`;
+     rm /tmp/menu.tmp.$$;
+     if [ "$RTMBR" != "" ] || [ "$RETVAL" != "0" ];then
+       RETVAL=0;
+      else
+       RETVAL=1;
+     fi;
+    fi;
+  done;
+fi;
+
+if [ "$RETVAL" == "0" ];then
+  if [ -x /usr/sbin/grub-install ];then
+    (/usr/sbin/grub-install --force --no-floppy --recheck "(${RTMBR})"
+    RPART=`grub-probe -t drive /boot`
+    /usr/sbin/grub-setup --force "${RPART}"
+    /usr/sbin/grub-mkconfig  > /boot/grub/grub.cfg) > /dev/null 2>&1
+   else
+   (cat <<EOF
+root ($RTMBR,2)
+setup ($RTMBR)
+quit
+EOF
+) |/usr/sbin/grub --batch > /dev/null 2>&1
+  fi
+fi;
+

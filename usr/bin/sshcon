@@ -1,0 +1,40 @@
+#!/bin/bash
+
+if [ ! "$1" ];then
+  exit
+fi;
+
+SERV=$1
+
+if [ "$2" != "" ];then
+  SPORT=$2;
+  if [ "${SPORT}" != "22" ];then
+    /sbin/iptables -I EXTOUT -j ACCEPT -p tcp -d ${SERV} --dport ${SPORT} -m state --state NEW
+  fi;
+ else
+  SPORT=22;
+fi;
+
+if [ -e /root/sshkey.pem ];then
+  SKEY=/root/sshkey.pem
+ else
+  SKEY=/etc/openssl/serverkey.pem
+fi;
+
+ssh-keygen -R $SERV >/dev/null 2>&1
+
+if [ "$3" != "" ];then
+#  shift 2
+   /usr/bin/ssh -q -o PasswordAuthentication=no -o ConnectTimeout=5 -o NumberOfPasswordPrompts=0 -i ${SKEY} -R 873:127.0.0.1:873 -p ${SPORT} root@$SERV "$3"
+#  /usr/bin/ssh -q -o PasswordAuthentication=no -i /etc/openssl/serverkey.pem -R 873:127.0.0.1:873 -p ${SPORT} $SERV \"$3\"
+ else
+  /usr/bin/ssh -q -o PasswordAuthentication=no -o ConnectTimeout=5 -o NumberOfPasswordPrompts=0 -i ${SKEY} -R 873:127.0.0.1:873 -p ${SPORT} root@$SERV
+fi;
+
+ERROUT=$?
+
+if [ "${SPORT}" != "22" ];then
+  /sbin/iptables -D EXTOUT -j ACCEPT -p tcp -d ${SERV} --dport ${SPORT} -m state --state NEW
+fi;
+
+exit $ERROUT

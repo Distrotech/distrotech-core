@@ -1,0 +1,115 @@
+#! /bin/sh
+
+#    Copyright (C) 2002  <Gregory Hinton Nietsky>
+#    Copyright (C) 2005  <ZA Telecomunications>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+
+PATH=/sbin:/etc:/bin:/usr/bin
+
+clear
+stty onlcr
+
+case "$0" in
+  *0)command="halt";;
+  *2)command="reset";;
+  *)command=reboot;;
+esac
+
+(/sbin/ip rule del iif lo table Ipsec prio 25
+/sbin/ip rule del table Static prio 50
+/sbin/ip rule del table VPN prio 60
+/sbin/ip rule del table zebra prio 75
+/sbin/ip rule del fwmark 1 table 100 prio 100
+/sbin/ip rule del fwmark 2 table 101 prio 101
+/sbin/ip rule del fwmark 3 table 102 prio 102
+/sbin/ip rule del fwmark 4 table 103 prio 103
+/sbin/ip rule del fwmark 5 table 104 prio 104
+/sbin/ip rule del fwmark 6 table 105 prio 105
+/sbin/ip rule del fwmark 7 table 106 prio 106
+/sbin/ip rule del fwmark 8 table 107 prio 107
+/sbin/ip rule del fwmark 9 table 108 prio 108
+/sbin/ip rule del fwmark 10 table 109 prio 109) >/dev/null 2>&1
+
+su pgsql -c "/usr/bin/pg_ctl -D /var/spool/pgsql -m immediate stop" > /dev/null 2>&1
+su pgsql -c "/usr/bin/pg_ctl -D /var/spool/cubit -m immediate stop" > /dev/null 2>&1
+
+if [ "$1" != "fast" ];then 
+  while [ "`pidof clamd`" ];do
+    (killall clamd;
+    sleep 1) > /dev/null 2>&1
+  done
+  rmmmod dazuko > /dev/null 2>&1
+  rmmmod dazukofs > /dev/null 2>&1
+  killall5 -9
+  sleep 5
+  killall5 -15
+fi
+
+# Try to turn off quota:
+if fgrep quota /etc/fstab 1> /dev/null 2> /dev/null ; then
+  if [ -x /sbin/quotaoff ]; then
+    echo "Turning off filesystem quotas."
+    /sbin/quotaoff -a
+  fi
+fi
+
+/sbin/hwclock --systohc
+
+if [ -e /tmp/ntp.drift ];then
+  cp /tmp/ntp.drift /etc/
+fi;
+
+if [ "$command" != "reset" ];then
+  $command -w
+fi;
+
+umount -a -tnfs
+swapoff -a
+
+cat /etc/fstab |awk '$3 == "devpts" {print "umount "$2}' |sort |sh
+cat /etc/fstab |awk '$2 != "/dev" && $3 == "devfs" {print "umount "$2}' |sort |sh
+cat /etc/fstab |awk '$2 != "/proc" && $3 == "proc" {print "umount "$2}' |sort |sh
+
+umount -a -tnonfs > /dev/null 2>&1
+
+sync
+if [ -e /etc/.install ];then 
+  mount -n -o remount,ro /etc > /dev/null 2>&1
+  mount -n -o remount,ro /root > /dev/null 2>&1
+  mount -n -o remount,ro /tmp > /dev/null 2>&1
+fi;
+umount -n /sys > /dev/null 2>&1
+mount -n -o remount,ro /
+
+# See if this is a powerfail situation.
+if [ -f /etc/power_is_failing ]; then
+  echo "Turning off UPS, bye."
+  /sbin/powerd -q
+  exit 1
+fi
+
+if [ "$command" = "reboot" ];then
+  reboot -f
+elif [ "$command" = "reset" ];then
+  ip -o link show |awk -F: '{printf "ip link set down%s\n",$2}' |sh > /dev/null 2>&1
+  ip route sh table all |awk '$2 != "default" {printf "ip route del %s table %s\n",$2,$6}' |sh > /dev/null 2>&1
+  ip -o addr |awk '$3 == "inet" {printf "ip addr del %s dev %s\n",$4,$2}' |sh > /dev/null 2>&1
+  /etc/rc.d/rc.sysinit
+  /sbin/init 3
+else
+  halt -f -p
+fi

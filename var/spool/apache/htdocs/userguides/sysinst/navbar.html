@@ -1,0 +1,93 @@
+<html>
+<head>
+<base target="content">
+<link rel=stylesheet type=text/css href=../netsentry.css>
+</head>
+<body>
+
+<script language="JavaScript">
+  NavOver=(((navigator.appName == "Netscape") &&
+    (parseInt(navigator.appVersion) >= 3 )) ||
+    ((navigator.appName == "Microsoft Internet Explorer") &&
+    (parseInt(navigator.appVersion) >= 4 )));
+
+  function IMGLoad(img) {
+    var a=new Image();
+    a.src=img;
+    return a;
+  }
+  if(NavOver) {
+    home1=IMGLoad("../instman/images/home_a.png");
+    home2=IMGLoad("../instman/images/home.png");
+    boot1=IMGLoad("images/boot_a.gif");
+    boot2=IMGLoad("images/boot.gif");
+    cfdisk1=IMGLoad("images/cfdisk_a.gif");
+    cfdisk2=IMGLoad("images/cfdisk.gif");
+    format1=IMGLoad("images/format_a.gif");
+    format2=IMGLoad("images/format.gif");
+    mount1=IMGLoad("images/mount_a.gif");
+    mount2=IMGLoad("images/mount.gif");
+    driver1=IMGLoad("images/driver_a.gif");
+    driver2=IMGLoad("images/driver.gif");
+    scsi1=IMGLoad("images/scsi_a.gif");
+    scsi2=IMGLoad("images/scsi.gif");
+    install1=IMGLoad("images/inst_a.gif");
+    install2=IMGLoad("images/inst.gif");
+    passwd1=IMGLoad("images/passwd_a.gif");
+    passwd2=IMGLoad("images/passwd.gif");
+  }
+</script>
+
+<table border="0" width="170" cellspacing="0" cellpadding="0">
+  <tr>
+    <td width="170">
+      <p align="center"><img border="0" src="../images/Sentry.gif" width="129" height="181"></td>
+  </tr>
+  <tr>
+    <td ALIGN=MIDDLE>
+      <p align=center>
+      <a href="../index.html" language="JavaScript" target=_top
+      onmouseover="if(NavOver) document['home'].src=home1.src"
+      onmouseout="if(NavOver) document['home'].src=home2.src"><img src="../instman/images/home.png"
+      border="0" alt="Home Page" name="home"></a><br><a href="boot.html"
+      language="JavaScript" target=content
+      onmouseover="if(NavOver) document['boot'].src=boot1.src"
+      onmouseout="if(NavOver) document['boot'].src=boot2.src"><img src="images/boot.gif"
+      width="140" height="35" border="0" alt="Network Config" name="boot"></a><br><a href="cfdisk.html"
+      language="JavaScript" target=content
+      onmouseover="if(NavOver) document['cfdisk'].src=cfdisk1.src"
+      onmouseout="if(NavOver) document['cfdisk'].src=cfdisk2.src"><img src="images/cfdisk.gif"
+      width="140" height="35" border="0" alt="Partition Creation" name="cfdisk"></a><br><a href="format.html"
+      language="JavaScript" target=content
+      onmouseover="if(NavOver) document['format'].src=format1.src"
+      onmouseout="if(NavOver) document['format'].src=format2.src"><img src="images/format.gif"
+      width="140" height="35" border="0" alt="Formating Partitions" name="format"></a><br><a href="mount.html"
+      language="JavaScript" target=content
+      onmouseover="if(NavOver) document['mount'].src=mount1.src"
+      onmouseout="if(NavOver) document['mount'].src=mount2.src"><img src="images/mount.gif"
+      width="140" height="35" border="0" alt="Mounting The System" name="mount"></a><br><a href="drivers.html"
+      language="JavaScript" target=content
+      onmouseover="if(NavOver) document['driver'].src=driver1.src"
+      onmouseout="if(NavOver) document['driver'].src=driver2.src"><img src="images/driver.gif"
+      width="140" height="35" border="0" alt="Aditional Drivers" name="driver"></a><br><a href="bootdisk.html"
+      language="JavaScript" target=content
+      onmouseover="if(NavOver) document['scsi'].src=scsi1.src"
+      onmouseout="if(NavOver) document['scsi'].src=scsi2.src"><img src="images/scsi.gif"
+      width="140" height="35" border="0" alt="Bootdisk For SCSI CD" name="scsi"></a><br><a href="install.html"
+      language="JavaScript" target=content
+      onmouseover="if(NavOver) document['install'].src=install1.src"
+      onmouseout="if(NavOver) document['install'].src=install2.src"><img src="images/inst.gif"
+      width="140" height="35" border="0" alt="Installing The System" name="install"></a><br><a href="passwd.html"
+      language="JavaScript" target=content
+      onmouseover="if(NavOver) document['passwd'].src=passwd1.src"
+      onmouseout="if(NavOver) document['passwd'].src=passwd2.src"><img src="images/passwd.gif"
+      width="140" height="35" border="0" alt="Setting System Password" name="passwd"></a><br><a href="view.html"
+      language="JavaScript" target=content
+      onmouseover="if(NavOver) document['view'].src=view1.src"
+      onmouseout="if(NavOver) document['view'].src=view2.src"><img src="images/view.gif"
+      width="140" height="35" border="0" alt="Viewing System Data" name="view"></a>
+    </td>
+  </tr>
+</table>
+</body>
+</html>

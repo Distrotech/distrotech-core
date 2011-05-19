@@ -1,0 +1,16 @@
+#!/usr/bin/perl
+
+open(FL,"-");
+$cnt=0;
+$percl=0;
+while(<FL>)
+  {
+    $cnt++;
+    ($perc)=split(/\./,(($cnt/$ARGV[0])*100));
+    if ($perc > $percl)
+      {
+        printf(<STDOUT>,"$perc\n");
+      }
+    $percl=$perc;
+  }
+close(FL);

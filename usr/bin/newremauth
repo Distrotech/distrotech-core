@@ -1,0 +1,8 @@
+#!/bin/bash
+
+/usr/bin/rsync -aR 127.0.0.1::programs/var/spool/update/remote.keys /
+/usr/bin/ldapmodify -U admin -Y PLAIN -w "`cat /etc/mail/ldap`" -cf /var/spool/update/remote.keys
+/usr/bin/gensshauth > /root/.ssh/authorized_keys.tmp              
+if [ -s /root/.ssh/authorized_keys.tmp ];then 
+  cp /root/.ssh/authorized_keys.tmp /root/.ssh/authorized_keys
+fi

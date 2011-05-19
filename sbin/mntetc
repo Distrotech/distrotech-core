@@ -1,0 +1,4 @@
+#!/bin/bash
+
+gunzip -c /install/etc.gz |dd of=/dev/rd/5 bs=1k count=1536
+mount -n /dev/rd/5 /etc

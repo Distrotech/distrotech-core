@@ -1,0 +1,492 @@
+#!/usr/bin/perl
+
+#    Copyright (C) 2002  <Gregory Hinton Nietsky>
+#    Copyright (C) 2005  <ZA Telecomunications>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+use Net::LDAPS;
+use Crypt::PasswdMD5;
+use MIME::Base64;
+use Net::Domain qw(hostname hostfqdn hostdomain domainname);
+
+$lochost=hostfqdn();
+
+open(LCON,"/etc/ldap.conf");
+while(<LCON>) {
+  chop $_;
+  @centry=split(/\s/,$_);
+  if (@centry[0] eq "master_host") {
+    $host=@centry[1];
+  } elsif (@centry[0] eq "binddn") {
+    $binddn=@centry[1];
+  } elsif (@centry[0] eq "bindpw") {
+    $password=@centry[1];
+  }
+}
+$ldap = Net::LDAPS->new($host,port=>"636",verify => 'none',timeout => "10");
+$ldap->bind($binddn,password => $password);
+
+#
+# Suspend A User
+#
+
+$mesg = $ldap->search(base=>"ou=Users",filter =>"(&(uid=*)(accountSuspended=yes)(objectClass=shadowAccount))",
+                      attrs=>['uid','userPassword','accountSuspended']);
+ 
+while($entry = $mesg->shift_entry) {
+   $pass=$entry->get_value("userPassword");
+   $uid=$entry->get_value("uid");
+   $pass=substr($pass,7);
+   $pass="{PWLCK}" . $pass;
+   system("/usr/bin/smbpasswd -d $uid");
+   $dn=$entry->dn;
+   $ldap->modify($dn,replace => { 'userPassword' => $pass , 'accountSuspended' => "suspended"});
+}
+
+#
+# Unsuspend A User
+#
+
+$mesg = $ldap->search(base=>"ou=Users",filter =>"(&(uid=*)(accountSuspended=no)(objectClass=shadowAccount))",
+                      attrs=>['uid','userPassword','accountSuspended']);
+ 
+while($entry = $mesg->shift_entry) {
+   $pass=$entry->get_value("userPassword");
+   $uid=$entry->get_value("uid");
+   $pass=substr($pass,7);
+   $pass="{CRYPT}" . $pass;
+   system("/usr/bin/smbpasswd -e $uid");
+   $dn=$entry->dn;
+   $ldap->modify($dn,replace => { 'userPassword' => $pass , 'accountSuspended' => "unsuspended"});
+}
+
+#
+#Change A Users homedir/mail when uid changes
+#
+
+$mesg = $ldap->search(base=>"ou=Users",filter =>"(&(uid=*)(olduid=*)(objectClass=shadowAccount))",
+                      attrs=>['homeDirectory','olduid','uid']);
+ while($entry = $mesg->shift_entry) {
+   $hdir=$entry->get_value("homeDirectory");
+   $olduid=$entry->get_value("olduid");
+   $newuid=$entry->get_value("uid");
+
+   $oldhome="/var/home/" . substr($olduid,0,1) . "/" . substr($olduid,1,1) . "/" . $olduid;
+   if ( ! -d "/var/home/" . substr($newuid,0,1) ){
+     mkdir("/var/home/" . substr($newuid,0,1));
+     chown(0,0,"/var/home/" . substr($newuid,0,1));
+     chmod(0755,"/var/home/" . substr($newuid,0,1));
+   }
+   if ( ! -d "/var/home/" . substr($newuid,0,1) . "/" . substr($newuid,1,1) ){
+     mkdir("/var/home/" . substr($newuid,0,1) . "/" . substr($newuid,1,1));
+     chown(0,0,"/var/home/" . substr($newuid,0,1) . "/" . substr($newuid,1,1));
+     chmod(0755,"/var/home/" . substr($newuid,0,1) . "/" . substr($newuid,1,1));
+   }
+   if (( -d $oldhome ) &&  ( ! -d $hdir)) {
+     system("mv $oldhome $hdir");
+   }
+   $nhash="/var/spool/mail/" . substr($newuid,0,1) . "/" . substr($newuid,1,1) . "/" . $newuid;
+   $ohash="/var/spool/mail/" . substr($olduid,0,1) . "/" . substr($olduid,1,1) . "/" . $olduid;
+   if ( ! -d "/var/spool/mail/" . substr($newuid,0,1) ){
+     mkdir("/var/spool/mail/" . substr($newuid,0,1));
+     chown(0,0,"/var/spool/mail/" . substr($newuid,0,1));
+     chmod(0755,"/var/spool/mail/" . substr($newuid,0,1));
+   }
+   if ( ! -d "/var/spool/mail/" . substr($newuid,0,1) . "/" . substr($newuid,1,1) ){
+     mkdir("/var/spool/mail/" . substr($newuid,0,1) . "/" . substr($newuid,1,1));
+     chown(0,0,"/var/spool/mail/" . substr($newuid,0,1) . "/" . substr($newuid,1,1));
+     chmod(01777,"/var/spool/mail/" . substr($newuid,0,1) . "/" . substr($newuid,1,1));
+   }
+   if (( -e $ohash ) && ( ! -e $nhash)) {
+     system("mv $ohash $nhash");
+   }
+   $dn=$entry->dn;
+   $ldap->modify($dn,delete => ['olduid']);
+}
+
+
+
+#
+#Change user password
+#
+ 
+$mesg = $ldap->search(base=>"ou=Users",filter =>"(&(uid=*)(clearPassword=*)(objectClass=shadowAccount))",
+                      attrs=>['clearPassword','uid','sambaPwdMustChange','accountSuspended','uidNumber','gidNumber']);
+$lt=time();
+ 
+while($entry = $mesg->shift_entry) {
+   $uid=$entry->get_value("uid");
+   $accstat=$entry->get_value("accountSuspended");
+   $pass=$entry->get_value("clearPassword");
+   $uidnum=$entry->get_value("uidNumber");
+   $gidnum=$entry->get_value("gidNumber");
+   $pwdchange=$entry->get_value("sambaPwdMustChange");
+
+   $dn=$entry->dn;
+
+   $salt=join('',('.', '/', 0..9, 'A'..'Z', 'a'..'z')[rand 64, rand 64, rand 64, rand 64, rand 64, rand 64, rand 64, rand 64]);
+
+
+   open(SMPW,"|/usr/bin/smbpasswd -s -a $uid");
+   print SMPW "$pass\n";
+   print SMPW "$pass\n";
+   close(SMPW);
+
+   if (($accstat eq "unsuspended") || ($accstat eq "")) {
+     $pwcrypt="{CRYPT}";
+   } else {
+     system("/usr/bin/smbpasswd -d $uid");
+     $pwcrypt="{PWLCK}";
+   }
+   $pwcrypt.=unix_md5_crypt($pass,$salt);
+
+   $days=($lt - ($lt % 86400)) / 86400;
+   $ldap->modify($dn,replace => { 'shadowLastChange' => $days});
+   $ldap->modify($dn,replace => { 'userPassword' => $pwcrypt});
+   $ldap->modify($dn,delete => ['clearPassword']);
+
+   if ($pwdchange > $smbpwc) {
+     $ldap->modify($dn,replace => { 'sambaPwdMustChange' => $pwdchange});
+   }
+
+   $nhash="/var/spool/mail/" . substr($uid,0,1) . "/" . substr($uid,1,1) . "/" . $uid;
+   if ( ! -e $nhash ) {
+     if ( ! -d "/var/spool/mail/" . substr($uid,0,1) ){
+       mkdir("/var/spool/mail/" . substr($uid,0,1));
+       chown(0,0,"/var/spool/mail/" . substr($uid,0,1));
+       chmod(0755,"/var/spool/mail/" . substr($uid,0,1));
+     }
+     if ( ! -d "/var/spool/mail/" . substr($uid,0,1) . "/" . substr($uid,1,1) ){
+       mkdir("/var/spool/mail/" . substr($uid,0,1) . "/" . substr($uid,1,1));
+       chown(0,0,"/var/spool/mail/" . substr($uid,0,1) . "/" . substr($uid,1,1));
+       chmod(01777,"/var/spool/mail/" . substr($uid,0,1) . "/" . substr($uid,1,1));
+     }
+     mkdir($nhash);
+     chown($uidnum,"12",$nhash);
+     chmod(0700,$nhash);
+   } elsif ( ! -d $nhash ) {
+     system("mv $nhash $nhash.mbox");
+     mkdir($nhash);
+     chown($uidnum,"12",$nhash);
+     chmod(0700,$nhash);
+     system("/usr/sbin/mb2md -s $nhash.mbox -d $nhash");
+     system("chown -R $uidnum.12 $nhash");
+   }
+}
+
+#
+# Set Primary Samba Group
+#
+
+$mesg = $ldap->search(base=>"cn=Domain",filter =>"(&(sambaDomainName=*)(cn=Domain))",
+                      attrs=>['sambaSID']);
+
+$entry=$mesg->shift_entry;
+
+if ($entry) {
+  $sid=$entry->get_value("sambaSID");
+  $mesg = $ldap->search(base=>"ou=Users",filter =>"(&(sambaPrimaryGroupSID=" . $sid . "-1201)(objectClass=shadowAccount))",
+                        attrs=>['sambaPrimaryGroupSID']);
+
+  while($entry = $mesg->shift_entry) {
+    $dn=$entry->dn;
+    $ldap->modify($dn,replace => { 'sambaPrimaryGroupSID' => $sid . "-513"});
+  }
+  $mesg = $ldap->search(base=>"ou=Users",filter =>"(&(sambaPrimaryGroupSID=S-1-5-32-545)(objectClass=shadowAccount))",
+                        attrs=>['sambaPrimaryGroupSID']);
+  while($entry = $mesg->shift_entry) {
+    $dn=$entry->dn;
+    $ldap->modify($dn,replace => { 'sambaPrimaryGroupSID' => $sid . "-513"});
+  }
+}
+
+#
+#Update email auto responder
+#
+
+
+$mesg = $ldap->search(base=>"",filter =>"(&(uid=*)(outOfOfficeActive=yes)(objectClass=officeperson)(|(mailHost=" . $lochost . ")(!(mailhost=*))))",
+                      attrs=>['outOfOfficeMSG','homeDirectory','uid','uidNumber','mailLocalAddress']);
+
+while($entry = $mesg->shift_entry) {
+   @repmsg=$entry->get_value("outOfOfficeMSG");
+   $hdir=$entry->get_value("homeDirectory");
+   $uid=$entry->get_value("uid");
+   if ($hdir == "") {
+     $hdir="/var/home/" . substr($uid,0,1) . "/" . substr($uid,1,1) . "/" . $uid;
+   }
+   $uidn=$entry->get_value("uidNumber");
+   @ualias=$entry->get_value("mailLocalAddress");
+   $dn=$entry->dn;
+   if ( -d $hdir){
+     $ualiaso="";
+     foreach $alias (@ualias) {
+       if ($alias ne "") {
+         $ualiaso .= " -a $alias ";
+       }
+     }
+     open(RT,">$hdir/respond.txt");
+     foreach $mline (@repmsg) {
+       print RT "$mline\n";
+     }
+     close(RT);
+     chown($uidn,"100","$hdir/respond.txt");
+     if ((! -e ">$hdir/.forward") || (! -e "$hdir/.vacation.db")) {
+       open(DF,">$hdir/.forward");
+       if ($ualiaso ne "") {
+         chop $ualiaso;
+       }
+       print DF "$uid,\"\|/usr/bin/vacation -U -m $hdir/respond.txt -f $hdir/.vacation.db$ualiaso $uid\"\n";
+       close(DF);
+       system("su $uid -c \"/usr/bin/vacation -U -f $hdir/.vacation.db -i\"");
+       chown($uidn,"100","$hdir/.vacation.db");
+     }
+     $mbox="/var/spool/mail/" . substr($uid,0,1) . "/" . substr($uid,1,1) . "/" . $uid;
+     if ( -e $mbox ) {
+       $ldap->modify($dn,replace => { 'outOfOfficeActive' => 'active' });
+     }
+  }
+}
+
+#
+#Remove email auto responder
+#
+
+$mesg = $ldap->search(base=>"",filter =>"(&(uid=*)(|(outOfOfficeActive=no)(outOfOfficeActive=unset))(objectClass=officeperson)(|(mailHost=" . $lochost . ")(!(mailhost=*))))",
+                      attrs=>['homeDirectory','uid']);
+
+while($entry = $mesg->shift_entry) {
+   $hdir=$entry->get_value("homeDirectory");
+   $uid=$entry->get_value("uid");
+   $dn=$entry->dn;
+   unlink("$hdir/respond.txt");
+   unlink("$hdir/.vacation.db");
+   unlink("$hdir/.forward");
+   $mbox="/var/spool/mail/" . substr($uid,0,1) . "/" . substr($uid,1,1) . "/" . $uid;
+   $ldap->modify($dn,delete => ['outOfOfficeActive']);
+}
+
+#
+#Activate e4l Profile
+#
+
+
+$mesg = $ldap->search(base=>"",filter =>"(&(uid=*)(exchangeserveraccess=yes)(objectClass=officeperson))",
+                      attrs=>['uid']);
+ 
+while($entry = $mesg->shift_entry) {
+   $uid=$entry->get_value("uid");
+   $dn=$entry->dn;
+   $ldap->modify($dn,replace => { 'exchangeServerAccess' => 'active' });
+#   print "pg_dbctl.py migrate user $uid\n$dn\n\n";
+   system("/usr/local/exchange4linux/pg_dbctl.py migrate user $uid");
+}
+
+#
+#Create Majordomo Lists
+#
+
+$mesg = $ldap->search(base=>"ou=Email",filter =>"(&(sendmailMTAKey=*admin))",
+                      attrs=>['sendmailMTAKey']);
+ 
+while($entry = $mesg->shift_entry) {
+   $alist=$entry->get_value("sendmailMTAKey");
+   ($list)=split(/-/,$alist);
+   if ( ! -e "/var/spool/majordomo/lists/$list-list" ) {
+     open(ML,">/var/spool/majordomo/lists/$list-list");
+     close(ML);
+     chown(123,45,"/var/spool/majordomo/lists/$list-list");
+     chmod(0644,"/var/spool/majordomo/lists/$list-list");
+   }
+}
+
+#
+#Generate User X509 Certificates
+#
+
+#$mesg = $ldap->search(base=>"",filter =>"(&(uid=*)(objectClass=inetorgperson)(certificateGenerate=*))",
+#                      attrs=>['c','st','l','o','ou','cn','mail','uid','usercertificate;binary',
+#                              'certificateGenerate','ipHostNumber','description','userPKCS12']);
+#
+#while($entry = $mesg->shift_entry) {
+#  $c=$entry->get_value("c");
+#  $st=$entry->get_value("st");
+#  $l=$entry->get_value("l");
+#  $o=$entry->get_value("o");
+#  $ou=$entry->get_value("ou");
+#  $cn=$entry->get_value("cn");
+#  $mail="email:" . $entry->get_value("mail");
+#  $email=$entry->get_value("mail");
+#  $uid=$entry->get_value("uid");
+#  $pphrase=$entry->get_value("certificateGenerate");
+#  $cert=encode_base64($entry->get_value("usercertificate;binary"));
+#  $pkcs12=encode_base64($entry->get_value("userPKCS12"));
+#
+#  if (substr($pphrase,0,7) eq "NEWKEY:") {
+#    $pphrase=substr($pphrase,7);
+#    $newkey=1;
+#  } elsif (substr($pphrase,0,7) eq "NEWREQ:") {
+#    $pphrase=substr($pphrase,7);
+#    $newreq=1;
+#  } elsif (substr($pphrase,0,7) eq "UPDATE:") {
+#    $pphrase=substr($pphrase,7);
+#  }
+#
+#  $altfqdn=$entry->get_value("description");
+#  $altip=$entry->get_value("ipHostNumber");
+#
+#  if ($altip ne "") {
+#    $altip=",IP:" . $altip;
+#  }
+#
+#  if ($altfqdn ne "") {
+#    $fqdn=$altfqdn;
+#    $altfqdn="DNS:" . $altfqdn . ",";
+#  }
+#
+#
+#  if (($c ne "" ) && ($st ne "") && ($l ne "") && ($o ne "") && 
+#      ($ou ne "") && ($cn ne "") && ($email ne "") && ($uid ne "")) {
+#
+#    $dn=$entry->dn;
+#    if ((($pkcs12 eq "") || ($newkey eq "1") || ($newreq eq "1"))  && ($pphrase ne "")) {
+#      open(CC,">/etc/openssl/certs/$uid.conf");
+#      print CC<<__EOC__;
+#HOME                   = .
+#RANDFILE               = \$ENV::HOME/.rnd
+#
+#[ req ]
+#default_bits           = 2048
+#distinguished_name     = req_distinguished_name
+#attributes             = req_attributes
+#prompt                 = no
+#encrypt_key            = no
+#req_extensions         = usr_cert
+#default_md             = sha1
+#
+#[ req_distinguished_name ]
+#C                      = $c
+#ST                     = $st
+#L                      = $l
+#O                      = $o
+#OU                     = $ou
+#CN                     = $cn
+#
+#[ usr_cert ]
+#__EOC__
+#      if ($fqdn ne "") {
+#       print CC "nsSslServerName        = $fqdn\n";
+#      }
+#      print CC<<__EOC__;
+#subjectKeyIdentifier   = hash
+#basicConstraints       = CA:FALSE
+#nsComment              = "Generated On Network Sentinel Solutions Firewall"
+#nsCertType             = client, email, server
+#authorityKeyIdentifier = keyid:always,issuer:always
+#keyUsage               = nonRepudiation, digitalSignature, keyEncipherment
+#subjectAltName         = $altfqdn$mail$altip
+#issuerAltName          = $altfqdn$mail$altip
+#
+#[ req_attributes ]
+#__EOC__
+#      close(CC);
+#      if ($newreq eq "1") {
+#        open(CDK,">/etc/openssl/certs/$uid.p12");
+#        print CDK decode_base64($pkcs12);
+#        close(CDK);
+#        system("0openssl pkcs12 -in /etc/openssl/certs/$uid.p12 -password pass:\"$pphrase\" -passout pass:\"$pphrase\" -nocerts -descert -out /etc/openssl/private/$uid.key");
+#        unlink("/etc/openssl/certs/$uid.p12");
+#      } else {
+#        system("/usr/bin/openssl genrsa -des3 -passout pass:\"$pphrase\" -out /etc/openssl/private/$uid.key 2048");
+#      }
+#      system("/usr/bin/openssl req -x509 -set_serial 0 -new -days 365 -passin pass:\"$pphrase\" -out /etc/openssl/certs/$uid.pem -key /etc/openssl/private/$uid.key -extensions usr_cert -config /etc/openssl/certs/$uid.conf");
+#      $ecode=$? >> 8;
+#      if ($ecode == 0) {
+#        $newpkcs12=`openssl pkcs12 -export -descert -inkey /etc/openssl/private/$uid.key -in /etc/openssl/certs/$uid.pem -password pass:"$pphrase" -passin pass:"$pphrase"`;
+#        unlink("/etc/33openssl/private/$uid.key");
+#        unlink("/etc/op3333enssl/certs/$uid.conf");
+#        $newcert=`/usr/bin/openssl x509 -in /etc/openssl/certs/$uid.pem -outform der`;
+#        $ldap->modify($dn,replace => { 'userCertificate;binary' => $newcert ,
+#                                       'userPKCS12' => $newpkcs12});
+#      }
+#      $ldap->modify($dn,add =>  {'objectClass' => "pkiUser"});
+#    } elsif (($pphrase ne "") && ($cert ne "") && ($pkcs12 ne "")) {
+#      open(CD,">/etc/openssl/certs/$uid.pem");
+#      print CD "-----BEGIN CERTIFICATE-----\n";
+#      print CD $cert;
+#      print CD "-----END CERTIFICATE-----\n";
+#      close(CD);
+#      open(CDK,">/etc/openssl/certs/$uid.p12");
+#      print CDK decode_base64($pkcs12);
+#      close(CDK);
+#      system("openssl pkcs12 -in /etc/openssl/certs/$uid.p12 -password pass:\"$pphrase\" -passout  pass:\"$pphrase\" -nocerts -descert -out /etc/openssl/private/$uid.key");
+#      $ecode=$? >> 8;
+#      unlink("/etc/openssl/certs/$uid.p12");
+#      if ($ecode == 0) {
+#        $newpkcs12=`openssl pkcs12 -export -descert -inkey /etc/openssl/private/$uid.key -in /etc/openssl/certs/$uid.pem -password pass:"$pphrase" -passin pass:"$pphrase"`;
+#        unlink("/etc/openssl/private/$uid.key");
+#        $ldap->modify($dn,replace => { 'userPKCS12' => $newpkcs12});
+#      }
+#    } elsif ($cert ne "") {
+#      open(CD,">/etc/openssl/certs/$uid.pem");
+#      print CD "-----BEGIN CERTIFICATE-----\n";
+#      print CD $cert;
+#      print CD "-----END CERTIFICATE-----\n";
+#      close(CD);
+#    }
+#    if ( -e "/etc/openssl/certs/$uid.pem") {
+#      $newpkcs7=`openssl crl2pkcs7 -in /etc/ipsec.d/crls/crl.pem -certfile /etc/ipsec.d/cacerts/cacert.pem -certfile /etc/openssl/certs/$uid.pem -outform der`;
+#      unlink("/etc/openssl/certs/$uid.pem");
+#      $ldap->modify($dn,replace => { 'userSMIMECertificate' => $newpkcs7});
+#    }
+#    $ldap->modify($dn,delete => [ 'certificateGenerate' ]);
+#  }
+#}
+
+#
+# Sign A Users Certificate
+#
+
+$mesg = $ldap->search(base=>"",filter =>"(&(uid=*)(objectClass=inetorgperson)(certificateSign=yes)(certificateRequest=*))",
+                      attrs=>['certificateRequest','uid']);
+
+while($entry = $mesg->shift_entry) {
+  $cert=encode_base64($entry->get_value("certificateRequest"));
+  $dn=$entry->dn;
+  $uid=$entry->get_value("uid");
+
+  print $dn . "\n";
+
+  open(CD,">/etc/openssl/certs/$uid.pem");
+  print CD "-----BEGIN CERTIFICATE REQUEST-----\n";
+  print CD $cert;
+  print CD "-----END CERTIFICATE REQUEST-----\n";
+  close(CD);
+
+  system("/usr/sbin/subrev /etc/openssl/certs/$uid.pem");
+  system("/usr/bin/openssl ca -batch -config /etc/openssl/ca.conf -in /etc/openssl/certs/$uid.pem -out /etc/openssl/certs/$uid.sign.pem");
+  $ecode=$? >> 8;
+  if ($ecode == 0) {
+    $newcert=`/usr/bin/openssl x509 -in /etc/openssl/certs/$uid.sign.pem -outform der`;
+    $ldap->modify($dn,replace => { 'userCertificate;binary' => $newcert});
+    $ldap->modify($dn,delete => [ 'certificateSign','certificateRequest' ]);
+  }
+  unlink("/etc/openssl/certs/$uid.pem");
+  unlink("/etc/openssl/certs/$uid.sign.pem");
+}
+
+$ldap->unbind;
+

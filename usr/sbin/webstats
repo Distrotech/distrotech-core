@@ -1,0 +1,16 @@
+#!/bin/bash
+
+mv /var/log/access_log /var/log/access_log.wrk
+/usr/sbin/apachectl restart
+
+for vhost in `ls "/var/spool/apache/vhosts/"` ;do 
+  grep $vhost /var/log/access_log.wrk |\
+  awk '{print substr($0,length($1)+2)}' > "/var/spool/apache/usage/$vhost/access_log"
+  /usr/bin/webalizer -c "/var/spool/apache/usage/$vhost/usage.conf"
+  if [ -e "/var/spool/apache/vhosts/$vhost/SAVELOG" ];then
+     cat /var/spool/apache/usage/$vhost/access_log >> /var/spool/apache/vhosts/$vhost/access_log
+  fi
+done
+
+rm /var/log/access_log.wrk
+

@@ -1,0 +1,68 @@
+body, th, td, textarea {
+	font: normal 11px Verdana, Geneva, Arial, Helvetica, sans-serif;
+	color: Black;
+	background: White;
+}
+
+a:link,
+a:visited,
+a:active {
+	color: #00f;
+	text-decoration: none;
+}
+
+a:hover {color: #900;}
+
+.msg {
+	font-weight: bold;
+	text-align: center;
+}
+
+/* p.act: contains userlinks */
+.act {
+	text-align: center;
+}
+
+.box {
+	background: #ccc;
+	border: 1px solid #000;
+	padding: 2px;
+	margin: 0px 40px 0px 40px;
+	font-weight: normal;
+	text-align: center;
+}
+
+#stat {
+	background: #ccc;
+	border: 1px solid #000;
+	padding: 2px;
+	margin: 0px 40px 0px 40px;
+	font-weight: normal;
+	text-align: center;
+}
+
+.logo {text-align: center;}
+
+.form_table {
+	border: 1px solid gray;
+	margin: 0 auto;
+}
+
+.form_label {
+	font-weight: bold;
+	text-align: right;
+}
+
+.form_input {
+	margin: 0px 4px 0px 4px;
+	padding: 0px 0px 0px 2px;
+	width: 10em;
+}
+
+.form_check {margin: 0 4px 0 0;}
+
+.form_submit {text-align: right;}
+.form_submit input {
+	margin: 4px 4px 0 0;
+	padding: 0 4px 0 4px;
+}

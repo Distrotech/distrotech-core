@@ -1,0 +1,4 @@
+#!/bin/bash
+
+grep -E "V.*`openssl req -in $1 -noout -subject | cut -c10-`" /etc/openssl/index.txt |\
+     awk '{printf "/usr/bin/openssl ca -revoke /etc/openssl/newcerts/%s.pem\n",$3}' |tail -1|sh

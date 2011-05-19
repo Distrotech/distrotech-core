@@ -1,0 +1,26 @@
+#Create The Root Flash Device
+BUS=="scsi", KERNEL=="sd[a-z]", DRIVER=="sd", ,SYSFS{removable}=="1", SYSFS{size}!="0", SYMLINK="%k", NAME="flash"
+
+#Create Partition Devices Based On The Contents Of /sys/bloc/sd[a-z]/device/model
+BUS=="scsi", KERNEL=="sd[a-z][1-9]",  DRIVER=="sd", SYSFS{model}=="Card  Reader", SYSFS{size}!="0", SYMLINK="%k", NAME="flash%n"
+BUS=="scsi", KERNEL=="sd[a-z][1-9]",  DRIVER=="sd", SYSFS{model}=="Flash Disk", SYSFS{size}!="0", SYMLINK="%k", NAME="flash%n"
+BUS=="scsi", KERNEL=="sd[a-z][1-9]",  DRIVER=="sd", SYSFS{model}=="flash drive", SYSFS{size}!="0", SYMLINK="%k", NAME="flash%n"
+BUS=="scsi", KERNEL=="sd[a-z][1-9]",  DRIVER=="sd", SYSFS{model}=="USB FLASH DRIVE", SYSFS{size}!="0", SYMLINK="%k", NAME="flash%n"
+BUS=="scsi", KERNEL=="sd[a-z][1-9]",  DRIVER=="sd", SYSFS{model}=="STORAGE DEVICE", SYSFS{size}!="0", SYMLINK="%k", NAME="flash%n"
+BUS=="scsi", KERNEL=="sd[a-z][1-9]",  DRIVER=="sd", SYSFS{model}=="TS1GJFV30", SYSFS{size}!="0", SYMLINK="%k", NAME="flash%n"
+BUS=="scsi", KERNEL=="sd[a-z][1-9]",  DRIVER=="sd", SYSFS{model}=="TS2GJFV30", SYSFS{size}!="0", SYMLINK="%k", NAME="flash%n"
+BUS=="scsi", KERNEL=="sd[a-z][1-9]",  DRIVER=="sd", SYSFS{model}=="Storage Media", SYSFS{size}!="0", SYMLINK="%k", NAME="flash%n"
+BUS=="scsi", KERNEL=="sd[a-z][1-9]",  DRIVER=="sd", SYSFS{model}=="Flash Voyager", SYSFS{size}!="0", SYMLINK="%k", NAME="flash%n"
+BUS=="scsi", KERNEL=="sd[a-z][1-9]",  DRIVER=="sd", SYSFS{model}=="JetFlash", SYSFS{size}!="0", SYMLINK="%k", NAME="flash%n"
+BUS=="scsi", KERNEL=="sd[a-z][1-9]",  DRIVER=="sd", SYSFS{model}=="Kingston", SYSFS{size}!="0", SYMLINK="%k", NAME="flash%n"
+BUS=="scsi", KERNEL=="sd[a-z][1-9]",  DRIVER=="sd", SYSFS{model}=="DataTraveler 2.0", SYSFS{size}!="0", SYMLINK="%k", NAME="flash%n"
+BUS=="scsi", KERNEL=="sd[a-z][1-9]",  DRIVER=="sd", SYSFS{model}=="DataTraveler G2", SYSFS{size}!="0", SYMLINK="%k", NAME="flash%n"
+BUS=="scsi", KERNEL=="sd[a-z][1-9]",  DRIVER=="sd", SYSFS{model}=="DataTraveler G3", SYSFS{size}!="0", SYMLINK="%k", NAME="flash%n"
+BUS=="scsi", KERNEL=="sd[a-z][1-9]",  DRIVER=="sd", SYSFS{model}=="USB SD Reader", SYSFS{size}!="0", SYMLINK="%k", NAME="flash%n"
+BUS=="scsi", KERNEL=="sd[a-z][1-9]",  DRIVER=="sd", SYSFS{model}=="USB CF Reader", SYSFS{size}!="0", SYMLINK="%k", NAME="flash%n"
+BUS=="scsi", KERNEL=="sd[a-z][1-9]",  DRIVER=="sd", SYSFS{model}=="USB xD/SM Reader", SYSFS{size}!="0", SYMLINK="%k", NAME="flash%n"
+BUS=="scsi", KERNEL=="sd[a-z][1-9]",  DRIVER=="sd", SYSFS{model}=="USB MS Reader", SYSFS{size}!="0", SYMLINK="%k", NAME="flash%n"
+BUS=="scsi", KERNEL=="sd[a-z][1-9]",  DRIVER=="sd", SYSFS{model}=="USB", SYSFS{size}!="0", SYMLINK="%k", NAME="flash%n"
+BUS=="scsi", KERNEL=="sd[a-z][1-9]",  DRIVER=="sd", SYSFS{model}=="STORE N GO", SYSFS{size}!="0", SYMLINK="%k", NAME="flash%n"
+BUS=="scsi", KERNEL=="sd[a-z][1-9]",  DRIVER=="sd", SYSFS{model}=="silicon-power", SYSFS{size}!="0", SYMLINK="%k", NAME="flash%n"
+

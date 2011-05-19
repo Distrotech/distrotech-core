@@ -1,0 +1,4 @@
+spdflush;
+
+spdadd 0.0.0.0/0 0.0.0.0/0 any -P in ipsec esp/transport//use;
+spdadd 0.0.0.0/0 0.0.0.0/0 any -P out ipsec esp/transport//use;

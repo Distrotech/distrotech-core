@@ -1,0 +1,15 @@
+#!/bin/bash
+
+QUEUENAME=$1
+
+if [ ! "$1" ]; then
+echo " ERROR 555483736 - NO QUEUE ENTERED";
+  exit
+fi;
+
+SERV=$1
+
+echo `asterisk -rx "show queue $QUEUENAME"`;
+
+STATUS=`asterisk -rx "show queue $QUEUENAME" | cut -c -20` 
+echo $STATUS

@@ -1,0 +1,2 @@
+#!/bin/bash
+/usr/bin/arecord -q -t raw -r 8000 -c 1 -f S16_LE

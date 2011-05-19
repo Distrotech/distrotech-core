@@ -1,0 +1,13 @@
+#!/bin/bash
+
+echo -n "Enter Tunnel Name : ";
+read TNAME
+
+echo -n "Email Address To Email Request For Signing : ";
+read ENAME
+
+/usr/bin/openssl req -newkey RSA -keyout "/etc/ipsec.d/private/${TNAME}.pem" -out "/etc/ipsec.d/req/${TNAME}.req" \
+                     -config /etc/openssl/server.conf
+/usr/bin/openssl req -in "/etc/ipsec.d/req/${TNAME}.req" -noout -text -config /etc/openssl/server.conf
+
+/usr/bin/uuenview -b -m ${ENAME} -s "Certificate Signing Request" "/etc/ipsec.d/req/${TNAME}.req"

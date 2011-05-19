@@ -1,0 +1,31 @@
+#!/usr/bin/php
+<%
+include "/var/lib/asterisk/agi-bin/functions.inc";
+include "/var/spool/apache/htdocs/cdr/apifunc.inc";
+
+$fixup=pg_query("SELECT inuse.uniqueid from inuse left outer join cdr using (uniqueid) left outer join call using (uniqueid) where not cleared and cdr.uniqueid is not null and call.uniqueid is null AND disposition='ANSWERED' AND channel ~ '^SIP/[0-9]{8}-'");
+for($i=0;$i < pg_num_rows($fixup);$i++) {
+  $row=pg_fetch_array($fixup,$i,PGSQL_NUM);
+  account_call($row[0]);
+}
+pg_query($db,"DELETE FROM inuse USING call WHERE call.uniqueid=inuse.uniqueid  AND cleared");
+
+$delnocdr=pg_query($db,"SELECT inuse.uniqueid FROM inuse LEFT OUTER JOIN cdr USING (uniqueid) WHERE cleared AND cdr.uniqueid IS NULL AND setuptime < now()");
+for($i=0;$i < pg_num_rows($delnocdr);$i++) {
+  $row=pg_fetch_array($delnocdr,$i,PGSQL_NUM);
+  pg_query($db,"DELETE FROM inuse WHERE uniqueid='" . $row[0] . "'");
+}
+
+//pg_query($db,"UPDATE inuse set cleared = 't' where setup < now() - interval '30 minutes' and not cleared");
+
+$chanlist=chanstatus("");
+if (count($chanlist) > 0) {
+  $delnocdr=pg_query($db,"SELECT inuse.uniqueid,inuse.* FROM inuse LEFT OUTER JOIN cdr USING (uniqueid) WHERE NOT cleared AND cdr.uniqueid IS NULL");
+  for($i=0;$i < pg_num_rows($delnocdr);$i++) {
+    $row=pg_fetch_array($delnocdr,$i,PGSQL_NUM);
+    if (!is_array($chanlist[$row[0]])) {
+      pg_query($db,"DELETE FROM inuse WHERE uniqueid='" . $row[0] . "'");
+    }
+  }
+}
+%>

@@ -1,0 +1,11 @@
+
+#!/bin/bash
+
+/usr/bin/freshclam --quiet --stdout --daemon-notify > /tmp/clam.$$
+
+if [ -s /tmp/clam.$$ ];then
+  cat /tmp/clam.$$ |mail -s "Virus DB Update Errors" root
+  echo $error
+  echo $$
+fi;
+rm /tmp/clam.$$

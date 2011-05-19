@@ -1,0 +1,45 @@
+#!/usr/bin/perl
+
+use strict;
+
+my $prog_pppd     = "/usr/sbin/pppd";
+my $prog_tty      = "/usr/bin/tty";
+
+my $path_radiusclient_map = "/etc/radiusclient/port-id-map";
+
+my $port = `$prog_tty`;
+chomp ($port);
+
+my (%port_db);
+
+$port_db{'0'}="Async";
+$port_db{'2'}="ISDN";
+$port_db{'3'}="ISDN-V120";
+$port_db{'4'}="ISDN-V110";
+$port_db{'16'}="xDSL";
+
+my ($portid, $line, $ip_address, $ip_address_local, $conn_type, $pppdcmd,$porttype, $mtu ,$unitid);
+open (H, $path_radiusclient_map);
+while (($line = <H>) && (!$portid)) {
+  my @info = split (/\s+/, $line);
+  if ($info[0] eq $port) {
+    $portid = $info[1];
+    $ip_address=$info[2]; 
+    $ip_address_local=$info[3];
+    $conn_type=$info[4];
+    $porttype=$info[6];
+#    $porttype=$port_db{$info[6]};
+    $mtu=$info[7];
+  }
+}
+close (H);
+
+$unitid=$portid+6;
+if ($conn_type eq "dial") {
+  $pppdcmd ="$prog_pppd plugin radius.so plugin radattr.so porttype $porttype auth require-pap " .
+                       "$ip_address_local:$ip_address ipparam other proxyarp mtu $mtu unit $unitid";
+} else {
+  $pppdcmd ="$prog_pppd $ip_address_local:$ip_address ipparam other proxyarp mtu $mtu unit $unitid";
+}
+
+exec ($pppdcmd);

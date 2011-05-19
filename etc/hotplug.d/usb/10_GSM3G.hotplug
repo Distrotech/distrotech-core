@@ -1,0 +1,14 @@
+#!/bin/sh
+
+cd /etc/hotplug.d
+. ./hotplug.functions
+  
+if [ ! -e /sys/$DEVPATH/ttyUSB0 ] || [ ! -e "/sys/$DEVPATH/driver/module/drivers/usb:option" ];then
+ exit
+fi
+
+case $ACTION in
+  add)/etc/ifconf/pppup.ppp3g;;
+  remove)kill -9 `cat /var/run/ppp5.pid `;;
+  *)exit 1;;
+esac

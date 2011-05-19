@@ -1,0 +1,26 @@
+[ivr-default]
+;Due to the internal extension handleing please use 
+;_AX, where A is any first digit or dtmf wildcard to match 2 digit numbers
+;_AXX, where A is any first digit or dtmf wildcard to match 3 digit numbers
+;_AXXX, where A is any first digit or dtmf wildcard to match 4 digit numbers
+
+;The system will determine if more than one digit is required before passing call
+;this is done testing for A0 A00 A000 when the first digit is recived.
+;the least significant digit must match 0 for this logic to work.
+;see the timeout extension bellow for handling extra digits as the system will pass on the call
+;as soon as a possible match is found 
+
+;this is a valid extension
+exten => _XXXX,1,GotoIF(${EXISTS(${ODBC_SQL(name,users,name,${EXTEN})})}?intext,${EXTEN},1:i,1)
+
+;this is a valid queue
+exten => _5XX,1,GotoIf($[${QUEUE_MEMBER_COUNT(${EXTEN})} > 0]?queues,${EXTEN},1:t,1)
+
+;this is a valid meet me
+exten => _9XX,1,MeetMeCount(${EXTEN},MMCNT)
+exten => _9XX,n,GotoIf($[${MMCNT} > 0]?joinmm:t,1)
+exten => _9XX,n+1(joinmm),Macro(confcall,${EXTEN})
+
+exten => t,n,Goto(autoattendant,prompt,wait)
+
+exten => i,1,Goto(autoattendant,prompt,invalid)

@@ -1,0 +1,63 @@
+<html>
+<head>
+<title>Win95/98/Me Setup</title>
+<base target="content">
+
+<link rel=stylesheet type=text/css href=../netsentry.css>
+</head>
+
+<body>
+<script language="JavaScript">
+  NavOver=(((navigator.appName == "Netscape") &&
+    (parseInt(navigator.appVersion) >= 3 )) ||
+    ((navigator.appName == "Microsoft Internet Explorer") &&
+    (parseInt(navigator.appVersion) >= 4 )));
+
+  function IMGLoad(img) {
+    var a=new Image();
+    a.src=img;
+    return a;
+  }
+  if(NavOver) {
+    home1=IMGLoad("../images/home_a.gif");
+    home2=IMGLoad("../images/home.gif");
+    xpset1=IMGLoad("../images/winxp_a.gif");
+    xpset2=IMGLoad("../images/winxp.gif");
+    poledit1=IMGLoad("images/xppol_a.gif");
+    poledit2=IMGLoad("images/xppol.gif");
+    dom1=IMGLoad("images/xpdom_a.gif");
+    dom2=IMGLoad("images/xpdom.gif");
+  }
+</SCRIPT>
+<table border="0" width="170" cellspacing="0" cellpadding="0">
+  <tr>
+    <td width="190" height="181" align="middle">
+      <p align="center"><img border="0" src="../images/Sentry.gif" width="129" height="181"></td>
+  </tr>
+  <tr>
+    <td align=MIDDLE>
+      <p align=center>
+      <a href="../index.html" language="JavaScript" target=_top
+      onmouseover="if(NavOver) document['home'].src=home1.src"
+      onmouseout="if(NavOver) document['home'].src=home2.src"><img src="../images/home.gif" 
+      width="140" height="35" 
+      border="0" alt="Home Page" name="home"></a><br><a href="xpsetup.html" language="JavaScript"
+      onmouseover="if(NavOver) document['xpset'].src=xpset1.src"
+      onmouseout="if(NavOver) document['xpset'].src=xpset2.src"><img src="../images/winxp.gif" 
+      width="140" height="35" 
+      border="0" alt="Home Page" name="xpset"></a><br><a href="xppol.html" 
+      language="JavaScript" target=content
+      onmouseover="if(NavOver) document['poledit'].src=poledit1.src"
+      onmouseout="if(NavOver) document['poledit'].src=poledit2.src"><img src="images/xppol.gif"
+      width="140" height="35" border="0" alt="Network Setup" name="poledit"></a><BR><a href="xpdom.html" 
+      language="JavaScript" target=content
+      onmouseover="if(NavOver) document['xpdom'].src=dom1.src"
+      onmouseout="if(NavOver) document['xpdom'].src=dom2.src"><img src="images/xpdom.gif"
+      width="140" height="35" border="0" alt="User Profiles" name="xpdom"></a>
+      </P>
+    </td>
+  </tr>
+</table>
+</body>
+
+</html>

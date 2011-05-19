@@ -1,0 +1,37 @@
+#!/bin/bash
+
+UNAME=${1}
+
+UNUM=`wbinfo -i ${UNAME} |cut -d: -f3`
+USID=`wbinfo -n ${UNAME} |awk '{print $1}'`
+
+LPW="-U admin -Y PLAIN -w "`cat /etc/mail/ldap`""
+echo ${UNUM} - ${USID}
+
+#ldapsearch '(&(uidnumber=525519)(!(sambaSID=S-1-5-21-184834609-970553407-1726288727-34559)))' sambasid
+
+wbinfo -i ${UNAME} |awk -F: '{printf "ldapsearch -U admin -Y PLAIN -w \"`cat /etc/mail/ldap`\" \"(&(!(uidnumber=%s))(uid=%s))\" dn 2>/dev/null\n",$0,$3,$1}' |sh |grep -E "^dn:" |sed -e "s/dn:\(.*\),dc=.*/ldapdelete -U admin -Y PLAIN -w "`cat /etc/mail/ldap`" \1 2>\/dev\/null/" 
+wbinfo -n ${UNAME}  |awk -v UN=${UNAME} '{printf "ldapsearch -U admin -Y PLAIN -w \"`cat /etc/mail/ldap`\" \"(&(sambasid=%s)(!(uid=%s)))\" dn 2>/dev/null\n",$1,UN}' |sh |grep -E "^dn:" |sed -e "s/dn:\(.*\),dc=.*/ldapdelete -U admin -Y PLAIN -w "`cat /etc/mail/ldap`" \1 2>\/dev\/null/" 
+
+(wbinfo -i ${UNAME} |awk -F: '{printf "ldapsearch -U admin -Y PLAIN -w \"`cat /etc/mail/ldap`\" \"(&(!(uidnumber=%s))(uid=%s))\" dn \n",$0,$3,$1}' |sh |grep -E "^dn:" |sed -e "s/dn:\(.*\),dc=.*/ldapdelete -U admin -Y PLAIN -w "`cat /etc/mail/ldap`" \1/" |sh
+wbinfo -n ${UNAME}  |awk -v UN=${UNAME} '{printf "ldapsearch -U admin -Y PLAIN -w \"`cat /etc/mail/ldap`\" \"(&(sambasid=%s)(!(uid=%s)))\" dn\n",$1,UN}' |sh |grep -E "^dn:" |sed -e "s/dn:\(.*\),dc=.*/ldapdelete -U admin -Y PLAIN -w "`cat /etc/mail/ldap`" \1/" |sh) 2>/dev/null
+
+if [ ! "`(ldapsearch ${LPW} "(&(uidnumber=${UNUM})(sambasid=${USID}))" |grep -E "^dn:") 2>/dev/null`" ];then
+  (cat <<_EOF_
+dn: sambaSID=${USID},ou=idmap
+changetype: add
+objectClass: sambaSidEntry
+objectClass: sambaIdmapEntry
+uidNumber: ${UNUM}
+sambaSID: ${USID}
+
+_EOF_
+) |ldapadd ${LPW} 2> /dev/null
+fi;
+
+nscd -i passwd
+wbinfo -i ${UNAME} |awk -F: '$1 != "" {printf "sleep 2;/usr/sbin/idmapsync %s %s \"%s\"\n",$3,$1,$5}' |sh
+fixbox ${UNAME}
+(rm /var/spool/mail/${UNAME:0:1}/${UNAME:1:1}/${UNAME}/dovecot.index*
+rm /var/spool/mail/${UNAME:0:1}/${UNAME:1:1}/${UNAME}/ushared/*/.INBOX/dovecot.index*) 2>/dev/null
+

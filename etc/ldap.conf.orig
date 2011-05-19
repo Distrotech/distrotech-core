@@ -1,0 +1,33 @@
+master_host ****
+uri ldaps://127.0.0.1 ****
+ldap_version 3
+port 636
+
+timelimit 10
+
+nss_paged_results yes
+idle_timelimit 5
+bind_timelimit 2
+
+sasl_secprops none
+#sasl_authid admin
+rootuse_sasl no
+
+tls_checkpeer no
+tls_ciphers HIGH
+tls_cacertdir /etc/ipsec.d/certs/
+#tls_cacertfile /etc/ipsec.d/cacerts/cacert.pem
+tls_key /etc/openssl/serverkey.pem
+tls_cert /etc/openssl/server.signed.pem
+
+binddn ****
+bindpw ****
+base ****
+
+bind_policy soft
+nss_connect_policy persist
+
+pam_filter objectclass=posixAccount
+pam_login_attribute uid
+pam_password crypt
+pam_member_attribute gidNumber

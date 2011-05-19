@@ -1,0 +1,3 @@
+*Edit capi.conf to add controllers
+*Add SIP Users to sip.conf
+*Add User To voicemail.conf

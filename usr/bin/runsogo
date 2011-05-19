@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [ ! -e /var/run/sogo/sogo.pid ];then
+  source /usr/GNUstep/System/Library/Makefiles/GNUstep.sh
+  /usr/GNUstep/Local/Tools/Admin/sogod
+fi;
+
+if [ ! -e /var/run/sogo/memcached.pid ];then
+  echo $$ > /var/run/sogo/memcached.pid
+  exec /usr/bin/memcached
+fi;

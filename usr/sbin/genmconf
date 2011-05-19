@@ -1,0 +1,46 @@
+#!/usr/bin/perl
+
+open(IT,"/etc/inittab");
+while (($line=<IT>) && (! $eosf)) {
+  chop $line;
+  push(@sysit,$line);
+  if ($line eq "#EOF") {
+    $eosf=true;
+  }
+}
+close(IT);
+
+open(IT,">/etc/inittab");
+foreach $line (@sysit) {
+  print IT "$line\n";
+}
+print IT "\n";
+
+open(MC,">/etc/mgetty.conf");
+
+print MC<<__EOF__;
+debug 4
+speed 38400
+data-only y
+__EOF__
+
+$itcnt=0;
+
+open(PM,"/etc/radiusclient/port-id-map");
+while(<PM>) {
+  @pdata=split(/\s+/,$_);
+  if (substr($pdata[0],0,1) ne "#") {
+    print IT "ML$itcnt:3:respawn:/usr/sbin/mgetty $pdata[0]\n";
+    print MC "port @pdata[0]\n  speed @pdata[5]\n";
+    if ($pdata[4] ne "dial") {
+      print MC "  direct y\n";
+    }
+  }
+  print MC "\n";
+  $itcnt++;
+}
+
+close(PM);
+close(MC);
+close(IT);
+

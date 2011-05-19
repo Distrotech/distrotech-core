@@ -1,0 +1,16 @@
+#!/bin/bash
+
+for t1 in a b c d e f g h i j k l m n o p q r s t u v w x y z A B C D E F G H I J K L M N O P Q R S T U V W X Y Z 0 1 2 3 4 5 6 7 8 9 ;do 
+  for t2 in a b c d e f g h i j k l m n o p q r s t u v w x y z A B C D E F G H I J K L M N O P Q R S T U V W X Y Z 0 1 2 3 4 5 6 7 8 9 ;do 
+    if [ ! -d "/var/spool/mail/$t1/$t2" ];then
+      mkdir -p /var/spool/mail/$t1/$t2
+    fi;
+    chmod 1777 /var/spool/mail/$t1/$t2
+    chown root.root /var/spool/mail/$t1/$t2
+  done;
+done;
+
+chmod 755 /var/spool/mail/*
+chown root.root /var/spool/mail/*
+
+cut -d: -f1 /etc/passwd |awk '{print "if [ -e \"/var/spool/mail/"$1"\" ];then mv \"/var/spool/mail/"$1"\" \"/var/spool/mail/"substr($1,1,1)"/"substr($1,2,1)"/"$1"\";fi"}' |sh

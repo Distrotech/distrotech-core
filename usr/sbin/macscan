@@ -1,0 +1,4 @@
+#!/bin/bash
+ip -o -f inet addr |awk '$5 == "brd" {print "ping -c 10 "$6" &"}' |sh > /dev/null 2>&1
+sleep 10
+arp -an 2>/dev/null

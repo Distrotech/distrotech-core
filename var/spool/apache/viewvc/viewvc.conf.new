@@ -1,0 +1,15 @@
+[general]
+svn_roots = projects : /var/spool/svn
+[utilities]
+[options]
+root_as_url_component = 1
+authorizer = svnauthz
+hide_cvsroot = 1
+[templates]
+[cvsdb]
+[vhosts]
+[authz-forbidden]
+[authz-forbiddenre]
+[authz-svnauthz]
+authzfile = /var/spool/svn/access
+[query]

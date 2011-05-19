@@ -1,0 +1,9 @@
+/dev/sda3 / ext3 rw,acl 0 0
+none /tmp tmpfs rw 0 0
+bindfs /var/web fuse.bindfs rw,nosuid,nodev,allow_other,default_permissions 0 0
+devpts /dev/pts devpts rw 0 0
+usbfs /proc/bus/usb usbfs rw 0 0
+nfsd /proc/fs/nfsd nfsd rw 0 0
+/dev/loop0 /mnt/dev ext2 rw 0 0
+proc /mnt/dev/proc proc rw 0 0
+sysfs /mnt/dev/sys sysfs rw 0 0

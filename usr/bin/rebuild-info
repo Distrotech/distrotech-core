@@ -1,0 +1,9 @@
+#!/bin/bash
+
+(for infdir in /usr/info /usr/share/info;do
+  cd $infdir
+  rm dir;
+  for info in *;do
+    install-info $info dir;
+  done 
+done) > /dev/null 2>&1

@@ -1,0 +1,16 @@
+#!/bin/bash
+
+if [ -e /var/run/crond.pid ];then
+  if [ ! -s /var/run/crond.pid ];then
+    killall -9 crond > /dev/null 2>&1
+   elif [ ! -d /proc/`cat /var/run/crond.pid` ];then
+    killall -9 crond > /dev/null 2>&1
+  fi;
+ else
+  killall -9 crond > /dev/null 2>&1
+fi;
+
+if [ ! "`pidof crond`" ];then
+  echo $$ > /var/run/crond.pid
+  exec /usr/sbin/crond -f >> /var/log/cron 2>&1
+fi

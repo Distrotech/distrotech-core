@@ -1,0 +1,78 @@
+#!/usr/bin/perl
+
+#    Copyright (C) 2002  <Gregory Hinton Nietsky>
+#    Copyright (C) 2005  <ZA Telecomunications>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+use Net::LDAPS;
+use Crypt::PasswdMD5;
+use MIME::Base64;
+
+open(LCON,"/etc/ldap.conf");
+while(<LCON>) {
+  chop $_;
+  @centry=split(/\s/,$_);
+  if (@centry[0] eq "master_host") {
+    $host=@centry[1];
+  } elsif (@centry[0] eq "binddn") {
+    $binddn=@centry[1];
+  } elsif (@centry[0] eq "bindpw") {
+    $password=@centry[1];
+  }
+}
+$ldap = Net::LDAPS->new($host,port=>"636",verify => 'none',timeout => "10");
+$ldap->bind($binddn,password => $password);
+
+#
+# Create SSH Authorised Users
+#
+
+$adminuser = $ldap->search(base=>"cn=admin access,ou=Admin",filter => "member=*",attrs=>['member']);
+$adminmem=$adminuser->shift_entry;
+@memadmin=$adminmem->get_value("member");
+$admincnt=0;
+
+open(WA,">/tmp/webauth");
+foreach $auser (@memadmin) {
+  $mesg = $ldap->search(base=>"$auser",filter =>"(&(uid=*)(userCertificate=*)(|(objectclass=inetorgperson)(objectclass=usercertstore)))",attrs=>['userCertificate','uid','cn']);
+  if ($mesg->count > 0) {
+    $admincnt++;
+    while($entry=$mesg->shift_entry) {
+      $dn=$entry->dn;
+      if ($memdone{$dn} ne "1") {
+        $memdone{$dn}=1;
+        $cert=$entry->get_value("userCertificate;binary");
+        $uid=$entry->get_value("uid");
+        $cn=$entry->get_value("cn");
+        print WA $cn . ":xxj31ZMTZzkVA\n";
+
+        open(CD1,"|/usr/bin/openssl x509 -inform der -pubkey -noout |/usr/bin/pubkey2ssh - \"$uid - $cn\"");
+        print CD1 $cert;
+        close(CD1);
+      }
+    }
+  }
+}
+close(WA);
+
+#Dont Add Server Pub Key If There Admins.
+#open(SPK,"/root/.ssh/server.key.pub");
+#while(<SPK>) {
+#  print $_;
+#}
+#close(SPK);
+
+$ldap->unbind;

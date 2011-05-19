@@ -1,0 +1,169 @@
+<head>
+<link rel=stylesheet type=text/css href=../netsentry.css>
+<title>Partition Creation</title></head>
+<CENTER>
+<TABLE WIDTH=80% CELLSPACING=10>
+<TR><TD ALIGN=CENTER>
+<IMG SRC=images/inst1.png>
+</TD></TR><TR><TD ALIGN=LEFT>
+<UL>
+<LI>Before The System Can Be Installed The Hard Drive(s) Needs To Be Prepared Or Partitioned</LI>
+<LI>This Involves Allocating Areas Of The Disk For Swap Space (Virtual Memory) And Data Storage</LI>
+<LI>We Recommend Allocating At Least One 128M Partition To Virtual Memory</LI>
+<LI>The Data Partitions Will Depend On The Hard Drive(s) And Requirements Of The System</LI>
+<LI>There Is No Substantial Benefit In Creating Many Partitions On A Single Disk</LI>
+<LI>Some Systems Are Not Able To Address Large Hard Drives In This Case Create A 64Mb Data Partition To Be Mounted As /boot Latter</LI>
+<LI>Here Is A List Of Data Areas You May Want To Partition</LI>
+<UL>
+<LI>/ This Is The Beginning Of Your File System (Root Directory) And Has To Exist And Be Marked Bootable Unless A /boot Partition 
+Is Defined</LI>
+<LI>/boot This Is Where The Kernel Is Stored And Must Be Marked Bootable If Defined</LI>
+<LI>/var This Is Where All The Data Is Stored IE Mail Boxes, Incoming/Outgoing Mail, File
+  Server And Proxy Server And Requires As Much 
+Space As Possible</LI>
+<LI>/var/home User Home Directories And Profiles It Is A Good Idea To Have A Alternate Drive For This Data Area</LI>
+<LI>/var/spool/samba This Is The Location Of The File Server Once Again It Is Good Practice To Store This On A
+  Separate Disk</LI>
+<LI>/var/spool/squid This Is Where Cached Files Are Stored And Should Be 20% Bigger Than The Size Assigned For This Purpose In The 
+Management Console</LI>
+<LI>/var/spool/apache All Files Associated For The Web Server</LI>
+<LI>/var/spool/mail All Users Mail Is Stored In This Area , Required Size Depends On Number Of Users And Mail Policy</LI>
+</UL>
+</UL>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER>
+<IMG SRC=images/inst2.png>
+</TD></TR><TR><TD ALIGN=LEFT>
+<UL>
+<LI>Once You Have Selected The Fdisk Option You Will Need To Select A Disk To Partition (This Must Be Repeated For Each Disk)</LI>
+<LI>The Following Table Maps Familiar Drives To Linux Devices</LI>
+<LI>If Your SCSI Drives Are Not Shown Load The Appropriate Driver (See The Drivers Section)</LI>
+<UL>
+<LI>Primary Master /dev/hda</LI>
+<LI>Primary Slave /dev/hdb</LI>
+<LI>Secondary Master /dev/hdc</LI>
+<LI>Secondary Slave /dev/hdd</LI>
+</UL>
+</UL>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER>
+<IMG SRC=images/inst3.png>
+</TD></TR><TR><TD ALIGN=LEFT>
+<UL>
+<LI>If This Is The First Time You Configuring The System Select Yes</LI>
+<LI>If You Select No You Will Be Able To Edit The Partition Table</LI>
+</UL>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER>
+<IMG SRC=images/inst4.png>
+</TD></TR><TR><TD ALIGN=LEFT>
+<UL>
+<LI>The Fdisk Program Is Really Straight Forward And Uncomplicated Showing You The Disk Information And
+  Partitions</LI>
+<LI>You Will Create New Partions On The Free Space (Highlighted) Write The Partitions And Quit The Program</LI>
+</UL>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER>
+<IMG SRC=images/inst5.png>
+</TD></TR><TR><TD ALIGN=LEFT>
+<UL>
+<LI>By Selecting New You Are Given A Choice Of Options When Possible Only Use Primary Partitions (Only 4 Per Disk Available) A Logical 
+Partition Allows You To Create Extended Partitions Within The Space Allocated To The Logical Partition</LI>
+<UL>
+</ul>
+</ul>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER>
+<IMG SRC=images/inst6.png>
+</TD></TR><TR><TD ALIGN=LEFT>
+<UL>
+<LI>Enter The Size To Create In This Case 128 Mb To Be Used As Swap Space</LI>
+</UL>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER>
+<IMG SRC=images/inst7.png>
+</TD></TR><TR><TD ALIGN=LEFT>
+<UL>
+<LI>We Are Able To Create Partitions At The Beginning Or The End Of The Free Space It Is
+  Recommended To Always Use The Beginning</LI>
+</UL>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER>
+<IMG SRC=images/inst8.png>
+</TD></TR><TR><TD ALIGN=LEFT>
+<UL>
+<LI>On Linux Systems We Use The Linux Partition Type There Are Many Other Types As You Will
+  See. When We Create Swap Swap Space The 
+Type Needs To Change To Linux Swap</LI>
+<LI>Highlight The Partition To Change Select Type A List Of Types Will Be Displayed</LI>
+</UL>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER>
+<IMG SRC=images/inst9.png>
+</TD></TR><TR><TD ALIGN=LEFT>
+<UL>
+<LI>Press Any Key To Continue</LI>
+<LI>We Are Only Interested With Types 82,83,85</LI>
+<UL>
+</ul>
+</ul>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER>
+<IMG SRC=images/inst10.png>
+</TD></TR><TR><TD ALIGN=LEFT>
+<UL>
+<LI>Enter The Type Required In This Case 82</LI>
+</UL>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER>
+<IMG SRC=images/inst11.png>
+</TD></TR><TR><TD ALIGN=LEFT>
+<UL>
+<LI>Once Successfully Added Select Free Space To Allocate The Next Partition Repeat This
+  Process Till All Required Space Is Allocated</LI>
+</UL>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER>
+<IMG SRC=images/inst12.png>
+</TD></TR><TR><TD ALIGN=LEFT>
+<UL>
+<LI>Specify The Size To Allocate For New Partition</LI>
+</UL>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER>
+<IMG SRC=images/inst13.png>
+</TD></TR><TR><TD ALIGN=LEFT>
+<UL>
+<LI>If You Are Not Going To Allocate A /boot Partition Mark The / Partition Bootable By Selecting Bootable</LI>
+</UL>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER>
+<IMG SRC=images/inst14.png>
+</TD></TR><TR><TD ALIGN=LEFT>
+<UL>
+<LI>Once All Required Partitions Are Allocated You Will Have To Activate The Partition Table By Selecting Write</LI>
+<LI>You Will Be Warned About Data Loss And Prompted For A Reply Type In "yes" And Press Enter</LI>
+</UL>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER>
+<IMG SRC=images/inst15.png>
+</TD></TR><TR><TD ALIGN=LEFT>
+<UL>
+<LI>All That Is Left To Do Is Quit And Start The Process Over For The Next Disk Until All Disks Are Partitioned</LI>
+</UL>
+</TD></TR>
+</TABLE>

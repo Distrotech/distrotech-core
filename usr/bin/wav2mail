@@ -1,0 +1,62 @@
+#!/bin/bash
+
+WAVFILE=$1
+SRC=$2
+DST=$3
+DOMAIN=$4
+MAILTO=$5
+
+TEST=""
+while [ ! -e /var/spool/asterisk/monitor/${WAVFILE}.WAV ] && [ "${TEST}" != "XXXXXXXXXX" ];do
+  TEST=${TEST}X
+  sleep 1
+done;
+
+if [ ! -e /var/spool/asterisk/monitor/${WAVFILE}.WAV ];then
+  exit
+fi
+
+sleep 4
+
+TEXT=`(cat << __EOF__
+Auto voice recording from ${SRC} to ${DST}.
+
+The attached file contains the wav recording.
+__EOF__
+) |uuenview -q - +`
+
+(cat <<__EOF__
+From: "Auto Voice Recording From ${SRC} To ${DST}" <asterisk@${DOMAIN}>
+To: ${MAILTO}
+Subject: Auto Voice Recording From ${SRC} To ${DST}
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+        boundary="----_=_NextPart_${WAVFILE}"
+Status: R
+
+This is a multi-part message in MIME format.
+
+------_=_NextPart_${WAVFILE}
+Content-Type: text/plain;
+        charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+${TEXT}
+
+------_=_NextPart_${WAVFILE}
+Content-Type: audio/x-wav;
+        name="${WAVFILE}.WAV"
+Content-Transfer-Encoding: base64
+Content-Description: Auto Voice Recording From ${SRC} To ${DST}
+Content-Disposition: attachment;
+        filename="${WAVFILE}.WAV"
+
+__EOF__
+
+/usr/bin/uuenview -b /var/spool/asterisk/monitor/${WAVFILE}.WAV
+
+cat <<__EOF__
+
+------_=_NextPart_${WAVFILE}--
+__EOF__
+) |sendmail -t -f asterisk@${DOMAIN}

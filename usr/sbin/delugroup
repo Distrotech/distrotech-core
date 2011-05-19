@@ -1,0 +1,43 @@
+#!/usr/bin/perl
+
+use Net::LDAPS;
+
+open(LCON,"/etc/ldap.conf");
+while(<LCON>) {
+  chop $_;
+  @centry=split(/\s/,$_);
+  if (@centry[0] eq "master_host") {
+    $host=@centry[1];
+  } elsif (@centry[0] eq "binddn") {
+    $binddn=@centry[1];
+  } elsif (@centry[0] eq "bindpw") {
+    $password=@centry[1];
+  }
+}
+
+$ldap = Net::LDAPS->new($host,port=>"636",verify => 'none',timeout => "10");
+$ldap->bind($binddn,password => $password);
+
+($gid)=getgrnam(@ARGV[1]);
+if ($gid ne @ARGV[1]) {
+  exit 255;
+}
+
+($uid)=getpwnam(@ARGV[0]);
+if ($uid ne @ARGV[0]) {
+  exit 255;
+}
+
+$mesg = $ldap->search(base=>"ou=Groups",filter =>"(cn=" . @ARGV[1] . ")",attrs=>['cn']);
+
+if ($mesg->count ne "1") {
+  exit 255;
+}
+
+$entry = $mesg->shift_entry;
+
+$res=$ldap->modify($entry->dn,delete => { memberuid => @ARGV[0] });
+$err=$res->error;
+
+#sleep 5;
+#`/usr/sbin/nscd -i group`

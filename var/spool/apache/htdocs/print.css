@@ -1,0 +1,171 @@
+body {
+	background-color: white;
+	color: #000000;
+}
+a:link {
+	color: black;
+}
+td {
+	color: black;
+	font-weight:normal;
+	font-size:12;
+	font-family:arial;
+	text-decoration: none;
+	border: solid black 1px;
+}
+th {
+	color: black;
+	font-weight:bold;
+	font-size:14;
+	font-family: Arial, Helvetica, sans-serif;
+	text-decoration: none;
+	vertical-align: middle;
+	border: solid black 1px;
+}
+.table-cell1 {
+	font-size: 12;
+	font-weight: normal;
+}
+.list-color1 {
+	background-color: white;
+}
+.list-color2 {
+	background-color: white;
+}
+.option-green {
+	border: solid black 1px;
+	color: #FFFFFF;
+	background-color: green;
+}
+.option-red {
+	border: solid black 1px;
+	color: #FFFFFF;
+	background-color: #d33831;
+}
+.menu-color1 {
+	color: #222244;
+	background-color: #7875a3;
+	font-weight:normal;
+	font-size:10;
+	font-family:arial;
+	text-decoration: none;
+	padding-left:5;
+	padding-right:5;
+	vertical-align:middle;
+	border: solid black 0px;
+}
+.menu-color2 {
+	color: #222244;
+	background-color: #d33831;
+	font-weight:normal;
+	font-family:arial;
+	font-size: 10;
+	color:#FFFFFF;
+	text-decoration:underline;
+	padding-left:5;
+	padding-right:5;
+	vertical-align:middle;
+	border: solid black 0px;
+}
+.hintsClass {
+	text-align: center;
+	font-family: Verdana, Arial, Helvetica;
+}
+.hint {
+	border-style: solid;
+	border-color: black;
+	background: white;
+	background-color: #FFFF99;
+	width:350px;
+	margin:0px;
+	padding:0px;
+	border-width: 2px;
+}
+td.main-menu {
+        height:20;
+	background-color: #7875a3;
+	border: solid black 0px;
+}
+.heading-body {
+	font-size: 20;
+	font-style:italic;
+	font-weight:bold;
+}
+.heading-body2 {
+	font-size: 12;
+	font-weight:bold;
+}
+a:active {
+	text-decoration: none;
+}
+a:hover {
+	text-decoration: none;
+	font-weight: bold;
+}
+.heading-body a:active {
+	text-decoration: none;
+}
+.heading-body a:hover {
+	text-decoration: none;
+	font-weight: lighter;
+}
+.heading-body2 a:active {
+	text-decoration: none;
+}
+.heading-body2 a:hover {
+	text-decoration: none;
+	font-weight: lighter;
+}
+.table-cell1 a:active {
+	text-decoration: none;
+}
+.table-cell1 a:hover {
+	text-decoration: none;
+	font-weight: bold;
+}
+td.head-logo {
+	height:117;
+	border: solid black 0px;
+	background-color: rgb(51,59,59);
+}
+td.heading1 {
+	width:250px;
+	height:150;
+	vertical-align:middle;
+}
+td.heading2 {
+	width:100%;
+	height:150;
+	vertical-align:middle;
+}
+tr.heading {
+	width:100%;
+	height:150;
+	vertical-align:middle;
+}
+td.side-menu {
+	border: solid black 0px;
+	width: 165;
+}
+td.main-body {
+	padding-top:10;
+	vertical-align:middle;
+	border: solid black 0px;
+}
+td.logo {
+	padding-right:25px;
+	width:100%;
+	height:25px;
+	vertical-align:bottom;
+}
+table.heading {
+	width:100%;
+	padding:0;
+}
+table.userinfo {
+	width:90%;
+	padding-top:0;
+}
+h1 {
+	color: rgb(0, 128, 0);
+}

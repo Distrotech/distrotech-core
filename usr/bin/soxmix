@@ -1,0 +1,7 @@
+#!/bin/bash
+
+/usr/bin/sox -m $1 $2 $3
+if [ -d /var/spool/asterisk/monitor.bak ];then
+  BACKBASE=`echo $3 |sed -e "s/\/monitor\//\/monitor.bak\//"`
+  /usr/bin/rsync -a $3 ${BACKBASE}
+fi;

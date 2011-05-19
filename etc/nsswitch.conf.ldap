@@ -1,0 +1,4 @@
+hosts:          files dns ldap wins
+passwd:		files ldap winbind
+shadow:		files ldap
+group:		files ldap winbind

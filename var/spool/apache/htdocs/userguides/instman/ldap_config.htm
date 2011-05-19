@@ -1,0 +1,75 @@
+<html>
+
+<head>
+<title>LDAP Config</title>
+<link rel=stylesheet type=text/css href=../netsentry.css>
+</head>
+
+<body>
+<TABLE WIDTH=100% CELLSPACING=10>
+<TR><TD ALIGN=CENTER VALIGN=MIDDLE><IMG SRC=images/olselect.png></TD></TR>
+<TR><TD ALIGN=LEFT VALIGN=MIDDLE>
+<UL>
+<li>Open Outlook Click On Tools Then Accounts</li>
+</ul>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER VALIGN=MIDDLE><IMG SRC=images/olldapsel.png></TD></TR>
+<TR><TD ALIGN=LEFT VALIGN=MIDDLE>
+<UL>
+<li>Click On Add 
+<li>Select The Directory Service Option </li>
+<li>You Need To Add A Different "Account" For Each Address Book You Need Access To</LI>
+</ul>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER VALIGN=MIDDLE><IMG SRC=images/olldapserv.png></TD></TR>
+<TR><TD ALIGN=LEFT VALIGN=MIDDLE>
+<ul>
+  <li>Enter The Address Of Your Firewall The Full Name Hostname And Doamin Ie firewall.company.co.za</li>
+  <li>You Will Need To Logon To Protect Access From Unauthorised Users On The Internet,Tick My LDAP Server Requires 
+  Logon</li>
+</ul>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER VALIGN=MIDDLE><IMG SRC=images/olldapauth.png></TD></TR>
+<TR><TD ALIGN=LEFT VALIGN=MIDDLE>
+<ul>
+  <li>Your Username Must Be In The Form Of A LDAP DN There Are Two Posibilities</li>
+  <UL>
+    <LI>I Need Access To Address Books With Read Access For All Users.Your Login Will Be uid=&lt;USERNAME&gt;,ou=user</LI>
+    <LI>I Have Access To A Closed Address Book.Your Login Will Be cn=&lt;USERNAME&gt;,ou=users,cn=&lt;ADDRESSBOOK&gt;.</LI>
+  </UL>
+  <li>Do Not Select Secure Password Authentication</li>
+</ul>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER VALIGN=MIDDLE><IMG SRC=images/olldapcheck.png></TD></TR>
+<TR><TD ALIGN=LEFT VALIGN=MIDDLE>
+<ul>
+  <li>Select Yes To Enable This Feature (Recomended)</li>
+</ul>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER VALIGN=MIDDLE><IMG SRC=images/olldapfin.png></TD></TR>
+<TR><TD ALIGN=LEFT VALIGN=MIDDLE>
+<ul>
+  <li>Click Finish To Continue</li>
+  <li>Locate The Account You Have Just Created And Click The Properties Button</li>
+</ul>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER VALIGN=MIDDLE><IMG SRC=images/olldapssl.png></TD></TR>
+<TR><TD ALIGN=LEFT VALIGN=MIDDLE>
+<ul>
+  <li>Click On The Advanced Tab And Select &quot;This Server Requires A Secure
+    Connection&quot;</li>
+  <li>The Search Base Is The Begining Point Of The Address Book You Are Configureing For
+  The Search Base Is In The Form Of A LDAP DN ou=entries,cn=&lt;ADDRESSBOOK&gt;</LI>
+  <LI>The Search Base ou=users is the base of all configured users (those with email accounts on the server).</LI>
+</ul>
+</TD></TR>
+</TABLE>
+</body>
+
+</html>

@@ -1,0 +1,50 @@
+#
+# reserved values
+#
+255	local
+254	main
+253	default
+0	unspec
+#
+# local
+#
+#1	inr.ruhep
+25 Ipsec
+50 Static
+60 VPN
+75 zebra
+80 Link
+90 Mark_0
+95 3G
+100 Mark_1
+101 Mark_2
+102 Mark_3
+103 Mark_4
+104 Mark_5
+105 Mark_6
+106 Mark_7
+107 Mark_8
+108 Mark_9
+109 Mark_10
+110 Mark_11
+150 VPN0
+151 VPN1
+152 VPN2
+153 VPN3
+154 VPN4
+155 VPN5
+156 VPN6
+157 VPN7
+158 VPN8
+159 VPN9
+200 eth_0
+201 eth_1
+202 eth_2
+203 eth_3
+204 eth_4
+205 eth_5
+206 eth_6
+207 eth_7
+208 eth_8
+209 eth_9
+

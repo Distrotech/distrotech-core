@@ -1,0 +1,687 @@
+#!/bin/bash
+
+#    Copyright (C) 2002  <Gregory Hinton Nietsky>
+#    Copyright (C) 2005  <ZA Telecomunications>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+
+/sbin/udevd --daemon
+
+LKERNEL=`/usr/bin/uname -r`
+
+if [ ! -e /dev/null ];then
+  /bin/mknod -m 0666 /dev/null c 1 3
+fi;
+
+if [ ! -d /sys/block ];then
+  mount -t sysfs none /sys
+fi;
+
+if [ -e /etc/.install ];then
+  modprobe dm-mod
+#  dmraid -ay -i > /dev/null 2>&1
+fi;
+
+#Bring Up Loopback Device
+/sbin/ip addr add 127.0.0.1/8 dev lo
+/sbin/ip addr add 127.0.0.2/32 dev lo
+/sbin/ip link set dev lo up
+
+#Setup Dummy Default Gateway
+(/sbin/modprobe dummy
+/sbin/ip addr add 127.255.255.253/30 dev dummy0
+/sbin/ip link set dev dummy0 up
+/sbin/ip route add 127.255.255.252/30 src 127.255.255.253 dev dummy0 scope link table 80) > /dev/null 2>&1
+
+#Setup Welcome Message And Hostname
+if [ -e /etc/netsentry-version ];then
+  eval `cat /etc/netsentry-version`
+ else
+  eval `cat /install/netsentry-version`
+fi;
+
+if [ -e /etc/HOSTNAME ];then
+  /usr/bin/hostname -F /etc/HOSTNAME
+ else
+  if [ -e /etc/.networksentry-lite ];then
+    /usr/bin/hostname $HN_ADDR-lite
+   else
+    /usr/bin/hostname $HN_ADDR
+  fi
+fi;
+
+#Setup Disk Mapper
+/sbin/dmsetup mknodes
+
+#if [ "`/sbin/dmraid -c -sa -i | grep -iv "No RAID"`" ];then
+#  ln -s mapper/`/sbin/dmraid -c -sa -i` /dev/mda
+#  for mddev in /dev/mapper/`/sbin/dmraid -c -sa -i`? ;do 
+#    echo $mddev |awk '{printf "ln -s %s /dev/mda%s\n",substr($1,6),substr($1,length($1))}' |sh
+#  done
+#fi;
+
+if [ ! -d /dev/loop ];then
+  mkdir /dev/loop
+  for ldev in 0 1 2 3 4 5 6 7;do
+    mknod /dev/loop/$ldev b 7 $ldev;
+    if [ ! -e /dev/loop$ldev ];then
+      ln -s /dev/loop/$ldev /dev/loop$ldev;
+    fi;
+  done
+fi;
+
+if [ -e /etc/.install ];then
+  mount -f -t ext3 /dev/loop0 / > /dev/null 2>&1
+  mount -f -t ext3 /dev/ram5 /etc > /dev/null 2>&1
+
+  dd if=/dev/zero of=/dev/ram1 bs=1024 count=4096 > /dev/null 2>&1
+  dd if=/dev/zero of=/dev/ram2 bs=1024 count=256 > /dev/null 2>&1
+  dd if=/dev/zero of=/dev/ram3 bs=1024 count=4096 > /dev/null 2>&1
+
+  mke2fs -i 2048 /dev/ram1 4096 >/dev/null 2>&1
+  mke2fs -i 1024 /dev/ram2 256 > /dev/null 2>&1
+  mke2fs -i 1024 /dev/ram3 4096 > /dev/null 2>&1
+
+  mount /dev/ram1 /var > /dev/null 2>&1
+  mount /dev/ram2 /root > /dev/null 2>&1
+  mount /dev/ram3 /tmp > /dev/null 2>&1
+
+  mount -t proc none /proc > /dev/null 2>&1
+  mount -t devpts none /dev/pts > /dev/null 2>&1
+  mount -t tmpfs none /dev/shm > /dev/null 2>&1
+
+  #Scan And Load ATA Modules
+  for scard in `ls /lib/modules/${LKERNEL}/kernel/drivers/ata/  |grep -vE "(^lib)|(^ahci_platform)|(^pata_legacy)|(^pata_winbond)|(^pata_qdi)|(^ata_generic)" |cut -d. -f1`;do
+     modprobe $scard
+  done;
+  modprobe ata_generic
+
+  for vardir in log run lock tmp lib spool home state named empty logs net-snmp db;do
+    mkdir /var/$vardir
+  done;
+
+  mkdir /var/db/nscd
+  mkdir /var/run/nscd
+
+  for vlib in nfs  pcmcia  xdm  xkb;do
+    mkdir /var/lib/$vlib
+  done;
+
+  for vnlib in sm  sm.bak v4recovery;do
+    mkdir /var/lib/nfs/$vnlib
+  done;
+
+  for vlock in sm  sm.bak adsl;do
+    mkdir /var/lock/$vlock
+  done;
+
+  for logdir in tmp squid radius apache;do
+    mkdir /var/log/$logdir
+  done;
+
+  for spooldir in mail mqueue mqueue.in approxy apache mysql bulls mailscanner clientmqueue cron lpd avirus samba hylafax;do
+    mkdir /var/spool/$spooldir
+  done;
+
+  chmod 777 /var/spool/clientmqueue
+
+  chmod 755 /var/spool/hylafax
+  chown fax.fax /var/spool/hylafax
+  tar -C /var/spool/hylafax -xzf /install/faxspool.tgz
+  
+  mkdir /var/spool/mailscanner/incoming
+  mkdir /var/spool/mailscanner/quarantine
+  mkdir /var/spool/mailscanner/archive
+  mkdir /var/spool/apache/icons
+  mkdir /var/spool/cron/crontabs
+  mkdir /var/state/dhcp/
+  mkdir /var/state/saslauthd/
+
+  tar -C / -xzf /install/htdocs.tgz
+  if [ ! -d /var/spool/apache/htdocs/ns/config ];then
+    mkdir /var/spool/apache/htdocs/ns/config
+    mkdir /var/spool/apache/htdocs/ns/config/sslconf
+    mkdir /var/spool/apache/htdocs/ns/config/zones
+  fi;
+  mkdir /var/spool/apache/htdocs/userguides
+  tar -C /var/spool/apache/htdocs/userguides -xzf /install/userguide.tgz
+  ln -s /install/jre.exe /var/spool/apache/htdocs/
+
+  chmod 750 /var/log/squid
+  chmod 750 /var/spool/mailscanner/*
+  chmod 700 /var/spool/mqueue
+  chmod 775 /var/spool/samba
+  chown root.root /var/spool/samba
+  chmod 777 /var/spool/clientmqueue
+  chmod 750 /var/spool/apache/htdocs/ns/config
+  chmod 750 /var/spool/apache/htdocs/ns/config/zones
+  chmod 1777 /var/run
+  chmod 1777 /tmp
+  chmod -R 755 /var/log
+
+  chown smmsp.smmsp /var/spool/clientmqueue
+  chown www.www /var/spool/apache/htdocs/ns/config
+  chown www.www /var/spool/apache/htdocs/ns/config/zones
+  chown clamav.clamav /var/spool/mailscanner/*
+  chown -R clamav.clamav /var/spool/avirus
+  chown nobody.nogroup /var/log/squid
+  chown root.clamav /var/spool/mailscanner
+
+  touch /var/state/dhcp/dhcpd.leases
+
+  ln -s /install/icons/* /var/spool/apache/icons/
+
+  cp /etc/root.cache /var/named
+  cp /install/.profile_install /root/.profile
+  chmod 750 /root/.profile
+  echo "clear" > /root/.bash_logout
+
+  #Load Network Modules
+  for ADAPTER in `lspci -nm |awk -F\" -v LPATH=/lib/modules/${LKERNEL} '$2 == "Class 0200" {printf "grep -E \"%s.*%s\" %s/modules.pcimap\n",$4,$6,LPATH}' |sh |awk '{print $1}' |sort |uniq`;do 
+    if [ ! -d /sys/module/${ADAPTER} ];then
+      /sbin/modprobe $ADAPTER > /dev/null 2>&1
+    fi;
+  done
+
+  #Fire Up Device Discovery And Initilise Devices
+  /sbin/udevtrigger
+  /sbin/udevsettle
+
+  while [ "`ps ax |grep /sbin/hotplug |grep -v grep`" ] && [ "$time_out" != "XXXXXXXXXX" ];do
+    time_out=X$time_out
+    sleep 2;
+  done;
+
+  mount -a
+  /sbin/hdparm -c1 -d1 /dev/hd? > /dev/null 2>&1
+
+  /usr/sbin/syslogd &
+  /usr/sbin/klogd -c 1 &
+ else
+  /sbin/modprobe usbcore > /dev/null 2>&1
+
+  #Load IMQ Devices And Netfilter
+  (/sbin/modprobe imq numdevs=16
+  /sbin/modprobe lp) >/dev/null 2>&1
+
+  /sbin/modprobe -a -lt netfilter \*nf_nat* |awk -F/ '{printf "modprobe %s\n",substr($9,0,index($9,".")-1)}' |sh > /dev/null 2>&1
+  /sbin/modprobe -a -lt hwmon |awk -F/ '{printf "modprobe %s\n",substr($8,0,index($8,".")-1)}' |sh > /dev/null 2>&1
+  /sbin/modprobe -a -lt acpi |awk -F/ '{printf "modprobe %s\n",substr($8,0,index($8,".")-1)}' |sh > /dev/null 2>&1
+  /sbin/modprobe -a -lt dma |awk -F/ '{printf "modprobe %s\n",substr($8,0,index($8,".")-1)}' |sh > /dev/null 2>&1
+  /sbin/modprobe -a -lt cpu/cpufreq |awk -F/ '{printf "modprobe %s\n",substr($11,0,index($11,".")-1)}' |sh > /dev/null 2>&1
+
+  if [ -e /lib/modules/${LKERNEL}/extra/dazuko.ko.gz ];then
+    /sbin/modprobe dazuko >/dev/null 2>&1
+  fi;
+
+  #Probe For Additional Network Services
+  (/sbin/modprobe ppp_generic
+  /sbin/modprobe 8021q
+  /sbin/modprobe ipcomp
+  /sbin/modprobe ip_gre
+  /sbin/modprobe esp4
+  /sbin/modprobe ah4
+  /sbin/modprobe tun
+  /sbin/modprobe l2tp_ppp
+  /sbin/modprobe pppoe
+  /sbin/modprobe capability ) >/dev/null 2>&1
+
+  #Load CD/DVD Drives
+  /sbin/modprobe sr_mod
+
+  #Load Mouse Needed For Boom
+  /sbin/modprobe psmouse
+
+  #Turn Swap On
+  /sbin/swapon -a > /dev/null 2>&1
+
+  #load the vesa fb if no other fb is loaded 
+  if [ ! -e /dev/fb1 ];then
+     ls -l /lib/modules/${LKERNEL}/kernel/drivers/video/uvesafb.ko.gz > /dev/null 2>&1
+     if [ $? == 0 ];then
+        modprobe uvesafb
+     fi;
+  fi;
+
+  #Run File System Check On All Devices
+  /usr/bin/awk '$1 != "/dev/loop0" && $3 == "ext3" {printf "/sbin/e2fsck -C 0 -p %s\nERR=$?\nif [ $ERR -gt 1 ] && [ $ERR -lt 8 ];then\n  /sbin/e2fsck -C 0 -Dfy %s\n  /sbin/reboot\nfi\n\n",$1,$1,$1 }' /etc/fstab |/bin/bash 2>/dev/null
+
+  #Remount Root Device Read Write Deleteing Old mtab
+  mount -n -o remount,rw /
+  rm /etc/mtab
+  touch /etc/mtab
+  /usr/sbin/vgmknodes --refresh
+  mount / -f
+
+  #Set DMA/32bit On IDE Drives
+  /sbin/hdparm -c1 -d1 /dev/hd? > /dev/null 2>&1
+
+  #Set the basic NSS conf
+  if [ -e /etc/nsswitch.conf.boot ] && [ -e /etc/nsswitch.conf.ldap ];then
+    cp /etc/nsswitch.conf.boot /etc/nsswitch.conf
+  fi;
+
+  #Clean Out /tmp
+  (rm -rf /tmp/*
+   grep -E "^MemTotal" /proc/meminfo |awk '$2 >= 1048576 {print "mount -t tmpfs none /tmp\n"}' |sh
+   chmod 1777 /tmp)>/dev/null 2>&1
+
+  #Mount All Mount Points
+  mount -at ext3 > /dev/null 2>&1
+
+  #Startup Syslog
+  if [ -e /var/run/syslog.pid ];then
+    rm /var/run/syslog.pid
+  fi;
+  /usr/sbin/syslogd &
+  /usr/sbin/klogd -c 1 &
+
+  #Fire up web FUSE
+  if [ -x /usr/bin/bindfs ];then
+    modprobe fuse
+    if [ ! -d /var/web ];then
+      mkdir /var/web
+    fi;
+    /usr/bin/bindfs --create-for-regex="././([^/]+)" --create-with-perms=660,770 /var/home /var/web
+  fi;
+
+  #Link FD
+  ln -s /proc/self/fd /dev
+
+  #Configure And Load Zap Channels
+  if [ -e /etc/wanpipe/wanrouter.rc ];then
+    /usr/sbin/wanrouter start > /dev/null 2>&1
+    if [ -e /etc/wanpipe/smg_bri.conf ];then
+      /usr/sbin/smg_ctrl start > /dev/null 2>&1
+    fi;
+  fi;
+  if [ -e /lib/modules/${LKERNEL}/dahdi ];then
+    /sbin/modprobe dahdi_dummy >/dev/null 2>&1
+   else
+    /sbin/modprobe ztdummy >/dev/null 2>&1
+  fi;
+
+  #Housekeeping Delete Orphaned Files
+  if [ -e /etc/nologin ];then
+    rm /etc/nologin
+  fi;
+
+  if [ -e /etc/shutdownpid ];then
+    rm /etc/shutdownpid
+  fi;
+
+  rm /var/run/nscd/* > /dev/null 2>&1
+  rm /var/run/* > /dev/null 2>&1
+  chmod 1777 /var/run
+
+  if [ -e /var/lock/atalkd ];then
+    rm /var/lock/atalkd
+  fi; 
+
+  #Dns Server
+  rm /var/named/*.jnl > /dev/null 2>&1
+
+  #File Server
+  if [ -e /var/lock/gencache.tdb ];then
+    rm /var/lock/gencache.tdb
+  fi; 
+  if [ -e /var/lock/browse.dat ];then
+    rm /var/lock/browse.dat
+  fi; 
+  if [ -e /var/lock/wins.dat ];then
+    rm /var/lock/wins.dat
+  fi; 
+  if [ ! -d /var/lock/LCK..tts ];then
+    mkdir /var/lock/LCK..tts
+    chmod 1777 /var/lock/LCK..tts
+  fi;
+  if [ ! -d /var/lock/subsys ];then
+    mkdir /var/lock/subsys
+    chmod 777 /var/lock/subsys
+  fi;
+  if [ -d /etc/samba ];then
+    rm /etc/samba/winbindd_*.tdb > /dev/null 2>&1
+  fi;
+  if [ -d /etc/samb/winbindd_cache.tdba ];then
+    rm /etc/samba/winbindd_cache.tdb
+  fi;
+  if [ -e /etc/samba/winbindd_idmap.tdb ];then
+    rm /etc/samba/winbindd_idmap.tdb
+  fi;
+  #Create File Server Structue
+  if [ ! -d /var/spool/samba/share ];then
+    mkdir -p /var/spool/samba/share
+    chown 0.139 /var/spool/samba/share
+    chmod 2777 /var/spool/samba/share
+  fi
+  if [ ! -d /var/spool/samba/netlogon ];then
+    mkdir -p /var/spool/samba/netlogon
+    chown 0.139 /var/spool/samba/netlogon
+    chmod 2775 /var/spool/samba/netlogon
+  fi
+  if [ ! -d /var/spool/samba/ftp ];then
+    mkdir -p /var/spool/samba/ftp
+    chown 65535.65535 /var/spool/samba/ftp
+    chmod 6770 /var/spool/samba/ftp
+  fi
+  if [ ! -e /var/spool/samba/ftp/welcome.txt ];then
+    (cat << EOF
+
+welcome.txt
+-----------
+
+Place Your Login Message Here.
+
+A File welcome.txt in any directory is displayed when a user changes
+to that directory.
+
+
+EOF
+)> /var/spool/samba/ftp/welcome.txt
+    chmod 664 /var/spool/samba/ftp/welcome.txt
+    chown 65535.65535 /var/spool/samba/ftp/welcome.txt
+  fi
+
+  if [ -e /tmp/clamd ];then
+    rm /tmp/clamd
+  fi;
+  if [ -e /fastboot ];then
+    rm /fastboot
+  fi;
+
+  #NFS Server
+  if [ -e /var/lib/nfs/rmtab ];then
+    rm /var/lib/nfs/rmtab
+  fi;
+  touch /var/lib/nfs/rmtab
+  if [ ! -d /var/lib/nfs/v4recovery ];then
+    mkdir /var/lib/nfs/v4recovery
+  fi;
+
+  #PostGRE SQL Server
+  if [ -e /var/spool/cubit/postmaster.pid ];then
+    rm /var/spool/cubit/postmaster.pid
+  fi;
+  if [ -e /var/spool/pgsql/postmaster.pid ];then
+    rm /var/spool/pgsql/postmaster.pid
+  fi;
+
+
+  #VPN
+  if [ ! -d /usr/var/racoon/ ];then
+    mkdir /usr/var/racoon
+  fi;
+
+  #NSCD
+  if [ ! -d /var/run/nscd ] || [ ! -d /var/db/nscd ];then
+    mkdir -p /var/run/nscd/ /var/db/nscd/
+    chmod 700 /var/run/nscd/ /var/db/nscd/
+   else
+    if [ -e /var/run/nscd/nscd.pid ];then
+      rm /var/run/nscd/nscd.pid
+    fi;
+    if [ -e /var/run/nscd/socket ];then
+      rm /var/run/nscd/socket
+    fi;
+  fi;
+  rm /var/db/nscd/*
+
+  #Create Proftp Run Directory
+  if [ ! -d /var/run/proftpd ];then
+    mkdir /var/run/proftpd
+  fi;
+
+  if [ -e /tmp/backup ];then
+    rm /tmp/backup
+  fi;
+
+  #Old Redundant Server Key Move
+  if [ ! -e /etc/openssl/serverkey.pem ] && [ -e /etc/ipsec.d/private/serverkey.pem ];then
+    mv /etc/ipsec.d/private/serverkey.pem /etc/openssl/serverkey.pem
+  fi;
+
+  #Redundant Home Dir Skel Remove
+  if [ -d /etc/skel/mail ];then
+    rm -rf /etc/skel/mail
+  fi;
+  if [ -d /etc/skel/.winprofile ];then
+    rm -rf /etc/skel/.winprofile
+  fi;
+
+  #init utmp/wtmp/lastlog/ppplog
+  cat /dev/null > /var/run/utmp
+  if [ ! -e /var/log/wtmp ];then
+    touch /var/log/wtmp
+  fi;
+  if [ ! -e /var/log/lastlog ]; then
+    touch /var/log/lastlog
+  fi;
+  rm /var/log/pppd.log.* > /dev/null 2>&1
+
+  #Delete MRTG Lock Files
+  rm /etc/mrtg.conf_l* > /dev/null 2>&1
+
+  #Asterisk Config Fixup
+  if [ -x /usr/sbin/asterisk ];then
+    if [ ! -e /etc/asterisk/ivrmenu.conf ];then
+      cp /etc/asterisk/ivrmenu.conf.orig /etc/asterisk/ivrmenu.conf
+    fi;
+    if [ ! -e /etc/asterisk/local.conf ];then
+      touch /etc/asterisk/local.conf
+    fi;
+    if [ ! -e /etc/asterisk/providers.conf ];then
+      touch /etc/asterisk/providers.conf
+    fi;
+    if [ ! -e /etc/asterisk/meetme.conf ];then
+      touch /etc/asterisk/meetme.conf
+    fi;
+    if [ -h /var/lib/asterisk/sounds/voicemail ];then
+      rm /var/lib/asterisk/sounds/voicemail
+    fi;
+  fi;
+
+  #Create ISDN Devices
+  for ttyi in 0 1 2 3 4 5 6 7 8 9;do
+    mknod /dev/ttyI$ttyi c 43 $ttyi > /dev/null 2>&1
+  done
+  for ttyi1 in 1 2 3 4 5 6 7 8 9;do
+    for ttyi2 in 0 1 2 3 4 5 6 7 8 9;do
+      mknod /dev/ttyI$ttyi1$ttyi2 c 43 $ttyi1$ttyi2 > /dev/null 2>&1
+    done;
+  done
+  if [ ! -d /sys/module/mISDN_core ] && [ -e /dev/mISDN ];then
+    rm /dev/mISDN
+   else
+    touch /etc/misdn-init.conf
+  fi;
+
+  #Load Balancing Route Tables
+  if [ ! -e /etc/.install ] && [ -x /sbin/ip ];then
+    /sbin/ip rule add iif lo table Ipsec prio 10
+    /sbin/ip rule add table 80 prio 11
+    /sbin/ip rule add table Static prio 12
+    /sbin/ip rule add table VPN prio 13
+    /sbin/ip rule add table zebra prio 14
+    /sbin/ip rule add fwmark 1 table 100 prio 90
+    /sbin/ip rule add fwmark 2 table 101 prio 91
+    /sbin/ip rule add fwmark 3 table 102 prio 92
+    /sbin/ip rule add fwmark 4 table 103 prio 93
+    /sbin/ip rule add fwmark 5 table 104 prio 94
+    /sbin/ip rule add fwmark 6 table 105 prio 95
+    /sbin/ip rule add fwmark 7 table 106 prio 96
+    /sbin/ip rule add fwmark 8 table 107 prio 97
+    /sbin/ip rule add fwmark 9 table 108 prio 98
+    /sbin/ip rule add fwmark A table 109 prio 99
+    /sbin/ip rule add fwmark 14 table 150 prio 100
+    /sbin/ip rule add fwmark 15 table 151 prio 101
+    /sbin/ip rule add fwmark 16 table 152 prio 102
+    /sbin/ip rule add fwmark 17 table 153 prio 103
+    /sbin/ip rule add fwmark 18 table 154 prio 104
+    /sbin/ip rule add fwmark 19 table 155 prio 105
+    /sbin/ip rule add fwmark 1A table 156 prio 106
+    /sbin/ip rule add fwmark 1B table 157 prio 107
+    /sbin/ip rule add fwmark 1C table 158 prio 108
+    /sbin/ip rule add fwmark 1D table 159 prio 109
+    /sbin/ip rule add fwmark 1E table eth_0 prio 110
+    /sbin/ip rule add fwmark 1F table eth_1 prio 111
+    /sbin/ip rule add fwmark 20 table eth_2 prio 112
+    /sbin/ip rule add fwmark 21 table eth_3 prio 113
+    /sbin/ip rule add fwmark 22 table eth_4 prio 114
+    /sbin/ip rule add fwmark 23 table eth_5 prio 115
+    /sbin/ip rule add fwmark 24 table eth_6 prio 116
+    /sbin/ip rule add fwmark 25 table eth_7 prio 117
+    /sbin/ip rule add fwmark 26 table eth_8 prio 118
+    /sbin/ip rule add fwmark 27 table eth_9 prio 119
+    /sbin/ip rule add table 90 prio 120
+    /sbin/ip rule add table 150 prio 130 
+    /sbin/ip rule add table 95 prio 140
+  fi;
+
+  #Load Network Modules
+  /etc/rc.d/rc.firewall startup
+  for ADAPTER in `lspci -nm |awk -F\" -v LPATH=/lib/modules/${LKERNEL} '$2 == "Class 0200" {printf "grep -E \"%s.*%s\" %s/modules.pcimap\n",$4,$6,LPATH}' |sh |awk '{print $1}' |sort |uniq`;do 
+    if [ ! -d /sys/module/${ADAPTER} ];then
+      /sbin/modprobe $ADAPTER > /dev/null 2>&1
+    fi;
+  done
+
+  #Fire Up Device Discovery And Initilise Devices
+  /sbin/udevtrigger
+  /sbin/udevsettle
+
+  while [ "`ps ax |grep /sbin/hotplug |grep -v grep`" ] && [ "$time_out" != "XXXXXXXXX" ];do
+    time_out=X$time_out
+    sleep 3;
+  done;
+
+  #Mount All Other Filesytems Except NFS
+  mount -at nonfs > /dev/null 2>&1
+  
+  #Configure The Bridge
+  if [ -x /etc/rc.d/rc.interface ]; then
+    /etc/rc.d/rc.interface > /dev/null 2>&1
+  fi;
+
+  #Syncronice The Backup Disk
+  if [ -e /backup/hotswap ];then
+    rsync -vaR --exclude=/sys --exclude=/backup --exclude=/dev --exclude=/proc / /backup/
+  fi;
+
+  #Turn On Quotas
+  if [ -x /etc/rc.d/rc.quota ];then
+    /etc/rc.d/rc.quota
+  fi;
+
+  #Remove Unused SATA/PATA Drivers
+  ls /lib/modules/${LKERNEL}/kernel/drivers/ata |cut -d. -f1 |grep -vE "(^lib)|(^ahci_platform)" |awk '{printf "if [ -d /sys/module/%s ];then lsmod |grep -E \"^%s \";fi\n",$1,$1}' |sh |awk '$3 == 0 {printf "rmmod %s\n",$1}' |sh
+  for atalib in libahci pata_sis libata;do
+    if [ -d /sys/module/${atalib} ];then
+      lsmod |grep -E "^${atalib} " |awk '$3 == 0 {printf "rmmod %s\n",$1}' |sh
+    fi;
+  done;
+fi;
+
+#Unmount And Cleanup Initial Ram Disk
+(umount /initrd/dev
+umount /initrd/sys
+umount /initrd/proc
+umount /initrd) > /dev/null 2>&1
+
+if [ ! -e /initrd/linuxrc ];then 
+  blockdev --flushbufs /dev/ram0
+fi;
+
+#Set Screen Saver On Console
+/usr/bin/setterm -blank 5
+
+#ISA Modules
+if [ -x /etc/rc.d/rc.modules ];then
+  /etc/rc.d/rc.modules
+fi;
+
+(cat <<_EOF_
+
+Welcome To $BRAND V$VERSION
+Powered By Linux V${LKERNEL}
+
+Where Do You Want To Go Tommorow ?
+
+Go Penguins !!!!!!!
+
+_EOF_
+)>/etc/motd
+
+(cat <<_EOF_
+
+Welcome To $BRAND V$VERSION Linux V${LKERNEL}
+
+_EOF_
+)>/etc/issue
+
+if [ ! -e /etc/resolv.conf ];then
+  echo "domain company.co.za" > /etc/resolv.conf
+fi;
+
+if [ -e /etc/HOSTNAME ];then
+  /usr/bin/hostname -F /etc/HOSTNAME
+ else
+  if [ -e /etc/.networksentry-lite ];then
+    /usr/bin/hostname $HN_ADDR-lite
+   else
+    /usr/bin/hostname $HN_ADDR
+  fi
+fi;
+
+if [ ! -e /etc/.install ];then
+  #Turn On Syn Flood Protection
+  echo 1 >/proc/sys/net/ipv4/tcp_syncookies
+
+  #Turn Off Explicit Congestion Notification (for broken firewalls)
+  echo 0 >/proc/sys/net/ipv4/tcp_ecn
+
+  #Turn Off TCP Window Scaling (for broken firewalls)\
+  echo 0 > /proc/sys/net/ipv4/tcp_window_scaling
+
+  #Dump Tasks When Out Of Memory
+  echo 1 > /proc/sys/vm/oom_dump_tasks
+
+  #Start DHCP As Soon As Posible
+  if [ -e /etc/dhcpd.leases ];then
+    mv /etc/dhcpd.leases* /var/state/dhcp
+  fi;
+  if [ ! -d /var/state/dhcp ];then
+    mkdir -p /var/state/dhcp
+  fi;
+  if [ ! -e /var/state/dhcp/dhcpd.leases ];then
+    touch /var/state/dhcp/dhcpd.leases
+  fi;
+  /usr/sbin/dhcpd > /dev/null 2>&1
+
+  #Start SNMP
+  /usr/sbin/snmpd -c /etc/snmpd.conf
+
+  #Load Dummy Sound Card And Set Up Any Found Cards
+  if [ -d /lib/modules/${LKERNEL}/kernel/sound/ ];then
+    modprobe snd-dummy >/dev/null 2>&1
+    modprobe snd-pcm-oss >/dev/null 2>&1
+    (/sbin/modprobe snd-opl3-synth
+    /sbin/modprobe snd-opl4-synth
+    /sbin/modprobe snd-emux-synth
+    /sbin/modprobe snd_seq_midi
+    /usr/sbin/alsactl restore)> /dev/null 2>&1
+  fi;
+fi;

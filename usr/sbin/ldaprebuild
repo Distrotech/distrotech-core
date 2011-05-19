@@ -1,0 +1,11 @@
+#!/bin/bash
+
+mount / -o remount,rw
+
+if [ -d /var/spool/ldap ] || [ -d /var/log/ldap ];then
+  BDIR=/var/spool/ldap-`date +%Y-%m-%d.%H.%M.%S`
+  mkdir $BDIR
+  mv /var/spool/ldap $BDIR
+  mv /var/log/ldap $BDIR/log
+fi;
+

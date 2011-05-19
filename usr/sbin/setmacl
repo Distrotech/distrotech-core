@@ -1,0 +1,33 @@
+#!/bin/bash
+
+if [ ! -d /var/lib/dovecot/shared ];then
+  mkdir -p /var/lib/dovecot/shared
+fi;
+
+if [ ! -e /var/lib/dovecot/shared/mailboxes.db ];then
+  touch /var/lib/dovecot/shared/mailboxes.db
+  chown smmsp.mail /var/lib/dovecot/shared/mailboxes.db;
+  chmod 660 /var/lib/dovecot/shared/mailboxes.db;
+fi;
+
+#Share Dictionary
+setfacl -R -b /var/lib/dovecot
+setfacl -m g:users:rX /var/lib/dovecot
+setfacl -m g:users:rw /var/lib/dovecot/shared/mailboxes.db
+
+#New Mail Boxes / Dirs Been Opened To Be Run At Startup
+chown root.root /var/spool/mail /var/spool/mail/? /var/spool/mail/?/?
+chmod 770 /var/spool/mail /var/spool/mail/? /var/spool/mail/?/?
+setfacl -b /var/spool/mail /var/spool/mail/? /var/spool/mail/?/?
+setfacl -m u::rwX -m g::rwX -m o::0 -m g:mail:rwX -m g:users:rX -m m::rwX \
+        -m d:u::rwX -m d:g::rwX -m d:o::0 -m d:g:mail:rwX -m d:m::rwX \
+        /var/spool/mail /var/spool/mail/? /var/spool/mail/?/?
+setfacl -m d:g:users:rX -m g::rX -m d:g::rX /var/spool/mail /var/spool/mail/?
+
+#User Stores / Public Store
+setfacl -R -b /var/spool/mail/?/?/* /var/spool/mail/shared
+setfacl -R -m u::rwX -m g::rwX -m o::0 -m g:mail:rwX -m m:rwX \
+        -m d:u::rwX -m d:g::rwX -m d:o::0 -m d:g:mail:rwX -m d:m:rwX \
+        /var/spool/mail/?/?/* /var/spool/mail/shared
+setfacl -R -m u:bin:rwX -m d:u:bin:rwX /var/spool/mail/shared/
+setfacl -m u:bin:rwX /var/spool/mail

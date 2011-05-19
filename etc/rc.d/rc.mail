@@ -1,0 +1,154 @@
+#!/bin/bash
+
+/usr/sbin/socktest 127.0.0.1 25 >/dev/null 2>&1
+if [ $? != 0 ];then
+  /usr/bin/killall -9 sendmail
+fi
+
+DROPACL=0;
+
+#Create Public Mail Folders
+if [ ! -d /var/spool/mail/shared ] || [ "`ls -ld /var/spool/mail/shared |awk '{print $3"."$4}'`" != "bin.users" ];then
+  if [ ! -d /var/spool/mail/shared ];then
+    mkdir -m 2775 /var/spool/mail/shared
+  fi;
+  chown bin.users /var/spool/mail/shared
+  touch /var/spool/mail/shared/dovecot-shared
+  chown bin.users /var/spool/mail/shared/dovecot-shared
+  chmod 660 /var/spool/mail/shared/dovecot-shared
+fi;
+
+if [ ! -d /var/spool/mail/shared/.Administrators ] || [ "`ls -ld /var/spool/mail/shared/.Administrators |awk '{print $3"."$4}'`" != "bin.smbadm" ];then
+  if [ ! -d /var/spool/mail/shared/.Administrators ];then
+    mkdir -m 2770 /var/spool/mail/shared/.Administrators
+  fi;
+  chown bin.smbadm /var/spool/mail/shared/.Administrators
+
+  touch /var/spool/mail/shared/.Administrators/dovecot-shared
+  chown bin.smbadm /var/spool/mail/shared/.Administrators/dovecot-shared
+  chmod 660 /var/spool/mail/shared/.Administrators/dovecot-shared
+
+  for mbox in cur new tmp;do
+    if [ ! -d /var/spool/mail/shared/.Administrators/${mbox} ];then
+      mkdir -m 2770 /var/spool/mail/shared/.Administrators/${mbox}
+    fi;
+    chown bin.smbadm /var/spool/mail/shared/.Administrators/${mbox}
+  done;
+  if [ -e /var/spool/mail/shared/.Administrators/dovecot-acl ];then
+    rm /var/spool/mail/shared/.Administrators/dovecot-acl
+  fi;
+fi;
+
+if [ ! -e /var/spool/mail/shared/.Administrators/dovecot-acl ];then
+  echo "group=smbadm lrwstipex" > /var/spool/mail/shared/.Administrators/dovecot-acl
+  chown bin.smbadm /var/spool/mail/shared/.Administrators/dovecot-acl
+  DROPACL=1
+fi;
+
+if [ ! -d "/var/spool/mail/shared/.Incoming Faxes" ] || [ "`ls -ld "/var/spool/mail/shared/.Incoming Faxes" |awk '{print $3"."$4}'`" != "bin.users" ];then
+  if [ ! -d "/var/spool/mail/shared/.Incoming Faxes" ];then
+    mkdir -m 2770 "/var/spool/mail/shared/.Incoming Faxes"
+  fi;
+  chown bin.users "/var/spool/mail/shared/.Incoming Faxes"
+
+  touch "/var/spool/mail/shared/.Incoming Faxes/dovecot-shared"
+  chown bin.users "/var/spool/mail/shared/.Incoming Faxes/dovecot-shared"
+  chmod 660 "/var/spool/mail/shared/.Incoming Faxes/dovecot-shared"
+
+  for mbox in cur new tmp;do
+    if [ ! -d "/var/spool/mail/shared/.Incoming Faxes/${mbox}" ];then
+      mkdir -m 2770 "/var/spool/mail/shared/.Incoming Faxes/${mbox}"
+    fi;
+    chown bin.users "/var/spool/mail/shared/.Incoming Faxes/${mbox}"
+  done;
+  if [ -e "/var/spool/mail/shared/.Incoming Faxes/dovecot-acl" ];then
+    rm "/var/spool/mail/shared/.Incoming Faxes/dovecot-acl"
+  fi;
+fi;
+
+if [ ! -e "/var/spool/mail/shared/.Incoming Faxes/dovecot-acl" ];then
+  echo "group=users lrwstipex" > "/var/spool/mail/shared/.Incoming Faxes/dovecot-acl"
+  chown bin.users "/var/spool/mail/shared/.Incoming Faxes/dovecot-acl"
+  DROPACL=1
+fi;
+
+if [ ${DROPACL} == 1 ] && [ -e /var/spool/mail/shared/dovecot-acl-list ];then
+  rm /var/spool/mail/shared/dovecot-acl-list
+fi;
+
+if [ ! "`/bin/pidof sendmail`" ];then
+  #Check Statistics File
+  if [ ! -e /var/db/sendmail.statistics ];then
+    mv /etc/mail/statistics /var/db/sendmail.statistics
+    ln -s /var/db/sendmail.statistics /etc/mail/statistics
+  fi;
+  /usr/sbin/sendmail -bd -ODeliveryMode=queue -OQueueDirectory=/var/spool/mqueue.in > /dev/null 2>&1 &
+
+fi;
+
+#Startup POP3/IMAP Service
+if [ ! -e /etc/dovecot.passwd ];then
+  touch /etc/dovecot.passwd
+fi
+
+if [ ! -d /var/lib/dovecot/shared ];then
+  mkdir -p /var/lib/dovecot/shared;
+  chmod 777 /var/lib/dovecot/shared;
+fi
+
+if [ ! -e /var/lib/dovecot/shared/mailboxes.db ];then
+  touch /var/lib/dovecot/shared/mailboxes.db;
+  chown smmsp.mail /var/lib/dovecot/shared/mailboxes.db;
+  chmod 660 /var/lib/dovecot/shared/mailboxes.db;
+  setfacl -m g:users:rX /var/lib/dovecot
+  setfacl -m g:users:rw /var/lib/dovecot/shared/mailboxes.db
+  if [ "$?" != 0 ];then
+    sed -e "s/ext3\([\t ]*\)defaults\([\t ]\)\(.*\)/ext3\1defaults,acl\2\3/" /etc/fstab > /tmp/fstab.acl
+    if [ "`diff -u /tmp/fstab.acl /etc/fstab`" ];then
+      grep -E "ext3.*defaults,acl" /tmp/fstab.acl |awk '{printf "mount %s -o remount,acl\n",$2}' |sh
+      cp /tmp/fstab.acl /etc/fstab
+      /usr/sbin/setmacl >/dev/null 2>&1
+    fi;
+  fi
+fi
+
+if [ /etc/dovecot.conf -nt /var/run/dovecot/master.pid ];then
+  (killall dovecot;
+  sleep 3;
+  killall -9 dovecot) > /dev/null 2>&1
+fi
+
+if [ ! "`/bin/pidof dovecot`" ] && [ "$1" != "sendmail" ];then
+  if [ -e /var/run/dovecot/master.pid ];then
+    rm /var/run/dovecot/master.pid
+  fi;
+
+  /usr/sbin/dovecot-wrap
+ else if  [ "$1" != "sendmail" ] && [ /etc/dovecot-example.conf -nt /etc/dovecot.conf ];then
+    kill `cat /var/run/dovecot/master.pid`;
+    touch /etc/dovecot.conf;
+    /usr/sbin/dovecot-wrap
+  fi
+fi;
+
+if [ ! -e /etc/dovecot-sogo.conf ] || [ /etc/dovecot.conf -nt /etc/dovecot-sogo.conf ];then
+  sed -e "s/^[ \t]*ssl_listen.*$/#/" \
+      -e "s/^\([ \t]*listen = \).*/\1127.0.0.1:286/" \
+      -e "s/^\([ \t]*args = session=yes cache_key=\%u\).*/\1 sogo-%Ls/" \
+      -e "s/^\(protocols = imap\).*$/\1/" \
+      -e "s/^\(.*path = \/var\/run\/dovecot\)\/auth-master$/\1-sogo\/auth-master/" \
+      -e "s/^\(base_dir.*\)/\1-sogo/" /etc/dovecot.conf |grep -vE "^#" > /etc/dovecot-sogo.conf
+  (killall dovecot-sogo;
+  sleep 3;
+  killall -9 dovecot-sogo) > /dev/null 2>&1
+fi
+
+if [ -e /etc/dovecot-sogo.conf ] && [ ! "`/bin/pidof dovecot-sogo`" ] && [ "$1" != "sendmail" ];then
+  if [ -e /var/run/dovecot-sogo/master.pid ];then
+    rm /var/run/dovecot-sogo/master.pid
+  fi;
+
+  /usr/sbin/dovecot-wrap sogo
+fi;
+
+/usr/sbin/safe_sogo

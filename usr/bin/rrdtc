@@ -1,0 +1,45 @@
+#!/usr/bin/perl
+
+require RRDs;
+
+chdir "/var/spool/apache/htdocs/mrtg";
+
+@devices=("imq1","ppp1","imq2","ppp2","imq3","ppp3","imq4","ppp4","imq5","ppp5","imq0");
+
+if (@ARGV[0] ne "Dialup") {
+  push(@devices,@ARGV[0]);
+} else {
+  push(@devices,"ppp0");
+}
+
+$/="\n\n";
+
+
+foreach $device (@devices) {
+  if (! -e "bw-" . $device . ".rrd") {
+    &create_rrd($device);
+  }
+  open(TC,"/sbin/tc -s class show dev $device |");
+  while(<TC>) {
+    chop $_;
+    ($info,$stats,$rate,$share,$tokens)=split(/\n/,$_);
+    @info=split(/ /,$info);
+    @stats=split(/ /,$stats);
+    $bwpool{@info[2]}=@stats[2];
+  }
+  RRDs::update("bw-" . $device . ".rrd","N:" . $bwpool{'1:10'} . ":" . $bwpool{'1:20'} . ":" . $bwpool{'1:30'});
+  close(TC);
+}
+
+sub create_rrd() {
+  my($device)=@_;
+  @dbtmpl=('bw-' . $device . '.rrd','-s',300,
+           'DS:high:COUNTER:600:U:U',
+           'DS:med:COUNTER:600:U:U',
+           'DS:low:COUNTER:600:U:U',
+           'RRA:AVERAGE:0.5:1:599',
+           'RRA:AVERAGE:0.5:6:700',
+           'RRA:AVERAGE:0.5:24:775',
+           'RRA:AVERAGE:0.5:288:795');
+  RRDs::create(@dbtmpl);
+}

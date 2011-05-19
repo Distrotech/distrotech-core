@@ -1,0 +1,117 @@
+#!/bin/bash
+
+eval `cat /etc/netsentry-version`
+
+RTPT=`cat /etc/fstab |grep -w "/" |awk '{print $1}'`
+INRTPT=`ls -l $RTPT |awk '{print "/dev/"$11}'`
+
+dd if=/dev/zero of=/tmp/initrd bs=1k count=2048
+mke2fs -Fi 1024 /tmp/initrd 2048
+mount /tmp/initrd /mnt/initrd -o loop=/dev/loop/6
+
+mkdir /mnt/initrd/bin
+mkdir /mnt/initrd/dev
+mkdir /mnt/initrd/etc
+mkdir /mnt/initrd/lib
+mkdir /mnt/initrd/proc
+mkdir /mnt/initrd/sys
+mkdir /mnt/initrd/sbin
+mkdir /mnt/initrd/sysroot
+mkdir /mnt/initrd/isofs
+  
+
+if [ "$SCSI_ADAPTER" ];then
+  ADAP_PROBE="insmod /lib/modules/${INSTALL_KERNEL}/scsi/${SCSI_ADAPTER}.ko";
+fi;
+
+(cat <<_EOF_
+#!/bin/nash
+
+mount -t proc /proc /proc
+insmod /lib/modules/${INSTALL_KERNEL}/scsi/scsi_mod.ko
+$ADAP_PROBE
+insmod /lib/modules/${INSTALL_KERNEL}/scsi/sd_mod.ko
+
+mount --ro -t ext3 $INRTPT /sysroot
+
+echo 0x0100 > /proc/sys/kernel/real-root-dev
+pivot_root /sysroot /sysroot/initrd
+
+_EOF_
+)>/mnt/initrd/linuxrc
+
+chmod 750 /mnt/initrd/linuxrc
+cp /sbin/nash /mnt/initrd/bin/
+mknod /mnt/initrd/dev/console c 5 1
+mknod /mnt/initrd/dev/null c 1 3
+mknod /mnt/initrd/dev/systty c 4 0
+mknod /mnt/initrd/dev/zero c 1 5
+mkdir /mnt/initrd/dev/rd
+mknod /mnt/initrd/dev/rd/5 b 1 5
+chmod 600 /mnt/initrd/dev/rd/5
+
+touch /mnt/initrd/etc/fstab
+
+cd /mnt/initrd/etc
+ln -s /proc/mounts mtab
+
+cd /mnt/initrd/sbin
+cp /sbin/insmod.static insmod
+
+ln -s /bin 
+ln -s /linuxrc init
+
+mkdir -p /mnt/initrd/lib/modules/${INSTALL_KERNEL}/scsi
+
+cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/scsi/scsi_mod.ko.gz \
+   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/scsi/
+
+cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/scsi/sd_mod.ko.gz \
+   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/scsi/
+
+if [ "$SCSI_ADAPTER" ];then
+    cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/scsi/${SCSI_ADAPTER_FILE}.ko.gz \
+       /mnt/initrd/lib/modules/${INSTALL_KERNEL}/scsi/
+fi;
+
+gunzip /mnt/initrd/lib/modules/${INSTALL_KERNEL}/scsi/*
+
+cd /root
+
+umount /mnt/initrd
+e2fsck /tmp/initrd 
+
+mke2fs /dev/floppy/0
+mount /dev/fd0 /mnt/floppy
+
+tar -C /mnt/floppy -xzf /boot/boot_base.tgz 
+cp /boot/vmlinuz-install /mnt/floppy/boot
+
+if [ -e /etc/.install ];then
+  dd if=/tmp/initrd |gzip -c9 |dd bs=1k of=/tmp/initrd.gz
+  cp /tmp/initrd.gz /mnt/floppy/boot/initrd-rescue
+  rm /tmp/initrd.gz
+ else
+  dd if=/tmp/initrd |gzip -c9 |dd bs=1k of=/boot/initrd-rescue
+  cp /boot/initrd-rescue /mnt/floppy/boot
+fi;
+
+rm /tmp/initrd
+
+(cat <<_EOF_
+default 0
+timeout 20
+
+title $BRAND Rescue Disk
+kernel /boot/vmlinuz-install root=$RTPT S
+initrd /boot/initrd-rescue
+_EOF_
+) > /mnt/floppy/boot/grub/menu.lst
+
+/usr/sbin/grub --batch <<EOF
+root (fd0)
+setup (fd0)
+EOF
+
+umount /mnt/floppy
+e2fsck /dev/floppy/0

@@ -1,0 +1,59 @@
+#!/usr/bin/perl
+
+if ($ARGV[0] eq "") {
+  exit
+}
+
+if ($ARGV[1] eq "") {
+  $ARGV[1]=$ARGV[0];
+}
+
+use Net::LDAPS;
+
+open(LCON,"/etc/ldap.conf");
+while(<LCON>) {
+  chop $_;
+  @centry=split(/\s/,$_);
+  if (@centry[0] eq "master_host") {
+    $host=@centry[1];
+  } elsif (@centry[0] eq "binddn") {
+    $binddn=@centry[1];
+  } elsif (@centry[0] eq "bindpw") {
+    $password=@centry[1];
+  }
+}
+
+$ldap = Net::LDAPS->new($host,port=>"636",verify => 'none',timeout => "10");
+$ldap->bind($binddn,password => $password);
+
+$mesg = $ldap->search(base=>"",filter =>"(&(sambaSID=*)(|(sambaDomainName=" . @ARGV[0] . ")(sambaDomainName=" . @ARGV[1] . ")))",
+                      attrs=>['sambaSID','sambaDomainName']);
+
+while($entry = $mesg->shift_entry) {
+  $domain=uc($entry->get_value("sambaDomainName"));
+  if ($domain eq uc(@ARGV[1])) {
+    $sid=$entry->get_value("sambaSID");
+  } elsif ($domain eq uc(@ARGV[0])) {
+    $sid2=$entry->get_value("sambaSID");
+  }
+}
+
+if (($sid2 ne "") && ($sid eq "")) {
+  $sid=$sid2;
+}
+
+if ($sid ne "") {
+  $ldap->modify("cn=smbadm,ou=Groups",replace=> {sambaSID => $sid . "-512"});
+  $ldap->modify("cn=users,ou=Groups",replace=> {sambaSID => $sid . "-513"});
+  $ldap->modify("cn=nowebaccess,ou=Groups",replace=> {sambaSID => $sid . "-101"});
+  $ldap->modify("cn=fullwebaccess,ou=Groups",replace=> {sambaSID => $sid . "-102"});
+  if ($sid2 eq "") {
+    $sid2=$sid;
+  }
+}
+
+if ($sid2 ne "") {
+  $ldap->modify("uid=nobody,ou=Users",replace=> {sambaSid => $sid2 . "-501"});
+  $ldap->modify("cn=nogroup,ou=Groups",replace=> {sambaSidList => $sid2 . "-501"});
+}
+

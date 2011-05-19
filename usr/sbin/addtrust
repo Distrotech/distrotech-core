@@ -1,0 +1,44 @@
+#!/usr/bin/perl
+
+use Net::LDAPS;
+
+open(LCON,"/etc/ldap.conf");
+while(<LCON>) {
+  chop $_;
+  @centry=split(/\s/,$_);
+  if (@centry[0] eq "master_host") {
+    $host=@centry[1];
+  } elsif (@centry[0] eq "binddn") {
+    $binddn=@centry[1];
+  } elsif (@centry[0] eq "bindpw") {
+    $password=@centry[1];
+  }
+}
+
+$ldap = Net::LDAPS->new($host,port=>"636",verify => 'none',timeout => "10");
+$ldap->bind($binddn,password => $password);
+
+$mesg = $ldap->search(filter =>"objectClass=posixAccount",
+                      attrs=>['uidnumber']);
+
+while($entry = $mesg->shift_entry) {
+  $uidnum=$entry->get_value("uidnumber");
+  if ($uidnum >= 500) {
+    $useduid{$uidnum}="TRUE";
+  }
+}
+
+$ucnt=500;
+while($useduid{$ucnt} eq "TRUE") {
+  $ucnt++;
+}
+
+$res=$ldap->add("uid=$ARGV[0],ou=Trusts",attrs => [ objectClass => 
+                ["device","posixAccount"] , homeDirectory => "/dev/null",
+                loginShell => "/usr/bin/false", gidNumber => "200",uid => $ARGV[0],
+                cn => $ARGV[1],uidNumber => $ucnt]);
+$err=$res->error;
+
+open(AL,">/tmp/addt.log");
+print AL "$err\n";
+close(AL);

@@ -1,0 +1,174 @@
+#!/usr/bin/perl
+
+use Socket;
+use CGI;
+
+CGI::ReadParse(*form_data);
+
+$dnslu=$form_data{'dnslu'};
+
+print "Content-Type: text/html\n\n";
+
+$dnslu=1;
+
+print "<TABLE BORDER=2>\n";
+
+open(CT,"/proc/net/ip_conntrack");
+while(<CT>) {
+  chop $_;
+  push(@indata,$_);
+}
+$line=0;
+
+foreach $ipct (@indata) {
+  @ctdb=split(/\s/,$ipct);
+  $lproto{$line}=shift(@ctdb);
+  if ($lproto{$line} eq "tcp") {
+    push(@tcpdat,$line);
+  } elsif ($lproto{$line} eq "udp") {
+    push(@udpdat,$line);
+  } elsif ($lproto{$line} eq "icmp") {
+    push(@icmpdat,$line);
+  } else {
+    push(@othdat,$line);
+  }
+  foreach $ctel (@ctdb) {
+    $key="";
+    $val="";
+    if ($ctel ne "") {
+      ($key,$val)=split(/=/,$ctel);
+      if (! $val) {
+        if (!((($ctel gt "0") && ($ctel lt "99999999")) || (! $ctel))) {
+          $lstat{$line}.="$ctel,";
+        }
+      }
+      if ($key eq "src") {
+        if (($dnslu ne "") && (! $kip{$val})){
+          $iaddr=inet_aton($val);
+          $nval=gethostbyaddr($iaddr, AF_INET);
+          $kip{$val}=$nval;
+          if ($nval ne "") {
+            $val=$nval;
+          } else {
+            $kip{$val}=$val;
+          }
+        } elsif ($kip{$val} ne "") {
+          $val=$kip{$val};
+        }
+        if (! $insrc{$line}) {
+          $insrc{$line}=$val;
+        } else {
+          $outsrc{$line}=$val;
+        }
+      } elsif ($key eq "sport") {
+        $valn=getservbyport($val,$lproto{$line});
+        if ($valn) {
+          $val=$valn;
+        }
+        if (! $insrcp{$line}) {
+          $insrcp{$line}=$val;
+        } else {
+           $outsrcp{$line}=$val;
+        }
+      } elsif ($key eq "dst") {
+        if (($dnslu) && (! $kip{$val})){
+          $iaddr=inet_aton($val);
+          $nval=gethostbyaddr($iaddr, AF_INET);
+          $kip{$val}=$nval;
+          if ($nval ne "") {
+            $val=$nval;
+          } else {
+            $kip{$val}=$val;
+          }
+        } elsif ($kip{$val} ne "") {
+          $val=$kip{$val};
+        }
+        if (! $indst{$line}) {
+          $indst{$line}=$val;
+        } else {
+          $outdst{$line}=$val;
+        }
+      } elsif ($key eq "dport") {
+        $valn=getservbyport($val,$lproto{$line});
+        if ($valn) {
+          $val=$valn;
+        }
+        if (! $indstp{$line}) {
+          $indstp{$line}=$val;
+        } else {
+          $outdstp{$line}=$val;
+        }
+      }
+    }
+  }
+  $line++;
+}
+
+print "<TR><TH COLSPAN=5>TCP</TH></TR>\n";
+print "<TR><TH COLSPAN=2>Origin</TH><TH COLSPAN=2>Destination</TH><TH><BR></TH></TR>";
+print "<TR><TH>Source</TH><TH>Dest.</TH><TH>Source</TH><TH>Dest.</TH><TH>State</TH>\n";
+
+
+sub printout() {
+  local($cnt)=@_;
+  chop $lstat{$cnt};
+  if ($lstat{$cnt} eq "") {
+    $lstat{$cnt}="<BR>";
+  }
+  if (($outsrc{$cnt} eq $indst{$cnt}) && ($outsrcp{$cnt} eq $indstp{$cnt})) {
+    $outsrc{$cnt}="<BR>";
+  } else {
+    $outsrc{$cnt}="$outsrc{$cnt}:$outsrcp{$cnt}";
+  }
+
+  if (($outdst{$cnt} eq $insrc{$cnt}) && ($outdstp{$cnt} eq $insrcp{$cnt})) {
+    $outdst{$cnt}="<BR>";
+  } else {
+    $outdst{$cnt}="$outdst{$cnt}:$outdstp{$cnt}";
+  }
+
+  $output=sprintf ("<TR><TD>%s</TD><TD>%s</TD><TD>%s</TD><TD>%s</TD><TD>%s</TD></TR>\n",
+          "$insrc{$cnt}:$insrcp{$cnt}","$indst{$cnt}:$indstp{$cnt}",$outsrc{$cnt},$outdst{$cnt},$lstat{$cnt});
+
+  return "$output";
+}
+
+
+foreach $cnt (@tcpdat) {
+  $tout=&printout($cnt);
+  push(@tcpout,$tout);
+}
+
+@tcpout=sort(@tcpout);
+foreach $oline (@tcpout) {
+  print "$oline";
+}
+
+print "<TR><TH COLSPAN=5>UDP</TH></TR>\n";
+print "<TR><TH COLSPAN=2>Origin</TH><TH COLSPAN=2>Destination</TH><TH><BR></TH></TR>";
+print "<TR><TH>Source</TH><TH>Dest.</TH><TH>Source</TH><TH>Dest.</TH><TH>State</TH>\n";
+foreach $cnt (@udpdat) {
+  $uout=&printout($cnt);
+  push(@udpout,$uout);
+}
+
+@udpout=sort(@udpout);
+foreach $oline (@udpout) {
+  print "$oline";
+}
+
+print "<TR><TH COLSPAN=5>ICMP</TH></TR>\n";
+print "<TR><TH COLSPAN=2>Origin</TH><TH COLSPAN=2>Destination</TH><TH><BR></TH></TR>";
+print "<TR><TH>Source</TH><TH>Dest.</TH><TH>Source</TH><TH>Dest.</TH><TH>State</TH>\n";
+foreach $cnt (@icmpdat) {
+  &printout($cnt);
+}
+
+print "<TR><TH COLSPAN=5>OTHER</TH></TR>\n";
+print "<TR><TH COLSPAN=2>Origin</TH><TH COLSPAN=2>Destination</TH><TH><BR></TH></TR>";
+print "<TR><TH>Source</TH><TH>Dest.</TH><TH>Source</TH><TH>Dest.</TH><TH>State</TH>\n";
+foreach $cnt (@othdat) {
+  &printout($cnt);
+}
+
+print "</TABLE>";

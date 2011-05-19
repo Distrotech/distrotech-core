@@ -1,0 +1,88 @@
+# /etc/profile: This file contains system-wide defaults used by
+# all Bourne (and related) shells.
+
+# Set the values for some environment variables:
+export TERMINFO=/usr/share/terminfo
+export MINICOM="-c on"
+export MANPATH=/man:/usr/man/preformat:/usr/man:/usr/X11R6/man:/usr/share/man
+#export HOSTNAME="`cat /etc/HOSTNAME`"
+export LESSOPEN="|lesspipe.sh %s"
+export LESS="-M"
+export MOZILLA_HOME=/usr/lib/netscape
+export TAPE=/dev/tapes/tape0/mtn
+export EDITOR=pico
+export LOCATE_PATH=/var/db/locate
+export PGDATA=/var/spool/pgsql
+export SDL_FBDEV=/dev/fb1
+
+# Set the default system $PATH:
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/X11R6/bin:/opt/sophos/bin"
+
+if [ -d /install ];then
+  export PATH="$PATH:/install"
+fi;
+
+# For root users, ensure that /usr/local/sbin, /usr/sbin, and /sbin are in
+# the $PATH.  Some means of connection don't add these by default (sshd comes
+# to mind).
+if [ "`id -u`" = "0" ]; then
+  echo $PATH | grep /usr/local/sbin 1> /dev/null 2> /dev/null
+  if [ ! $? = 0 ]; then
+    PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
+  fi
+fi
+
+# For non-root users, add the current directory to the search path:
+if [ ! "`id -u`" = "0" ]; then
+ PATH="$PATH:."
+fi
+
+# I had problems using 'eval tset' instead of 'TERM=', but you might want to 
+# try it anyway. I think with the right /etc/termcap it would work great.
+# eval `tset -sQ "$TERM"`
+if [ "$TERM" = "" -o "$TERM" = "unknown" ]; then
+ TERM=linux
+fi
+
+# Set a default shell prompt:
+#PS1='`hostname`:`pwd`# '
+if [ "$SHELL" = "/bin/pdksh" -o "$SHELL" = "/bin/ksh" ]; then
+ PS1="! $ "
+elif [ "$SHELL" = "/bin/zsh" ]; then
+ PS1="%m:%~%# "
+elif [ "$SHELL" = "/bin/ash" ]; then
+ PS1="$ "
+else
+ PS1='`hostname -f`:\w\$ '
+fi
+PS2='> '
+ignoreeof=10
+export PATH DISPLAY LESS TERM PS1 PS2 ignoreeof
+
+# Default umask.  A umask of 022 prevents new files from being created group
+# and world writable.
+umask 022
+
+# Set up the LS_COLORS and LS_OPTIONS environment variables for color ls:
+if [ "$SHELL" = "/bin/zsh" ]; then
+ eval `dircolors -z`
+elif [ "$SHELL" = "/bin/ash" ]; then
+ eval `dircolors -s`
+else
+ eval `dircolors -b`
+fi
+
+# Append any additional sh scripts found in /etc/profile.d/:
+for file in /etc/profile.d/*.sh ; do
+  if [ -x $file ]; then
+    . $file
+  fi
+done
+
+alias ls='ls --color=auto'
+alias ldapmodify='ldapmodify -U admin -Y PLAIN -w "`cat /etc/mail/ldap`"'
+alias ldapsearch='ldapsearch -U admin -Y PLAIN -w "`cat /etc/mail/ldap`" -LLL'
+alias ldapadd='ldapadd -U admin -Y PLAIN -w "`cat /etc/mail/ldap`"'
+alias ldappasswd='ldappasswd -U admin -Y PLAIN -w "`cat /etc/mail/ldap`"'
+alias ldapdelete='ldapdelete -U admin -Y PLAIN -w "`cat /etc/mail/ldap`"'
+

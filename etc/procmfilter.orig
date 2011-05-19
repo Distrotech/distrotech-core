@@ -1,0 +1,187 @@
+#!/usr/bin/perl
+
+use DBI;
+use Net::LDAPS;
+
+open(LCON,"/etc/ldap.conf");
+while(<LCON>) {
+  chop $_;
+  @centry=split(/\s/,$_);
+  if (@centry[0] eq "binddn") {
+    $binddn=@centry[1];
+  } elsif (@centry[0] eq "bindpw") {
+    $password=@centry[1];
+  }
+}
+
+$ldap = Net::LDAPS->new("127.0.0.1",port=>"636",verify => 'none');
+$ldap->bind($binddn,password => $password);
+
+$user="horde";
+$password="";
+
+$driver = "mysql";
+$database="horde";
+$hostname="";
+$port=3306;
+
+$dsn = "DBI:$driver:database=$database;host=$hostname;port=$port";
+$dbh = DBI->connect($dsn, $user, $password);
+
+$hsel=$dbh->prepare("SELECT pref_uid,pref_value FROM horde_prefs WHERE pref_scope = 'imp' AND pref_name = 'filters' ");
+$hsel->execute();
+
+while ( @row = $hsel->fetchrow_array ) {
+  $mesg = $ldap->search(base=>"ou=Users",filter =>"(&(uid=*)(mailLocalAddress=@row[0]))",attrs=>['uid','uidNumber','homeDirectory']);
+  while($entry=$mesg->shift_entry) {
+    $uid=$entry->get_value("uid");
+    $uidnum=$entry->get_value("uidNumber");
+    $home=$entry->get_value("homeDirectory");
+    if ($uid ne "") {
+      $user{@row[0]}=$uid;
+      $uidnum{@row[0]}=$uidnum;
+      $homedir{@row[0]}=$home;
+    }
+  }
+ 
+  chop @row[1];
+  @dfields=split(/;\}/,@row[1]);
+
+
+  foreach $field (@dfields) {
+    if ($user{@row[0]} eq "") {
+      ($user{@row[0]})=split(/\@/,@row[0]);
+      $mesg = $ldap->search(base=>"ou=Users",filter =>"(&(uid=$user{@row[0]}))",attrs=>['uidNumber','homeDirectory']);
+      while($entry=$mesg->shift_entry) {
+        $uidnum=$entry->get_value("uidNumber");
+        $home=$entry->get_value("homeDirectory");
+        $uidnum{@row[0]}=$uidnum;
+        $homedir{@row[0]}=$home;
+      }
+    }
+
+    @tmp=();
+    push(@tmp,$user{@row[0]});
+    push(@tmp,@row[0]);
+
+    $_=$field;
+
+    if (/i:([0-9]+);a:([0-9]+):\{s:[0-9]+:\"fields\";a:([0-9]+):\{(.*)/) {
+      $rcnt=$1;
+      $width=$2;
+      $param=$4;
+      chop $param;
+      @params=split(/\";/,$param);
+      for ($pcnt=0;$pcnt < $3;$pcnt++) { 
+        $_=@params[$pcnt];
+        if (/i:$pcnt;s:[0-9]+:\"(.*)/) {
+          $_=$1;
+          if (/(subject|to|cc|from)/) {
+            $rule.="$1\|";
+          } elsif (/(body)/) {
+            $flags="B";
+          }
+        }
+      }
+      chop $rule;
+      $rule="(" . $rule . ")";
+    } elsif (/^s:4:"text";s:[0-9]+:"(.*)";s:6:"action";s:[0-9]:(.*)/) {
+      $search=$1;
+      if ($width eq "4") {
+        $_=$2;
+        ($folder)=/"move";s:6:"folder";s:[0-9]+:"(.*)"/;
+      } else {
+        $folder="";
+      }
+    }
+    if (($rule ne "") && ($search ne "")) {
+      push(@tmp,$rule);
+      push(@tmp,$search);
+      push(@tmp,$flags);
+      push(@tmp,$folder);
+      push(@tmp,$uidnum{@row[0]});
+      push(@tmp,$homedir{@row[0]});
+      $dout=join("\|\|",@tmp);
+      push(@output,$dout);
+      $rule="";
+      $flags="";
+      $search="";
+    }
+  }
+}
+
+@output=sort(@output);
+$lastu="";
+$cnt=0;
+foreach $filter (@output) {
+  @fdata=split(/\|\|/,$filter);
+
+  $curpath=substr(@fdata[0],0,1) . "/" . substr(@fdata[0],1,1);
+  if (@fdata[5] eq "") {
+    $file="/dev/null";
+  } else {
+    $file="/var/home/" . $curpath . "/" . @fdata[0] . "/mail/" . @fdata[5];
+  }
+
+  @fdata[3]=join("\\\}",split(/\}/,@fdata[3]));
+  @fdata[3]=join("\\{",split(/{/,@fdata[3]));
+
+  @fdata[3]=join("\\\]",split(/\]/,@fdata[3]));
+  @fdata[3]=join("\\\[",split(/\[/,@fdata[3]));
+
+  if ((@fdata[4] eq "B") && (@fdata[2] ne "()")) {
+    $rule=":0 H\n";
+    $rule .="* @fdata[2]:.*@fdata[3].*\n" . $file . "\n\n";
+    $rule .=":0 B\n";
+    $rule .="* .*@fdata[3].*\n" . $file;
+  } elsif (@fdata[4] eq "B") {
+    $rule="\n:0 B\n";
+    $rule .="* .*@fdata[3].*\n" . $file;
+  } else {
+    $rule="\n:0 H\n";
+    $rule .="* @fdata[2]:.*@fdata[3].*\n" . $file;
+  }
+
+  if (@fdata[0] ne $lastu) {
+    if ($cnt ne "0") {
+      $lastpath=substr($lastu,0,1) . "/" . substr($lastu,1,1);
+      print PMRC <<__EOB__;
+MAILDIR=$ORGMAIL
+DEFAULT=$MAILDIR/
+
+:0 w
+/var/spool/mail/$lastpath/$lastu/
+__EOB__
+      close(PMRC);
+    }
+    if ( -d @fdata[7]) {
+      open(PMRC,">@fdata[7]/.procmailrc");
+      chown(@fdata[6],100,"@fdata[7]/.procmailrc");
+      chmod(0444,"@fdata[7]/.procmailrc");
+    } else {
+      open(PMRC,">/dev/null");  
+    }
+    print PMRC <<__EOB__;
+SENDER = "<\$1>"
+SHIFT = 1
+
+$rule
+__EOB__
+  } else {
+    print PMRC <<__EOB__;
+
+$rule
+__EOB__
+  }
+
+  $cnt++;
+  $lastu=@fdata[0];
+}
+
+print PMRC <<__EOB__;
+
+:0 w
+/var/spool/mail/$curpath/@fdata[0]/
+__EOB__
+close(PMRC);
+

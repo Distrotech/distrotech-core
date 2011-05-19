@@ -1,0 +1,2 @@
+#!/bin/sh
+echo "UPDATE astdb SET value='1' WHERE (family='Setup' AND (key='DEFRECORD' OR key='AAREC')) OR key='RECORD'" |psql -U asterisk -h 127.0.0.1

@@ -1,0 +1,105 @@
+#!/usr/bin/perl
+
+if (@ARGV[0] eq "") {
+  exit;
+}
+
+open(LF,"-");
+
+use Net::LDAPS;
+
+open(LCON,"/etc/ldap.conf");
+while(<LCON>) {
+  chop $_;
+  @centry=split(/\s/,$_);
+  if (@centry[0] eq "binddn") {
+    $binddn=@centry[1];
+  } elsif (@centry[0] eq "bindpw") {
+    $password=@centry[1];
+  }
+}
+
+$ldap = Net::LDAPS->new("127.0.0.1",port=>"636",verify => 'none');
+
+$ldap->bind($binddn,password => $password);
+
+
+$uidls=$ldap->search(base=>"ou=Users",filter =>"(|(hostedsite=*)(hostedfpsite=*))",
+                     attrs=>['uid','homedirectory','hostedfpsite','hostedsite']);
+while($entry=$uidls->shift_entry) {
+  $uid=$entry->get_value("uid");
+  $hdir=$entry->get_value("homedirectory");
+  @fpsites=$entry->get_value("hostedfpsite");
+  @wwwsites=$entry->get_value("hostedsite");
+
+  foreach $hdom (@fpsites) {
+    $sdir="/var/spool/apache/vhosts/" . substr($uid,0,1) . "/" . substr($uid,1,1) . "/$uid/$hdom";
+    if ( -d $sdir ) {
+      $sitedir{$hdom}=$sdir;
+    }
+  }
+
+
+  foreach $hdom (@fpsites) {
+    $sdir="/var/spool/apache/vhosts/" . substr($uid,0,1) . "/" . substr($uid,1,1) . "/$uid/$hdom";
+    if ( -d $sdir ) {
+      $sitedir{$hdom}=$sdir;
+    }
+  }
+
+  foreach $hdom (@wwwsites) {
+    $sdir="$hdir/$hdom";
+    if ( -d $sdir ) {
+      $sitedir{$hdom}=$sdir;
+    }
+  }
+}
+
+if (@ARGV[0] eq "apache") {
+  $olddir="";
+  while(<LF>) { 
+    @lent=split(/ /,$_);
+    $doma=shift(@lent);
+    $logent=join(" ",@lent);
+    if ( -d $sitedir{$doma}) {
+      if ($olddir ne $sitedir{$doma}) {
+        if ($isopen) {
+          close(LFO);
+        }
+        open(LFO,">$sitedir{$doma}/usage/$ARGV[0]/access_log.in");
+        $isopen=true;
+        print "/bin/sort -k4 $sitedir{$doma}/usage/$ARGV[0]/access_log.in > $sitedir{$doma}/usage/$ARGV[0]/access_log\n";
+        print "rm $sitedir{$doma}/usage/$ARGV[0]/access_log.in\n";
+        print "/usr/bin/webalizer -c \"$sitedir{$doma}/usage/$ARGV[0]/usage.conf\"\n";
+        print "rm $sitedir{$doma}/usage/$ARGV[0]/access_log\n";
+      }
+      print LFO $logent;
+    }
+    $olddir=$sitedir{$doma};
+  }
+  close(LF);
+} elsif (@ARGV[0] eq "squid") {
+  $olddir="";
+  while(<LF>) {
+    ($doma)=/.*http:\/\/([^\/:]*)\//;
+    if ($doma eq "") {
+      ($doma)=/.*CONNECT ([^\/:\s]*)/;
+    }
+    if ( -d $sitedir{$doma}) {
+      if ($olddir ne $sitedir{$doma}) {
+        if ($isopen) {
+          close(LFO);
+        }
+        open(LFO,">$sitedir{$doma}/usage/$ARGV[0]/access_log.in");
+        $isopen=true;
+        print "/bin/sort -k1 $sitedir{$doma}/usage/$ARGV[0]/access_log.in > $sitedir{$doma}/usage/$ARGV[0]/access_log\n";
+        print "rm $sitedir{$doma}/usage/$ARGV[0]/access_log.in\n";
+        print "/usr/bin/webalizer -c \"$sitedir{$doma}/usage/$ARGV[0]/usage.conf\"\n";
+        print "rm $sitedir{$doma}/usage/$ARGV[0]/access_log\n";
+      }
+      print LFO $_;
+    }
+    $olddir=$sitedir{$doma};
+  }
+}
+

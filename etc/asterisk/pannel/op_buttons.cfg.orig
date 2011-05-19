@@ -1,0 +1,62 @@
+[SIP/0001]
+Position=144
+Label="Gregory Nietsky"
+Extension=0001
+Context=intext
+Icon=1
+Voicemail_Context=intext
+
+;[CAPI[contr1/NNNNNNNNN]]    ; where NNNN is the ISDN number
+;Position=22,23
+;Label="External CAPI"
+;Extension=-1
+;Context=in-extern
+;Icon=4 
+
+;[901]
+;Position=8
+;Label="Meetme 901"
+;Extension=901
+;Context=conferences
+;Icon=5
+
+;[902]
+;Position=9
+;Label="Meetme 902"
+;Extension=902
+;Icon=5
+
+;[IAX2/iaxtel]
+;Position=15,16
+;Label="Iaxtel"
+;Extension=-1
+;Icon=2
+
+;[IAX2/iaxtel]
+;Position=15,16
+;Label="Iaxtel"
+;Extension=-1
+;Icon=2
+;Panel_context=sip      ; buttons with panel context will be displayed in their
+                       ; own panel, you have to append ?context=NAME when loading
+                       ; the swf file
+
+; You can draw rectangles anywhere in the screen. The canvas sixe is 990x600
+;
+
+[rectangle]
+x=0
+y=35
+width=990
+height=560
+line_width=3
+line_color=0xffff10
+fade_color1=0xffff10
+fade_color2=0xffff3F
+rnd_border=2
+alpha=20       
+layer=bottom       ; top    = above buttons
+                ; bottom = below buttons
+
+;include => more_rectangles.cfg
+

@@ -1,0 +1,7 @@
+#!/usr/bin/perl
+
+use DBI;
+
+$dbh = DBI->connect("DBI:ODBC:Asterisk","asterisk","asterisk");
+$dbh->do("UPDATE users SET password='@ARGV[2]' WHERE mailbox = '@ARGV[1]' AND context='@ARGV[0]'");
+

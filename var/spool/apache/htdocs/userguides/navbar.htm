@@ -1,0 +1,42 @@
+<html>
+  <head>
+    <base target="_blank">
+    <link rel=stylesheet type=text/css href=netsentry.php>
+  </head>
+
+  <script language="JavaScript">
+    NavOver=(((navigator.appName == "Netscape") && (parseInt(navigator.appVersion) >= 3 )) ||
+             ((navigator.appName == "Microsoft Internet Explorer") && (parseInt(navigator.appVersion) >= 4 )));
+
+    function MSFPpreload(img) {
+      var a=new Image();
+      a.src=img;
+      return a;
+    }
+    if(NavOver) {
+      win1=MSFPpreload("images/win_a.png");
+      win2=MSFPpreload("images/win.png");
+      xp1=MSFPpreload("images/winxp_a.png");
+      xp2=MSFPpreload("images/winxp.png");
+    }
+  </script>
+<body><table border="0" width="170" cellspacing="0" cellpadding="0">
+  <tr>
+    <td width="190">
+      <p align="center"><img border="0" src="images/Sentry.gif" width="129" height="181"></td>
+  </tr>
+  <tr>
+    <td width="190">
+    <p align="center">
+    <a href="instman/index.html" language="JavaScript" target=_top
+      onmouseover="if(NavOver) document['win'].src=win1.src"
+      onmouseout="if(NavOver) document['win'].src=win2.src">
+    <img src="images/win.png" border="0" alt="Windows 9x/Me" name="win"></a>
+    <a href="instman/xpsetup.html" language="JavaScript" target=content
+      onmouseover="if(NavOver) document['xp'].src=xp1.src"
+      onmouseout="if(NavOver) document['xp'].src=xp2.src">
+    <img src="images/winxp.png" border="0" alt="Windows XP" name="xp"></a>
+    </td>
+  </tr>
+</table></body>
+</html>

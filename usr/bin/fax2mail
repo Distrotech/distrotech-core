@@ -1,0 +1,52 @@
+#!/bin/bash
+
+FAXFILE=$1
+CALLEDID=$2
+CALLERID=$3
+DOMAIN=$4
+MAILTO=$5
+PAGES=$6
+REMOTESTATIONID=$7
+
+TEXT=`(cat << __EOF__
+A ${PAGES} Page(s) fax message from ${CALLERID} (${REMOTESTATIONID}) was recived.
+
+The attached PDF file contains the fax message.
+__EOF__
+) |uuenview -q - +`
+
+(cat <<__EOF__
+From: "Fax To ${CALLEDID}" <asterisk@${DOMAIN}>
+To: ${MAILTO}
+Subject: Fax From ${CALLERID} (${REMOTESTATIONID}) ${PAGES} Page(s)
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+        boundary="----_=_NextPart_${FAXFILE}"
+Status: R
+
+This is a multi-part message in MIME format.
+
+------_=_NextPart_${FAXFILE}
+Content-Type: text/plain;
+        charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+${TEXT}
+
+------_=_NextPart_${FAXFILE}
+Content-Type: application/pdf;
+        name="${FAXFILE}.pdf"
+Content-Transfer-Encoding: base64
+Content-Description: ${PAGES} Page(s) Fax From ${CALLERID} (${REMOTESTATIONID})
+Content-Disposition: attachment;
+        filename="${FAXFILE}.pdf"
+
+__EOF__
+
+/usr/bin/tiff2pdf -z  /var/spool/asterisk/fax/${FAXFILE}.tif |/usr/bin/uuenview -b - ${FAXFILE}.pdf
+
+cat <<__EOF__
+
+------_=_NextPart_${FAXFILE}--
+__EOF__
+) |sendmail -t -f asterisk@${DOMAIN}

@@ -1,0 +1,20 @@
+#!/bin/bash
+
+if [ ! -e /tmp/custtest.last ];then
+  touch /tmp/custtest.last
+fi
+
+(awk -F: '$4 == 1 {printf "(/usr/sbin/socktest %s %s >/dev/null 2>&1;if [ $? != 0 ];then echo \"%s\";fi) &\n",$1,$2,$3}' /etc/custdb |sh;sleep 8) |sort > /tmp/custtest.now;
+
+grep -vf /tmp/custtest.last /tmp/custtest.now > /tmp/custtest.diff
+
+if [ -s /tmp/custtest.diff ];then
+  (cat <<__EOF__
+I have run some tests on all the sites and have noticed the following sites are not responding.
+
+So i sugest you get off your lazy arse and investigate these sites.
+
+__EOF__
+  grep -vf /tmp/custtest.last /tmp/custtest.now) |mail -s "Ooops These Sites May Have Problems" support
+  cp /tmp/custtest.now /tmp/custtest.last
+fi;

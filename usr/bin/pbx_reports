@@ -1,0 +1,247 @@
+#!/usr/bin/php -d safe_mode=no
+<%
+
+function do_report($repname, $username, $additional) {
+  global $ob_file,$rcnt,$qlev,$discrip,$acdls,$qfilt,$db,$edata,$stats;
+
+  $filename=tempnam("/tmp", $username);
+
+  $pid=pcntl_fork();
+  if ($pid == 0) {  
+    $ob_file = fopen($filename,'w');
+
+    function ob_file_callback($buffer) {
+      global $ob_file;
+      fwrite($ob_file,$buffer);
+    }
+
+    ob_start('ob_file_callback');
+
+    date_default_timezone_set("Africa/Johannesburg");
+    $curtime=time();
+    $repdate=array(getdate($curtime-(86400*7)), getdate($curtime));
+
+    $weeklyrep['dom']=$repdate[0]['mday'];
+    $weeklyrep['date']=$repdate[0]['mon'] . "/" . $repdate[0]['year'];
+    $weeklyrep['dom2']=$repdate[1]['mday'];
+    $weeklyrep['date2']=$repdate[1]['mon'] . "/" . $repdate[1]['year'];
+    $weeklyrep['sortby']="cost";
+    $weeklyrep['sortdown']="on";
+
+    $grouprep['trunk']="G";
+    $grouprep['dom']=$repdate[0]['mday'];
+    $grouprep['date']=$repdate[0]['mon'] . "/" . $repdate[0]['year'];
+    $grouprep['dom2']=$repdate[1]['mday'];
+    $grouprep['date2']=$repdate[1]['mon'] . "/" . $repdate[1]['year'];
+    $grouprep['mweight']="on";
+    $grouprep['morder']="sum(cost)";
+    $grouprep['disp']="ANSWERED";
+
+    $usagerep['time_day']=$repdate[0]['mday'];
+    $usagerep['time_month']=$repdate[0]['mon'];
+    $usagerep['time_year']=$repdate[0]['year'];
+    $usagerep['mtime_day']=$repdate[1]['mday'];
+    $usagerep['mtime_month']=$repdate[1]['mon'];
+    $usagerep['mtime_year']=$repdate[1]['year'];
+    $usagerep['slog']="time";
+    $usagerep['time_hour'] =0;
+    $usagerep['time_min']=0;
+    $usagerep['time_sec']=0;
+    $usagerep['mtime_hour']=23;
+    $usagerep['mtime_min']=59;
+    $usagerep['mtime_sec']=59;
+
+    $queueslrep['time_day']=$repdate[0]['mday'];
+    $queueslrep['time_month']=$repdate[0]['mon'];
+    $queueslrep['time_year']=$repdate[0]['year'];
+    $queueslrep['mtime_day']=$repdate[1]['mday'];
+    $queueslrep['mtime_month']=$repdate[1]['mon'];
+    $queueslrep['mtime_year']=$repdate[1]['year'];
+    $queueslrep['slog']="time";
+    $queueslrep['time_hour']=0;
+    $queueslrep['time_min']=0;
+    $queueslrep['time_sec']=0;
+    $queueslrep['mtime_hour']=23;
+    $queueslrep['mtime_min']=59;
+    $queueslrep['mtime_sec']=59;
+
+    $acdrep['time_day']=$repdate[0]['mday'];
+    $acdrep['time_month']=$repdate[0]['mon'];
+    $acdrep['time_year']=$repdate[0]['year'];
+    $acdrep['mtime_day']=$repdate[1]['mday'];
+    $acdrep['mtime_month']=$repdate[1]['mon'];
+    $acdrep['mtime_year']=$repdate[1]['year'];
+    $acdrep['slog']="time";
+    $acdrep['time_hour']=0;
+    $acdrep['time_min']=0;
+    $acdrep['time_sec']=0;
+    $acdrep['mtime_hour']=23;
+    $acdrep['mtime_min']=59;
+    $acdrep['mtime_sec']=59;
+
+    $addinf['grouprep']="exten";
+    $addinf['acdrep']="fqueue";
+
+    $report['queueslrep']="cdr/qslstat.php";
+    $report['weeklyrep']="cdr/allrep.php";
+    $report['usagerep']="cdr/qagntstat.php";
+    $report['grouprep']="cdr/dextenr.php";
+    $report['acdrep']="cdr/acdstat.php";
+
+    $_SERVER['PHP_AUTH_USER']=$username;
+    $_SESSION['userid']=$_SERVER['PHP_AUTH_USER'];
+    $_POST['print']=2;
+
+    $_POST['disppage']=$report[$repname];
+    $_SESSION['disppage']=$_POST['disppage'];
+
+    while(list($key,$value) = each($$repname)) {
+      $_POST[$key]=$value;
+    }
+    if ($addinf[$repname] != "") {
+      $_POST[$addinf[$repname]]=$additional;
+    }
+
+    $superglobals = array($_SERVER,$_ENV,$_FILES,$_COOKIE,$_GET,$_POST);
+    foreach ($superglobals as $superglobal) {
+      extract($superglobal, EXTR_SKIP);
+    }
+
+    if (ereg("([a-zA-Z]+)\/",$report[$repname],$dispdata)) {
+      if ($dispdata[1] == "cdr") {
+        include "/var/spool/apache/htdocs/cdr/uauth.inc";
+      } else {
+        include "/var/spool/apache/htdocs/ldap/auth.inc";
+      } 
+    }
+
+    include "/var/spool/apache/htdocs/" . $report[$repname];
+    ob_end_flush();
+    exit;
+  } else {
+    pcntl_waitpid($pid, $repstatus);
+  }
+  if ($additional != "") {
+    $additional="_" . $additional;
+  }
+  return array("file" => $filename, "name" => $repname . $additional . ".csv");
+}
+
+function sendmail($files, $username) {
+  $pid=pcntl_fork();
+  if ($pid == 0) {  
+    include "/var/spool/apache/htdocs/ldap/ldapcon.inc";
+    include('Mail.php');
+    include('Mail/mime.php');
+
+    $mail =& Mail::factory('mail');
+    $mime = new Mail_mime("\n");
+
+    $text = 'Text version of email';
+    $html = '<html><body>HTML version of email</body></html>';
+    $hdrs = array("From" => "asterisk@" . $LOCAL_DOMAIN, "Subject" => "PBX Reports");
+
+    for($att=0;$att < count($files); $att++) {
+      if (filesize($files[$att]['file']) > 0) {
+        $mime->addAttachment($files[$att]['file'], "application/ms-excel", $files[$att]['name']);
+      }
+      unlink($files[$att]['file']);
+    }
+
+    $mime->setTXTBody($text);
+    $mime->setHTMLBody($html);
+
+    $body = $mime->get();
+    $hdrs = $mime->headers($hdrs);
+    $mail->send($username . "@" . $LOCAL_DOMAIN, $hdrs, $body);
+    exit;
+  } else {
+    pcntl_waitpid($pid, $mailstatus);
+  } 
+}
+
+function getuserinf() {
+  global $ob_file;
+
+  $filename=tempnam("/tmp", pbxrep);
+
+  $pid=pcntl_fork();
+  if ($pid == 0) {  
+    function ob_file_callback($buffer) {
+      global $ob_file;
+      fwrite($ob_file,$buffer);
+    }
+
+    $ob_file = fopen($filename,'w');
+    ob_start('ob_file_callback');
+
+    include "/var/spool/apache/htdocs/ldap/auth.inc";
+    include "/var/spool/apache/htdocs/cdr/auth.inc";
+    $users=pg_query($db, "SELECT gauth.key,gauth.family FROM astdb AS gauth WHERE gauth.value='GAUTH'");
+    for($gcnt=0;$gcnt < pg_num_rows($users);$gcnt++) {
+      $r=pg_fetch_array($users,$gcnt,PGSQL_NUM);
+
+      $sarr=array("uid","email");
+      $sr=ldap_search($ds, $r[0], "(uid=*)",$sarr);
+      $sinfo=ldap_get_entries($ds,$sr);
+
+      $r[0]=$sinfo[0]['uid'][0];
+
+      print "GRP:" . join(":",$r) . "\n";
+    }
+    $acd=pg_query($db,"SELECT DISTINCT substr(astdb.family,2),astdb.value from astdb LEFT OUTER JOIN astdb AS gauth ON (gauth.family = astdb.value AND gauth.value='GAUTH') where astdb.key='BGRP' and astdb.family ~ '^Q' AND gauth.family=astdb.value");
+    for($acnt=0;$acnt < pg_num_rows($acd);$acnt++) {
+      $r=pg_fetch_array($acd,$acnt,PGSQL_NUM);
+      print "ACD:" . join(":",$r) . "\n";
+    }
+    ob_end_flush();
+    exit;
+  } else {
+    pcntl_waitpid($pid, $infostatus);
+  }
+  $output = fopen($filename,'r');
+  $groups=array();
+  while (($buffer = fgets($output, 4096)) !== false) {
+    $info=split(":",rtrim($buffer,"\n"));
+    if ($info[0] == "GRP") {
+      if (!is_array($groups[$info[1]])) {
+        $groups[$info[1]]=array();
+      }
+      array_push($groups[$info[1]], $info[2]);
+    } else if ($info[0] == "ACD") {
+      if (!is_array($acd[$info[2]])) {
+        $acd[$info[2]]=array();
+      }
+      array_push($acd[$info[2]], $info[1]);
+    }
+  }
+  $uinfo['users']=$groups;
+  $uinfo['acd']=$acd;
+  fclose($output);
+  unlink($filename);
+  return $uinfo;
+}
+
+$uinf=getuserinf();
+foreach($uinf['users'] as $key => $value) {
+  $files=array();
+  $acd=array();
+  array_push($files, do_report("weeklyrep", $key, ""));
+  array_push($files, do_report("usagerep", $key, ""));
+  for($cnt=0;$cnt < count($value);$cnt++) {
+    array_push($files, do_report("grouprep", $key, $value[$cnt]));
+    for($acnt=0;$acnt < count($uinf['acd'][$value[$cnt]]);$acnt++) { 
+      array_push($acd,$uinf['acd'][$value[$cnt]][$acnt]);
+    }
+  }
+  if (count($acd) > 0) {
+    array_push($files, do_report("queueslrep", $key, ""));
+    for($acnt=0;$acnt < count($acd);$acnt++) {
+      array_push($files, do_report("acdrep", $key, $acd[$acnt]));
+    }
+  }
+  sendmail($files, $key);
+  unset($files);
+  unset($acd);
+}
+%>

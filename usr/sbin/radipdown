@@ -1,0 +1,26 @@
+#!/usr/bin/perl
+
+use strict;
+
+my $prog_radacct = "/usr/sbin/radacct";
+my ($sessionid, $username,$port,$portid,$sestime,$porttype,$compress,$mtu,$lotime)=split(/:/,$ARGV[0]);
+my $ip_address_local=@ARGV[1];
+
+if ($lotime > time()) {
+  my $sessiontime = time() - $lotime;
+  open  (H, "| $prog_radacct -i $port");
+  my $cmd ="Acct-Session-ID = \"$sessionid\"\n" .
+           "User-Name = \"$username\"\n" .
+           "Acct-Status-Type = Stop\n" .
+           "Acct-Authentic = RADIUS\n" .
+           "Service-Type = Framed-User\n" .
+           "Framed-Protocol = PPP\n" .
+           "Framed-IP-Address = $ip_address_local\n" .
+           "Acct-Session-Time = $sessiontime\n" .
+           "NAS-Port-Type = $porttype\n" .
+           "Framed-MTU = $mtu\n" .
+           "Framed-IP-Netmask = 255.255.255.255\n" .
+           "Framed-Compression = Van-Jacobson-TCP-IP\n";
+  print H $cmd;
+  close (H);
+}

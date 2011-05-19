@@ -1,0 +1,3 @@
+#!/bin/bash
+
+(zcat /var/log/asterisk/messages.5.gz /var/log/asterisk/messages.4.gz /var/log/asterisk/messages.3.gz /var/log/asterisk/messages.2.gz /var/log/asterisk/messages.1.gz |grep -E "loader\.c: [0-9]+ modules will be loaded";grep -E "loader\.c: [0-9]+ modules will be loaded" /var/log/asterisk/messages) | cut -c2-16 |grep -vE " 0[024]:"

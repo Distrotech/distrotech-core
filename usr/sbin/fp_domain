@@ -1,0 +1,378 @@
+#!/usr/bin/perl
+
+open(FPC,">/etc/fp/httpd.conf.fp.orig");
+open(AAC,">/etc/fp/access.conf");
+
+print FPC <<__EOF_FILE__;
+ResourceConfig /etc/apache/srm.conf
+AccessConfig /etc/fp/access.conf
+ServerRoot /usr
+Port 80
+Port 666
+ServerName localhost
+DocumentRoot "/var/spool/apache/htdocs"
+LoadModule userdir_module     libexec/mod_userdir.so
+AddModule mod_userdir.c
+UserDir public_html
+NameVirtualHost *
+__EOF_FILE__
+
+open(SCF,"/etc/fp/vhost.conf");
+while(<SCF>) {
+  chop $_;
+  @ddin=split(/\|/,$_);
+  print FPC <<__EOF_FILE__;
+<VirtualHost @ddin[0]:80>
+  DocumentRoot /var/spool/apache/vhosts/@ddin[0]
+  ServerName @ddin[0]
+</VirtualHost>
+
+__EOF_FILE__
+
+  print AAC <<__EOF_FILE__;
+<Directory /var/spool/apache/vhosts/@ddin[0]>
+  <IfModule mod_bandwidth.c>
+    Bandwidth all @ddin[2]
+    MinBandWidth all @ddin[3]
+  </IfModule>
+</Directory>
+
+__EOF_FILE__
+}
+close(AAC);
+close(FPC);
+
+open(SPWF,"/etc/shadow");
+while(<SPWF>) {
+  chop $_;
+  @pdata=split(/:/,$_);
+  $cpass{@pdata[0]}=@pdata[1];
+}
+close(SPWF);
+
+open(ACF,"/etc/fp/vhost.conf");
+while(<ACF>) {
+  chop $_;
+  @acdat=split(/\|/,$_);
+  if ( ! -e "/var/spool/apache/usage/@acdat[0]/squid/usage.conf" ) {
+    open(WC,">/var/spool/apache/usage/@acdat[0]/squid/usage.conf");
+print WC <<__END_OF_RECORD__;
+LogFile        /var/spool/apache/usage/@acdat[0]/squid/access_log
+LogType	squid
+OutputDir      /var/spool/apache/usage/@acdat[0]/squid
+HistoryName	webalizer.hist
+Incremental	yes
+IncrementalName	webalizer.current
+ReportTitle    Usage Statistics From Proxy Server For
+HostName       @acdat[0]
+#HTMLExtension  html
+PageType	htm*
+PageType	cgi
+PageType	phtml
+PageType	php*
+PageType	php
+PageType	pl
+PageType	asp
+#UseHTTPS       no
+DNSCache	dns_cache.db
+DNSChildren	10
+#HTMLPre <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+#HTMLHead <META NAME="author" CONTENT="The Webalizer">
+#HTMLBody <BODY BGCOLOR="#E8E8E8" TEXT="#000000" LINK="#0000FF" VLINK="#FF0000">
+#HTMLPost 	<BR CLEAR="all">
+#HTMLTail <IMG SRC="msfree.png" ALT="100% Micro$oft free!">
+#HTMLEnd </BODY></HTML>
+Quiet		yes
+ReallyQuiet	no
+TimeMe		no
+GMTTime		no
+Debug		no
+FoldSeqErr	no
+#VisitTimeout	1800
+IgnoreHist	no
+CountryGraph	yes
+DailyGraph	yes
+DailyStats	yes
+HourlyGraph	yes
+HourlyStats	yes
+GraphLegend	yes
+#GraphLines	2
+TopSites        30
+TopKSites       10
+TopURLs         30
+TopKURLs        10
+TopReferrers    30
+TopAgents       15
+TopCountries    30
+TopEntry        10
+TopExit         10
+TopSearch       20
+TopUsers        20
+AllSites	yes
+AllURLs		yes
+AllReferrers	yes
+AllAgents	yes
+AllSearchStr	yes
+AllUsers      	yes
+IndexAlias    	index.html
+IndexAlias	postinfo.html
+#HideSite	*mrunix.net
+#HideSite	localhost
+#HideReferrer	mrunix.net/
+#HideReferrer	Direct Request
+HideURL		*.gif
+HideURL		*.GIF
+HideURL		*.jpg
+HideURL		*.JPG
+HideURL		*.png
+HideURL		*.PNG
+HideURL		*.ra
+#HideAgent	RealPlayer
+#HideUser	root
+#HideUser	admin
+#GroupURL	/cgi-bin/*	CGI Scripts
+#GroupURL	/images/*	Images
+#GroupSite	*.aol.com
+#GroupSite	*.compuserve.com
+#GroupReferrer	yahoo.com/	Yahoo!
+#GroupReferrer	excite.com/     Excite
+#GroupReferrer	infoseek.com/   InfoSeek
+#GroupReferrer	webcrawler.com/ WebCrawler
+#GroupUser      root            Admin users
+#GroupUser      admin           Admin users
+#GroupUser      wheel           Admin users
+GroupAgent	MSIE		Micro$oft Internet Exploder
+#HideAgent	MSIE
+GroupAgent	Mozilla		Netscape
+#HideAgent	Mozilla
+GroupAgent	Lynx*		Lynx
+#HideAgent	Lynx*
+#HideAllSites	no
+#GroupDomains	0
+#GroupShading	yes
+#GroupHighlight	yes
+#IgnoreSite	bad.site.net
+#IgnoreURL	/test*
+#IgnoreReferrer	file:/*
+#IgnoreAgent	RealPlayer
+#IgnoreUser     root
+#IgnoreURL	*
+#IncludeURL	~joeuser*
+#IgnoreUser     *
+#IncludeUser    someuser
+#MangleAgents    0
+SearchEngine	yahoo.com	p=
+SearchEngine	altavista.com	q=
+SearchEngine	google.com	q=
+SearchEngine	eureka.com	q=
+SearchEngine	lycos.com	query=
+SearchEngine	hotbot.com	MT=
+SearchEngine	msn.com		MT=
+SearchEngine	infoseek.com	qt=
+SearchEngine	webcrawler	searchText=
+SearchEngine	excite		search=
+SearchEngine	netscape.com	search=
+SearchEngine	mamma.com	query=
+SearchEngine	alltheweb.com	query=
+SearchEngine	northernlight.com  qr=
+#DumpPath	/var/lib/httpd/logs
+#DumpHeader	no
+#DumpExtension	tab
+#DumpSites	no
+#DumpURLs	no
+#DumpReferrers	no
+#DumpAgents	no
+#DumpUsers	no
+#DumpSearchStr  no
+__END_OF_RECORD__
+    close(WC);
+  }
+  if ( ! -e "/var/spool/apache/usage/@acdat[0]/apache/usage.conf" ) {
+    open(WC,">/var/spool/apache/usage/@acdat[0]/apache/usage.conf");
+print WC <<__END_OF_RECORD__;
+LogFile        /var/spool/apache/usage/@acdat[0]/apache/access_log
+LogType	clf
+OutputDir      /var/spool/apache/usage/@acdat[0]/apache
+HistoryName	webalizer.hist
+Incremental	yes
+IncrementalName	webalizer.current
+ReportTitle    Usage Statistics From Webserver For
+HostName       @acdat[0]
+#HTMLExtension  html
+PageType	htm*
+PageType	cgi
+PageType	phtml
+PageType	php*
+PageType	php
+PageType	pl
+PageType	asp
+#UseHTTPS       no
+DNSCache	dns_cache.db
+DNSChildren	10
+#HTMLPre <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+#HTMLHead <META NAME="author" CONTENT="The Webalizer">
+#HTMLBody <BODY BGCOLOR="#E8E8E8" TEXT="#000000" LINK="#0000FF" VLINK="#FF0000">
+#HTMLPost 	<BR CLEAR="all">
+#HTMLTail <IMG SRC="msfree.png" ALT="100% Micro$oft free!">
+#HTMLEnd </BODY></HTML>
+Quiet		yes
+ReallyQuiet	no
+TimeMe		no
+GMTTime		no
+Debug		no
+FoldSeqErr	no
+#VisitTimeout	1800
+IgnoreHist	no
+CountryGraph	yes
+DailyGraph	yes
+DailyStats	yes
+HourlyGraph	yes
+HourlyStats	yes
+GraphLegend	yes
+#GraphLines	2
+TopSites        30
+TopKSites       10
+TopURLs         30
+TopKURLs        10
+TopReferrers    30
+TopAgents       15
+TopCountries    30
+TopEntry        10
+TopExit         10
+TopSearch       20
+TopUsers        20
+AllSites	yes
+AllURLs		yes
+AllReferrers	yes
+AllAgents	yes
+AllSearchStr	yes
+AllUsers      	yes
+IndexAlias    	index.html
+IndexAlias	postinfo.html
+#HideSite	*mrunix.net
+#HideSite	localhost
+#HideReferrer	mrunix.net/
+#HideReferrer	Direct Request
+HideURL		*.gif
+HideURL		*.GIF
+HideURL		*.jpg
+HideURL		*.JPG
+HideURL		*.png
+HideURL		*.PNG
+HideURL		*.ra
+#HideAgent	RealPlayer
+#HideUser	root
+#HideUser	admin
+#GroupURL	/cgi-bin/*	CGI Scripts
+#GroupURL	/images/*	Images
+#GroupSite	*.aol.com
+#GroupSite	*.compuserve.com
+#GroupReferrer	yahoo.com/	Yahoo!
+#GroupReferrer	excite.com/     Excite
+#GroupReferrer	infoseek.com/   InfoSeek
+#GroupReferrer	webcrawler.com/ WebCrawler
+#GroupUser      root            Admin users
+#GroupUser      admin           Admin users
+#GroupUser      wheel           Admin users
+GroupAgent	MSIE		Micro$oft Internet Exploder
+#HideAgent	MSIE
+GroupAgent	Mozilla		Netscape
+#HideAgent	Mozilla
+GroupAgent	Lynx*		Lynx
+#HideAgent	Lynx*
+#HideAllSites	no
+#GroupDomains	0
+#GroupShading	yes
+#GroupHighlight	yes
+#IgnoreSite	bad.site.net
+#IgnoreURL	/test*
+#IgnoreReferrer	file:/*
+#IgnoreAgent	RealPlayer
+#IgnoreUser     root
+#IgnoreURL	*
+#IncludeURL	~joeuser*
+#IgnoreUser     *
+#IncludeUser    someuser
+#MangleAgents    0
+SearchEngine	yahoo.com	p=
+SearchEngine	altavista.com	q=
+SearchEngine	google.com	q=
+SearchEngine	eureka.com	q=
+SearchEngine	lycos.com	query=
+SearchEngine	hotbot.com	MT=
+SearchEngine	msn.com		MT=
+SearchEngine	infoseek.com	qt=
+SearchEngine	webcrawler	searchText=
+SearchEngine	excite		search=
+SearchEngine	netscape.com	search=
+SearchEngine	mamma.com	query=
+SearchEngine	alltheweb.com	query=
+SearchEngine	northernlight.com  qr=
+#DumpPath	/var/lib/httpd/logs
+#DumpHeader	no
+#DumpExtension	tab
+#DumpSites	no
+#DumpURLs	no
+#DumpReferrers	no
+#DumpAgents	no
+#DumpUsers	no
+#DumpSearchStr  no
+__END_OF_RECORD__
+    close(WC);
+  }
+  if ( ! -d "/var/spool/apache/vhosts/@acdat[0]/_vti_pvt" ) {
+    @oldpw=();
+    @oldgrp=();
+    $isadmingrp="";
+    $isautgrp="";
+    if (-e "/var/spool/apache/vhosts/@acdat[0]/_vti_pvt/service.pwd") {
+      open(PWF,"/var/spool/apache/vhosts/@acdat[0]/_vti_pvt/service.pwd");
+      while(<PWF>) {
+        ($pwuname,$pwcrypt)=split(/:/,$_);
+        if ((($pwuname ne @acdat[1]) && ($pwcrypt ne $cpass{@acdat[1]})) && (($pwuname ne "") && ($pwcrypt ne ""))) {
+          push(@oldpw,$_);
+        }
+      }
+      close(PWF);
+    }
+    if (-e "/var/spool/apache/vhosts/@acdat[0]/_vti_pvt/service.grp") {
+      open(GPF,"/var/spool/apache/vhosts/@acdat[0]/_vti_pvt/service.grp");
+      while(<GPF>) {
+        ($gname,$members)=split(/:/,$_);
+        if ((index($members,@acdat[1]) eq -1) && ($gname eq "administrators")) {
+          $isadmingrp="YIP";
+          push(@oldgp,"$gname: @acdat[1]$members");
+        } elsif ($gname eq "authors") {
+          push(@oldgp,$_);
+          $isautgrp="YIP";
+        } elsif ($gname ne "# -FrontPage-\n") {
+          push(@oldgp,$_);
+        }
+      close(GPF);
+      }
+    }
+    system("/usr/local/frontpage/version5.0/bin/owsadm.exe -o install -u @acdat[1] -p 80 -m @acdat[0] -servconf /etc/fp/httpd.conf.fp.orig -xuser @acdat[1] -pw DeFaUlT"); 
+    open(PWF,">/var/spool/apache/vhosts/@acdat[0]/_vti_pvt/service.pwd");
+    print PWF "# -FrontPage-\n";
+    foreach $ouser (@oldpw) {
+      print PWF "$ouser";
+    }
+    print PWF "@acdat[1]:$cpass{@acdat[1]}\n";
+    close(PWF);
+    open(GPF,">/var/spool/apache/vhosts/@acdat[0]/_vti_pvt/service.grp");
+    print GPF "# -FrontPage-\n";
+    if ($isadmingrp ne "YIP") {
+      print GPF "administrators: @acdat[1]\n";
+    }
+    if ($isautgrp ne "YIP") {
+      print GPF "authors:\n";
+    }
+    foreach $grp (@oldgp) {
+      print GPF "$grp";
+    }
+    close(GPF);
+    system("cp /var/spool/apache/vhosts/@acdat[0]/_private/.htaccess /var/spool/apache/usage/@acdat[0]/");
+  }
+}
+close(ACF);
+

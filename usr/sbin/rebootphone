@@ -1,0 +1,56 @@
+#!/usr/bin/php -d safe_mode=no
+<%
+
+$pwlen=8;
+$validpw="(name=secret OR length(secret) != " . $pwlen . " OR secret='' OR secret IS NULL OR secret !~ '[0-9]' OR secret !~ '[a-z]' OR secret !~ '[A-Z]')";
+
+$ptype['snom']="SELECT name,ipaddr," . $validpw . " from users left outer join astdb as lkey on (substr(name,0,3)=lkey.key) LEFT OUTER JOIN astdb AS ptype ON (name=ptype.family AND ptype.key='PTYPE') LEFT OUTER JOIN astdb AS macok ON (name=macok.family AND macok.key='SNOMMAC') WHERE macok.value != '' AND macok.value IS NOT NULL AND ptype.value='SNOM' AND length(name) = 4 AND lkey.family = 'LocalPrefix' AND lkey.value=1";
+$ptype['polycom']="SELECT name,ipaddr," . $validpw . " from users left outer join astdb as lkey on (substr(name,0,3)=lkey.key) LEFT OUTER JOIN astdb AS ptype ON (name=ptype.family AND ptype.key='PTYPE') LEFT OUTER JOIN astdb AS macok ON (name=macok.family AND macok.key='SNOMMAC') WHERE macok.value != '' AND macok.value IS NOT NULL AND (ptype.value='POLYCOM' OR ptype.value ~ '^IP_[0-9]+$') AND length(name) = 4 AND lkey.family = 'LocalPrefix' AND lkey.value=1";
+$ptype['zap']="SELECT name,value," . $validpw . " from users left outer join astdb on (name=family AND key='ZAPLine') where value ~ '^[1-9]'";
+$ptype['queue']="SELECT users.name,1," . $validpw . " from users left outer join queue_table USING (name) where queue_table.name IS NOT NULL";
+$ptype['h323']="SELECT name,ipaddr," . $validpw . " from users where h323neighbor and h323gkid is not null";
+$ptype['trunk']="SELECT name,value," . $validpw . " from users LEFT OUTER JOIN astdb ON (family=name AND key = 'FWDU') where value != '0' AND value != '1' AND value IS NOT NULL";
+
+$boot['snom']=TRUE;
+$boot['polycom']=TRUE;
+$boot['zap']=FALSE;
+$boot['queue']=FALSE;
+$boot['h323']=FALSE;
+$boot['trunk']=FALSE;
+
+include "/var/spool/apache/htdocs/cdr/auth.inc";
+include "/var/spool/apache/htdocs/cdr/autoadd.inc";
+
+if (! isset($agi)) {
+  require_once("/var/lib/asterisk/agi-bin/phpagi/phpagi-asmanager.php");
+  $agi=new AGI_AsteriskManager();
+}
+
+$agi->connect("127.0.0.1","admin","admin");
+
+while(list($phone,$query) = each($ptype)) {
+  $curext=pg_query($db,$ptype[$phone]);
+  $num=pg_num_rows($curext);
+  for($i=0;$i < $num;$i++) {
+    $r = pg_fetch_array($curext,$i,PGSQL_NUM);
+    if (($r[1] == "") || ($r[1] == "0.0.0.0")) {
+      continue;
+    }
+    if ($r[2] == 't') {
+      $newpass=randpwgen($pwlen);
+      if ($boot[$phone]) {
+        $agi->command("sip notify reboot-" . $phone . " " . $r[0]);
+      }
+      pg_query($db,"UPDATE users SET secret='" . $newpass . "' WHERE name='" . $r[0] . "'");
+      if ($boot[$phone]) {
+        $agi->command("sip prune realtime user " . $r['0']);
+        $agi->command("sip prune realtime peer " . $r['0']);
+        $agi->command("sip show peer " . $r[0] . " load");
+      }
+    } else if ((($_SERVER['argv'][1] == "") || ($_SERVER['argv'][1] == "1")) && ($boot[$phone]))  {
+      $agi->command("sip notify reboot-" . $phone . " " . $r[0]);
+    }
+  }
+}
+$agi->disconnect();
+%>

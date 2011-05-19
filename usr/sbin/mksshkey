@@ -1,0 +1,16 @@
+#!/bin/bash
+
+if [ -e /root/.ssh/server.key ];then
+  rm /root/.ssh/server.key;
+fi;
+
+if [ -e /root/.ssh/server.key.pub ];then
+  rm /root/.ssh/server.key.pub;
+fi;
+
+if [ ! -d /root/.ssh ];then
+  mkdir /root/.ssh
+  chmod 700 /root/.ssh
+fi;
+
+ssh-keygen -f /root/.ssh/server.key -t rsa -b 2048 -N "`cat /etc/mail/ldap`"  -C "Server Access Key"

@@ -1,0 +1,88 @@
+<head>
+<link rel=stylesheet type=text/css href=../netsentry.css>
+<title>Network Config</title></head>
+<CENTER>
+<TABLE WIDTH=80% CELLSPACING=10>
+<TR><TD ALIGN=CENTER>
+<IMG SRC=images/boot1.png>
+</TD></TR><TR><TD ALIGN=LEFT>
+<UL>
+<LI>When Network Sentinel Solutions Firewall Boots From The CD It Will Prompt You As To Whether You Will Be Running
+The Complete Package Or A Simple Gateway</LI>
+<LI>If You Booting From The Gateway CD You Will Not Be Prompted</LI>
+</UL>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER>
+<IMG SRC=images/boot2.png>
+</TD><TR><TD>
+<UL>
+<LI>The IP Address Of The Server Must Be Setup This Is The Internal Address</LI>
+<LI>You Should Only Use An Address In The Following Ranges And Subnet Bits Shown</LI>
+<UL>
+<LI>10.0.0.0 - 10.255.255.255 8</LI>
+<LI>172.16.0.0 - 172.16.31.255 16</LI>
+<LI>192.168.0.0 - 192.168.255.255 24</LI>
+</UL></UL>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER>
+<IMG SRC=images/boot3.png>
+</TD></TR><TR><TD ALIGN=LEFT>
+<UL>
+<LI>The Network Address Is The Lowest Address In A Subnet</LI>
+<LI>The Network Address And Broadcast Address (Highest Address) Cannot Be Used As IP Address</LI>
+<LI>The Following Table Outlines The Network Addresses As Used Above And With The Subnet Bits Used As
+  Above. Replace X With The Value 
+Chosen For That Position</LI>
+<UL>
+<LI>10.0.0.0 - 10.255.255.255 8 x.0.0.0</LI>
+<LI>172.16.0.0 - 172.31.255.255 16 x.x.0.0</LI>
+<LI>192.168.0.0 - 192.168.255.255 24 x.x.x.0</LI>
+</UL>
+</UL>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER>
+<IMG SRC=images/boot4.png>
+</TD></TR><TR><TD ALIGN=LEFT>
+<UL>
+<LI>The Subnet Bits Represent The Size Of The Network The Lower The Bits The More IP's Are Available</LI>
+<LI>When Using A Non Standard Mask Remember To Supply The Correct Network Address Above</LI>
+<LI>Here Are The Most Common Subnet Bits Masks And Network Sizes</LI>
+<UL>
+<LI>8 255.0.0.0 16 Million (Class A Network) Used From 0.0.0.0 To 127.255.255.255</LI>
+<LI>16 255.255.0.0 65535 (Class B Network) Used From 128.0.0.0 To 191.255.255.255</LI>
+<LI>24 255.255.255.0 256 (Class C Network) Used From 192.0.0.0 To 223.255.255.255</LI>
+</UL>
+</UL>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER>
+<IMG SRC=images/boot5.png>
+</TD></TR><TR><TD ALIGN=LEFT>
+<UL>
+<LI>If You Are Installing The Full Network Sentinel Solutions Firewall You May Create A Initial BOOTP Record To Enable A Machine On The Network To 
+Obtain Network Settings Automatically</LI>
+<LI>This Address Must Be In The Network Space You Have Allocated Above</LI>
+<LI>You Require The Media Access Controller Address Of The Machine</LI>
+<UL>
+<LI>To Obtain The MAC Address Of A Windows 95/98/Me System Click On Start Click On Run Then Type In winipcfg</LI>
+<LI>To Obtain The MAC Address Of A Windows XP/2000 System Open Up Command Prompt And Type ipconfig /all</LI>
+</UL>
+</UL>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER>
+<IMG SRC=images/boot6.png>
+</TD></TR><TR><TD ALIGN=LEFT>
+<UL>
+<LI>Enter The MAC Address You Obtained Above</LI>
+<LI>The PC Whose MAC Address Has Been Entered Here Needs To Be Configured To Use DHCP See The PC Configuration Guide On This Site For 
+More Information</LI>
+<LI>All Other DHCP/BOOTP Servers Must Be Turned Off Before Proceeding</LI>
+<LI>Once The New Firewall Has Been Configured And Is Running Reboot The PC You Have Configured As The Manager To Access And Configure 
+The System</LI>
+</UL>
+</TD></TR>
+</TABLE>

@@ -1,0 +1,30 @@
+#!/usr/bin/perl
+
+open(CF,"/etc/firewall.conf");
+while(<CF>) {
+  chop $_;
+  @words=split(/ /,$_);
+  if (@words[0] eq "IP" ) {
+    shift @words;
+    if (@words[0] eq "ADSL_USER") {
+      shift @words;
+      if (@words[2] >= 2) {
+        @words[2]=@words[2]-2;
+      }
+      $lout=join(" ",@words);          
+      push(@clines,"IP ADSL_USER " . $lout);
+    } else {
+      push(@clines,$_);
+    }
+  } else {
+    push(@clines,$_);
+  }
+}
+close(CF);
+
+
+open(CF,">/etc/firewall.conf");
+foreach $confline (@clines) {
+  print CF $confline . "\n";
+}
+close(CF);

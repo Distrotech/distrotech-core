@@ -1,0 +1,47 @@
+#!/bin/bash
+
+if [ -e /etc/.firstboot ] || [ -e /etc/.needsreconf ];then
+  exit;
+fi;
+
+if [ ! -d /var/log/sogo ];then
+  mkdir /var/log/sogo
+fi;
+
+if [ ! -d /var/run/sogo ];then
+  mkdir /var/run/sogo
+fi;
+
+chown sogo /var/run/sogo
+chown sogo /var/log/sogo
+
+if [ ! -e /var/run/sogo/memcached.pid ];then
+  ps axu |grep memcached |awk '$1 == "sogo" {print "kill "$2}' |sh
+ else 
+  CURMPID=`cat /var/run/sogo/memcached.pid`
+  if [ ! -d /proc/$CURMPID ] || [ ! "$CURMPID" ];then
+    rm /var/run/sogo/memcached.pid
+  fi;
+fi;
+
+
+if [ ! -e /var/run/sogo/sogo.pid ];then
+  ps ax |grep -E "[0-9] /bin/bash /usr/sbin/safe_sogo" |awk -v pid=$$ '$1 != pid {print "kill -9 "$1}' |sh
+  while [ "`pidof sogod`" ] && [ "$KTEST" != "XXX" ];do
+    killall sogod
+    sleep 1
+    KTEST=${KTEST}X
+  done;
+  if [ "`pidof sogod`" ];then
+    killall -9 sogod
+  fi;
+ else
+  CURSPID=`cat /var/run/sogo/sogo.pid`
+  if [ ! -d /proc/$CURSPID ] || [ ! "$CURSPID" ];then
+    rm /var/run/sogo/sogo.pid
+  fi;
+fi;
+
+if [ -e /usr/bin/runsogo ];then
+  su sogo -c /usr/bin/runsogo > /dev/null 2>&1 &
+fi;

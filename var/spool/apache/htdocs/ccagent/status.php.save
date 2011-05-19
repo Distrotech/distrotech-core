@@ -1,0 +1,65 @@
+<%
+/*
+#    Copyright (C) 2002  <Gregory Hinton Nietsky>
+#    Copyright (C) 2005  <ZA Telecomunications>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+include "/var/spool/apache/htdocs/reception/auth.inc";
+
+$timeout=120;
+$socket = fsockopen("127.0.0.1","5038", $errno, $errstr, $timeout); 
+fputs($socket,"Action: Login\r\n"); 
+fputs($socket,"UserName: admin\r\n"); 
+fputs($socket,"Secret: admin\r\n"); 
+fputs($socket,"Events: off\r\n"); 
+fputs($socket,"\r\n");
+
+if (isset($numtocall)) {
+  fputs($socket,"Action: Originate\r\n");
+  fputs($socket,"Channel: Agent/" . $PHP_AUTH_USER . "\r\n");
+  fputs($socket,"Context: ccdial\r\n");
+  fputs($socket,"Exten: " . $numtocall . "\r\n");
+  fputs($socket,"Priority: 1\r\n");
+  fputs($socket,"\r\n");
+} else if (isset($_POST['directdial'])) {
+  fputs($socket,"Action: Originate\r\n");
+  fputs($socket,"Channel: Agent/" . $PHP_AUTH_USER . "\r\n");
+  fputs($socket,"Context: ccddial\r\n");
+  fputs($socket,"Exten: " . $_POST['directdial'] . "\r\n");
+  fputs($socket,"Priority: 1\r\n");
+  fputs($socket,"\r\n");
+} else if (isset($_POST['transfer'])) {
+  $actchan=pg_query($db,"SELECT dstchannel from agent ${ARG1} where exten='$PHP_AUTH_USER'");
+//  pg_query($db,"UPDATE agent SET channel='' where exten='$PHP_AUTH_USER'");
+  list($agentchan)=pg_fetch_array($actchan,0);
+  fputs($socket,"Action: Redirect\r\n");
+  fputs($socket,"Channel: " . $agentchan . ",1\r\n");
+  fputs($socket,"Context: userout\r\n");
+  fputs($socket,"Exten: " . $_POST['extento'] . "\r\n");
+  fputs($socket,"Priority: 1\r\n");
+  fputs($socket,"\r\n");
+}
+
+while (!feof($socket)) { 
+  $wrets .= fread($socket, 8192); 
+}
+print $wrets;
+
+fputs($socket,"Action: Logoff\r\n"); 
+fputs($socket,"\r\n");
+fclose($socket);
+
+%>

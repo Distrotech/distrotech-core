@@ -1,0 +1,51 @@
+#!/usr/bin/perl
+
+use Net::LDAPS;
+use Crypt::PasswdMD5;
+
+open(LCON,"/etc/ldap.conf");
+while(<LCON>) {
+  chop $_;
+  @centry=split(/\s/,$_);
+  if (@centry[0] eq "binddn") {
+    $binddn=@centry[1];
+  } elsif (@centry[0] eq "bindpw") {
+    $password=@centry[1];
+  }
+}
+
+
+$ldap = Net::LDAPS->new("127.0.0.1",port=>"636",verify => 'none');
+
+$ldap->bind($binddn,password => $password);
+
+$mesg = $ldap->search(base=>"ou=Users",filter =>"(&(uid=*)(objectClass=sambaSamAccount))",
+                      attrs=>['sambaPwdMustChange','uid']);
+
+$ltime=time()+86400;
+
+$ucnt=0;
+while($entry = $mesg->shift_entry) {
+   $uid=$entry->get_value("uid");
+   $pmc=$entry->get_value("sambaPwdMustChange");
+
+   if (($pmc <= $ltime) && ($pmc ne "")) {
+     push(@euser,$uid);
+     $ucnt++;
+   }
+}
+
+if ($ucnt > 0) { 
+  open(SM,"|/usr/sbin/sendmail -t");
+
+  print SM<<__EOB__;
+To: root
+Subject: Expired Users/Users Expireing Within 24 Hours
+
+__EOB__
+
+  foreach $user (@euser) {
+     print SM "$user\n";
+  }
+  close(SM);
+}

@@ -1,0 +1,553 @@
+#!/usr/bin/perl
+
+use Net::LDAPS;
+use NDBM_File;
+use GDBM_File;
+use Fcntl;
+
+open(LCON,"/etc/ldap.conf");
+while(<LCON>) {
+  chop $_;
+  @centry=split(/\s/,$_);
+  if (@centry[0] eq "binddn") {
+    $binddn=@centry[1];
+  } elsif (@centry[0] eq "bindpw") {
+    $password=@centry[1];
+  }
+}
+
+$ldap = Net::LDAPS->new("127.0.0.1",port=>"636",verify => 'none') or exit;
+
+$ldap->bind($binddn,password => $password);
+
+
+$mesg = $ldap->search(base=>"ou=Email",filter =>"(sendmailMTAClassName=WhiteList)",
+                      attrs=>['sendmailMTAClassValue']);
+ 
+open(SR,">/opt/MailScanner/etc/rules/spam.whitelist.rules");
+while($entry = $mesg->shift_entry) {
+   @wlist=$entry->get_value("sendmailMTAClassValue");
+   foreach $wlent (@wlist) {
+     if ($wlent ne "127.0.0.1") {
+       if (index($wlent,"\@") eq -1) {
+         $wlent="*\@$wlent";
+       }
+       printf SR ("FromOrTo:  %-50s  yes\n",$wlent);
+     }
+   }
+}
+printf SR ("FromOrTo:  %-50sno\n","default");
+close(SR);
+
+$mesg = $ldap->search(base=>"ou=Email",filter =>"(sendmailMTAClassName=VirusSafe)",
+                      attrs=>['sendmailMTAClassValue']);
+ 
+open(VR,">/opt/MailScanner/etc/rules/virus.scanning.rules");
+while($entry = $mesg->shift_entry) {
+   @wlist=$entry->get_value("sendmailMTAClassValue");
+   foreach $wlent (@wlist) {
+     if ($wlent ne "127.0.0.1") {
+       if (index($wlent,"\@") eq -1) {
+         $wlent="*\@$wlent";
+       }
+       printf VR ("FromOrTo:  %-50s  no\n",$wlent);
+     }
+   }
+}
+printf VR ("FromOrTo:  %-50s  yes\n","default");
+close(VR);
+ 
+if ( -d "/opt/apache2" ) {
+  tie (%DB, 'GDBM_File',"/etc/apache/vhosts2",O_RDWR|O_TRUNC|O_CREAT, 0644);
+ } else {
+  tie (%DB, 'NDBM_File',"/etc/apache/vhosts",O_RDWR|O_TRUNC|O_CREAT, 0644);
+}
+open(FPC,">/etc/fp/httpd.conf.fp.orig");
+
+print FPC <<__EOF_FILE__;
+ResourceConfig /etc/fp/access.conf
+AccessConfig /etc/fp/access.conf
+ServerRoot /usr
+Listen 80
+Listen 666
+Listen 443
+ServerName localhost
+DocumentRoot "/var/spool/apache/htdocs"
+LoadModule userdir_module     libexec/mod_userdir.so
+AddModule mod_userdir.c
+UserDir public_html
+NameVirtualHost *
+
+__EOF_FILE__
+
+
+$mesg = $ldap->search(filter =>"(&(hostedSite=*)(objectClass=officePerson))",
+                      attrs=>['hostedSite','uidNumber','gidNumber','uid','userPassword']);
+ 
+while($entry = $mesg->shift_entry) {
+   @www=$entry->get_value("hostedSite");
+   $uidnum=$entry->get_value("uidNumber");
+   $gidnum=$entry->get_value("gidNumber");
+   $uidname=$entry->get_value("uid");
+   ($null,$pass)=split(/\{CRYPT\}/,$entry->get_value("userPassword"));
+
+   $dir="/var/home/" . substr($uidname,0,1) . "/" . substr($uidname,1,1) . "/" . $uidname;
+
+   foreach $site (@www) {
+     $DB{$site} = $dir . "/" . $site;
+     if ( ! -d $dir . "/" . $site ) {
+       mkdir($dir . "/" . $site);
+       chown($uidnum,80,$dir . "/" . $site);
+       chmod(02755,$dir . "/" . $site);
+     }
+     if ( ! -d $dir . "/" . $site . "/cgi-bin") {
+       mkdir($dir . "/" . $site . "/cgi-bin");
+       chown($uidnum,$gidnum,$dir . "/" . $site . "/cgi-bin");
+       chmod(0755,$dir . "/" . $site . "/cgi-bin");
+     }
+     if ( ! -d $dir . "/" . $site . "/usage") {
+       mkdir($dir . "/" . $site . "/usage",$mode);
+       chown(80,80,$dir . "/" . $site . "/usage");
+       chmod(02750,$dir . "/" . $site . "/usage");
+     }
+
+     if ( ! -e $dir . "/" . $site . "/usage/index.html") {
+       printuhtml($site,$dir . "/" . $site . "/usage/");
+       chown(80,80,$dir . "/" . $site . "/usage/index.html");
+       chmod(0640,$dir . "/" . $site . "/usage/index.html");
+     }
+
+     if ( ! -e $dir . "/" . $site . "/usage/.htaccess") {
+       printuauth($site,$dir . "/" . $site,$uidname);
+       chown(80,80,$dir . "/" . $site . "/usage/.htaccess");
+       chmod(0640,$dir . "/" . $site . "/usage/.htaccess");
+     }
+
+     if ( ! -d $dir . "/" . $site . "/usage/apache") {
+       mkdir($dir . "/" . $site . "/usage/apache");
+       chown(80,80,$dir . "/" . $site . "/usage/apache");
+       chmod(02750,$dir . "/" . $site . "/usage/apache");
+     }
+     if ( ! -e $dir . "/" . $site . "/usage/apache/usage.conf") {
+       printuconf($site,$dir . "/" . $site . "/usage/apache/access_log","clf",$dir . "/" . $site . "/usage/apache/");
+     }
+
+     if ( ! -d $dir . "/" . $site . "/usage/squid") {
+       mkdir($dir . "/" . $site . "/usage/squid");
+       chown(80,80,$dir . "/" . $site . "/usage/squid");
+       chmod(02750,$dir . "/" . $site . "/usage/squid");
+     }
+     if ( ! -e $dir . "/" . $site . "/usage/squid/usage.conf") {
+       printuconf($site,$dir . "/" . $site . "/usage/squid/access_log","squid",$dir . "/" . $site . "/usage/squid/");
+     }     
+     print FPC <<__EOF_FILE__;
+<VirtualHost @ddin[0]:80>
+  DocumentRoot $dir/$site
+  ServerName $site
+</VirtualHost>
+
+__EOF_FILE__
+    if ( ! -e "/usr/local/frontpage/$site" . ":80.cnf" ){
+      push(@update,$site);
+      $siteowner{$site}=$uidname;
+      $sitepass{$site}=$pass;
+      $sitedir{$site}=$dir . "/" . $site;
+    }
+  }
+}
+
+$mesg = $ldap->search(filter =>"(&(hostedFPSite=*)(objectClass=officePerson))",
+                      attrs=>['uid','hostedFPSite','userPassword','uidNumber']);
+
+$base="/var/spool/apache/vhosts";
+
+while($entry = $mesg->shift_entry) {
+   $uid=$entry->get_value("uid");
+   $uidnum=$entry->get_value("uidNumber");
+   @www=$entry->get_value("hostedFPSite");
+   ($null,$pass)=split(/\{CRYPT\}/,$entry->get_value("userPassword"));
+   foreach $site (@www) {
+     $dir = substr($uid,0,1) . "/" . substr($uid,1,1) . "/" . $uid . "/" . $site;
+     if ( ! -d "$base/" . substr($uid,0,1))  {
+       mkdir("$base/" . substr($uid,0,1));
+     }
+     if ( ! -d "$base/" . substr($uid,0,1) . "/" . substr($uid,1,1))  {
+       mkdir("$base/" . substr($uid,0,1) . "/" . substr($uid,1,1));
+     }
+     if ( ! -d "$base/" . substr($uid,0,1) . "/" . substr($uid,1,1) . "/" . $uid)  {
+       mkdir("$base/" . substr($uid,0,1) . "/" . substr($uid,1,1) . "/" . $uid);
+     }
+     if ( ! -d "$base/" . $dir)  {
+       mkdir("$base/" . $dir);
+       chown($uidnum,80,$base . "/" . $dir);
+       chmod(02755,$base . "/" . $dir);
+     }
+      
+     if ( ! -d $base . "/" . $dir . "/cgi-bin") {
+       mkdir($base . "/" . $dir . "/cgi-bin");
+       chown($uidnum,$gidnum,$base . "/" . $dir . "/cgi-bin");
+       chmod(0755,$base . "/" . $dir . "/cgi-bin");
+     }
+
+     if ( ! -d $base . "/" . $dir . "/usage") {
+       mkdir($base . "/" . $dir . "/usage",$mode);
+       chown($uidnum,80,$base . "/" . $dir . "/usage");
+       chmod(02750,$base . "/" . $dir . "/usage");
+     }
+     if ( ! -e $base . "/" . $dir . "/usage/index.html") {
+       printuhtml($site,$base . "/" . $dir . "/usage/");
+       chown($uidnum,80,$base . "/" . $dir . "/usage/index.html");
+       chmod(0640,$base . "/" . $dir . "/usage/index.html");
+     }
+
+     if ( ! -e $base . "/" . $dir . "/usage/.htaccess") {
+       printfpuauth($site,$base . "/" . $dir);
+       chown($uidnum,80,$base . "/" . $dir . "/usage/.htaccess");
+       chmod(0640,$base . "/" . $dir . "/usage/.htaccess");
+     }
+
+     if ( ! -d $base . "/" . $dir . "/usage/apache") {
+       mkdir($base . "/" . $dir . "/usage/apache");
+       chown($uidnum,80,$base . "/" . $dir . "/usage/apache");
+       chmod(02750,$base . "/" . $dir . "/usage/apache");
+     }
+     if ( ! -e $base . "/" . $dir . "/usage/apache/usage.conf") {
+       printuconf($site,$base . "/" . $dir . "/usage/apache/access_log","clf",$base . "/" . $dir . "/usage/apache/");
+     }
+
+     if ( ! -d $base . "/" . $dir . "/usage/squid") {
+       mkdir($base . "/" . $dir . "/usage/squid");
+       chown($uidnum,80,$base . "/" . $dir . "/usage/squid");
+       chmod(02750,$base . "/" . $dir . "/usage/squid");
+     }
+     if ( ! -e $base . "/" . $dir . "/usage/squid/usage.conf") {
+       printuconf($site,$base . "/" . $dir . "/usage/squid/access_log","squid",$base . "/" . $dir . "/usage/squid/");
+     }
+     if ( -d "/var/spool/apache/vhosts/" . $dir ) {
+       $DB{$site} = $dir;
+     } else {
+       $DB{$site} = $base . "/" . $dir;
+     }
+     print FPC <<__EOF_FILE__;
+<VirtualHost @ddin[0]:80>
+  DocumentRoot $base/$dir
+  ServerName $site
+</VirtualHost>
+
+__EOF_FILE__
+    if ( ! -e "/usr/local/frontpage/$site" . ":80.cnf" ){
+      push(@update,$site);
+      $siteowner{$site}=$uid;
+      $sitepass{$site}=$pass;
+      $sitedir{$site}=$base . "/" . $dir;
+    }
+  }
+}
+
+
+$mesg = $ldap->search(filter =>"(&(sendmailMTAKey=*)(sendmailMTAMapName=horde))",
+                      attrs=>['sendmailMTAKey','sendmailMTAMapValue']);
+ 
+while($entry = $mesg->shift_entry) {
+   $www=$entry->get_value("sendmailMTAMapValue");
+   if ($DB{$www} eq "" ) {
+     $DB{$www} = "/var/spool/apache/htdocs/horde";
+   }
+}
+
+if ( -e "/etc/webmap.local" ) {
+  open(LWM,"/etc/webmap.local");
+  while(<LWM>) {
+    chop $_;
+    ($site,$spath)=split(/:/,$_);
+    if ($DB{$site} eq "") {
+      $DB{$site} = $spath;
+    }
+  }
+  close(LWM);
+}
+
+untie %DB;
+close(TXT);
+
+$ldap->unbind;
+
+foreach $www (@update) {
+  @oldpw=();
+  @oldgrp=();
+  $isadmingrp="";
+  $isautgrp="";
+  if (-e $sitedir{$www} . "/_vti_pvt/service.pwd") {
+    open(PWF,$sitedir{$www} . "/_vti_pvt/service.pwd");
+    while(<PWF>) {
+      ($pwuname,$pwcrypt)=split(/:/,$_);
+      if (($pwuname ne $siteowner{$www}) && ($pwuname ne "") && ($pwcrypt ne "")) {
+        push(@oldpw,$_);
+      }
+    }
+    close(PWF);
+  }
+
+  if (-e $sitedir{$www} . "/_vti_pvt/service.grp") {
+    open(GPF,$sitedir{$www} . "/_vti_pvt/service.grp");
+    while(<GPF>) {
+      ($gname,$members)=split(/:/,$_);
+      if ((index($members,$siteowner{$www}) eq -1) && ($gname eq "administrators")) {
+        $isadmingrp="YIP";
+        push(@oldgp,"$gname: $uid$members");
+      } elsif ($gname eq "authors") {
+        push(@oldgp,$_);
+        $isautgrp="YIP";
+      } elsif ($gname ne "# -FrontPage-\n") {
+        push(@oldgp,$_);
+      }
+      close(GPF);
+    }
+  }
+
+  if ( -d $sitedir{$www} ) {
+    system("/usr/local/frontpage/version5.0/bin/owsadm.exe -o install -u $siteowner{$www} -p 80 -m $www -servconf /etc/fp/httpd.conf.fp.orig -xuser $siteowner{$www} -pw $siteowner{$www}"); 
+    system("chown -R $siteowner{$www}.www $sitedir{$www}/_vti_pvt/");
+    open(PWF,">" . $sitedir{$www} . "/_vti_pvt/service.pwd");
+    print PWF "# -FrontPage-\n";
+    foreach $ouser (@oldpw) {
+      print PWF "$ouser";
+    }
+
+    print PWF "$siteowner{$www}:$sitepass{$www}\n";
+    close(PWF);
+
+    open(GPF,">" . $sitedir{$www} . "/_vti_pvt/service.grp");
+    print GPF "# -FrontPage-\n";
+    if ($isadmingrp ne "YIP") {
+      print GPF "administrators: $siteowner{$www}\n";
+    }
+    if ($isautgrp ne "YIP") {
+      print GPF "authors:\n";
+    }
+    foreach $grp (@oldgp) {
+      print GPF "$grp";
+    }
+    close(GPF);
+  }
+}
+
+sub printuconf() {
+  local($domain,$lfile,$type,$outdir)=@_;
+  $title{'clf'}="Web Server";
+  $title{'squid'}="Proxy Server";
+  open(WC,">$outdir/usage.conf");
+  print WC <<__END_OF_RECORD__;
+LogFile         $lfile
+LogType         $type
+OutputDir       $outdir
+HistoryName	webalizer.hist
+Incremental	yes
+IncrementalName	webalizer.current
+ReportTitle     Usage Statistics From $title{$type} For
+HostName        $domain
+#HTMLExtension  html
+PageType	htm*
+PageType	cgi
+PageType	phtml
+PageType	php*
+PageType	php
+PageType	pl
+PageType	asp
+#UseHTTPS       no
+DNSCache	dns_cache.db
+DNSChildren	10
+#HTMLPre <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+#HTMLHead <META NAME="author" CONTENT="The Webalizer">
+#HTMLBody <BODY BGCOLOR="#E8E8E8" TEXT="#000000" LINK="#0000FF" VLINK="#FF0000">
+#HTMLPost 	<BR CLEAR="all">
+#HTMLTail <IMG SRC="msfree.png" ALT="100% Micro$oft free!">
+#HTMLEnd </BODY></HTML>
+Quiet		yes
+ReallyQuiet	no
+TimeMe		no
+GMTTime		no
+Debug		no
+FoldSeqErr	no
+#VisitTimeout	1800
+IgnoreHist	no
+CountryGraph	yes
+DailyGraph	yes
+DailyStats	yes
+HourlyGraph	yes
+HourlyStats	yes
+GraphLegend	yes
+#GraphLines	2
+TopSites        30
+TopKSites       10
+TopURLs         30
+TopKURLs        10
+TopReferrers    30
+TopAgents       15
+TopCountries    30
+TopEntry        10
+TopExit         10
+TopSearch       20
+TopUsers        20
+AllSites	yes
+AllURLs		yes
+AllReferrers	yes
+AllAgents	yes
+AllSearchStr	yes
+AllUsers      	yes
+IndexAlias    	index.html
+IndexAlias	postinfo.html
+#HideSite	*mrunix.net
+#HideSite	localhost
+#HideReferrer	mrunix.net/
+#HideReferrer	Direct Request
+HideURL		*.gif
+HideURL		*.GIF
+HideURL		*.jpg
+HideURL		*.JPG
+HideURL		*.png
+HideURL		*.PNG
+HideURL		*.ra
+#HideAgent	RealPlayer
+#HideUser	root
+#HideUser	admin
+#GroupURL	/cgi-bin/*	CGI Scripts
+#GroupURL	/images/*	Images
+#GroupSite	*.aol.com
+#GroupSite	*.compuserve.com
+#GroupReferrer	yahoo.com/	Yahoo!
+#GroupReferrer	excite.com/     Excite
+#GroupReferrer	infoseek.com/   InfoSeek
+#GroupReferrer	webcrawler.com/ WebCrawler
+#GroupUser      root            Admin users
+#GroupUser      admin           Admin users
+#GroupUser      wheel           Admin users
+GroupAgent	MSIE		Micro$oft Internet Exploder
+#HideAgent	MSIE
+GroupAgent	Mozilla		Netscape
+#HideAgent	Mozilla
+GroupAgent	Lynx*		Lynx
+#HideAgent	Lynx*
+#HideAllSites	no
+#GroupDomains	0
+#GroupShading	yes
+#GroupHighlight	yes
+#IgnoreSite	bad.site.net
+#IgnoreURL	/test*
+#IgnoreReferrer	file:/*
+#IgnoreAgent	RealPlayer
+#IgnoreUser     root
+#IgnoreURL	*
+#IncludeURL	~joeuser*
+#IgnoreUser     *
+#IncludeUser    someuser
+#MangleAgents    0
+SearchEngine	yahoo.com	p=
+SearchEngine	altavista.com	q=
+SearchEngine	google.com	q=
+SearchEngine	eureka.com	q=
+SearchEngine	lycos.com	query=
+SearchEngine	hotbot.com	MT=
+SearchEngine	msn.com		MT=
+SearchEngine	infoseek.com	qt=
+SearchEngine	webcrawler	searchText=
+SearchEngine	excite		search=
+SearchEngine	netscape.com	search=
+SearchEngine	mamma.com	query=
+SearchEngine	alltheweb.com	query=
+SearchEngine	northernlight.com  qr=
+#DumpPath	/var/lib/httpd/logs
+#DumpHeader	no
+#DumpExtension	tab
+#DumpSites	no
+#DumpURLs	no
+#DumpReferrers	no
+#DumpAgents	no
+#DumpUsers	no
+#DumpSearchStr  no
+__END_OF_RECORD__
+close(WC);
+}
+
+
+sub printuhtml() {
+  local($domain,$basedir)=@_;
+  open(WC,">$basedir/index.html");
+  print WC <<__END_OF_RECORD__;
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+ <TITLE>Usage Statistics For $domain - Last 12 Months</TITLE>
+</HEAD>
+<BODY BGCOLOR="#E8E8E8" TEXT="#000000" LINK="#0000FF" VLINK="#FF0000">
+<H2>Usage Statistics From Webserver For $domain</H2>
+<CENTER>
+<A HREF=apache><IMG SRC="apache/usage.png" ALT="Usage summary for $domain" HEIGHT=256 WIDTH=512 BORDER=O></A>
+<P>
+</CENTER>
+<H2>Usage Statistics From Proxy Server For $domain</H2>
+<CENTER>
+<A HREF=squid><IMG SRC="squid/usage.png" ALT="Usage summary for $domain" HEIGHT=256 WIDTH=512 BORDER=O></A>
+<P>
+<P>
+<HR>
+<TABLE WIDTH="100%" CELLPADDING=0 CELLSPACING=0 BORDER=0>
+<TR>
+<TD ALIGN=left VALIGN=top>
+<SMALL>Generated by
+<A HREF="http://www.mrunix.net/webalizer/"><STRONG>Webalizer Version 2.01</STRONG></A>
+</SMALL>
+</TD>
+</TR>
+</TABLE>
+</BODY>
+</HTML>
+__END_OF_RECORD__
+close(WC);
+}
+
+sub printfpuauth() {
+  local($domain,$basedir)=@_;
+  open(WC,">$basedir/usage/.htaccess");
+  print WC <<__END_OF_RECORD__;
+<Limit GET POST>
+order deny,allow
+deny from all
+allow from all
+require group authors administrators
+</Limit>
+<Limit PUT DELETE>
+order deny,allow
+deny from all
+</Limit>
+AuthType Basic
+AuthName $domain
+AuthUserFile $basedir/_vti_pvt/service.pwd
+AuthGroupFile $basedir/_vti_pvt/service.grp
+__END_OF_RECORD__
+close(WC);
+}
+
+sub printuauth() {
+  local($domain,$basedir,$uname)=@_;
+  open(WC,">$basedir/usage/.htaccess");
+  print WC <<__END_OF_RECORD__;
+
+IndexIgnore .htaccess
+
+<Limit GET POST>
+order deny,allow
+deny from all
+allow from all
+require user $uname
+</Limit>
+<Limit PUT DELETE>
+order deny,allow
+deny from all
+</Limit>
+AuthType Basic
+AuthName $domain
+__END_OF_RECORD__
+close(WC);
+}
+

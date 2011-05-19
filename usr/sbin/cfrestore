@@ -1,0 +1,32 @@
+#!/bin/bash
+
+if [ ! "`grep -E "^System Type" /var/spool/apache/htdocs/ns/config/netsentry.conf`" ];then
+  DAY=`date +%e`;
+  MONTH=`date +%m`;
+  YEAR=`date +%Y`;
+  let DAY--;
+  if (( $DAY == 0 ));then
+    let MONTH--;
+    if (( $MONTH == 4 )) || (( $MONTH == 6 )) || (( $MONTH == 9 )) || (( $MONTH == 11 ));then
+      DAY=30
+     elif (( $MONTH == 2 ));then
+      DAY=28
+     elif (( $MONTH == 0 ));then
+      MONTH=12
+      DAY=31
+      let YEAR--;
+     else
+      DAY=31
+    fi;
+  fi;
+  if (( $DAY < 10 ));then
+    DAY=0${DAY}
+  fi;
+  BFILE="/var/spool/backup/backup-$YEAR-$MONTH-$DAY.tar.gz"
+  if [ -e $BFILE ];then
+    tar -C / -xzf ${BFILE} var/spool/apache/htdocs/ns/config/netsentry.conf
+    (/usr/sbin/genconf;
+    /usr/sbin/servconfig;
+    /usr/sbin/sqlpasswd) >/dev/null 2>&1
+  fi;
+fi;

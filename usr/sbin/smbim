@@ -1,0 +1,50 @@
+#!/usr/bin/perl
+
+$validkey{'EXTEN'}="WINPOPUP";
+
+if ((@ARGV[2] eq "") || ( ! -e @ARGV[0])) {
+  exit;
+}
+
+open(MP,"|/usr/bin/smbclient -M " . @ARGV[2] . " -U " . @ARGV[1]);
+
+open(MSGF,@ARGV[0]);
+while(<MSGF>) {
+  ($cmd,$val)=split(/: /,$_);
+  $cmd=uc($cmd);
+  if ($cmd eq "") {
+    $cmd=$_;
+  }
+  if ($extcmd{$cmd} eq "") {
+    if ($cmd eq "EXTEN") {
+      $extcmd{$cmd}=@ARGV[2];
+      $exten=$val;
+    } else {
+      $extcmd{$cmd}=$val;
+    }
+    push(@cmds,$cmd);
+  }
+}
+close(MSGF);
+
+foreach $ecmd (@cmds) { 
+  if (($extcmd{$ecmd} ne "") && ($validkey{$ecmd} ne "")) {
+    print MP "UPDATE astdb SET value='" . $extcmd{$ecmd} . "' WHERE family='" . $exten . "' AND key='" . $validkey{$ecmd} . "'\n\n";
+  } elsif ($ecmd eq "HELP") {
+print MP<<__EOF__
+The following commands are accepted.
+
+EXTEN: <EXTENSION>
+	This assosiates the workstation with a extension.
+
+
+__EOF__
+  } else {
+    print MP "Command: " . $ecmd . "\nWas Not Understood\n\n";
+  }
+}
+
+print MP "Thank You";
+close(MP);
+
+unlink(@ARGV[0]);

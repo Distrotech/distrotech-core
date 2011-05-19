@@ -1,0 +1,398 @@
+dn: cn=Addressbooks
+objectClass: top
+objectclass: groupofnames
+cn: Addressbooks
+member: uid=admin,ou=users
+
+dn: ou=Users
+objectClass: organizationalUnit
+ou: Users
+
+dn: ou=Email
+objectClass: organizationalUnit
+ou: Email
+
+dn: ou=Trusts
+objectClass: organizationalUnit
+ou: Trusts
+
+dn: ou=Groups
+objectClass: organizationalUnit
+ou: Groups
+
+dn: ou=Hosts
+objectClass: organizationalUnit
+ou: Hosts
+
+dn: ou=Admin
+objectClass: organizationalUnit
+ou: Admin
+
+dn: ou=VAdmin
+objectClass: organizationalUnit
+ou: VAdmin
+
+dn: ou=Servers
+objectClass: organizationalUnit
+ou: Servers
+
+dn: ou=Idmap
+objectClass: organizationalUnit
+ou: Idmap
+
+dn: sendmailMTAMapName=virtuser,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAMap
+sendmailMTACluster: AllServers
+sendmailMTAMapName: virtuser
+
+dn: sendmailMTAMapName=access,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAMap
+sendmailMTACluster: AllServers
+sendmailMTAMapName: access
+
+dn: sendmailMTAMapName=mailer,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAMap
+sendmailMTACluster: AllServers
+sendmailMTAMapName: mailer
+
+dn: sendmailMTAMapName=domain,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAMap
+sendmailMTACluster: AllServers
+sendmailMTAMapName: domain
+
+dn: sendmailMTAMapName=horde,ou=Email
+objectClass: sendmailMTAMap
+sendmailMTAMapName: horde
+
+dn: sendmailMTAMapName=authinfo,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAMap
+sendmailMTACluster: AllServers
+sendmailMTAMapName: authinfo
+
+dn: sendmailMTAClassName=LDAPRoute,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAClass
+sendmailMTAClassName: LDAPRoute
+sendmailMTACluster: AllServers
+sendmailMTAClassValue: adddomain
+
+dn: sendmailMTAClassName=R,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAClass
+sendmailMTAClassName: R
+sendmailMTACluster: AllServers
+sendmailMTAClassValue: 127.0.0.1
+
+dn: sendmailMTAClassName=M,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAClass
+sendmailMTAClassName: M
+sendmailMTACluster: AllServers
+sendmailMTAClassValue: 127.0.0.1
+
+dn: sendmailMTAClassName=WhiteList,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAClass
+sendmailMTAClassName: WhiteList
+sendmailMTACluster: AllServers
+sendmailMTAClassValue: 127.0.0.1
+
+dn: sendmailMTAClassName=VirusSafe,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAClass
+sendmailMTAClassName: VirusSafe
+sendmailMTACluster: AllServers
+sendmailMTAClassValue: 127.0.0.1
+
+dn: sendmailMTAKey=bin,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAAlias
+objectClass: sendmailMTAAliasObject
+sendmailMTAAliasGrouping: aliases
+sendmailMTACluster: AllServers
+sendmailMTAKey: bin
+sendmailMTAAliasValue: root
+
+dn: sendmailMTAKey=daemon,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAAlias
+objectClass: sendmailMTAAliasObject
+sendmailMTAAliasGrouping: aliases
+sendmailMTACluster: AllServers
+sendmailMTAKey: daemon
+sendmailMTAAliasValue: root
+
+dn: sendmailMTAKey=MAILER-DAEMON,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAAlias
+objectClass: sendmailMTAAliasObject
+sendmailMTAAliasGrouping: aliases
+sendmailMTACluster: AllServers
+sendmailMTAKey: MAILER-DAEMON
+sendmailMTAAliasValue: root
+
+dn: sendmailMTAKey=FETCHMAIL-DAEMON,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAAlias
+objectClass: sendmailMTAAliasObject
+sendmailMTAAliasGrouping: aliases
+sendmailMTACluster: AllServers
+sendmailMTAKey: FETCHMAIL-DAEMON
+sendmailMTAAliasValue: root
+
+dn: sendmailMTAKey=manager,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAAlias
+objectClass: sendmailMTAAliasObject
+sendmailMTAAliasGrouping: aliases
+sendmailMTACluster: AllServers
+sendmailMTAKey: manager
+sendmailMTAAliasValue: root
+
+dn: sendmailMTAKey=nobody,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAAlias
+objectClass: sendmailMTAAliasObject
+sendmailMTAAliasGrouping: aliases
+sendmailMTACluster: AllServers
+sendmailMTAKey: nobody
+sendmailMTAAliasValue: root
+
+dn: sendmailMTAKey=operator,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAAlias
+objectClass: sendmailMTAAliasObject
+sendmailMTAAliasGrouping: aliases
+sendmailMTACluster: AllServers
+sendmailMTAKey: operator
+sendmailMTAAliasValue: root
+
+dn: sendmailMTAKey=postmaster,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAAlias
+objectClass: sendmailMTAAliasObject
+sendmailMTAAliasGrouping: aliases
+sendmailMTACluster: AllServers
+sendmailMTAKey: postmaster
+sendmailMTAAliasValue: root
+
+dn: sendmailMTAKey=faxmaster,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAAlias
+objectClass: sendmailMTAAliasObject
+sendmailMTAAliasGrouping: aliases
+sendmailMTACluster: AllServers
+sendmailMTAKey: faxmaster
+sendmailMTAAliasValue: root
+
+dn: sendmailMTAKey=system,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAAlias
+objectClass: sendmailMTAAliasObject
+sendmailMTAAliasGrouping: aliases
+sendmailMTACluster: AllServers
+sendmailMTAKey: system
+sendmailMTAAliasValue: root
+
+dn: sendmailMTAKey=toor,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAAlias
+objectClass: sendmailMTAAliasObject
+sendmailMTAAliasGrouping: aliases
+sendmailMTACluster: AllServers
+sendmailMTAKey: toor
+sendmailMTAAliasValue: root
+
+dn: sendmailMTAKey=admin,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAAlias
+objectClass: sendmailMTAAliasObject
+sendmailMTAAliasGrouping: aliases
+sendmailMTACluster: AllServers
+sendmailMTAKey: admin
+sendmailMTAAliasValue: root
+
+dn: sendmailMTAKey=root,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAAlias
+objectClass: sendmailMTAAliasObject
+sendmailMTAAliasGrouping: aliases
+sendmailMTACluster: AllServers
+sendmailMTAKey: root
+sendmailMTAAliasValue: pubbox
+description: System Alerts/Admin Mail:smbadm
+
+dn: sendmailMTAKey=majordomo,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAAlias
+objectClass: sendmailMTAAliasObject
+sendmailMTAAliasGrouping: aliases
+sendmailMTACluster: AllServers
+sendmailMTAKey: majordomo
+sendmailMTAAliasValue: "|/var/spool/majordomo/wrapper majordomo"
+
+dn: sendmailMTAKey=owner-majordomo,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAAlias
+objectClass: sendmailMTAAliasObject
+sendmailMTAAliasGrouping: aliases
+sendmailMTACluster: AllServers
+sendmailMTAKey: owner-majordomo
+sendmailMTAAliasValue: root
+
+dn: sendmailMTAKey=pubbox,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAAlias
+objectClass: sendmailMTAAliasObject
+sendmailMTAAliasGrouping: aliases
+sendmailMTACluster: AllServers
+sendmailMTAKey: pubbox
+sendmailMTAAliasValue: "|/usr/bin/procmail -Y -m /etc/procmailrc.pub"
+
+dn: sendmailMTAKey=astfax,ou=Email
+objectClass: sendmailMTA
+objectClass: sendmailMTAAlias
+objectClass: sendmailMTAAliasObject
+sendmailMTAAliasGrouping: aliases
+sendmailMTACluster: AllServers
+sendmailMTAKey: astfax
+sendmailMTAAliasValue: pubbox
+description: Incoming Faxes:users
+
+dn: cn=localadmin,ou=Groups
+objectClass: posixGroup
+objectClass: sambaGroupMapping
+cn: localadmin
+gidNumber: 30
+sambaSID: S-1-5-32-544
+sambaGroupType: 4
+displayName: Administrators
+description: Administrators
+
+dn: cn=users,ou=Groups
+objectClass: posixGroup
+objectClass: sambaGroupMapping
+cn: users
+gidNumber: 100
+sambaSID: S-1-22-2-100
+sambaGroupType: 2
+description: Domain Users
+displayName: Domain Users
+memberuid: admin
+
+dn: cn=nowebaccess,ou=Groups
+objectClass: posixGroup
+objectClass: sambaGroupMapping
+cn: nowebaccess
+gidNumber: 101
+sambaSID: S-1-22-2-101
+sambaGroupType: 2
+description: No Browsing Access
+displayName: No Browsing Access
+
+dn: cn=fullwebaccess,ou=Groups
+objectClass: posixGroup
+objectClass: sambaGroupMapping
+cn: fullwebaccess
+gidNumber: 102
+sambaSID: S-1-22-2-102
+sambaGroupType: 2
+description: Full Browsing Access
+displayName: Full Browsing Access
+
+dn: cn=domusers,ou=Groups
+objectClass: posixGroup
+objectClass: sambaGroupMapping
+cn: domusers
+gidNumber: 300
+sambaSID: S-1-5-32-545
+sambaGroupType: 4
+description: Users
+displayName: Users
+memberuid: admin
+
+dn: cn=smbadm,ou=Groups
+objectClass: posixGroup
+objectClass: sambaGroupMapping
+cn: smbadm
+gidNumber: 139
+sambaSID: S-1-22-2-139
+sambaGroupType: 2
+displayName: Domain Admins
+description: Domain Admins
+
+dn: cn=nogroup,ou=Groups
+objectClass: sambaGroupMapping
+objectClass: posixGroup
+cn: nogroup
+gidNumber: 65535
+memberUid: nobody
+sambaSID: S-1-5-32-546
+sambaSIDList: S-1-22-1-501
+sambaGroupType: 2
+description: Guests
+displayName: Guests
+
+dn: cn=Admin Access,ou=Admin
+objectClass: top
+objectClass: groupofnames
+cn: Admin Access
+member: uid=admin,ou=users
+
+dn: cn=User Read Access,ou=Admin
+objectClass: top
+objectClass: groupofnames
+cn: User Read Access
+member: uid=admin,ou=users
+
+dn: cn=Call Shop Access,ou=Admin
+objectClass: top
+objectClass: groupofnames
+cn: Call Shop Access
+member: uid=admin,ou=users
+
+dn: uid=admin,ou=users
+objectClass: device
+objectClass: posixAccount
+objectClass: shadowAccount
+cn: admin
+uid: admin
+homeDirectory: /root
+uidNumber: 0
+gidNumber: 139
+loginshell: /bin/bash
+userPassword:: e0NSWVBUfSQxJHJ2eFBWNHZBJE5hblFocmUwc1oycEE5UzhsRDByay4=
+shadowLastChange: 12113
+shadowMax: 99999
+shadowWarning: 0
+shadowInactive: 0
+shadowExpire: 65535
+
+dn: uid=nobody,ou=users
+objectClass: device
+objectClass: posixAccount
+objectClass: shadowAccount
+objectClass: sambaSamAccount
+cn: Unprivliged User
+uid: nobody
+homeDirectory: /tmp
+loginShell: /usr/bin/true
+shadowLastChange: 12113
+shadowMax: 99999
+shadowWarning: 0
+shadowInactive: 0
+shadowExpire: 65535
+uidNumber: 65535
+gidNumber: 65535
+sambaAcctFlags: [NDU        ]
+sambaSID: S-1-22-1-501
+
+dn: cn=Domain
+objectClass: device
+cn: Domain
+

@@ -1,0 +1,1 @@
+SELECT contact.datetime,contact.status,contact.followup,contact.feedback,lead.title,lead.fname,lead.sname,lead.number,idata.*,cdata.* from lead left outer join contact on (contact.lead = lead.id) left outer join contactdata_1_1 as cdata on (cdata.contid = contact.id) left outer join inputdata_1_1 as idata on (idata.leadid=lead.id) ORDER BY contact.datetime;

@@ -1,0 +1,33 @@
+#!/bin/bash
+if [ "${USER}" != "dump-capability" ] && [ ${USER} != "" ];then
+  ACL_GROUPS=`groups $USER |cut -d: -f2 |cut -c2- |tr ' ' ','`
+  if [ "${ACL_GROUPS}" == "" ];then 
+    wbinfo -i ${USER} |awk -F: '$1 != "" {printf "/usr/sbin/idmapsync %s %s \"%s\"\n",$3,$1,$5}' |sh
+    ACL_GROUPS="users"
+    FIXBOX=1;
+   else
+    FIXBOX=0;
+  fi
+  export ACL_GROUPS
+  if [ ! -d /var/spool/mail/${USER:0:1}/${USER:1:1}/${USER} ];then
+    if [ ! -d /var/spool/mail/${USER:0:1} ];then
+      mkdir -m 0770 /var/spool/mail/${USER:0:1}/
+      chown root.root /var/spool/mail/${USER:0:1}
+    fi;
+    if [ ! -d /var/spool/mail/${USER:0:1}/${USER:1:1} ];then
+      mkdir -m 0770 /var/spool/mail/${USER:0:1}/${USER:1:1}
+      chown root.root /var/spool/mail/${USER:0:1}/${USER:1:1}
+      setfacl -x d:g:users -m d:g::rwX /var/spool/mail/${USER:0:1}/${USER:1:1}
+    fi;
+    if [ -e /var/spool/mail/${USER:0:1}/${USER:1:1}/${USER} ];then
+      FIXBOX=1;
+     else
+      mkdir -m 0770 /var/spool/mail/${USER:0:1}/${USER:1:1}/${USER}
+      chown ${USER}.mail /var/spool/mail/${USER:0:1}/${USER:1:1}/${USER}
+    fi;
+  fi;
+  if [ "`ls /var/spool/mail/${USER:0:1}/${USER:1:1}/BOGUS.${USER}.* 2>/dev/null`" ] || [ ${FIXBOX} == 1 ];then
+    /usr/sbin/fixbox ${USER}
+  fi;
+fi;
+exec /usr/libexec/dovecot/imap "$@"

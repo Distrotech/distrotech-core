@@ -1,0 +1,33 @@
+#!/bin/bash
+
+
+if [ -e /var/run/isdnprobe.pid ];then
+  CURPID=`cat /var/run/isdnprobe.pid`
+  if [ "$CURPID" != "$$" ] && [ -d /proc/$CURPID ] && [ "$CURPID" ];then
+    exit;
+   else
+    echo $$ > /var/run/isdnprobe.pid
+  fi;
+ else
+  echo $$ > /var/run/isdnprobe.pid
+fi;
+
+if [ ! -e /dev/mISDN ];then
+  (/bin/mknod /dev/mISDN c 46 0;
+  /sbin/modprobe mISDN_l1;
+  /sbin/modprobe mISDN_l2;
+  /sbin/modprobe l3udss1;
+  /sbin/modprobe mISDN_isac;
+  /sbin/modprobe mISDN_x25dte;
+  /sbin/modprobe mISDN_dtmf;
+  /sbin/modprobe mISDN_dsp_mg2ec;
+  /sbin/modprobe mISDN_dsp;) > /dev/null 2>&1
+  if [ "$1" ];then
+    /sbin/modprobe -s -q --ignore-install $1;
+    sleep 5
+  fi;
+  rm /var/run/isdnprobe.pid
+ else
+    sleep 10
+  /sbin/modprobe -s -q --ignore-install $1;
+fi;

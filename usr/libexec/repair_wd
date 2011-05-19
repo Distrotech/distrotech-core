@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [ ! "`pidof crond`" ];then
+  /usr/libexec/startcron &
+  exit 0
+ elif [ -e /var/run/watchdog.pid ];then
+  kill -9 `cat /var/run/watchdog.pid`
+  /sbin/reboot   
+ else
+  exit $1
+fi;

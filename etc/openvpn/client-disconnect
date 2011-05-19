@@ -1,0 +1,10 @@
+#!/bin/bash
+
+/sbin/ip route del ${ifconfig_pool_remote_ip} dev vpn0 table Link
+/sbin/ip route del ${ifconfig_pool_remote_ip}/32 dev vpn0 src ${ifconfig_local} table Ipsec
+/sbin/ip addr del ${ifconfig_pool_local_ip}/30 dev vpn0
+
+/sbin/iptables -D OVPNIN -j SYSIN -s ${ifconfig_pool_remote_ip}/32
+/sbin/iptables -D OVPNOUT -j SYSOUT -d ${ifconfig_pool_remote_ip}/32
+/sbin/iptables -D OVPNFWD -j ACCEPT -d ${ifconfig_pool_remote_ip}/32
+/sbin/iptables -D OVPNFWD -j ACCEPT -s ${ifconfig_pool_remote_ip}/32

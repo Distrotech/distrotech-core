@@ -1,0 +1,203 @@
+#!/usr/bin/perl
+
+use Net::LDAPS;
+use Quota;
+
+#
+#Combos
+#
+#0	Unique
+#1	Home + Samba
+#2	Samba + Mail
+#3	Mail + Home
+#4	All On One
+
+$hardpc=1.2;
+
+open(LCON,"/etc/ldap.conf");
+while(<LCON>) {
+  chop $_;
+  @centry=split(/\s/,$_);
+  if (@centry[0] eq "master_host") {
+    $host=@centry[1];
+  } elsif (@centry[0] eq "binddn") {
+    $binddn=@centry[1];
+  } elsif (@centry[0] eq "bindpw") {
+    $password=@centry[1];
+  }
+}
+$ldap = Net::LDAPS->new($host,port=>"636",verify => 'none',timeout => "10");
+$ldap->bind($binddn,password => $password);
+
+
+open(FT,"/etc/fstab");
+
+while(<FT>) {
+  chop $_;
+  ($fsys,$mpoint)=/(^\/dev\/[sh]d[a-h][\d]*)[\s]*([\/\w]*)[\s].*/;
+  check_path("/var/home","home",$mpoint);
+  check_path("/var/spool/samba","samba",$mpoint);
+  check_path("/var/spool/mail","mail",$mpoint);
+  if ($mpoint ne "") {
+    $filesys{$mpoint}=$fsys;
+  }
+}
+
+sub check_path() {
+  local($path,$id,$mountp)=@_;
+  if ((index($path,$mountp) >= 0) && ($mountp ne "") && (length($mountp) > length($mntp{$id}))){
+    $mntp{$id}=$mountp;
+  }
+}
+
+$homedir=$mntp{'home'};
+$sambadir=$mntp{'samba'};
+$maildir=$mntp{'mail'};
+
+$combo=0;
+
+open(QT,">/etc/quotatab");
+if (($homedir eq $sambadir ) && ($homedir ne $maildir)) {
+  $combo=1;
+  push(@qdir,$filesys{$homedir});
+  push(@qdir,$filesys{$maildir});
+  print QT "$filesys{$homedir}:Home Directory And File Server Shares\n";
+  print QT "$filesys{$maildir}:Email Inbox\n";
+} elsif (($homedir eq $maildir ) && ($homedir ne $sambadir)){
+  $combo=3;
+  push(@qdir,$filesys{$homedir});
+  push(@qdir,$filesys{$sambadir});
+  print QT "$filesys{$homedir}:Home Directory And Email Inbox\n";
+  print QT "$filesys{$sambadir}:File Server Shares\n";
+} elsif (($sambadir eq $maildir) && ($sambadir ne $homedir)) {
+  push(@qdir,$filesys{$maildir});
+  push(@qdir,$filesys{$homedir});
+  $combo=2;
+  print QT "$filesys{$homedir}:Home Directory\n";
+  print QT "$filesys{$maildir}:File Server Shares And Email Inbox\n";
+} elsif (($homedir eq $maildir) && ($homedir eq $sambadir)) {
+  if ($homedir ne "") {
+    push(@qdir,$filesys{$homedir});
+    $combo=4;
+    print QT "$filesys{$homedir}:Entire File System\n";
+  }
+} elsif ($homedir ne "") {
+  print QT "$filesys{$homedir}:Home Directory\n";
+  print QT "$filesys{$sambadir}:File Server Shares\n";
+  print QT "$filesys{$maildir}:Email Inbox\n";
+}
+close(QT);
+
+#print $filesys{$homedir} . "\t" .  $filesys{$sambadir} . "\t" .  $filesys{$maildir} . "\n";
+#print $homedir . "\n"  . $sambadir . "\n" . $maildir . "\n";
+#print "$combo\n";
+
+
+if (@ARGV[0] eq "on") {
+  open(QRC,">/etc/rc.d/rc.quota");
+  print QRC "#!/bin/bash\n\n";
+  foreach $qfsys (@qdir) {
+    print QRC "mount -o remount,quota $qfsys\n";
+    print QRC "quotacheck -bvn $qfsys\n";
+    print QRC "quotaon -v $qfsys\n\n";
+    system("/usr/sbin/quotacheck -vmnb $qfsys\n");
+  }
+  close(QRC);
+  chmod(0750,"/etc/rc.d/rc.quota");
+
+  print "Enter Support Tel Number (Appearing In Quota Warning) :";
+  $telnum=<STDIN>;
+  chop $telnum;
+
+  print "Enter Support Email Address (Appearing In Quota Warning) :";
+  $eaddr=<STDIN>;
+  chop $eaddr;
+
+
+  open(WCC,">/etc/warnquota.conf");
+print WCC<<__EOB__;
+MAIL_CMD 	= "/usr/sbin/sendmail -t"
+FROM 		= "System Administrator <root>"
+SUBJECT 	= Disk Storage Quota Exceeded
+CC_TO 		= ""
+SUPPORT 	= "$eaddr"
+PHONE 		= "$telnum"
+__EOB__
+  close(WCC);
+
+  $mesg = $ldap->search(base=>"ou=Users",filter =>"(&(uid=*)(objectClass=shadowAccount))",
+                      attrs=>['uidNumber','quotaHomeDir','quotaFileServer','quotaMailSpool']);
+  while($entry = $mesg->shift_entry) {
+    $user=$entry->get_value("uidNumber");
+    $pdir=$entry->get_value("quotaHomeDir");
+    $fservdir=$entry->get_value("quotaFileServer");
+    $mailsp=$entry->get_value("quotaMailSpool");
+    $dn=$entry->dn;
+
+    set_limits($pdir,$fservdir,$mailsp,$user);
+  }
+} elsif (@ARGV[0] eq "off") {
+  chmod(0644,"/etc/rc.d/rc.quota");
+} else {
+  $mesg = $ldap->search(base=>"ou=Users",filter =>"(&(uid=*)(quotaChanged=yes)(objectClass=shadowAccount))",
+                      attrs=>['uidNumber','quotaHomeDir','quotaFileServer','quotaMailSpool','uid']);
+
+  while($entry = $mesg->shift_entry) {
+    $userid=$entry->get_value("uid");
+    $user=$entry->get_value("uidNumber");
+    $pdir=$entry->get_value("quotaHomeDir");
+    $fservdir=$entry->get_value("quotaFileServer");
+    $mailsp=$entry->get_value("quotaMailSpool");
+    $dn=$entry->dn;
+
+    set_limits($pdir,$fservdir,$mailsp,$user);
+    if ( -d "/var/home/" . substr($userid,0,1) . "/" . substr($userid,1,1) . "/" . $userid ) {
+      $ldap->modify($dn,delete => ['quotaChanged']);
+    }
+  }
+}
+
+
+sub set_limits() {
+  local($hdir,$fsdir,$mspool,$uid)=@_;
+  if ($combo eq 4) {
+    $block_soft=($hdir+$fsdir+$mspool)*1024;
+    $block_hard=$block_soft*$hardpc;
+    Quota::setqlim($filesys{$homedir},$uid,$block_soft,$block_hard,0,0);
+  } elsif ($combo eq 3) {
+    $block_soft=($hdir+$mspool)*1024;
+    $block_hard=$block_soft*$hardpc;
+    Quota::setqlim($filesys{$homedir},$uid,$block_soft,$block_hard,0,0);
+    $block_soft=$fsdir*1024;
+    $block_hard=$block_soft*$hardpc;
+    Quota::setqlim($filesys{$sambadir},$uid,$block_soft,$block_hard,0,0);
+  } elsif ($combo eq 2) {
+    $block_soft=($fsdir+$mspool)*1024;
+    $block_hard=$block_soft*$hardpc;
+    Quota::setqlim($filesys{$sambadir},$uid,$block_soft,$block_hard,0,0);
+
+    $block_soft=$hdir*1024;
+    $block_hard=$block_soft*$hardpc;
+    Quota::setqlim($filesys{$homedir},$uid,$block_soft,$block_hard,0,0);
+   } elsif ($combo eq 1) {
+    $block_soft=($hdir+$fsdir)*1024;
+    $block_hard=$block_soft*$hardpc;
+    Quota::setqlim($filesys{$homedir},$uid,$block_soft,$block_hard,0,0);
+
+    $block_soft=$mspool*1024;
+    $block_hard=$block_soft*$hardpc;
+    Quota::setqlim($filesys{$maildir},$uid,$block_soft,$block_hard,0,0);
+  } elsif ($combo eq 0) {
+    $block_soft=$fsdir*1024;
+    $block_hard=$block_soft*$hardpc;
+    Quota::setqlim($filesys{$sambadir},$uid,$block_soft,$block_hard,0,0);
+
+    $block_soft=$mspool*1024;
+    $block_hard=$block_soft*$hardpc;
+    Quota::setqlim($filesys{$maildir},$uid,$block_soft,$block_hard,0,0);
+
+    $block_soft=$hdir*1024;
+    $block_hard=$block_soft*$hardpc;
+    Quota::setqlim($filesys{$homedir},$uid,$block_soft,$block_hard,0,0);
+  }
+}

@@ -1,0 +1,6 @@
+#!/bin/bash
+
+if [ -e /etc/apache/vwdel ];then
+  mv /etc/apache/vwdel /etc/apache/vwdel.wrk
+  awk -F: '{print "/usr/sbin/fp_domain "$3}' /etc/apache/vwdel.wrk |sort |uniq |sh
+fi;

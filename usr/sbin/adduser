@@ -1,0 +1,109 @@
+#!/usr/bin/perl
+
+use Net::LDAPS;
+
+open(LCON,"/etc/ldap.conf");
+while(<LCON>) {
+  chop $_;
+  @centry=split(/\s/,$_);
+  if (@centry[0] eq "master_host") {
+    $host=@centry[1];
+  } elsif (@centry[0] eq "binddn") {
+    $binddn=@centry[1];
+  } elsif (@centry[0] eq "bindpw") {
+    $password=@centry[1];
+  }
+}
+
+$ldap = Net::LDAPS->new($host,port=>"636",verify => 'none',timeout => "10");
+$ldap->bind($binddn,password => $password);
+
+($uid)=getpwnam($ARGV[0]);
+if ($uid eq $ARGV[0]) {
+  exit 255;
+}
+
+$mesg = $ldap->search(filter =>"(uid=" . $ARGV[0] . ")",attrs=>['uid']);
+if ($mesg->count > 0) {
+  exit 255;
+}
+
+$mesg = $ldap->search(filter =>"objectClass=posixAccount",
+                      attrs=>['uidnumber']);
+
+while($entry = $mesg->shift_entry) {
+  $uidnum=$entry->get_value("uidnumber");
+  if ($uidnum >= 500) {
+    $useduid{$uidnum}="TRUE";
+  }
+}
+
+$ucnt=500;
+while($useduid{$ucnt} eq "TRUE") {
+  $ucnt++;
+}
+
+$res=$ldap->add("uid=$ARGV[0],ou=Users",attrs => [ objectClass => ["person","inetOrgPerson","officePerson","organizationalPerson","posixAccount",
+                                                                   "shadowAccount","inetLocalMailRecipient","radiusprofile","pkiUser"],
+                gidNumber => "100",
+                radiusAuthType => "Pam",
+                loginShell => "/usr/sbin/smrsh",
+                shadowMin => "0",
+                radiusPortType => "Async",
+                radiusServiceType => "Framed-User",
+                radiusFramedProtocol => "PPP",
+                radiusFramedIPAddress => "255.255.255.254",
+                radiusFramedIPNetmask => "255.255.255.255",
+                radiusFramedMTU => "1500",
+                radiusFramedCompression => "Van-Jacobson-TCP-IP",
+                radiusSimultaneousUse => "1",
+                quotaHomeDir => "10",
+                quotaFileServer => "20",
+                quotaMailSpool => "5",
+                shadowMax => "99999",
+                shadowWarning => "0",
+                shadowInactive => "0",
+                shadowExpire => "65535",
+                maxAliases => "1",
+                maxWebAliases => "1",
+                accountSuspended => "unsuspended",
+                dialupAccess => "yes",
+                radiusRealm => "DEFAULT",
+                uid => $ARGV[0],
+                mailRoutingAddress => $ARGV[0],
+                homeDirectory => "/var/home/" . substr($ARGV[0],0,1) . "/" . substr($ARGV[0],1,1) . "/" . $ARGV[0],
+                uidNumber => $ucnt,
+                cn => $ARGV[0]]);
+$err=$res->error;
+
+sleep 5;
+`/usr/sbin/nscd -i passwd`;
+
+$uid=$ARGV[0];
+
+$nhash="/var/spool/mail/" . substr($uid,0,1) . "/" . substr($uid,1,1) . "/" . $uid;
+
+print $nhash . "\n";
+
+if ( ! -e $nhash ) {
+  if ( ! -d "/var/spool/mail/" . substr($uid,0,1) ){
+    mkdir("/var/spool/mail/" . substr($uid,0,1));
+    chown(0,0,"/var/spool/mail/" . substr($uid,0,1));
+    chmod(0755,"/var/spool/mail/" . substr($uid,0,1));
+  }
+  if ( ! -d "/var/spool/mail/" . substr($uid,0,1) . "/" . substr($uid,1,1) ){
+    mkdir("/var/spool/mail/" . substr($uid,0,1) . "/" . substr($uid,1,1));
+    chown(0,0,"/var/spool/mail/" . substr($uid,0,1) . "/" . substr($uid,1,1));
+    chmod(01777,"/var/spool/mail/" . substr($uid,0,1) . "/" . substr($uid,1,1));
+  }
+  mkdir($nhash);
+  chown($ucnt,100,$nhash);
+  chmod(0700,$nhash);
+} elsif ( ! -d $nhash ) {
+  system("mv $nhash $nhash.mbox");
+  mkdir($nhash);
+  chown($ucnt,"100",$nhash);
+  chmod(0700,$nhash);
+  system("/usr/sbin/mb2md -s $nhash.mbox -d $nhash");
+  system("chown -R $ucnt.100 $nhash");
+}

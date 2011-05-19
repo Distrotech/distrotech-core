@@ -1,0 +1,10 @@
+#!/usr/bin/perl
+
+$/="\n\n";
+$certcnt="0";
+while(<STDIN>) {
+  open(COUT,">tmpcert.$certcnt");
+  print COUT $_;
+  $certcnt++;
+  close(COUT);
+}

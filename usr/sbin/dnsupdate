@@ -1,0 +1,60 @@
+#!/usr/bin/perl
+
+use LWP;
+
+if (@ARGV[0] ne "") {
+  $file=@ARGV[0];
+} elsif ( -f "/etc/dyndnsconf") {
+  $file="/etc/dyndnsconf";
+} else {
+  exit;
+}
+
+open(DCF,$file);
+while(<DCF>) {
+  chop $_;
+  if (m/^Code:(\S+)/) {
+    $code=$1;
+  } elsif (m/^Server:(\S+)/) {
+    $server=$1;
+  } elsif (m/^Servdata:(\S+)/) {
+    $servdata=$1;
+  } elsif (m/^Hostname:(\S+)/) {
+    $hostname=$1;
+  } elsif (m/^Realm:(.*)/) {
+    $realm=$1;
+  } elsif (m/^Username:(\S+)/) {
+    $username=$1;
+  } elsif (m/^Password:(\S+)/) {
+    $password=$1;
+  } elsif (m/^Protocol:(\S+)/) {
+    $protocol=$1;
+  }
+}
+close(DCF);
+
+$browser=LWP::UserAgent->new(timeout => "10");
+
+if (($code ne "") && ($server ne "") && ($servdata ne "")) { #FreeDns
+  $resp=$browser->get("http://" . $server . $servdata . $code);
+#  print $resp->content . "\n";
+} elsif (($password ne "") && ($username ne "") && ($hostname ne "") && ($realm ne "") && ($servdata ne "") && ($server ne "")) { #DynDNS
+  if ($protocol eq "https") {
+    $port="443";
+  } else {
+    $port="80";
+  }
+  $browser->credentials($server . ":" . $port,$realm,$username => $password);
+  $resp=$browser->get($protocol . "://" . $server . $servdata . $hostname);
+#  print $resp->content . "\n";
+} elsif (($password ne "") && ($username ne "") && ($realm ne "") && ($servdata ne "") && ($server ne "")) { #OpenDNS
+  if ($protocol eq "https") {
+    $port="443";
+  } else {
+    $port="80";
+  }
+  $browser->credentials($server . ":" . $port,$realm,$username => $password);
+  $resp=$browser->get($protocol . "://" . $server . $servdata);
+  print $resp->content . "\n";
+}
+

@@ -1,0 +1,108 @@
+ul
+{
+	list-style-image: url('images/ull1.gif');
+}
+ul ul
+{
+	list-style-image: url('images/ull2.gif');
+}
+ul ul ul
+{
+	list-style-image: url('images/ull3.gif');
+}
+a:link
+{
+	color: #222244;
+}
+a:active
+{
+	color: #222244;
+}
+a:visited
+{
+	color: #222244;
+}
+h1
+{
+	color: rgb(0, 128, 0);
+}
+h2
+{
+	color: rgb(0, 0, 128);
+}
+h3
+{
+	color: rgb(204, 51, 0);
+}
+h4
+{
+	color: rgb(102, 102, 153);
+}
+h5
+{
+	color: rgb(0, 0, 128);
+}
+h6
+{
+	color: rgb(0, 0, 128);
+}
+button
+{
+	background-color: rgb(51, 0, 153);
+	color: rgb(255, 255, 255);
+}
+label
+{
+	color: rgb(0, 0, 0);
+}
+textarea
+{
+	color: rgb(11, 0, 0);
+}
+fieldset
+{
+	color: rgb(11, 0, 0);
+}
+legend
+{
+	color: rgb(51, 0, 153);
+}
+select
+{
+	color: rgb(11, 0, 0);
+}
+caption
+{
+	color: rgb(51, 0, 153);
+}
+th
+{
+	color: rgb(0, 0, 0);
+}
+button       { font-size: 8pt; font-style: normal; font-family: Verdana, Arial, Helvetica; 
+               border-style: solid; border-width: 1pt }
+caption      { font-size: 14pt; font-style: normal; font-family: Verdana, Arial, Helvetica }
+fieldset     { font-family: Verdana, Arial, Helvetica; font-size: 8pt; font-style: normal; 
+               border-style: solid; border-width: 1pt }
+h1           { vertical-align: none; font-style: normal; font-size: 24pt; font-family: 
+               Bauhaus 93; text-align: none; font-weight: normal }
+h2           { font-family: Bauhaus 93; font-style: normal; font-size: 18pt; font-weight: 
+               normal; vertical-align: none; text-align: none }
+h3           { font-family: Bauhaus 93; text-align: none; font-size: 14pt; vertical-align: 
+               none; font-weight: normal; font-style: normal }
+h4           { font-weight: normal; font-size: 12pt; font-style: normal; text-align: none; 
+               font-family: Bauhaus 93; vertical-align: none }
+h5           { font-size: 10pt; font-style: normal; font-weight: normal; font-family: 
+               Bauhaus 93; vertical-align: none; text-align: none }
+h6           { text-align: none; vertical-align: none; font-family: Bauhaus 93; font-size: 
+               8pt; font-style: normal; font-weight: normal }
+label        { font-family: Verdana, Arial, Helvetica; font-size: 8pt; font-style: normal }
+label        { font-size: 8pt; font-family: Verdana, Arial, Helvetica; font-style: normal }
+legend       { font-style: normal; font-size: 8pt; font-family: Verdana, Arial, Helvetica }
+marquee      { font-family: Verdana, Arial, Helvetica; font-size: 14pt }
+select       { font-style: normal; font-family: Verdana, Arial, Helvetica; font-size: 8pt; 
+               border-style: solid;  }
+table        { font-family: Times New Roman; font-style: normal; font-weight: normal; 
+               text-align: none; vertical-align: none }
+textarea     { font-style: normal; font-size: 8pt; font-family: Verdana, Arial, Helvetica; 
+               border-style: solid;  }

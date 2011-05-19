@@ -1,0 +1,11 @@
+#!/usr/bin/perl
+
+use DBI;
+
+$dbh = DBI->connect("DBI:mysql:database=radius;host=localhost;port=3306","radius","radius");
+$asel=$dbh->prepare("select CallingStationId  from radacct where FramedIPAddress='@ARGV[0]' AND AcctStopTime=''");
+$asel->execute;
+@row=$asel->fetchrow_array;
+
+print @row[0] . "\n";
+

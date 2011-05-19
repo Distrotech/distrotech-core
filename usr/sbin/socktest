@@ -1,0 +1,22 @@
+#!/usr/bin/perl
+
+use Socket;
+use IO::Socket::INET;
+
+eval {
+  local $SIG{ALRM} = sub { die "alarm\n" };
+  alarm(10);
+  $packed_ip = gethostbyname(@ARGV[0]);
+  alarm(0);
+};
+
+if ($@ eq "alarm\n") {
+  die;
+}
+
+if (defined $packed_ip) {
+  $ip_address = inet_ntoa($packed_ip);
+  $sock = IO::Socket::INET->new(PeerAddr => $ip_address, PeerPort=> @ARGV[1], Proto=>'tcp',Timeout => '10') or die;
+} else { 
+  die;
+}

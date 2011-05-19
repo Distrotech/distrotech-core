@@ -1,0 +1,12 @@
+#!/bin/bash
+
+#if [ ! -d "/dev/tts" ];then
+#  /bin/mkdir /dev/tts
+#fi;
+
+#/bin/mknod /dev/tts/0 c 4 64
+#/usr/bin/setserial /dev/tts/0 port 0xb400 UART 16550A irq 3 Baud_base 115200
+
+#/bin/mknod /dev/tts/1 c 4 65
+#/usr/bin/setserial /dev/tts/1 port 0xb800 UART 16550A irq 3 Baud_base 115200
+

@@ -1,0 +1,16 @@
+
+#!/bin/bash
+
+lynx --dump $1 > /tmp/tmp-ca.pem
+
+HASH=`openssl x509 -hash -in /tmp/tmp-ca.pem |head -1`
+
+if [ "$?" == 0 ];then 
+  if [ -e /etc/ipsec.d/certs/$HASH.0 ];then
+    rm /etc/ipsec.d/certs/$HASH.0
+  fi;
+  mv /tmp/tmp-ca.pem /etc/ipsec.d/certs/$HASH.0
+  openssl x509 -in /etc/ipsec.d/certs/$HASH.0 -noout -text
+ else
+  rm /tmp/tmp-ca.pem
+fi;

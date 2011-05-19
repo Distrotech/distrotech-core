@@ -1,0 +1,14 @@
+#!/bin/bash
+
+if [ "$2" != "" ];then
+  SPORT=$2;
+ else
+  SPORT=22;
+fi;
+
+if [ "$3" != "" ];then
+  KVER=" $3"
+fi;
+
+/usr/bin/sshcon $1 ${SPORT} "/usr/sbin/vbox_upgrade${KVER}";
+exit $?

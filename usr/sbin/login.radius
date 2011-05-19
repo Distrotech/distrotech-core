@@ -1,0 +1,63 @@
+#!/usr/bin/perl
+
+use strict;
+
+my $prog_pppd     = "/usr/sbin/pppd";
+my $prog_tty      = "/usr/bin/tty";
+
+my $path_radiusclient_map = "/etc/radiusclient/port-id-map";
+
+my $port = `$prog_tty`;
+chomp ($port);
+
+my (%port_db);
+
+$port_db{'0'}="Async";
+$port_db{'2'}="ISDN";
+$port_db{'3'}="ISDN-V120";
+$port_db{'4'}="ISDN-V110";
+$port_db{'16'}="xDSL";
+
+my ($portid, $line, $port_ip_address, $ip_address_local,$mtu,$porttype,$pppunit);
+open (H, $path_radiusclient_map);
+while (($line = <H>) && (!$portid)) {
+  my @info = split (/\s+/, $line);
+  if ($info[0] eq $port) {
+    $portid = $info[1];
+    $port_ip_address=$info[2];
+    $ip_address_local=$info[3];
+    $porttype=$port_db{$info[6]};
+    $mtu=$info[7];
+  }
+}
+close (H);
+
+my $username = $ENV{"RADIUS_USER_NAME"};
+my $sessionid = "$$" . time ();
+
+if ($ENV{"RADIUS_SERVICE_TYPE"} =~ /^Framed-User$/) {
+  my $ip_address = $ENV{"RADIUS_FRAMED_IP_ADDRESS"};
+  if (!$ip_address || ($ip_address eq "255.255.255.254")) {
+    $ip_address = $port_ip_address;
+  } elsif ($ip_address eq "255.255.255.255") {
+    $ip_address = "";
+  }
+
+  if ($ENV{"RADIUS_FRAMED_MTU"}) {
+    $mtu = $ENV{"RADIUS_FRAMED_MTU"} 
+  }
+
+  my $compress;
+  if ($ENV{"RADIUS_FRAMED_COMPRESSION"}) {
+    $compress = "-vj";
+  }
+
+ my $lotime=time();
+ my $param = join (':', $sessionid, $username, $port, $portid,$ENV{"RADIUS_SESSION_TIMEOUT"},
+                         $porttype,$ENV{"RADIUS_FRAMED_COMPRESSION"},$mtu,$lotime);
+
+  $pppunit=$portid+6;
+  my $pppdcmd ="$prog_pppd $ip_address_local:$ip_address " . "$compress " . "ipparam $param mtu $mtu proxyarp unit $pppunit";
+
+  exec ($pppdcmd);
+}

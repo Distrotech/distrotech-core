@@ -1,0 +1,100 @@
+#!/usr/bin/perl
+
+use Net::LDAPS;
+
+open(LCON,"/etc/ldap.conf");
+while(<LCON>) {
+  chop $_;
+  @centry=split(/\s/,$_);
+  if (@centry[0] eq "master_host") {
+    $host=@centry[1];
+  } elsif (@centry[0] eq "binddn") {
+    $binddn=@centry[1];
+  } elsif (@centry[0] eq "bindpw") {
+    $password=@centry[1];
+  }
+}
+
+$ldap = Net::LDAPS->new($host,port=>"636",verify => 'none',timeout => "10");
+$ldap->bind($binddn,password => $password);
+
+
+if (@ARGV[0] ne "") {
+  $uidnum=getpwnam(@ARGV[0]);
+  if ($uidnum ne "") {
+    $filter="uidnumber=" . $uidnum;
+  } else {
+    $filter="uidnumber=" . @ARGV[0];
+  }
+} else {
+  $filter="(&(objectclass=sambasidentry)(!(cn=*))(uidnumber=*)(!(gidnumber=*)))";
+#(&(!(cn=*))(objectclass=sambaSidEntry)(uidnumber=*)(sambaSid=*))";
+}
+
+$mesg = $ldap->search(base=>"ou=Idmap",filter =>$filter,
+                      attrs=>['uidNumber','objectClass',"sambaSID"],sizelimit=>250,timelimit=>600);
+$ldap->unbind;
+$ldap = Net::LDAPS->new($host,port=>"636",verify => 'none',timeout => "10");
+$ldap->bind($binddn,password => $password);
+
+while ($entry=$mesg->shift_entry) {
+  $uid=$entry->get_value("uidNumber");
+  $sid=$entry->get_value("sambaSID");
+  @oclass=$entry->get_value("objectClass");
+
+  @pwdat=getpwuid($uid);
+  if ((@pwdat eq 0) && (@ARGV[0] ne "") && (@ARGV[1] ne "") && (@ARGV[2] ne "")) {
+    @pwdat[0]=@ARGV[1];
+    @pwdat[6]=@ARGV[2];
+  } elsif (@pwdat eq 0) {
+    open(WU,"/usr/bin/wbsidtouid " . $sid . "|");
+    while(<WU>) {
+      @wbdata=split(/:/,$_);
+      if ((@wbdata > 0) && (@wbdata[2] eq $uid)) {
+        @pwdat[0]=@wbdata[0];
+        @pwdat[6]=@wbdata[4];
+      }
+    }
+    close(WU);
+  }
+
+  if ((@pwdat[0] ne "") && (@oclass <= 5)) {
+    if (@pwdat[6] == "") {
+      @pwdat[6]=@pwdat[0];
+    }
+    @snd=split(/ /,@pwdat[6]);
+    shift(@snd);
+    $sn=join(" ",@snd);
+
+    $hdir="/var/home/" . substr(@pwdat[0],0,1) . "/" . substr(@pwdat[0],1,1) . "/" . @pwdat[0];
+
+    %rephash=(objectClass => ["inetLocalMailRecipient","sambaSidEntry","sambaIdmapEntry","simpleSecurityObject",
+                              "inetOrgPerson","person","organizationalPerson","officePerson",
+                              "radiusprofile","pkiUser"] ,
+              radiusPortType => "Async",cn => @pwdat[6],uid => @pwdat[0],mailLocalAddress => @pwdat[0],
+              radiusFramedIPAddress => "255.255.255.254" ,radiusFramedMTU => "1500",
+              radiusFramedCompression => "Van-Jacobson-TCP-IP", radiusSimultaneousUse => "1",
+              radiusServiceType => "Framed-User",radiusFramedProtocol => "PPP", 
+              radiusAuthType => "Pam",radiusFramedIPNetmask => "255.255.255.255",
+              mailRoutingAddress => @pwdat[0],maxWebAliases => "1",maxAliases => "1",
+              radiusRealm => "DEFAULT",radiusSessionTimeout => "86400",radiusIdleTimeout => "1800",
+              accountSuspended => "unsuspended",dialupaccess => "yes",
+              userPassword => "*");
+
+    if ( -e "/etc/nsswitch.conf.local" ) {
+      push(@{$rephash{'objectClass'}},"posixAccount");
+      $rephash{'gidNumber'}=100;
+      $rephash{'loginShell'}="/usr/sbin/smrsh";
+      $rephash{'homeDirectory'}=$hdir;
+    }
+
+    $res=$ldap->modify("sambaSID=$sid,ou=Idmap",replace => { %rephash });
+
+    $err=$res->error;
+    print "ADD:$uid:$err\n";
+  } elsif ((@pwdat[0] eq "") && (@ARGV[0] eq "")) {
+    $dn=$entry->dn();
+    $ldap->delete($dn);
+    print "DEL:$uid:$dn\n";
+  } 
+}

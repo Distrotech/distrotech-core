@@ -1,0 +1,92 @@
+  == Parsing '/etc/asterisk/asterisk.conf': Found
+  == Parsing '/etc/asterisk/extconfig.conf': Found
+Asterisk 1.0.1, Copyright (C) 1999-2004 Digium.
+Written by Mark Spencer <markster@digium.com>
+=========================================================================
+  == Parsing '/etc/asterisk/logger.conf': Found
+Asterisk Event Logger Started /var/log/asterisk/event_log
+  == Manager registered action Ping
+  == Manager registered action Events
+  == Manager registered action Logoff
+  == Manager registered action Hangup
+  == Manager registered action Status
+  == Manager registered action Setvar
+  == Manager registered action Getvar
+  == Manager registered action Redirect
+  == Manager registered action Originate
+  == Manager registered action MailboxStatus
+  == Manager registered action Command
+  == Manager registered action ExtensionState
+  == Manager registered action AbsoluteTimeout
+  == Manager registered action MailboxCount
+  == Manager registered action ListCommands
+  == Parsing '/etc/asterisk/manager.conf': Found
+  == Parsing '/etc/asterisk/rtp.conf': Found
+  == RTP Allocating from port range 10000 -> 20000
+Asterisk PBX Core Initializing
+Registering builtin applications:
+ [AbsoluteTimeout]
+  == Registered application 'AbsoluteTimeout'
+ [Answer]
+  == Registered application 'Answer'
+ [BackGround]
+  == Registered application 'BackGround'
+ [Busy]
+  == Registered application 'Busy'
+ [Congestion]
+  == Registered application 'Congestion'
+ [DigitTimeout]
+  == Registered application 'DigitTimeout'
+ [Goto]
+  == Registered application 'Goto'
+ [GotoIf]
+  == Registered application 'GotoIf'
+ [GotoIfTime]
+  == Registered application 'GotoIfTime'
+ [Hangup]
+  == Registered application 'Hangup'
+ [NoOp]
+  == Registered application 'NoOp'
+ [Prefix]
+  == Registered application 'Prefix'
+ [Progress]
+  == Registered application 'Progress'
+ [ResetCDR]
+  == Registered application 'ResetCDR'
+ [ResponseTimeout]
+  == Registered application 'ResponseTimeout'
+ [Ringing]
+  == Registered application 'Ringing'
+ [SayNumber]
+  == Registered application 'SayNumber'
+ [SayDigits]
+  == Registered application 'SayDigits'
+ [SayAlpha]
+  == Registered application 'SayAlpha'
+ [SayPhonetic]
+  == Registered application 'SayPhonetic'
+ [SetAccount]
+  == Registered application 'SetAccount'
+ [SetAMAFlags]
+  == Registered application 'SetAMAFlags'
+ [SetGlobalVar]
+  == Registered application 'SetGlobalVar'
+ [SetLanguage]
+  == Registered application 'SetLanguage'
+ [SetVar]
+  == Registered application 'SetVar'
+ [StripMSD]
+  == Registered application 'StripMSD'
+ [Suffix]
+  == Registered application 'Suffix'
+ [Wait]
+  == Registered application 'Wait'
+ [WaitExten]
+  == Registered application 'WaitExten'
+Asterisk Dynamic Loader Starting:
+  == Parsing '/etc/asterisk/modules.conf': Found
+ [chan_alsa.so] => (ALSA Console Channel Driver)
+  == Parsing '/etc/asterisk/alsa.conf': Found
+ALSA lib pcm.c:1972:(snd_pcm_open_noupdate) Unknown PCM hw:0,0
+Oct 14 16:43:54 ERROR[16384]: chan_alsa.c:298 alsa_card_init: snd_pcm_open failed: No such file or directory
+asterisk: conf.c:3079: snd_config_update_free: Assertion `update->count > 0 && update->finfo' failed.

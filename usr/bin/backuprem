@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if [ "$2" != "" ];then
+  SPORT=$2;
+ else
+  SPORT=22;
+fi;
+
+if [ -e /root/custkeys/${1}:${SPORT} ];then
+  /usr/bin/rsync -atqzLe "/usr/bin/ssh -q -p ${SPORT} -i /root/custkeys/${1}:${SPORT}" ${1}:/var/spool/backup/pbxdata.sql.gz /var/spool/backup/configs/${1}:${SPORT}.sql.gz
+  /usr/bin/rsync -atqzLe "/usr/bin/ssh -q -p ${SPORT} -i /root/custkeys/${1}:${SPORT}" ${1}:/var/spool/apache/htdocs/ns/config/netsentry.conf /var/spool/backup/configs/${1}:${SPORT}.conf;
+ else
+  echo "NO SUCH KEY";
+fi;
+
+ECODE=$?
+exit ${ECODE}

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+/usr/bin/wbinfo -i `/usr/bin/wbinfo -s ${1}` 

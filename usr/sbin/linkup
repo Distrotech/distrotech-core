@@ -1,0 +1,8 @@
+#!/bin/bash
+
+DEF_GW=`/sbin/ip route show 0/0 table 90 |awk '{print \$5}'`
+DEF_GADDR=`/sbin/ip addr show \$DEF_GW |tail -1 |awk '{print \$2}'`
+
+if [ "$DEF_GADDR" != "forever" ];then
+  ping -i 1 -l 3 -c 3 -q -w 2 $DEF_GADDR 2>&1 > /dev/null
+fi;

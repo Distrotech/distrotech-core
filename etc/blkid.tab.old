@@ -1,0 +1,10 @@
+<device DEVNO="0x0801" TIME="1305290599" TYPE="swap">/dev/sda1</device>
+<device DEVNO="0x0802" TIME="1305290599" TYPE="swap">/dev/sda2</device>
+<device DEVNO="0x0803" TIME="1305290599" LABEL="root" UUID="e9e7e1f1-7637-477c-b6f0-3be33a4bc09e" TYPE="ext3">/dev/sda3</device>
+<device DEVNO="0x0700" TIME="1305290599" UUID="80b65b71-6387-43e9-be59-fdbf134407d0" TYPE="ext2">/dev/loop0</device>
+<device DEVNO="0x0702" TIME="1287673507" UUID="BrfF5Q-voBp-YuZc-1YkD-LQIW-1SHx-9yiqqV" TYPE="lvm2pv">/dev/loop2</device>
+<device DEVNO="0x0703" TIME="1287673507" UUID="Dpaw7e-3LB8-POiD-fYk7-LrIH-TnRz-dvpgOZ" TYPE="lvm2pv">/dev/loop3</device>
+<device DEVNO="0x0704" TIME="1287673507" UUID="2Ylbds-08t1-cZxW-OeXi-N3HK-9Cz0-vZ00B3" TYPE="lvm2pv">/dev/loop4</device>
+<device DEVNO="0x0701" TIME="1288361548" UUID="e16612f1-33b4-4e5f-85ec-2ef927e58ab6" TYPE="ext2">/dev/loop1</device>
+<device DEVNO="0x0821" TIME="1305290599" LABEL="INSTALL" UUID="71ddbae1-8df0-4108-8c18-e3550b3bff2a" SEC_TYPE="ext2" TYPE="ext3">/dev/sdc1</device>
+<device DEVNO="0x0822" TIME="1305290599" UUID="773ce1bc-8f24-495c-b94c-23b3ca5702f1" TYPE="ext3" SEC_TYPE="ext2">/dev/sdc2</device>

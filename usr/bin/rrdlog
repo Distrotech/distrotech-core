@@ -1,0 +1,121 @@
+#!/usr/bin/perl
+
+use DBI;
+require RRDs;
+
+chdir "/var/spool/apache/htdocs/mrtg";
+@protos=(0,1,2,3,6,12,17,22,47,50,51,89,255);
+
+@proton[0]="IP";
+@proton[1]="ICMP";
+@proton[2]="IGMP";
+@proton[3]="GGP";
+@proton[6]="TCP";
+@proton[12]="PUP";
+@proton[17]="UDP";
+@proton[22]="IDP";
+@proton[47]="GRE";
+@proton[50]="ESP";
+@proton[51]="AH";
+@proton[89]="OSPF";
+@proton[255]="RAW";
+
+
+if (! -e "violations.rrd") {
+  &create_rrd("violations.rrd");
+}
+
+if (! -e "voip.rrd") {
+  &create_voip();
+}
+
+if (! -e "voip-tdm.rrd") {
+  &create_voip("tdm");
+}
+
+if (! -e "voip-lcr.rrd") {
+  &create_voip("lcr");
+}
+
+if (! -e "gsm.rrd") {
+  &create_gsm();
+}
+
+$user="logview";
+$password="admin";
+
+$driver = "mysql";
+$database="networksentry_log";
+$hostname="localhost";
+$port=3306;
+
+
+$dsn = "DBI:$driver:database=$database;host=$hostname;port=$port";
+$dbh = DBI->connect($dsn, $user, $password);
+$sth=$dbh->prepare("SELECT ip_protocol,count(id) FROM packet_filter WHERE local_time >= UNIX_TIMESTAMP(NOW() - INTERVAL 5 MINUTE) GROUP BY ip_protocol");
+$sth->execute;
+$numFields=$sth->{'NUM_OF_FIELDS'};
+while($ref=$sth->fetchrow_arrayref) {
+  $proto{$$ref[0]}=$$ref[1];
+}
+
+$out="";
+
+foreach $pcol (@protos) {
+  if ($proto{$pcol} eq "") {
+    $proto{$pcol}=0;
+  }
+  $out.=$proto{$pcol} . ":";
+}
+
+chop $out;
+RRDs::update("violations.rrd","N:$out");
+
+sub create_rrd() {
+  my($dbname)=@_;
+  @dbtmpl=($dbname,'-s',300);
+  foreach $pcol (@protos) {
+    push(@dbtmpl,"DS:" . @proton[$pcol] . ":ABSOLUTE:600:U:U");
+  }
+  push(@dbtmpl,'RRA:AVERAGE:0.5:1:599');
+  push(@dbtmpl,'RRA:AVERAGE:0.5:6:700');
+  push(@dbtmpl,'RRA:AVERAGE:0.5:24:775');
+  push(@dbtmpl,'RRA:AVERAGE:0.5:288:795');
+  RRDs::create(@dbtmpl);
+}
+
+sub create_voip() {
+  local($type)=@_;
+  if ($type ne "") {
+    @dbtmpl=("voip-" . $type . ".rrd",'-s',300);
+  } else {
+    @dbtmpl=('voip.rrd','-s',300);
+  }  
+  push(@dbtmpl,"DS:CCalls:GAUGE:600:U:U");
+  push(@dbtmpl,"DS:Calls:ABSOLUTE:600:U:U");
+  push(@dbtmpl,'RRA:AVERAGE:0.5:1:599');
+  push(@dbtmpl,'RRA:AVERAGE:0.5:6:700');
+  push(@dbtmpl,'RRA:AVERAGE:0.5:24:775');
+  push(@dbtmpl,'RRA:AVERAGE:0.5:288:795');
+  push(@dbtmpl,'RRA:LAST:0.5:1:599');
+  push(@dbtmpl,'RRA:LAST:0.5:6:700');
+  push(@dbtmpl,'RRA:LAST:0.5:24:775');
+  push(@dbtmpl,'RRA:LAST:0.5:288:795');
+  RRDs::create(@dbtmpl);
+}
+
+sub create_gsm() {
+  @dbtmpl=('gsm.rrd','-s',300);
+  push(@dbtmpl,"DS:Inuse:GAUGE:600:U:U");
+  push(@dbtmpl,"DS:Faulty:GAUGE:600:U:U");
+  push(@dbtmpl,'RRA:AVERAGE:0.5:1:599');
+  push(@dbtmpl,'RRA:AVERAGE:0.5:6:700');
+  push(@dbtmpl,'RRA:AVERAGE:0.5:24:775');
+  push(@dbtmpl,'RRA:AVERAGE:0.5:288:795');
+  push(@dbtmpl,'RRA:LAST:0.5:1:599');
+  push(@dbtmpl,'RRA:LAST:0.5:6:700');
+  push(@dbtmpl,'RRA:LAST:0.5:24:775');
+  push(@dbtmpl,'RRA:LAST:0.5:288:795');
+  RRDs::create(@dbtmpl);
+}
+

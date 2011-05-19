@@ -1,0 +1,17 @@
+#!/bin/bash
+
+#Lock The Script
+if [ -e /var/run/moh.pid ];then
+  PID=`tail -1 /var/run/moh.pid`
+  if [ -d /proc/$PID ];then
+    kill -9 $PID
+  fi;
+fi;
+
+echo $$ > /var/run/moh.pid
+
+while [ 1 ];do
+  for name in $@; do
+    /bin/cat $name ;
+  done
+done

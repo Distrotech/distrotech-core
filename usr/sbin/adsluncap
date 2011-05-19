@@ -1,0 +1,116 @@
+#!/usr/bin/perl
+
+open(CF,"/etc/firewall.conf");
+$lnum=0;
+$link=1;
+while(<CF>) {
+  chop $_;
+  push(@clines,$_);
+  @words=split(/ /,$_);
+  if (@words[0] eq "IP" ) {
+    shift @words;
+    if (@words[0] eq "ADSL") {
+      shift @words;
+      $lname="ppp" . $link;
+      $adsllink{$lname}=$lnum;
+      $link++;
+    } elsif (@words[0] eq "ADSL_USER") {
+      shift @words;
+      if (@words[2] eq "0") {
+        push(@candidate,$lnum);
+      } elsif (@words[2] ne "2") {
+        $actuser{@words[0]}=$lnum;
+      }
+    } elsif (@words[0] eq "Modem") {
+      shift @words;
+      if (@words[0] eq "Username") {
+        $uname=$lnum;
+        $mainuser=@words[1];
+      } elsif (@words[0] eq "Password") {
+        $pass=$lnum;
+      } elsif (@words[0] eq "Connection") {
+        $ctype=@words[1];
+      }
+    }
+  }
+  $lnum++;
+}
+close(CF);
+
+for ($ccnt=0;$ccnt < scalar(@ARGV);$ccnt++) {
+  if (@candidate[$ccnt] ne "") {
+    @canuser=split(/ /,@clines[@candidate[$ccnt]]);
+    if ((@ARGV[$ccnt] eq "ppp0") && ($ctype eq "ADSL")){
+      @aline=split(/ /,@clines[$uname]);
+      @aline[3]=@canuser[2];
+      @clines[$uname]=join(" ",@aline);
+
+      @aline=split(/ /,@clines[$pass]);
+      @aline[3]=@canuser[3];
+      @clines[$pass]=join(" ",@aline);
+
+      @canuser[4]=1;
+      @clines[@candidate[$ccnt]]=join(" ",@canuser);
+
+      if ($actuser{$mainuser} ne "") {
+        @capuser=split(/ /,@clines[$actuser{$mainuser}]);
+        @capuser[4]=2;
+        @clines[$actuser{$mainuser}]=join(" ",@capuser);
+      } else {
+        print @ARGV[0] . ": Username " . $mainuser . " Not Found In Pool\n";
+      }
+
+    } elsif ($adsllink{@ARGV[$ccnt]} ne "") {
+      @alinkdat=split(/ /,@clines[$adsllink{@ARGV[$ccnt]}]);
+
+      if ($actuser{@alinkdat[3]} ne "") {
+        @capuser=split(/ /,@clines[$actuser{@alinkdat[3]}]);
+        @capuser[4]=2;
+        @clines[$actuser{@alinkdat[3]}]=join(" ",@capuser);
+      } else {
+        print @ARGV[0] . ": Username " . @alinkdat[3] . " Not Found In Pool\n";
+      }
+      @canuser=split(/ /,@clines[@candidate[$ccnt]]);
+      @canuser[4]=1;
+      @clines[@candidate[$ccnt]]=join(" ",@canuser);
+    
+      @alinkdat[3]=@canuser[2];
+      @alinkdat[4]=@canuser[3];
+      @clines[$adsllink{@ARGV[$ccnt]}]=join(" ",@alinkdat);
+
+    } else {
+      if ((@ARGV[$ccnt] ne "ppp0") || ($ctype eq "ADSL")){      
+        print @ARGV[$ccnt] . ": Link Could Not Be Uncapped No Such Link\n";
+      }
+    }
+  } else {
+    if ((@ARGV[$ccnt] ne "ppp0") || ($ctype eq "ADSL")){      
+      print @ARGV[$ccnt] . ": Link Could Not Be Uncapped No Available Username\n";
+    }
+    if ((@ARGV[$ccnt] eq "ppp0") && ($ctype eq "ADSL")){
+      if ($actuser{$mainuser} ne "") {
+        @capuser=split(/ /,@clines[$actuser{$mainuser}]);
+        @capuser[4]=3;
+        @clines[$actuser{$mainuser}]=join(" ",@capuser);
+      } else {
+        print @ARGV[0] . ": Username " . $mainuser . " Not Found In Pool\n";
+      }
+    } elsif ($adsllink{@ARGV[$ccnt]} ne "") {
+      @alinkdat=split(/ /,@clines[$adsllink{@ARGV[$ccnt]}]);
+      if ($actuser{@alinkdat[3]} ne "") {
+        @capuser=split(/ /,@clines[$actuser{@alinkdat[3]}]);
+        @capuser[4]=3;
+        @clines[$actuser{@alinkdat[3]}]=join(" ",@capuser);
+      } else {
+        print @ARGV[0] . ": Username " . @alinkdat[3] . " Not Found In Pool\n";
+      }
+    }
+  }
+}
+
+open(CF,">/etc/firewall.conf");
+foreach $confline (@clines) {
+  print CF $confline . "\n";
+}
+close(CF);
+

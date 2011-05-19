@@ -1,0 +1,69 @@
+<html>
+  <head>
+    <title>Win95/98/Me Setup</title>
+    <base target="content">
+    <link rel=stylesheet type=text/css href=../netsentry.css>
+  </head>
+  <script language="JavaScript">
+    NavOver=(((navigator.appName == "Netscape") && (parseInt(navigator.appVersion) >= 3 )) ||
+            ((navigator.appName == "Microsoft Internet Explorer") && (parseInt(navigator.appVersion) >= 4 )));
+
+    function IMGLoad(img) {
+      var a=new Image();
+      a.src=img;
+      return a;
+    }
+    if(NavOver) {
+      home1=IMGLoad("images/home_a.png");
+      home2=IMGLoad("images/home.png");
+      network1=IMGLoad("images/networkb_a.png");
+      network2=IMGLoad("images/networkb.png");
+      uprofile1=IMGLoad("images/uprofile_a.png");
+      uprofile2=IMGLoad("images/uprofile.png");
+      proxy1=IMGLoad("images/proxy_a.png");
+      proxy2=IMGLoad("images/proxy.png");
+      outlook1=IMGLoad("images/outlook_a.png");
+      outlook2=IMGLoad("images/outlook.png");
+      ldap1=IMGLoad("images/ldap_a.png");
+      ldap2=IMGLoad("images/ldap.png");
+    }
+  </SCRIPT>
+<body><table border="0" width="170" cellspacing="0" cellpadding="0">
+  <tr>
+    <td width="190" height="181" align="middle">
+      <p align="center"><img border="0" src="../images/Sentry.gif" width="129" height="181"></td>
+  </tr>
+  <tr>
+    <td align=MIDDLE>
+      <p align=center>
+      <a href="../index.html" language="JavaScript" target=_top
+        onmouseover="if(NavOver) document['home'].src=home1.src"
+        onmouseout="if(NavOver) document['home'].src=home2.src">
+      <img src="images/home.png" border="0" alt="Up (User Guides)" name="home"></a>
+      <a href="network.html" language="JavaScript" target=content
+        onmouseover="if(NavOver) document['network'].src=network1.src"
+        onmouseout="if(NavOver) document['network'].src=network2.src">
+      <img src="images/networkb.png" border="0" alt="Network Config" name="network"></a>
+      <a href="profiles.html"  language="JavaScript" target=content
+        onmouseover="if(NavOver) document['uprofile'].src=uprofile1.src"
+        onmouseout="if(NavOver) document['uprofile'].src=uprofile2.src">
+      <img src="images/uprofile.png" border="0" alt="User Profiles" name="uprofile"></a>
+      <a href="proxy_settings.htm" language="JavaScript" target=content
+        onmouseover="if(NavOver) document['proxy'].src=proxy1.src"
+        onmouseout="if(NavOver) document['proxy'].src=proxy2.src">
+      <img src="images/proxy.png" border="0" alt="Proxy Settings" name="proxy"></a>
+      <a href="outlook_setup.htm" language="JavaScript" target=content
+        onmouseover="if(NavOver) document['outlook'].src=outlook1.src"
+        onmouseout="if(NavOver) document['outlook'].src=outlook2.src">
+      <img src="images/outlook.png" border="0" alt="Email Config" name="outlook"></a>
+      <a href="ldap_config.htm" language="JavaScript" target=content
+        onmouseover="if(NavOver) document['ldap'].src=ldap1.src"
+        onmouseout="if(NavOver) document['ldap'].src=ldap2.src">
+      <img src="images/ldap.png" border="0" alt="LDAP Config" name="ldap"></a>
+      </P>
+    </td>
+  </tr>
+</table>
+</body>
+
+</html>

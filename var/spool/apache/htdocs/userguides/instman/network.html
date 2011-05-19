@@ -1,0 +1,150 @@
+<head>
+<title>Network Setup</title>
+<link rel=stylesheet type=text/css href=../netsentry.css>
+</head>
+
+<CENTER>
+<TABLE WIDTH=100% CELLSPACING=10>
+<TR><TD ALIGN=CENTER VALIGN=MIDDLE>
+<IMG SRC=images/start.png>
+</TD></TR><TR><TD ALIGN=LEFT VALIGN=MIDDLE>
+<UL>
+<li>To Begin Setting Up Your Network Click On The Start Bar
+<li>Select Settings
+<li>Select Control Panel
+</ul>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER VALIGN=MIDDLE><IMG SRC=images/network.png></TD></TR>
+<TD ALIGN=LEFT VALIGN=MIDDLE>
+<UL>
+<li>Select Network By Double Clicking The Network Icon
+</ul>
+</TD></TR><TR>
+
+<TR><TD ALIGN=CENTER VALIGN=MIDDLE><IMG SRC=images/netconf.png></TD></TR>
+<TR><TD ALIGN=LEFT VALIGN=MIDDLE>
+<UL>
+<li>For Your System To Work You Require At Least The Following Items</li>
+  <UL>
+  <li>Client For Microsoft Networks</li>
+  <li>A Network Card In This Case A Realtek 8139</li>
+  <li>TCP/IP Set Of Protocols</li>
+  <li>File And Printer Shareing if you have files or a printer you want to share</li>
+  </ul>
+  </li>
+<li>To Log On To The Network Sentinel Solutions Firewall Select Client For Microsoft Networks As Your Default Login</li>
+<li>Click On File And Printer Shareing To Enable/Disable As Required</li>
+<li>File And Printer Shareing Exposes Your System To Posible Security Breaches Within Yuor Network</li>
+</li>
+</ul>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER VALIGN=MIDDLE><IMG SRC=images/netid.png></TD></TR>
+<TR><TD ALIGN=LEFT VALIGN=MIDDLE>
+<UL>
+<li>Click On The Identification Tab At The Top Of The Control Panel</li>
+<li>For You To Become Part Of The Network You Need To Configure A Machine Identity</li>
+<li>Enter The Name You Want This Computer To Be Known As On The Network IE Your Name</li>
+<li>Enter The Workgroup You Are Joining This Could Be Your Division IE SALES.This Is Also The Group Shown
+When You Browse The Network.It Is Wise To Plan Workgroups In Advance.In A Small Company The Work Group 
+Could Be The Same For All Users. 
+</TD></TR>
+
+<TR><TD ALIGN=CENTER VALIGN=MIDDLE><IMG SRC=images/netclient.png></TD></TR>
+<TR><TD ALIGN=LEFT VALIGN=MIDDLE>
+<UL>
+<li>Click On Configuration On The Network Control Panel</li>
+<li>Highlight Client For Microsoft Networks</li>
+<li>Click On The Properties Button</li>
+<li>Select Log On To Windows NT Domain</li>
+<li>In The Space Provided Type In The Domain The Firewall Has Been Configured With</li>
+<li>It Is Recomended That You Also Select Logon And Restore Network Connections</li>
+<li>When You Finished Click Ok To Go Back To The Network Control Pannel</li>
+</ul>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER VALIGN=MIDDLE><IMG SRC=images/tcpip.png></TD></TR>
+<TR><TD ALIGN=LEFT VALIGN=MIDDLE>
+<UL>
+<li>Click On TCP/IP (Sometimes More Than One Is Present Select The One Assosiated With Your Network Card)</li>
+<li>Click On Properties</li>
+<li>Click On The IP Address Tab</li>
+<li>Enable Obtain IP Address Automaticaly (If DHCP Is Enabled On Firewall This Is The Default/Recomended) 
+Otherwise Enter A IP Address.</li>
+<li>IF DHCP Is Not Enabled You Need To Supply The Appropriate Netmask</li>
+</ul>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER VALIGN=MIDDLE><IMG SRC=images/tcpwins.png></TD></TR>
+<TR><TD ALIGN=LEFT VALIGN=MIDDLE>
+<UL>
+<li>Click On The WINS Configuration Tab</li>
+<li>If DHCP IS Enabled (See Above) Select Use DHCP For WINS Resolution</li>
+<li>If DHCP Is Disabled Apply The Appropriate Settings</li>
+</ul>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER VALIGN=MIDDLE><IMG SRC=images/tcpgate.png></TD></TR>
+<TR><TD ALIGN=LEFT VALIGN=MIDDLE>
+<UL>
+<li>CLick On The Gateway Tab</li>
+<li>If DHCP Is Used This Must Be Left Unset Otherwise The Appropriate IP Must Be Set (This Is Normaly The Address Of The 
+Network Sentinel Solutions Firewall</li>
+</ul>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER VALIGN=MIDDLE><IMG SRC=images/tcpdns.png></TD></TR>
+<TR><TD ALIGN=LEFT VALIGN=MIDDLE>
+<UL>
+<li>Click On The DNS Configuration Tab</li>
+<li>This Must Be Set To Disable When Useing DHCP</li>
+<li>If DHCP Is Not Used The Computer Name (See Above) Must Be Put In The Host Field The Internet Domain
+Name Must Be Put Into The Domain Field.At Least One DNS Server Must Be Specified (The Network Sentinel Solutions Firewall Is A DNS Server) And The 
+Domain Must Be Added To The Domain Suffix Search Order</li>
+</ul>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER VALIGN=MIDDLE><IMG SRC=images/tcpnetbios.png></TD></TR>
+<TR><TD ALIGN=LEFT VALIGN=MIDDLE>
+<UL>
+<li>Click On The NetBios Tab</li>
+<li>This Should Be Enabled To Be Able To Access File Servers Useing The TCP/IP Protocol</li>
+</ul>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER VALIGN=MIDDLE><IMG SRC=images/tcpadv.png></TD></TR>
+<TR><TD ALIGN=LEFT VALIGN=MIDDLE>
+<UL>
+<li>Click On Advanced</li>
+<li>The TCP/IP Protocol Attached To Your Network Should Genraly Be The Default Protocol</li>
+<li>Contact Your Network Administrator For More Information This In Most Cases Will Never Be Changed.</li>
+</ul>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER VALIGN=MIDDLE><IMG SRC=images/tcpbind.png></TD></TR>
+<TR><TD ALIGN=LEFT VALIGN=MIDDLE>
+<UL>
+<li>Click On The Bindings Tab</li>
+<li>The Default Settings Are Almost Always Appropriate Only Change If You Are Required To By Your Network Administrator</li>
+<li>Click On The Ok Button To Take You Back To The Network Control Pannel</li>
+<li>Press OK</li>
+<li>Reboot Your PC When Prompted If You Are Not Prompted Please Reboot Manualy</li>
+<li>When You Log Back In Open The Network Control Pannel As Explaind In The First 3 Steps Above</li>
+</ul>
+</TD></TR>
+
+<TR><TD ALIGN=CENTER VALIGN=MIDDLE><IMG SRC=images/netaccess.png></TD></TR>
+<TR><TD ALIGN=LEFT VALIGN=MIDDLE>
+<UL>
+<li>Click On The Access Control Tab In The Network Control Pannel</li>
+<li>Select User Level Access Control</li>
+<li>The Domain Set On The Firewall Should Appear In The Domain Box</li>
+<li>Click OK</li>
+<li>Click Ok Again</li>
+<li>You Will Be Required To Reboot Your System Again This May Be Delayed Till After Configureing User Profiles However It Is Recomended 
+To Reboot At This Point</li>
+</ul>
+</TD></TR>
+
+</TABLE>

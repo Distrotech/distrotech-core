@@ -1,0 +1,31 @@
+#!/usr/bin/perl
+
+use Crypt::PasswdMD5;
+use Net::LDAPS;
+
+open(LCON,"/etc/ldap.conf");
+while(<LCON>) {
+  chop $_;
+  @centry=split(/\s/,$_);
+  if (@centry[0] eq "master_host") {
+    $host=@centry[1];
+  } elsif (@centry[0] eq "binddn") {
+    $binddn=@centry[1];
+  } elsif (@centry[0] eq "bindpw") {
+    $password=@centry[1];
+  }
+}
+
+$ldap = Net::LDAPS->new($host,port=>"636",verify => 'none',timeout => "10");
+$ldap->bind($binddn,password => $password);
+  
+$mesg = $ldap->search(base=>"ou=idmap",filter =>"(&(userpassword=\*)(!(|(uid=*\$)(gidnumber=))))",attrs=>['uid']);
+
+while($entry = $mesg->shift_entry) {
+  $uid=$entry->get_value("uid");
+
+  $salt=join('',('.', '/', 0..9, 'A'..'Z', 'a'..'z')[rand 64, rand 64, rand 64, rand 64, rand 64, rand 64, rand 64,rand 64]);
+  $pwcrypt="{CRYPT}" . unix_md5_crypt($uid,$salt);
+  $pwres=$ldap->modify($entry->dn ,replace => { 'userPassword' => $pwcrypt });
+}
+$ldap->unbind();

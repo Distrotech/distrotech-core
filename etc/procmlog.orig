@@ -1,0 +1,81 @@
+#!/usr/bin/perl
+
+use DBI;
+
+if (@ARGV[0] eq "") {
+  $logfile="maillog.1";
+} else {
+  $logfile=@ARGV[0];
+}
+
+$user="logview";
+$password="";
+
+$driver = "mysql";
+$database="networksentry_log";
+$hostname="localhost";
+$port=3306;
+
+$month{'Jan'}="1";
+$month{'Feb'}="2";
+$month{'Mar'}="3";
+$month{'Apr'}="4";
+$month{'May'}="5";
+$month{'Jun'}="6";
+$month{'Jul'}="7";
+$month{'Aug'}="8";
+$month{'Sep'}="9";
+$month{'Oct'}="10";
+$month{'Nov'}="11";
+$month{'Dec'}="12";
+
+$dsn = "DBI:$driver:database=$database;host=$hostname;port=$port";
+$dbh = DBI->connect($dsn, $user, $password);
+
+$mail_from="time,message_id,addr,msg_size,rcpt_count,message_tag,raddr";
+$mail_to="time,message_id,addr,delay,mailer,stat,xdelay,caddr,raddr";
+
+open(LF,"/var/log/$logfile");
+while(<LF>) {
+  chop $_;
+  if (( /sendmail\[.*\]/ ) && ( /.*: (to|from)=.*/ )) {
+    ($mon,$day,$hour,$min,$sec,$mid)=/^([\w]*)[\s]*([\d]*)[\s]*(..):(..):(..).*sendmail\[.*\]: ([\w]*):.*/;
+
+    if ($day < 10) {
+      $day="0$day";
+    }
+
+    @ctime=localtime(time);
+    if (@ctime[5] < 2000) {
+      @ctime[5]=@ctime[5]+1900;
+    }
+
+    @ctime[4]++;
+    if ($month{$mon} > @ctime[4]) {
+      @ctime[5]--;
+    }
+  
+    $mon=$month{$mon};
+
+    if ($mon < 10) {
+      $mon="0$mon";
+    }
+
+  
+    $ltime="@ctime[5]-$mon-$day $hour:$min:$sec";
+
+    if ( /.*: to=([^\s]*),.*/ ) {
+      ($rcpt,$delay,$stat)=/.*: to=([^\s]*),.*delay=(..:..:..).*stat=(.*)$/;
+      ($mailer)=/.*mailer=([\w\.<>@,]*),.*/;
+      ($xdelay)=/.*xdelay=(..:..:..).*/;
+      ($caddr)=/.*ctladdr=([^\s]*).*/;
+      ($raddr)=/.*relay=([\w\.@\*#=-]*).*/;
+      $dbh->do("INSERT INTO mail_to ($mail_to) VALUES (\"$ltime\",\"$mid\",\"$rcpt\",\"$delay\",\"$mailer\",\"$stat\",\"$xdelay\",\"$caddr\",\"$raddr\")");
+    }
+    if ( /.*: from=([^\s]*),.*/ ) {
+      ($mfrom,$size,$nrcpts,$relay)=/.*:[\s]*from=([^\s]*),[\s]*size=([\d]*).*nrcpts=([\d]*).*relay=(.*)$/;
+      ($msgid)=/.*msgid=([^\s]*).*/;
+      $dbh->do("INSERT INTO mail_from ($mail_from) VALUES (\"$ltime\",\"$mid\",\"$mfrom\",\"$size\",\"$nrcpts\",\"$msgid\",\"$relay\")");
+    }
+  }
+}

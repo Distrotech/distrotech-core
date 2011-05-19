@@ -1,0 +1,92 @@
+#!/usr/bin/perl
+
+use CGI;
+
+print "Content-Type: text/html\n\n";
+
+CGI::ReadParse(*form_data);
+
+if ($form_data{'show'} eq "") {
+  $form_data{'show'}="V";
+}
+
+print <<__EOB__;
+<CENTER>
+<FORM NAME=sslrevf METHOD=POST>
+<INPUT TYPE=HIDDEN NAME=show VALUE="$form_data{'show'}">
+<INPUT TYPE=HIDDEN NAME=revoke>
+<TABLE WIDTH=90% BORDER=0 CELLPADDING=0 CELLSPACING=0>
+<TR CLASS=list-color2><TH>State</TH><TH>Date Created (Z)</TH><TH>Date Revoked (Z)</TH><TH>Serial</TH><TH>Subject</TH></TR>
+__EOB__
+
+open(TR,"../../htdocs/ns/config/sslrevoke");
+while(<TR>) {
+  chop $_;
+  if ($_ ne $form_data{'revoke'}) {
+    push(@torev,$_);
+    $revp{$_}="TRUE";
+  }
+}
+
+if ($form_data{'revoke'} ne "") {
+  push(@torev,$form_data{'revoke'});
+  open(TR,">../../htdocs/ns/config/sslrevoke");
+  foreach $cert (@torev) {
+    print TR "$cert\n";
+#    print "<SCRIPT>alert('Revoking :$cert')</SCRIPT>\n";
+  }
+  close(TR);  
+}
+
+open(CD,"/etc/openssl/index.txt");
+$rcnt=0;
+while(<CD>) {
+  @certd=split(/\t/,$_);
+
+  if ((@certd[0] eq $form_data{'show'}) || ($form_data{'show'} eq "ALL")) {
+    if (($rcnt % 2) eq "0") {
+      $rowcol="CLASS=list-color1";
+    } else {
+      $rowcol="CLASS=list-color2";
+    }
+    $rcnt++;
+    print "<TR $rowcol><TD>";
+    if (@certd[0] eq "R") {
+      print "Revoked";
+    } elsif (@certd[0] eq "V") {
+      print "Valid";
+    }
+
+    $certid=@certd[3];
+
+    if (($form_data{'revoke'} ne @certd[3]) && (@certd[0] eq "V") && ($revp{$certid} ne "TRUE")){
+      print "<BR><A HREF=\"javascript:ajaxrevoke('@certd[3]')\">Revoke</A>";
+    } elsif (($form_data{'revoke'} eq @certd[3] ) || ($revp{$certid} eq "TRUE")){
+      print "<BR>Revoke Pending";
+    }
+
+
+    print "</TD>";
+
+    $_=@certd[1];
+    @sdate=/^(..)(..)(..)(..)(..)(..)Z$/;
+    print "<TD>@sdate[0]-@sdate[1]-@sdate[2] @sdate[3]:@sdate[4]:@sdate[5]</TD>";
+
+    if (@certd[2] ne "") {
+      $_=@certd[2];
+      @edate=/^(..)(..)(..)(..)(..)(..)Z$/;
+      print "<TD>@edate[0]-@edate[1]-@edate[2] @edate[3]:@edate[4]:@edate[5]</TD>";
+     } else {
+       print "<TD><BR></TD>";
+     }
+     print "<TD>@certd[3]</TD><TD>";
+     @subdata=split(/\//,@certd[5]);
+     foreach $dni (@subdata) {
+       if ($dni ne "") {
+         print "$dni<BR>";
+       }
+     }
+     print "</TD></TR>\n";
+  }
+}
+print "</TABLE></FORM>";

@@ -1,0 +1,30 @@
+^IP Interface
+^FileServer Controler
+^FileServer Option ADS[RS]
+^DNS DynServ
+^DNS DynZone
+^DNS SmartKey
+^IP SysConf PrimaryDns
+^IP SysConf SecondaryDns
+^IP SysConf PrimaryWins
+^IP SysConf SecondaryWins
+^Email MailExchange[12]
+^IP Modem Number
+^IP Modem Username
+^IP Modem Password
+^IP Modem ComPort
+^IP Modem Speed
+^IP Modem FlowControl
+^IP Modem Connection
+^IP Modem Init1
+^IP Modem Init2
+^IP Modem DialString
+^IP Modem Number
+^IP Modem Username
+^IP Modem Password
+^IP Modem MTU
+^IP Modem Address
+^IP Modem Gateway
+^IP Modem IdleTimeout
+^IP Modem Holdoff
+^IP Modem Maxfail

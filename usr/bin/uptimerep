@@ -1,0 +1,106 @@
+#!/usr/bin/perl
+
+#    Copyright (C) 2002  <Gregory Hinton Nietsky>
+#    Copyright (C) 2005  <ZA Telecomunications>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+open(UT,"-");
+$/="\n\n";
+while(<UT>) {
+  chop $_;
+  ($ukey,$uval,$verinf,$loadavg,$astver,$astup)=split(/\n/,$_);
+  @loaddat=split(/ /,$loadavg);
+  pop(@loaddat);
+  pop(@loaddat);
+  $loadavg=join(" ",@loaddat);
+
+  ($uval1,$uval2)=split(/ /,$uval);
+  if ($uval1 > 0) {
+    $uptime{$ukey}=$uval1;
+    $idle{$ukey}=$uval2/$uval1 * 100;
+  } else {
+    push(@offline,$ukey);
+  }
+  @verdat=split(/ /,$astver);
+  $curaver{$ukey}=@verdat[1];
+  @astupdat=split(/, /,substr($astup,14));
+
+  @astupfin=("0","0","0");
+  foreach $astupinf (@astupdat) {
+    ($pgap,$pval,$ptype)=split(/ /,$astupinf );
+    if ($pgap ne "") {
+      $ptype=$pval;
+      $pval=$pgap;
+    }
+    if (($ptype eq "week") || ($ptype eq "weeks")) {
+      @astupfin[0]=@astupfin[0]+$pval*7;
+    } elsif (($ptype eq "day") || ($ptype eq "days")) {
+      @astupfin[0]=@astupfin[0]+$pval;
+    } elsif (($ptype eq "hour") || ($ptype eq "hours")) {
+      @astupfin[1]=@astupfin[1]+$pval;
+    } elsif (($ptype eq "minute") || ($ptype eq "minutes")) {
+      @astupfin[2]=@astupfin[2]+$pval;
+    }
+  }
+  if (@astupfin[0] > 1){
+    @astupfin[0]=sprintf(" %3i days,",@astupfin[0]);
+  } elsif (@astupfin[0] > 0){
+    @astupfin[0]=sprintf(" %3i day, ",@astupfin[0]);
+  } else {
+    @astupfin[0]="          ";
+  }
+  $curaut{$ukey}=sprintf("%s %02i:%02i",@astupfin[0],@astupfin[1],@astupfin[2]);
+  $curver{$ukey}=$verinf;
+  $curload{$ukey}=$loadavg;
+}
+close(UT);
+
+@offline=sort(@offline);
+
+print "Sites Possibly Offline\n";
+
+foreach $oline (@offline) {
+  printf "%-40s\n", $oline;
+}
+print "\nSites Idle %, System Uptime, Kernel Version, Asterisk Uptime, Asterisk Version\n";
+
+foreach $key (sort { $uptime{$a} <=> $uptime{$b} } keys %uptime) {
+  printf "%-40s%4i%\% ", $key, $idle{$key};
+
+  $hours=$uptime{$key} % 86400;
+  $days=($uptime{$key} - $left) / 86400;
+  $mins=$hours % 3600;
+  $hours=($hours - $mins) / 3600; 
+  $secs=$mins % 60;
+  $mins=($mins - $secs) / 60; 
+
+  if ($days >= 2) {
+    printf "%3i days, ", $days;
+  } elsif ($days >= 1) {
+    printf "%3i day,  ", $days;
+  } else {
+    if (($hours >=1) || ($days >= 1)) {
+      printf "          ";
+    }
+  }
+
+  if (($hours >= 1) || ($days >= 1)) {
+    printf "%02i:%02i", $hours, $mins;
+  } elsif ($mins > 0) {
+    printf "%02i:%02i min      ", $mins, $secs;
+  }
+  printf " %-20s%-20s%-15s%s\n", $curver{$key}, $curaut{$key}, $curaver{$key}, $curload{$key};
+}

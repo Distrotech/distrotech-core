@@ -1,0 +1,34 @@
+#!/bin/bash
+
+PID=$$
+
+if [ -e /var/run/safe_slapd.pid ];then
+  CURPID=`cat /var/run/safe_slapd.pid`
+  if [ "$CURPID" != "$PID" ] && [ -d /proc/$CURPID ] && [ "$CURPID" ];then
+    exit;
+   else
+    echo $PID > /var/run/safe_slapd.pid
+  fi;
+ else
+  echo $PID > /var/run/safe_slapd.pid
+fi;
+
+while [ 1 ]; do 
+  if [ "`pidof slapd`" ];then
+    exit;
+  fi;
+  if [ ! -d /var/spool/ldap ] || [ ! -d /var/log/ldap ];then
+    echo FIX
+  fi;
+  if [ -e /etc/ipsec.d/cacerts/cacert.pem ] && [ -e /etc/openssl/server.signed.pem ] && [ ! -e /etc/.networksentry-lite ];then
+    exec /usr/libexec/slapd -d 0 -h "ldap:// ldaps://"
+   else
+    if [ -x /usr/libexec/slapd ] && [ ! -e /etc/.install ];then
+      exec /usr/libexec/slapd -d 0 -h "ldap://127.0.0.1"
+    fi;
+  fi;
+  EXITSTATUS=$?
+  sleep 5;
+done
+
+rm /var/run/slapd.pid

@@ -1,0 +1,52 @@
+#!/bin/bash
+
+if [ ! "$1" ];then
+  exit;
+fi;
+
+if [ $# == 3 ];then
+  USER=$3
+  BPATH=/var/spool/mail/$1/$2/
+ elif [ $# == 1 ];then
+  USER=$1
+  BPATH=/var/spool/mail/${1:0:1}/${1:1:1}/
+ else
+  exit
+fi;
+
+MPATH=${BPATH}${USER}
+
+if [ ! -d ${MPATH} ];then
+  if [ -e ${MPATH} ];then
+    /bin/mv ${MPATH} ${MPATH}.mbox
+    /usr/sbin/mb2md -s ${MPATH}.mbox -d ${MPATH}
+   else
+    mkdir ${MPATH}
+  fi;
+fi;
+
+for BOGBOX in `ls -d ${BPATH}BOGUS.${USER}.* 2>/dev/null` ;do
+  if [ -d ${BOGBOX} ];then
+    rsync -a ${BOGBOX}/* ${MPATH}/
+    for BOGFLD in `ls -d ${BOGBOX}/.?* 2>/dev/null` ;do
+      if [ "${BOGFLD}" != "${BOGBOX}/.." ];then
+        rsync -a ${BOGFLD} ${MPATH}/
+      fi;
+    done;
+    rm -rf ${BOGBOX}
+   else
+    /usr/sbin/mb2md -s ${BOGBOX} -d ${MPATH}
+    rm ${BOGBOX}
+  fi;
+done;
+
+if [ -d ${MPATH} ];then
+  setfacl -R -b ${MPATH}
+  chown -R ${USER}.mail ${MPATH}
+  setfacl -R -b ${MPATH}
+  setfacl -R -m u::rwX -m g::rwX -m o::0 -m g:mail:rwX -m m::rwX \
+          -m d:u::rwX -m d:g::rwX -m d:o::0 -m d:g:mail:rwX -m d:m::rwX ${MPATH}
+  if [ -e ${MPATH}.mbox ];then
+    rm -rf ${MPATH}.mbox
+  fi;
+fi;

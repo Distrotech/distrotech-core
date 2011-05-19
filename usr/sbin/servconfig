@@ -1,0 +1,2662 @@
+#!/bin/bash
+
+#    Copyright (C) 2002  <Gregory Hinton Nietsky>
+#    Copyright (C) 2005  <ZA Telecomunications>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+if [ ! "`grep -E "^System Type" /var/spool/apache/htdocs/ns/config/netsentry.conf`" ];then
+  exit
+ elif [ ! -e /etc/firewall.conf.last ];then
+  cp /var/spool/apache/htdocs/ns/config/netsentry.conf /etc/firewall.conf.last
+fi;
+
+cd /var/spool/apache/htdocs/ns/config
+
+
+Gen_CRL_Cert() {
+  /usr/bin/openssl ca -gencrl -out /etc/ipsec.d/crls/crl.pem -config /etc/openssl/ca.conf -batch > /dev/null 2>&1
+  /usr/bin/openssl crl -in /etc/ipsec.d/crls/crl.pem -text > crl.txt 
+  if [ -e "/etc/ipsec.d/certs/`openssl crl -noout -hash -in /etc/ipsec.d/crls/crl.pem`.r0" ];then
+    rm /etc/ipsec.d/certs/`openssl crl -noout -hash -in /etc/ipsec.d/crls/crl.pem`.r0
+  fi
+  cp /etc/ipsec.d/crls/crl.pem /etc/ipsec.d/certs/`openssl crl -noout -hash -in /etc/ipsec.d/crls/crl.pem`.r0
+  /usr/sbin/pkistore
+}
+
+restartbrid() {
+  KSTOP=
+  while [ `pidof sangoma_brid` ] && [ "$KSTOP" != "XXXXXXX" ];do
+    killall sangoma_brid
+    KSTOP=${KSTOP}X
+    sleep 2;
+  done;
+  if [ `pidof sangoma_brid` ];then
+    killall -9 sangoma_brid
+  fi;
+  exec /usr/sbin/sangoma_brid -bg &
+}
+
+if [ ! "`lsmod |grep -E "^dummy"`" ] && [ -x /usr/sbin/noroute ];then
+  /usr/sbin/noroute
+fi;
+
+if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstconfig ];then
+  if [ ! "`pidof dhcpd`" ];then
+    /usr/sbin/dhcpd > /dev/null 2>&1
+  fi;
+
+  if [ ! "`pidof named`" ];then
+    /usr/sbin/named > /dev/null 2>&1
+  fi;
+
+  if [ ! "`pidof nscd`" ];then
+    if [ -e /var/run/nscd/nscd.pid ];then
+      rm /var/run/nscd/nscd.pid
+    fi;
+    if [ -e /var/run/nscd/socket ];then
+      rm /var/run/nscd/socket
+    fi;
+    /usr/sbin/nscd > /dev/null 2>&1
+  fi;
+
+  if [ "`whoami`" != "`echo root`" ];then
+    nscd -i passwd;
+    nscd -i hosts;
+    nscd -i group;
+  fi
+
+  if [ ! "`pidof watchdog`" ];then
+    if [ ! -e /dev/watchdog ];then
+      modprobe softdog
+    fi;
+    /sbin/watchdog
+  fi;
+
+  if [ ! "`pidof nmbd`" ];then
+    /usr/sbin/nmbd -D &
+  fi;
+
+  if [ ! "`pidof smbd`" ];then
+    /usr/sbin/smbd -D &
+  fi;
+
+  if [ ! "`pidof racoon`" ] && [ ! -e /var/run/ppp-reroute ];then
+    /usr/sbin/racoon > /dev/null 2>&1
+  fi;
+
+  if [ ! "`pidof t38modem`" ];then
+    /usr/libexec/t38modem_start > /dev/null 2>&1 &
+  fi;
+
+  if [ -x /usr/sbin/clamd.start ];then
+    /usr/sbin/clamd.start
+    MSPID=`cat /var/run/mailscanner.pid 2> /dev/null`
+    MSPIDS=`ls -d /proc/$MSPID 2> /dev/null`
+    if [ ! "$MSPIDS" ] || [ ! "$MSPID" ];then
+      /opt/MailScanner/bin/MailScanner /opt/MailScanner/etc/MailScanner.conf
+    fi;
+  fi;
+
+  NTPDPID=`pidof ntpd`
+  if [ ! "$NTPDPID" ];then
+    /usr/bin/ntpd -g
+  fi;
+#  su pgsql -c "pg_ctl status -D /var/spool/pgsql" > /dev/null 2>&1
+#  if [ $? == 1 ] || [ ! -d /proc/`cat /var/spool/pgsql/postmaster.pid  |head -1` ];then
+#    /etc/rc.d/rc.exchange
+#    sleep 10;
+#  fi;
+
+  #Check Squid
+  RCPID=`ps ax |grep RunCache |grep -v grep`
+  if [ ! "$RCPID" ];then
+    (ls /var/db/squid/blacklists/*/urls /var/db/squid/blacklists/*/domains |awk '{printf "if [ %s -nt %s.db ];then squidGuard -C %s;chown nobody.nogroup %s.db > /dev/null 2>&1;fi;\n",$1,$1,$1,$1}'  |sh) &
+    killall -9 squid > /dev/null 2>&1
+    /usr/bin/RunCache > /dev/null 2>&1 &
+    sleep 5
+    /usr/sbin/squid -k reconfigure > /dev/null 2>&1 &
+  fi;
+
+  #Startup No-IP.com
+  if [ ! -e /etc/.networksentry-lite ] && [ -e /etc/no-ip2.conf ] && [ ! "`pidof noip2`" ];then
+    /sbin/ip -o route show 0.0.0.0/0 table 90 |awk '{printf "/usr/sbin/noip2 -I %s\n",$5}' |sh > /dev/null 2>&1;
+  fi;
+
+  #Start SSHD
+  if [ ! "`pidof sshd`" ];then
+    /usr/sbin/sshd
+  fi;
+
+  #Start Ldap
+  if [ ! -e /etc/.networksentry-lite ] && [ -e /etc/mail/ldap ] && [ ! -e /etc/.firstboot ];then
+    ldapsearch -U admin -Y PLAIN -w "`cat /etc/mail/ldap`" -b uid=admin,ou=users uid=admin uid > /tmp/ldaps.out &
+    LDS="";
+    while [ ! -s /tmp/ldaps.out ] && [ "${LDS}" != "XXXXXXXXXXXXXXXXXXXX" ];do
+      sleep 1
+      LDS=${LDS}X
+    done;
+    if [ ! -s /tmp/ldaps.out ];then
+      killall -9 ldapsearch > /dev/null 2>&1
+      killall sendmail
+      if [ "`pidof slapd`" ];then
+        killall slapd
+        if [ "`pidof slapd`" ];then
+          killall winbindd
+          sleep 3
+          killall -9 winbindd
+        fi;
+      fi;
+      /etc/rc.d/rc.ldap > /dev/null 2>&1
+      LDS="";
+      while [ ! "`pidof slapd`" ] && [ "${LDS}" != "XXXXX" ];do
+        sleep 1
+        /etc/rc.d/rc.ldap > /dev/null 2>&1
+        LDS=${LDS}X
+      done;
+      killall -9 ldapsearch > /dev/null 2>&1
+    fi;
+    rm /tmp/ldaps.out
+  fi;
+
+  if [ ! -e /etc/.firstboot ];then
+    diff /etc/nsswitch.conf.ldap /etc/nsswitch.conf > /dev/null 2>&1
+    if [ $? != 0 ];then 
+      /usr/sbin/socktest 127.0.0.1 389 >/dev/null 2>&1
+      if [ $? == 0 ];then
+        if [ -e /etc/nsswitch.conf.boot ] && [ -e /etc/nsswitch.conf.ldap ];then
+          if [ ! -e /etc/nsswitch.conf.local ];then
+            cp /etc/nsswitch.conf.ldap /etc/nsswitch.conf
+           else
+            cp /etc/nsswitch.conf.local /etc/nsswitch.conf
+          fi;
+        fi;
+      fi;
+    fi
+  fi;
+
+  #Reconfig Watchdog
+  if [ -e /etc/watchdog.conf.orig ];then
+    if [ /etc/watchdog.conf.orig -nt /etc/watchdog.conf ];then
+     (grep -E "^max-load-[15]+" /etc/watchdog.conf;grep -vE "^max-load-[15]" /etc/watchdog.conf.orig) > /etc/watchdog.local
+      if [ "`diff /etc/watchdog.local /etc/watchdog.conf`" ];then
+        mv /etc/watchdog.local /etc/watchdog.conf
+        while [ "`pidof watchdog`" ];do
+          killall -9 watchdog
+          sleep 1
+        done
+        /sbin/watchdog
+       elif [ -e /etc/watchdog.local ];then
+        touch /etc/watchdog.conf
+        rm /etc/watchdog.local
+      fi;
+    fi;
+  fi;
+
+  #Start Windows Authentication
+  if [ ! -e /etc/.networksentry-lite ] && [ ! "`pidof winbindd`" ];then
+    /usr/sbin/winbindd > /dev/null 2>&1 &
+  fi;
+
+  #Start Email
+  if [ -x /etc/rc.d/rc.mail ];then
+    /etc/rc.d/rc.mail
+  fi;
+
+#  if [ "`asterisk -rx "oh323 show conf" |grep -c "Registered"`" != "1" ] && [ -e /usr/lib/asterisk/modules/chan_oh323.so ];then 
+#    ps ax |grep /usr/sbin/mohplay |awk '$5 != "grep" {printf "kill -9 %s\n",$1}'
+#    killall -9 gnugk
+#    sleep 2
+#  fi
+
+  ASTFOPPID=`ps ax |grep op_server.pl |grep -v grep |head -1 |awk '{print $1}'`
+
+  ASTPID=`pidof asterisk`
+  if [ ! "`pidof gnugk`" ];then
+    rm /tmp/gnugk.ini-* > /dev/null 2>&1
+    if [ -e /etc/h323-custom.conf ];then
+      /usr/sbin/gnugk -c /etc/h323-custom.conf > /dev/null 2>&1 &
+     else
+      /usr/sbin/gnugk -c /etc/h323.conf > /dev/null 2>&1 &
+    fi;
+    sleep 2
+    kill -1 `cat /var/run/gnugk.pid`
+#    /usr/sbin/asterisk -rx "restart gracefully" > /dev/null 2>&1
+  fi;
+
+  if [ ! "$ASTPID" ];then
+    ps ax |grep "/bin/sh /usr/sbin/safe_asterisk" |awk '$5 != "grep" {print "kill "$1}' |sh > /dev/null 2>&1
+    sleep 5
+    /usr/sbin/safe_asterisk > /dev/null 2>&1
+
+    if [ "$ASTFOPPID" ];then
+      kill -9 $ASTFOPPID
+    fi;
+    sleep 2
+    nohup /etc/asterisk/pannel/op_server.pl > /dev/null 2>&1 &
+  fi;
+
+  if [ ! "$ASTFOPPID" ];then
+    nohup /etc/asterisk/pannel/op_server.pl > /dev/null 2>&1 &
+  fi;
+
+  if [ -e /etc/wanpipe/smg_bri.conf ];then
+    PIDDIR=/proc/`cat /var/run/sangoma_brid.pid`
+    if [ -x "${PIDDIR}/exe" ];then
+      diff -u ${PIDDIR}/exe /usr/sbin/sangoma_brid
+      if [ "$?" != "0" ];then
+        restartbrid;
+      fi;
+     else
+      restartbrid;
+    fi;
+  fi;
+
+  ZPID=`pidof zebra`
+  RPID=`pidof ripd`
+  BPID=`pidof bgpd`
+  OPID=`pidof ospfd`
+  IPID=`pidof isisd`
+
+  if [ ! "$ZPID" ];then
+    zebra -d
+    REROUTE=1
+  fi;
+  if [ ! "$OPID" ];then
+    ospfd -d
+    REROUTE=1
+  fi;
+  if [ ! "$RPID" ];then
+    ripd -d
+    REROUTE=1
+  fi;
+  if [ ! "$BPID" ];then
+    bgpd -d
+    REROUTE=1
+  fi;
+  if [ ! "$IPID" ];then
+    isisd -d
+    REROUTE=1
+  fi;
+  if [ "$REROUTE" = 1 ];then
+    vtysh -b
+  fi;
+
+  SNMPPID=`pidof snmpd`
+  if [ ! "$SNMPPID" ];then
+    /usr/sbin/snmpd -c /etc/snmpd.conf
+    RUNGENCONF=1;
+  fi;
+
+  if [ -x /usr/bin/svnadmin ] && [ ! -d /var/spool/svn ];then
+    /usr/bin/svnadmin create /var/spool/svn
+    (cat << EOF
+[/]
+* = r
+admin = rw
+EOF
+) > /var/spool/svn/access
+    chown -R www.www /var/spool/svn
+  fi;
+
+#  FROXPID=`pidof frox`
+#  NAMEDPID=`pidof named`
+#  if [ ! "$FROXPID" ] && [ "$NAMEDPID" ];then
+#    /usr/sbin/frox &
+#  fi;
+fi;
+
+if [ -e /tmp/op_buttons.cfg.new ] && [ -e /etc/asterisk/pannel/op_buttons.cfg ];then 
+  ASTOPBUT=`diff /tmp/op_buttons.cfg.new /etc/asterisk/pannel/op_buttons.cfg`
+ elif [ -e /tmp/op_buttons.cfg.new ] && [ ! -e /etc/asterisk/pannel/op_buttons.cfg ];then
+  ASTOPBUT=1
+fi;
+
+if [ -e /tmp/op_style.cfg.new ] && [ -e /etc/asterisk/pannel/op_style.cfg ];then 
+  ASTOPSTY=`diff /tmp/op_style.cfg.new /etc/asterisk/pannel/op_style.cfg`
+ elif [ -e /tmp/op_style.cfg.new ] && [ ! -e /etc/asterisk/pannel/op_style.cfg ];then
+  ASTOPSTY=1
+fi;
+
+if [ "$ASTOPBUT" ] || [ "$ASTOPSTY" ];then
+  cp /tmp/op_buttons.cfg.new /etc/asterisk/pannel/op_buttons.cfg
+  cp /tmp/op_style.cfg.new /etc/asterisk/pannel/op_style.cfg
+  ASTFOPPID=`ps ax |grep op_server.pl |grep -v grep |head -1 |awk '{print $1}'`
+  if [ "$ASTFOPPID" ];then
+    kill -1 $ASTFOPPID
+   else
+    nohup /etc/asterisk/pannel/op_server.pl > /dev/null 2>&1 &
+  fi;
+fi;
+
+if [ -e netsentry-sysvars ] && [ -e sysvars ] && [ ! -e /install/default.conf.full ] && [ "`diff sysvars netsentry-sysvars`" ];then
+  /usr/sbin/sysreconf netsentry-sysvars;
+  /sbin/reboot
+ elif [ -e netsentry-sysvars ] && [ -e sysvars ] && [ ! -e /install/default.conf.full ];then
+  /usr/sbin/genconf
+fi;
+
+if [ -e netsentry-sysvars ];then
+  rm netsentry-sysvars;
+fi;
+
+if [ ! -d /root/.ssh ];then
+  mkdir /root/.ssh 
+  chmod 700 /root/.ssh
+fi;
+
+if [ ! -e /root/.ssh/authorized_keys ];then
+  /usr/bin/gensshauth > /root/.ssh/authorized_keys
+fi;
+
+if [ -e gensshauth ] && [ gensshauth -nt /root/.ssh/authorized_keys  ];then
+  if [ -x /usr/bin/gensshauth ];then
+    /usr/bin/gensshauth > /root/.ssh/authorized_keys
+  fi;
+fi;
+
+if [ -e /var/run/netsentry-config ];then
+  PID=`tail -1 /var/run/netsentry-config`
+  if [ -d /proc/$PID ];then
+    exit
+   else
+    echo $$ > /var/run/netsentry-config
+  fi;
+ else
+  echo $$ > /var/run/netsentry-config
+fi;
+
+if [ ! -e networksentry-lite ] && [ ! -e /tmp/.firstconfig ] && [ ! -e /etc/.install ];then
+  /usr/sbin/pwsync > /dev/null 2>&1
+  if [ -e sslrevoke ];then
+    cat sslrevoke  |awk '{printf "openssl ca -revoke /etc/openssl/newcerts/%s.pem -config /etc/openssl/ca.conf -batch\n",$1}' |sh
+    rm sslrevoke
+    Gen_CRL_Cert;
+  fi;
+
+  ls /var/spool/apache/htdocs/ssl/sign |awk '{printf "echo %s; \n\
+     /usr/bin/openssl ca -notext -config /etc/openssl/ca.conf -batch \\\n\
+             -out \"/var/spool/apache/htdocs/X509/%s.pem\" \\\n\
+             -in \"/var/spool/apache/htdocs/ssl/sign/%s\"; \n\
+     rm \"/var/spool/apache/htdocs/ssl/req/%s\"; \n\
+     rm \"/var/spool/apache/htdocs/ssl/sign/%s\"; \n\
+     /usr/bin/openssl crl2pkcs7 -in /etc/ipsec.d/crls/crl.pem \\\n\
+             -certfile /etc/ipsec.d/cacerts/cacert.pem \\\n\
+             -certfile \"/var/spool/apache/htdocs/X509/%s.pem\" \\\n\
+             -out \"/var/spool/apache/htdocs/X509/%s.p7b\" \\\n\
+             -outform der;\n\
+     if [ ! -s \"/var/spool/apache/htdocs/X509/%s.pem\" ];then \n\
+       rm \"/var/spool/apache/htdocs/X509/%s.p7b\" ;\n\
+       rm \"/var/spool/apache/htdocs/X509/%s.pem\" ;\n\
+     fi\n",split($0,fn,"."),fn[1],$0,$0,$0,fn[1],fn[1],fn[1],fn[1],fn[1]}' |sh > /dev/null 2>&1
+
+  ls /var/spool/apache/htdocs/ssl/casign |awk '{printf "echo %s; \n\
+     /usr/bin/openssl ca -config /etc/openssl/ca.conf -batch -notext -extensions ca_cert\\\n\
+             -out \"/var/spool/apache/htdocs/X509CA/%s.pem\" \\\n\
+             -in \"/var/spool/apache/htdocs/ssl/casign/%s\"; \n\
+     rm \"/var/spool/apache/htdocs/ssl/req/%s\"; \n\
+     rm \"/var/spool/apache/htdocs/ssl/casign/%s\"; \n\
+     /usr/bin/openssl crl2pkcs7 -in /etc/ipsec.d/crls/crl.pem \\\n\
+             -certfile /etc/ipsec.d/cacerts/cacert.pem \\\n\
+             -certfile \"/var/spool/apache/htdocs/X509CA/%s.pem\" \\\n\
+             -out \"/var/spool/apache/htdocs/X509CA/%s.p7b\" \\\n\
+             -outform der;\n\
+     if [ ! -s \"/var/spool/apache/htdocs/X509CA/%s.pem\" ];then \n\
+       rm \"/var/spool/apache/htdocs/X509CA/%s.p7b\" ;\n\
+       rm \"/var/spool/apache/htdocs/X509CA/%s.pem\" ;\n\
+     fi\n",split($0,fn,"."),fn[1],$0,$0,$0,fn[1],fn[1],fn[1],fn[1],fn[1]}' |sh > /dev/null 2>&1
+
+    for cert in `ls /etc/ipsec.d/certs`;do
+      if [ -h /etc/ipsec.d/certs/$cert ];then
+        rm /etc/ipsec.d/certs/$cert
+      fi
+    done;
+
+    ls /etc/ipsec.d/cacerts/*.pem /etc/ipsec.d/clients/*.pem 2> /dev/null |awk '{printf "HASH=`openssl x509 -noout -hash -in %s`\n\
+if [ ! -e /etc/ipsec.d/certs/${HASH}.0 ];then\n \
+  ln -s %s /etc/ipsec.d/certs/${HASH}.0\n\
+fi;\n",$1,$1}' |sh > /dev/null 2>&1
+
+    ls /etc/ipsec.d/crls/*.pem 2> /dev/null |awk '{printf "HASH=`openssl crl -noout -hash -in %s`\n\
+if [ ! -e /etc/ipsec.d/certs/${HASH}.r0 ];then\n \
+  ln -s %s /etc/ipsec.d/certs/${HASH}.r0\n\
+fi;\n",$1,$1}' |sh > /dev/null 2>&1
+
+    ls /etc/ipsec.d/certs/*.0 |awk -F\. '{printf "if [ ! -e /etc/ipsec.%s.txt ];then openssl x509 -in /etc/ipsec.%s.0 -noout -text > /etc/ipsec.%s.txt;fi\n",$2,$2,$2}'  |sh
+fi;
+
+if [ -e /etc/sogo_ad.conf ] && [ ! -e /var/home/sogo/sogo_ad.conf ];then
+  cp /etc/sogo_ad.conf /var/home/sogo/sogo_ad.conf
+ elif [ ! -e /etc/sogo_ad.conf ] && [ -e /var/home/sogo/sogo_ad.conf ];then
+  cp /var/home/sogo/sogo_ad.conf /etc/sogo_ad.conf
+  RUNGENCONF=1;
+ elif [ -e /etc/sogo_ad.conf ] && [ -e /var/home/sogo/sogo_ad.conf ] && [ "`diff /etc/sogo_ad.conf /var/home/sogo/sogo_ad.conf`" ];then
+  if [ /etc/sogo_ad.conf -nt /var/home/sogo/sogo_ad.conf ];then
+    cp /etc/sogo_ad.conf /var/home/sogo/sogo_ad.conf
+   else
+    cp /var/home/sogo/sogo_ad.conf /etc/sogo_ad.conf
+    RUNGENCONF=1;    
+  fi;
+fi
+
+if [ -e /var/run/netsentry-update ];then
+  rm /var/run/netsentry-update
+  chmod -R u+rw,g-rwx,o-rwx /var/spool/apache/htdocs/ns/config
+  chown -R www.www /var/spool/apache/htdocs/ns/config
+ else
+  rm /var/run/netsentry-config
+  if [ "$RUNGENCONF" == 1 ];then
+    /usr/sbin/genconf
+  fi;
+  exit
+fi;
+
+
+#Check For Capped ADSL Accounts
+
+#if [ ! -d /var/lock/adsl/ ];then
+#  mkdir /var/lock/adsl/
+#fi;
+
+#CAPLOCK=`date +"%B-%Y"`
+#CAPPED="";
+
+#if [ -e /var/lock/adsl/$CAPLOCK ];then
+#  for link in 0 1;do
+#    ip link show ppp${link} > /dev/null 2>&1
+#    if [ $? == 0 ];then
+#      IP3=`ip -o addr show ppp${link} |tail -1 |awk '{print $4}' |cut -d. -f 3`
+#      CLASSB=`ip -o addr show ppp${link} |tail -1 |awk '{print $4}' |awk -F. '{print $1$2}'`
+#      if [ $IP3 -lt 96 ] && [ "$CLASSB" == "165165" ];then
+#        CAPPED="$CAPPED ppp${link}";
+#      fi
+#    fi;
+#  done;
+# else
+#  /usr/sbin/adslreset
+#  touch /var/lock/adsl/$CAPLOCK
+#fi;
+
+#if [ "$CAPPED" ];then
+# /usr/sbin/adsluncap $CAPPED
+# /usr/sbin/genconf
+# PPPDIFF=`diff /var/spool/apache/htdocs/ns/config/rc.ppp /etc/rc.d/rc.ppp`
+# if [ "$PPPDIFF" ];then
+#   cp /var/spool/apache/htdocs/ns/config/rc.ppp /etc/rc.d/rc.ppp
+#   killall pppd
+#   sleep 30
+#   exit
+# fi;
+#fi;
+
+chown www.www /var/run/netsentry-config
+
+if [ -e clamav.conf ] && [ -e /etc/clamav.conf ];then 
+  AVDIFF=`diff clamav.conf /etc/clamav.conf`
+ else
+  if [ -e clamav.conf ];then 
+    AVDIFF="NO FILE";
+  fi;
+fi;
+
+if [ -e clamd.start ] && [ -e /usr/sbin/clamd.start ];then 
+  AVDIFF2=`diff clamd.start /usr/sbin/clamd.start`
+ else
+  if [ -e clamd.start ];then 
+    AVDIFF2="NO FILE";
+  fi;
+fi;
+
+if [ ! -e networksentry-lite ] && [ ! -e /tmp/backup ];then
+  if [ "$AVDIFF" ] || [ "$AVDIFF2" ];then
+    cp clamd.start /usr/sbin/clamd.start
+    chown root.root /usr/sbin/clamd.start
+    chmod 750 /usr/sbin/clamd.start
+    cp -p clamav.conf /etc/
+    chmod 664 /etc/clamav.conf
+    chown root.root /etc/clamav.conf
+    /usr/sbin/clamd.start START
+  fi;
+fi;
+
+if [ -e networksentry-lite ] ;then
+  touch /etc/.networksentry-lite
+ else
+  if [ -e /etc/.networksentry-lite ] || [ -e /tmp/.firstconfig ];then
+    /sbin/modprobe dazuko > /dev/null 2>&1
+    /sbin/ifconfig lo:0 127.0.0.2 netmask 255.255.255.255
+    /etc/rc.d/rc.exchange > /dev/null 2>&1 &
+    rm /etc/clamav.conf
+    if [ -e /etc/mail/sendmail.mc ];then
+      rm /etc/mail/sendmail.mc
+    fi;
+    /usr/sbin/snmpd -c /etc/snmpd.conf
+
+    /usr/sbin/inetd > /dev/null 2>&1
+    if [ ! -d /etc/samba/private ];then
+      mkdir /etc/samba/private
+    fi;
+    if [ ! -d /etc/samba/private/secrets.tdb ];then
+      smbpasswd -w admin
+    fi;
+    /usr/sbin/winbindd > /dev/null 2>&1 &
+
+    (/usr/sbin/portmap
+    /usr/sbin/rpc.statd -p 32765 -o 32766
+    /usr/sbin/rpc.lockd
+    /usr/sbin/rpc.mountd -p 32767
+    /usr/sbin/rpc.nfsd
+    /usr/sbin/rpc.rquotad -p 32769)>/dev/null 2>&1
+
+    /usr/sbin/named > /dev/null 2>&1
+
+    if [ -x /etc/rc.d/rc.mount ];then
+      /etc/rc.d/rc.mount
+    fi;
+
+    if [ ! -d /var/run/proftpd ];then
+      mkdir /var/run/proftpd
+    fi;
+
+    /usr/sbin/saslauthd -a pam > /dev/null 2>&1
+
+    if [ ! -d /var/spool/samba/netlogon ];then
+      mkdir /var/spool/samba/netlogon
+      chown root.139 /var/spool/samba/netlogon
+      chmod 2775 /var/spool/samba/netlogon
+    fi
+
+    if [ ! -d /var/spool/samba/ftp ];then
+      mkdir /var/spool/samba/ftp
+      chown nobody.nogroup /var/spool/samba/ftp
+      chmod 6770 /var/spool/samba/ftp
+    fi
+
+    if [ ! -e /var/spool/samba/ftp/welcome.txt ];then
+      (cat << EOF
+
+welcome.txt
+-----------
+
+Place Your Login Message Here.
+
+A File welcome.txt in any directory is displayed when a user changes
+to that directory.
+
+
+EOF
+)> /var/spool/samba/ftp/welcome.txt
+      chmod 664 /var/spool/samba/ftp/welcome.txt
+      chown nobody.nogroup /var/spool/samba/ftp/welcome.txt
+    fi
+
+    /usr/sbin/dhcpd > /dev/null 2>&1
+#    /etc/rc.d/rc.hfax > /dev/null 2>&1
+    /usr/sbin/lpd > /dev/null 2>&1
+    /usr/bin/checkpc -f > /dev/null 2>&1
+    rm /etc/.networksentry-lite
+    if [ ! -e /etc/.install ] && [ ! -e /tmp/.firstconfig ];then
+      touch /tmp/.firstconfig
+    fi;
+  fi;
+fi;
+
+
+CONF_FILE="netsentry.conf";
+
+OPENSSL=/usr/bin/openssl
+
+if [ -e ca.conf ] && [ -e /etc/openssl/ca.conf ];then 
+  CADIFF=`diff ca.conf /etc/openssl/ca.conf`;
+ else
+  if [ -e ca.conf ];then 
+    CADIFF="NO FILE";
+  fi;
+fi;
+
+if [ -e server.conf ] && [ -e /etc/openssl/server.conf ];then 
+  CASERVDIFF=`diff server.conf /etc/openssl/server.conf`;
+ else
+  if [ -e ca.conf ];then 
+    CASERVDIFF="NO FILE";
+  fi;
+fi;
+
+if [ ! -e networksentry-lite ];then
+  if [ "$CADIFF" ] || [ "$CASERVDIFF" ] || [ ! -e /etc/openssl/serverkey.pem ] || [ ! -e /etc/openssl/private/cakey.pem ];then
+    if [ ! -d /etc/ipsec.d ];then
+      mkdir /etc/ipsec.d;
+      chmod 755 /etc/ipsec.d;
+      chown root.root /etc/ipsec.d;
+      mkdir /etc/ipsec.d/cacerts;
+      chmod 755 /etc/ipsec.d/cacerts;
+      chown root.root /etc/ipsec.d/cacerts;
+      mkdir /etc/ipsec.d/crls;
+      chmod 755 /etc/ipsec.d/crls;
+      chown root.root /etc/ipsec.d/crls;
+      mkdir /etc/ipsec.d/certs;
+      chmod 755 /etc/ipsec.d/certs;
+      chown root.root /etc/ipsec.d/certs;
+    fi;
+
+    if [ ! -d /etc/openssl ];then
+      mkdir /etc/openssl
+      mkdir /etc/openssl/certs
+      mkdir /etc/openssl/newcerts
+      mkdir /etc/openssl/private
+      chmod 750 /etc/openssl
+      chown 0.80 /etc/openssl
+      chmod 750 /etc/openssl/certs
+      chmod 750 /etc/openssl/newcerts
+      chmod 750 /etc/openssl/private
+    fi;
+    if [ "$CADIFF" ];then
+      cp -p  ca.conf /etc/openssl/
+      chmod 640 /etc/openssl/ca.conf
+      rm /etc/openssl/openssl.conf
+      ln -s /etc/openssl/ca.conf /etc/openssl/openssl.conf
+      chown root.www /etc/openssl/ca.conf 
+    fi;
+
+    if [ "$CASERVDIFF" ];then
+      cp -p  server.conf /etc/openssl/
+      chmod 600 /etc/openssl/server.conf
+      chown root.root /etc/openssl/server.conf
+    fi;
+
+    if [ ! -e /etc/openssl/private/cakey.pem ] || [ "$CADIFF" ];then
+      (rm /etc/openssl/newcerts/*;
+      rm /etc/openssl/index.*;
+      rm /etc/openssl/serial;
+      rm /etc/openssl/server.sign.pem;
+      rm /etc/openssl/serial.old) > /dev/null 2>&1
+
+      echo -n "01" > /etc/openssl/serial
+      touch /etc/openssl/index.txt
+
+      if [ -e /etc/openssl/private/cakey.pem ];then
+        /usr/bin/openssl req -x509 -new -days 3650 -out /etc/ipsec.d/cacerts/cacert.pem \
+                             -key /etc/openssl/private/cakey.pem -config /etc/openssl/ca.conf -set_serial 0\
+                             -extensions v3_ca -batch
+       else
+        /usr/bin/openssl req -x509 -newkey rsa:2048 -days 3650 -out /etc/ipsec.d/cacerts/cacert.pem \
+                             -keyout /etc/openssl/private/cakey.pem -config /etc/openssl/ca.conf -set_serial 0\
+                             -extensions v3_ca -nodes -batch >/dev/null 2>&1
+        chown root.root /etc/openssl/private/cakey.pem
+        chmod 600 /etc/openssl/private/cakey.pem
+      fi;
+     else
+      if [ ! -e /etc/ipsec.d/cacerts/cacert.pem ];then
+        /usr/bin/openssl req -x509 -new -out /etc/ipsec.d/cacerts/cacert.pem \
+                             -key /etc/openssl/private/cakey.pem -set_serial 0\
+                             -days 3650 -extensions v3_ca -batch >/dev/null 2>&1
+      fi;
+    fi;
+    /usr/bin/openssl x509 -in /etc/ipsec.d/cacerts/cacert.pem -text > cacert.txt
+    /usr/bin/openssl req -key /etc/openssl/private/cakey.pem -new -batch\
+                         -out /etc/openssl/ca.req -config /etc/openssl/ca.conf
+
+    if [ -e /etc/openssl/serverkey.pem ];then
+      /usr/bin/openssl req -new -out /etc/openssl/server.pem \
+                           -config /etc/openssl/server.conf \
+                           -key /etc/openssl/serverkey.pem -days 1460 -batch> /dev/null 2>&1
+     else
+      /usr/bin/openssl req -newkey rsa:2048 -out /etc/openssl/server.pem \
+                           -config /etc/openssl/server.conf -nodes \
+                           -keyout /etc/openssl/serverkey.pem -days 1460 -batch > /dev/null 2>&1
+      chmod 600 /etc/openssl/serverkey.pem
+    fi;
+
+    if [ -e /etc/openssl/server.sign.pem ];then
+      /usr/bin/openssl ca -config /etc/openssl/ca.conf -batch -revoke /etc/openssl/server.sign.pem >/dev/null 2>&1
+    fi;
+
+    /usr/bin/openssl ca -in /etc/openssl/server.pem -config /etc/openssl/ca.conf -batch|/usr/bin/openssl x509 \
+                        -out /etc/openssl/server.sign.pem > /dev/null 2>&1
+    /usr/bin/openssl x509 -in /etc/openssl/server.sign.pem -text > server.txt
+
+    if [ ! -e /etc/ipsec.d/cacerts/server_cacert.pem ] || \
+       [ -e /etc/ipsec.d/cacerts/signed_cacert.pem ];then
+      /usr/bin/openssl x509 -in /etc/openssl/server.sign.pem \
+                            -out /etc/openssl/server.signed.pem 
+      cat /etc/openssl/serverkey.pem /etc/openssl/server.signed.pem > /etc/openssl/imapd.pem
+      chmod 600 /etc/openssl/imapd.pem
+      WEB_RESTART=true;
+    fi;
+    Gen_CRL_Cert;
+  fi;
+fi;
+
+if [ -e sysvars ] && [ -e /etc/netsentry-sysvars ];then
+  SYSVF=`diff sysvars /etc/netsentry-sysvars`
+ else
+  SYSVF="NO FILE";
+fi;
+
+if [ "$SYSVF" ] && [ ! -e networksentry-lite ];then
+  cp sysvars /etc/netsentry-sysvars
+  chmod 640 /etc/netsentry-sysvars
+  chown 0.80 /etc/netsentry-sysvars
+fi;
+
+if [ -e ntp.conf ] && [ -e /etc/ntp.conf ];then
+  NTPCF=`diff ntp.conf /etc/ntp.conf`  
+ else
+  NTPCF="NO FILE";
+fi;
+
+
+if [ "$NTPCF" ] && [ ! -e networksentry-lite ];then
+  cp -p ntp.conf /etc/
+  chmod 640 /etc/ntp.conf
+  chown root.root /etc/ntp.conf
+  if [ "`pidof ntpd`" ];then
+    killall ntpd
+  fi;
+  sleep 2
+  /usr/bin/ntpd -g
+fi;
+
+if [ -e filename.rules.conf ] && [ -e /opt/MailScanner/etc/filename.rules.conf ];then
+  MSAF=`diff filename.rules.conf /opt/MailScanner/etc/filename.rules.conf`  
+ else
+  MSAF="NO FILE";
+fi;
+
+
+if [ "$MSAF" ] && [ ! -e networksentry-lite ];then
+  cp -p filename.rules.conf /opt/MailScanner/etc/
+  chmod 644 /opt/MailScanner/etc/filename.rules.conf
+  chown root.root /opt/MailScanner/etc/filename.rules.conf
+fi;
+
+
+if [ -e mailscanner.conf ] && [ -e /opt/MailScanner/etc/MailScanner.conf ];then
+  MSCF=`diff mailscanner.conf /opt/MailScanner/etc/MailScanner.conf`  
+ else
+  MSCF="NO FILE";
+fi;
+
+
+if [ "$MSCF" ] && [ ! -e networksentry-lite ];then
+  cp -p mailscanner.conf /opt/MailScanner/etc/MailScanner.conf
+  chmod 644 /opt/MailScanner/etc/MailScanner.conf
+  chown root.root /opt/MailScanner/etc/MailScanner.conf
+fi;
+
+if [ "$MSCF" ] || [ "$MSAF"] ;then
+  if  [ ! -e networksentry-lite ];then
+    pid=`/bin/ps axww |
+         /usr/bin/grep '[ ]'/opt/MailScanner/bin/MailScanner |
+         /usr/bin/awk '{print $1}'`
+    kill `cat /var/run/mailscanner.pid 2>/dev/null` >/dev/null 2>&1
+    sleep 2
+    if [ "x$1" != "x-q" ]; then
+      kill -9 $pid > /dev/null 2>&1
+    fi
+    /opt/MailScanner/bin/MailScanner /opt/MailScanner/etc/MailScanner.conf
+  fi;
+fi;
+
+if [ ! -e networksentry-lite ];then 
+  ls sslconf |awk '{printf "if [ ! -e /etc/openssl/certs/%s.pem ];then\n$OPENSSL req -newkey rsa:2048 -out /etc/openssl/certs/%s.req -keyout /etc/openssl/private/%s.pem -config sslconf/%s;\n$OPENSSL ca -config /etc/openssl/ca.conf -batch -in /etc/openssl/certs/%s.req -out /etc/openssl/certs/%s.sign.pem;\n$OPENSSL x509 -in /etc/openssl/certs/%s.sign.pem -out /etc/openssl/certs/%s.pem;\nchmod 644 /etc/openssl/certs/%s.pem;\nchown nobody.root /etc/openssl/private/%s.pem;\nchmod 400 /etc/openssl/private/%s.pem;\nfi\n",$1,$1,$1,$1,$1,$1,$1,$1,$1,$1,$1}' |sh > /dev/null 2>&1
+fi;
+
+#if [ -e ipsec.conf ] && [ -e /etc/ipsec.conf.orig ];then 
+#  CONFDIFF=`diff ipsec.conf /etc/ipsec.conf.orig`
+# else
+#  if [ -e ipsec.conf ];then 
+#    CONFDIFF="NO FILE";
+#  fi;
+#fi;
+#
+#if [ "$CONFDIFF" ] && [ ! -e networksentry-lite ];then
+#  SSL_Restart;
+#fi;
+
+if [ ! -e /etc/ipsec.d/psk.txt ];then
+  touch /etc/ipsec.d/psk.txt
+  chmod 600 /etc/ipsec.d/psk.txt
+  chown 0.0 /etc/ipsec.d/psk.txt
+fi;
+
+if [ -e racoon.conf ] && [ -e /etc/racoon/racoon.conf ];then 
+  RACCDIFF=`diff racoon.conf /etc/racoon/racoon.conf`
+ else
+  if [ -e racoon.conf ];then 
+    RACCDIFF="NO FILE";
+  fi;
+fi;
+
+#if [ -e racoon.policy ] && [ -e /etc/racoon/racoon.policy.orig ];then 
+#  RACPDIFF=`diff racoon.policy /etc/racoon/racoon.policy.orig`
+# else
+#  if [ -e racoon.policy ];then 
+#    RACPDIFF="NO FILE";
+#  fi;
+#fi;
+
+#if [ "$RACCDIFF" ] || [ "$RACPDIFF" ];then
+if [ "$RACCDIFF" ];then
+  if [ ! -e networksentry-lite ];then
+    (cp racoon.conf /etc/racoon/racoon.conf;
+#    cp racoon.policy /etc/racoon/racoon.policy.orig;
+    killall racoon;sleep 5;killall -9 racoon
+    setkey -FP
+    setkey -F
+    racoon
+    /usr/bin/sleep 5
+#    /usr/sbin/setkey -f /etc/racoon/racoon.policy
+    /sbin/ip tun ls |grep -E "tun[0-9]+:" |awk -F: '{print "/sbin/ip tun del "$1}' |sh > /dev/null 2>&1
+    /etc/rc.d/rc.tunnels) > /dev/null 2>&1
+  fi;
+ else
+  touch /etc/racoon/racoon.conf
+fi;
+
+if [ -e openvpn.conf ] && [ -e /etc/openvpn/openvpn.conf ];then 
+  OVPNDIFF=`diff openvpn.conf /etc/openvpn/openvpn.conf`
+ else
+  if [ -e openvpn.conf ];then 
+    OVPNDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$OVPNDIFF" ] && [ ! -e networksentry-lite ];then
+ if [ ! -d /etc/openvpn ];then
+    mkdir /etc/openvpn
+ fi; 
+ if [ ! -e /etc/openvpn/serverdh.pem ];then
+    /usr/bin/openssl dhparam -5 -out /etc/openvpn/serverdh.pem 1024 > /dev/null 2>&1 &
+   else
+    cp openvpn.conf /etc/openvpn/openvpn.conf
+    chmod 640 /etc/openvpn/openvpn.conf
+    chown root.root /etc/openvpn/openvpn.conf
+    (killall openvpn;sleep 5;killall -9 openvpn) > /dev/null 2>&1
+    if [ -s /etc/openvpn/openvpn.conf ];then
+      /usr/sbin/openvpn /etc/openvpn/openvpn.conf
+    fi;
+  fi;
+fi;
+
+if [ ! -e /etc/ipsec.d/crls/crl.pem ] && [ ! -e networksentry-lite ] && [ ! -h /etc/ipsec.d ];then
+  Gen_CRL_Cert;
+fi;
+
+if [ -e mrtg.conf ] && [ -e /etc/mrtg.conf ];then 
+  MRTGDIFF=`diff mrtg.conf /etc/mrtg.conf`
+ else
+  if [ -e mrtg.conf ];then 
+    MRTGDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$MRTGDIFF" ];then
+  cp -p mrtg.conf /etc/
+  chmod 640 /etc/mrtg.conf
+  chown root.www /etc/mrtg.conf
+  if [ ! -d /var/spool/apache/htdocs/mrtg ];then
+    mkdir -p /var/spool/apache/htdocs/mrtg
+  fi;
+  indexmaker /etc/mrtg.conf --prefix=/mrtg --section=h1  --columns 1 --nolegend --addhead "<link rel=stylesheet type=text/css href=/style.php>" --title "Traffic Graphs" --rrdviewer /cgi-perl/auth/mrtg-rrd.cgi --output /var/spool/apache/htdocs/mrtg/index.html
+fi;
+
+
+if [ -e HOSTNAME ] && [ -e /etc/HOSTNAME ];then 
+  DNSDIFF=`diff HOSTNAME /etc/HOSTNAME`
+ else
+  if [ -e HOSTNAME ];then 
+    DNSDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$DNSDIFF" ];then
+  cp -p HOSTNAME /etc/HOSTNAME
+  chmod 644 /etc/HOSTNAME
+  chown root.root /etc/HOSTNAME
+  /bin/hostname -F /etc/HOSTNAME
+fi;
+
+
+if [ -e resolv.conf ] && [ -e /etc/resolv.conf ];then 
+  DNSRDIFF=`diff resolv.conf /etc/resolv.conf`
+ else
+  if [ -e resolv.conf ];then 
+    DNSRDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$DNSRDIFF" ];then
+  cp -p resolv.conf /etc/
+  chmod 644 /etc/resolv.conf
+  chown root.root /etc/resolv.conf
+fi;
+
+if [ -e hosts ] && [ -e /etc/hosts ];then 
+  HOSTDIFF=`diff hosts /etc/hosts`
+ else
+  if [ -e hosts ];then 
+    HOSTDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$HOSTDIFF" ];then
+  cp -p hosts /etc/
+  chmod 644 /etc/hosts
+  chown root.root /etc/hosts
+  /usr/sbin/squid -k reconfigure > /dev/null 2>&1
+ else
+  touch /etc/hosts
+fi;
+
+if [ -e ednszones ];then
+  cat ednszones |awk '{print "if [ -e \"/var/named/"$0"\" ];then\nZDIFF=`diff zones/"$0" /var/named/"$0"`\nfi;\nif [ \"$ZDIFF\" ] || [ ! -e \"/var/named/"$0"\" ];then\n  cp zones/"$0" /var/named/\nfi;"}' |sh
+fi;
+
+if [ -e idnszones ];then
+  cat idnszones |awk '{print "if [ ! -e \"/var/named/"$0"\" ];then\n  cp zones/"$0" /var/named/\nfi;"}' |sh
+  cat idnszones |awk '{print "if [ -e \"zones/"$0".key\" ];then\nZDIFF=`diff zones/"$0".key /var/named/"$0".key`\nif [ \"$ZDIFF\" ] || [ ! -e \"/var/named/"$0".key\" ];then\n  cp zones/"$0".key /var/named/\nchmod 600 /var/named/"$0".key;\nchown root.root /var/named/"$0".key;\nfi;\nfi;"}' |sh
+  cat idnszones |awk '{print "if [ -e \"zones/"$0".private\" ];then\nZDIFF=`diff zones/"$0".private /var/named/"$0".private`\nif [ \"$ZDIFF\" ] || [ ! -e \"/var/named/"$0".private\" ];then\n  cp zones/"$0".private /var/named/\nchmod 600 /var/named/"$0".private;\nchown root.root /var/named/"$0".private;\nfi;\nfi;"}' |sh
+fi;
+
+if [ -e zones/nsupdate.key ] && [ -e /var/named/nsupdate.key ];then 
+  DNSUKDIFF=`diff zones/nsupdate.key /var/named/nsupdate.key`
+ else
+  if [ -e zones/nsupdate.key ];then 
+    DNSUKDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$DNSUKDIFF" ];then
+  cp -p zones/nsupdate.key /var/named
+  chown root.root /var/named/nsupdate.key
+  chmod 600 /var/named/nsupdate.key
+fi;
+
+if [ -e zones/nsupdate.private ] && [ -e /var/named/nsupdate.private ];then 
+  DNSUKDIFF=`diff zones/nsupdate.private /var/named/nsupdate.private`
+ else
+  if [ -e zones/nsupdate.private ];then 
+    DNSUKDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$DNSUKDIFF" ];then
+  cp -p zones/nsupdate.private /var/named
+  chown root.root /var/named/nsupdate.private
+  chmod 600 /var/named/nsupdate.private
+fi;
+
+if [ -e zones/dyndns.key ] && [ -e /var/named/dyndns.key ];then 
+  DNSUKDIFF=`diff zones/dyndns.key /var/named/dyndns.key`
+ else
+  if [ -e zones/dyndns.key ];then 
+    DNSUKDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$DNSUKDIFF" ];then
+  cp -p zones/dyndns.key /var/named
+  chown root.root /var/named/dyndns.key
+  chmod 600 /var/named/dyndns.key
+fi;
+
+if [ -e zones/dyndns.private ] && [ -e /var/named/dyndns.private ];then 
+  DNSUKDIFF=`diff zones/dyndns.private /var/named/dyndns.private`
+ else
+  if [ -e zones/dyndns.private ];then 
+    DNSUKDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$DNSUKDIFF" ];then
+  cp -p zones/dyndns.private /var/named
+  chmod 600 /var/named/dyndns.private
+  chown root.root /var/named/dyndns.private
+fi;
+
+if [ -e zones/domain.ext ] && [ -e /var/named/domain.ext.orig ];then 
+  DNSEZDIFF=`diff -I serial zones/domain.ext /var/named/domain.ext.orig`
+ else
+  if [ -e zones/domain.ext ];then 
+    DNSEZDIFF="NO FILE";
+  fi;
+fi;
+
+if [ -e zones/domain.dyn ] && [ -e /var/named/domain.dyn.orig ];then 
+  DNSDZDIFF=`diff -I serial zones/domain.dyn /var/named/domain.dyn.orig`
+ else
+  if [ -e zones/domain.dyn ];then 
+    DNSDZDIFF="NO FILE";
+  fi;
+fi;
+
+#if [ -e atalkd.conf ] && [ -e /etc/netatalk/atalkd.conf.orig ];then 
+#  ATCDIFF=`diff atalkd.conf /etc/netatalk/atalkd.conf.orig`
+# else
+#  if [ -e atalkd.conf ];then 
+#    ATCDIFF="NO FILE";
+#  fi;
+#fi;
+
+#if [ "$ATCDIFF" ] && [ ! -e networksentry-lite ];then
+#  cp atalkd.conf /etc/netatalk/atalkd.conf.orig
+#  cp atalkd.conf /etc/netatalk/atalkd.conf
+#  chown root.root /etc/netatalk/atalkd.conf*
+#  chmod 644 /etc/netatalk/atalkd.conf*
+#  killall -9 atalkd
+#  atalkd
+#fi;
+
+#if [ -e afpd.conf ] && [ -e /etc/netatalk/afpd.conf ];then 
+#  ATFDIFF=`diff afpd.conf /etc/netatalk/afpd.conf`
+# else
+#  if [ -e afpd.conf ];then 
+#    ATFDIFF="NO FILE";
+#  fi;
+#fi;
+
+#if [ "$ATFDIFF" ] && [ ! -e networksentry-lite ];then
+#  cp afpd.conf /etc/netatalk/afpd.conf
+#  chown root.root /etc/netatalk/afpd.conf
+#  chmod 644 /etc/netatalk/afpd.conf
+#  killall -9 afpd
+#  afpd
+#fi;
+
+#if [ -e AppleVolumes.default ] && [ -e /etc/netatalk/AppleVolumes.default ];then 
+#  ATVDIFF=`diff AppleVolumes.default /etc/netatalk/AppleVolumes.default`
+# else
+#  if [ -e AppleVolumes.default ];then 
+#    ATVDIFF="NO FILE";
+#  fi;
+#fi;
+
+#if [ "$ATVDIFF" ] && [ ! -e networksentry-lite ];then
+#  cp AppleVolumes.default /etc/netatalk/AppleVolumes.default
+#  chown root.root /etc/netatalk/AppleVolumes.default
+#  chmod 644 /etc/netatalk/AppleVolumes.default
+#  killall -9 afpd
+#  afpd
+#fi;
+
+
+if [ -e named.conf ] && [ -e /etc/named.conf.orig ];then 
+  DNSDIFF=`diff named.conf /etc/named.conf.orig`
+ else
+  if [ -e named.conf ];then 
+    DNSDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$DNSDZDIFF" ];then
+  cp zones/domain.dyn /var/named/
+  cp zones/domain.dyn /var/named/domain.dyn.orig
+  chmod 640 /var/named/domain.dyn
+  chown root.root /var/named/domain.dyn
+  chmod 640 /var/named/domain.dyn.orig
+  chown root.root /var/named/domain.dyn.orig
+  rm /var/named/domain.ext.jnl > /dev/null 2>&1
+fi;
+
+
+if [ "$DNSEZDIFF" ];then
+  cp zones/domain.ext /var/named/
+  cp zones/domain.ext /var/named/domain.ext.orig
+  chmod 640 /var/named/domain.ext
+  chown root.root /var/named/domain.ext
+  chmod 640 /var/named/domain.ext.orig
+  chown root.root /var/named/domain.ext.orig
+  rm /var/named/domain.ext.jnl > /dev/null 2>&1
+fi;
+
+if [ "$DNSEZDIFF" ] || [ "$DNSDZDIFF" ];then
+  if [ "`pidof named`" ];then
+    /usr/sbin/rndc reload
+   else
+    /usr/sbin/named
+  fi;
+  if [ -e /tmp/dnsup.ppp ];then 
+    /usr/bin/nsupdate /tmp/dnsup.ppp > /dev/null 2>&1
+  fi;
+fi;
+
+if [ "$DNSDIFF" ];then
+  cp -p named.conf /etc/named.conf.orig
+  cp -p named.conf /etc/named.conf
+  chown root.root /etc/named.conf.orig
+  chown root.root /etc/named.conf
+  chmod 600 /etc/named.conf.orig
+  chmod 600 /etc/named.conf
+  if [ "`pidof named`" ];then
+    /usr/sbin/rndc reload
+   else
+    /usr/sbin/named
+  fi;
+ else
+  touch /etc/named.conf
+fi;
+
+if [ -e rc.interface ] && [ -e /etc/rc.d/rc.interface ];then 
+  INDIFF=`diff rc.interface /etc/rc.d/rc.interface`
+ else
+  if [ -e rc.interface ];then 
+    INDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$INDIFF" ] && [ ! -e /etc/.cdrom ];then
+  cp -p rc.interface /etc/rc.d/
+  chmod 750 /etc/rc.d/rc.interface
+  chown root.root /etc/rc.d/rc.interface
+  /etc/rc.d/rc.interface  
+fi;
+
+if [ -e iftab ] && [ -e /etc/iftab ];then 
+  IFTDIFF=`diff iftab /etc/iftab`
+ else
+  if [ -e iftab ];then 
+    IFTDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$IFTDIFF" ] && [ ! -e /etc/.cdrom ];then
+  cp -p iftab /etc
+  chmod 640 /etc/iftab
+  chown root.root /etc/iftab
+  /sbin/ip link set eth0 down >/dev/null 2>&1
+  cat /etc/iftab |awk '{printf "/sbin/ip link set %s down\n",$1}' |sh > /dev/null 2>&1
+  /sbin/ifrename > /dev/null 2>&1
+  cat /etc/iftab |awk '{printf "/sbin/ip link set %s up\n",$1}' |sh > /dev/null 2>&1
+  /sbin/ip link set eth0 up >/dev/null 2>&1
+fi;
+
+if [ ! -d /etc/ifconf ];then
+  mkdir /etc/ifconf
+fi;
+
+for ifconf in ifup.*;do
+  if [ ! -e "/etc/ifconf/$ifconf" ];then
+    cp $ifconf /etc/ifconf/
+    chmod 600 /etc/ifconf/$ifconf
+    rm /etc/ifconf/ifbw.`echo $ifconf |cut -d. -f2` > /dev/null 2>&1
+    /usr/sbin/ifcfg `echo $ifconf |cut -d. -f2` > /dev/null 2>&1
+   else
+    if [ "`diff -u  $ifconf /etc/ifconf/$ifconf`" ];then
+      cp $ifconf /etc/ifconf/
+      chmod 600 /etc/ifconf/$ifconf
+      rm /etc/ifconf/ifbw.`echo $ifconf |cut -d. -f2` > /dev/null 2>&1
+      /usr/sbin/ifcfg `echo $ifconf |cut -d. -f2` RESTART > /dev/null 2>&1
+    fi;
+  fi;
+done;
+
+
+for ifconf in `ls ifbw.* 2>/dev/null` ;do
+  if [ ! -e "/etc/ifconf/$ifconf" ];then
+    cp $ifconf /etc/ifconf/
+    chmod 600 /etc/ifconf/$ifconf
+    sh /etc/ifconf/ifbw.`echo $ifconf |cut -d. -f2` > /dev/null 2>&1
+   else
+    if [ "`diff -u  $ifconf /etc/ifconf/$ifconf`" ];then
+      cp $ifconf /etc/ifconf/
+      chmod 600 /etc/ifconf/$ifconf
+      sh /etc/ifconf/ifbw.`echo $ifconf |cut -d. -f2` > /dev/null 2>&1
+    fi;
+  fi;
+done;
+
+for ifconf in `ls pppup.* 2>/dev/null` ;do
+  if [ ! -e "/etc/ifconf/$ifconf" ];then
+    cp $ifconf /etc/ifconf/
+    chmod 750 /etc/ifconf/$ifconf
+   else
+    if [ "`diff -u  $ifconf /etc/ifconf/$ifconf`" ];then
+      cp $ifconf /etc/ifconf/
+      chmod 750 /etc/ifconf/$ifconf
+    fi;
+  fi;
+done;
+
+for ethconf in `ls /etc/ifconf`;do
+  if [ ! -e $ethconf ];then
+    rm /etc/ifconf/$ethconf
+  fi;
+done;
+
+rm ifup.* > /dev/null 2>&1
+rm ifbw.* > /dev/null 2>&1
+rm pppup.* > /dev/null 2>&1
+
+if [ -e smb.conf ] && [ -e /etc/samba/smb.conf ];then 
+  SMFDIFF=`diff smb.conf /etc/samba/smb.conf`
+ else
+  if [ -e smb.conf ];then 
+    SMFDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$SMFDIFF" ] && [ ! -e networksentry-lite ];then
+  cp -p smb.conf /etc/samba/
+  chmod 644 /etc/samba/smb.conf
+  chown root.root /etc/samba/smb.conf
+
+  awk '($1 == "FileServer") && ($2 == "Share") && ($7 == "true") && ($6 == "users") {print "if [ ! -d \"/var/spool/samba/"$4"\" ];then\nmkdir \"/var/spool/samba/"$4"\";\nfi\nchown root."$6" \"/var/spool/samba/"$4"\";\nchmod 2777 \"/var/spool/samba/"$4"\""}' $CONF_FILE |sh
+  awk '($1 == "FileServer") && ($2 == "Share") && ($7 == "true") && ($6 != "users") {print "if [ ! -d \"/var/spool/samba/"$4"\" ];then\nmkdir \"/var/spool/samba/"$4"\";\nfi\nchown root."$6" \"/var/spool/samba/"$4"\";\nchmod 2775 \"/var/spool/samba/"$4"\""}' $CONF_FILE |sh
+  awk '($1 == "FileServer") && ($2 == "Share") && ($7 == "false") {print "if [ ! -d \"/var/spool/samba/"$4"\" ];then\nmkdir \"/var/spool/samba/"$4"\";\nfi\nchown root."$6" \"/var/spool/samba/"$4"\";\nchmod 2770 \"/var/spool/samba/"$4"\""}' $CONF_FILE |sh
+
+  killall -9 nmbd > /dev/null 2>&1
+  killall -9 smbd > /dev/null 2>&1
+  /bin/kill -9 `cat /var/lock/winbindd.pid 2>/dev/null` > /dev/null 2>&1
+  rm /var/lock/winbindd*.tdb  > /dev/null 2>&1
+  /usr/sbin/winbindd > /dev/null 2>&1 &
+  /usr/sbin/nmbd > /dev/null 2>&1 &
+  /usr/sbin/smbd > /dev/null 2>&1 &
+fi;
+
+if [ -e krb5.conf ] && [ -e /etc/krb5.conf ];then 
+  KRBDIFF=`diff krb5.conf /etc/krb5.conf`
+ else
+  if [ -e krb5.conf ];then 
+    KRBDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$KRBDIFF" ] && [ ! -e networksentry-lite ];then
+  cp -p krb5.conf /etc/
+  chmod 644 /etc/krb5.conf
+  chown root.root /etc/krb5.conf
+fi;
+
+if [ -e astmod.conf ] && [ -e /etc/asterisk/modules.conf ];then 
+  ASTDIFF=`diff astmod.conf /etc/asterisk/modules.conf`
+ else
+  if [ -e astmod.conf ];then 
+    ASTDIFF="NO FILE";
+  fi;
+fi;
+
+if [ -e sip.conf ] && [ -e /etc/asterisk/sip.conf ];then 
+  ASTSIP=`diff sip.conf /etc/asterisk/sip.conf`
+ else
+  if [ -e sip.conf ];then 
+    ASTSIP="NO FILE";
+  fi;
+fi;
+
+if [ -e iax.conf ] && [ -e /etc/asterisk/iax.conf ];then 
+  ASTIAX=`diff iax.conf /etc/asterisk/iax.conf`
+ else
+  if [ -e iax.conf ];then 
+    ASTIAX="NO FILE";
+  fi;
+fi;
+
+if [ -e agents.conf ] && [ -e /etc/asterisk/agents.conf ];then 
+  ASTAGENT=`diff agents.conf /etc/asterisk/agents.conf`
+ else
+  if [ -e agents.conf ];then 
+    ASTAGENT="NO FILE";
+  fi;
+fi;
+
+if [ -e ooh323.conf ] && [ -e /etc/asterisk/ooh323.conf ];then 
+  ASTH323=`diff ooh323.conf /etc/asterisk/ooh323.conf`
+ else
+  if [ -e ooh323.conf ];then 
+    ASTH323="NO FILE";
+  fi;
+fi;
+
+if [ -e gnugk.conf ] && [ -e /etc/h323.conf ];then 
+  GNUGKH323=`diff gnugk.conf /etc/h323.conf`
+ else
+  if [ -e h323.conf ];then 
+    GNUGKH323="NO FILE";
+  fi;
+fi;
+
+if [ -e ast_monitor ] && [ -e /usr/bin/ast_monitor ];then 
+  ASTMON=`diff ast_monitor /usr/bin/ast_monitor`
+ else
+  if [ -e ast_monitor ];then 
+    ASTMON="NO FILE";
+  fi;
+fi;
+
+
+if [ -e voicemail.conf ] && [ -e /etc/asterisk/voicemail.conf ];then 
+  ASTVM=`diff voicemail.conf /etc/asterisk/voicemail.conf`
+ else
+  if [ -e voicemail.conf ];then 
+    ASTVM="NO FILE";
+  fi;
+fi;
+
+if [ -e providers.conf ] && [ -e /etc/asterisk/providers.conf ];then 
+  ASTCLI=`diff providers.conf /etc/asterisk/providers.conf`
+ else
+  if [ -e providers.conf ];then 
+    ASTCLI="NO FILE";
+  fi;
+fi;
+
+
+if [ -e chan_dahdi.conf ] && [ -e /dev/dahdi ] && [ -e /etc/asterisk/chan_dahdi.conf ];then 
+  ASTZAP=`diff chan_dahdi.conf /etc/asterisk/chan_dahdi.conf`
+ else
+  if [ -e zapata.conf ] && [ -e /etc/asterisk/zapata.conf ] && [ ! -e /dev/dahdi ];then 
+    ASTZAP=`diff zapata.conf /etc/asterisk/zapata.conf`
+   else
+    if [ -e zapata.conf ] || [ -e chan_dahdi.conf ];then 
+      ASTZAP="NO FILE";
+    fi;
+  fi;
+fi;
+
+if [ -e dahdi.conf ] && [ -e /etc/dahdi/system.conf ];then 
+  ASTZTCFG=`diff dahdi.conf /etc/dahdi/system.conf`
+ else
+  if [ -e zaptel.conf ] && [ -e /etc/zaptel.conf ] && [ ! -e dahdi.conf ];then 
+    ASTZTCFG=`diff zaptel.conf /etc/zaptel.conf`
+   else
+    if [ -e zaptel.conf ] || [ -e dahdi.conf ];then 
+      ASTZTCFG="NO FILE";
+    fi;
+  fi;
+fi;
+
+if [ -e dahdir.conf ] && [ -e /etc/dahdi/systemr.conf ];then 
+  ASTZTCFGR=`diff dahdir.conf /etc/dahdi/systemr.conf`
+ else
+  if [ -e zaptelr.conf ] && [ -e /etc/zaptelr.conf ] && [ ! -e dahdir.conf ];then 
+    ASTZTCFGR=`diff zaptel.conf /etc/zaptel.conf`
+   else
+    if [ -e zaptelr.conf ] || [ -e dahdir.conf ];then 
+      ASTZTCFGR="NO FILE";
+    fi;
+  fi;
+fi;
+
+if [ -e exten_blf.conf ] && [ -e /etc/asterisk/exten_blf.conf ];then 
+  ASTBLF=`diff exten_blf.conf /etc/asterisk/exten_blf.conf`
+ else
+  if [ -e exten_blf.conf ];then 
+    ASTBLF="NO FILE";
+  fi;
+fi;
+
+if [ -e misdn.conf ] && [ -e /etc/asterisk/misdn.conf ];then 
+  ASTMISDN=`diff misdn.conf /etc/asterisk/misdn.conf`
+ else
+  if [ -e misdn.conf ];then 
+    ASTMISDN="NO FILE";
+  fi;
+fi;
+
+
+if [ "$ASTCLI" ] && [ ! -e networksentry-lite ];then
+  cp -p providers.conf /etc/asterisk
+  chmod 640 /etc/asterisk/providers.conf
+  chown root.root /etc/asterisk/providers.conf
+  /usr/sbin/asterisk -r -x "extensions reload"
+fi;
+
+if [ "$ASTSIP" ] && [ ! -e networksentry-lite ];then
+  cp -p sip.conf /etc/asterisk
+  chmod 640 /etc/asterisk/sip.conf
+  chown root.root /etc/asterisk/sip.conf
+  /usr/sbin/asterisk -r -x "sip reload"
+fi;
+
+if [ "$ASTIAX" ] && [ ! -e networksentry-lite ];then
+  cp -p iax.conf /etc/asterisk
+  chmod 640 /etc/asterisk/iax.conf
+  chown root.root /etc/asterisk/iax.conf
+  /usr/sbin/asterisk -r -x "reload"
+ else
+  touch /etc/asterisk/iax.conf
+fi;
+
+if [ "$ASTAGENT" ] && [ ! -e networksentry-lite ];then
+  cp -p agents.conf /etc/asterisk
+  chmod 640 /etc/asterisk/agents.conf
+  chown root.root /etc/asterisk/agents.conf
+  /usr/sbin/asterisk -r -x "reload chan_agent.so"
+ else
+  touch /etc/asterisk/agents.conf
+fi;
+
+if [ "$GNUGKH323" ] && [ ! -e networksentry-lite ];then
+  cp -p gnugk.conf /etc/h323.conf
+  chmod 640 /etc/h323.conf
+  chown root.root /etc/h323.conf
+  kill -HUP `cat /var/run/gnugk.pid`
+ else
+  touch /etc/h323.conf
+fi;
+
+if [ "$ASTH323" ] && [ ! -e networksentry-lite ];then
+  cp -p ooh323.conf /etc/asterisk/ooh323.conf
+  chmod 640 /etc/asterisk/ooh323.conf
+  chown root.root /etc/asterisk/ooh323.conf
+  /usr/sbin/asterisk -rx "ooh323 reload"
+fi;
+
+if [ "$ASTZAP" ] && [ ! -e networksentry-lite ];then
+  if [ -e chan_dahdi.conf ];then
+    cp -p chan_dahdi.conf /etc/asterisk
+    chmod 640 /etc/asterisk/chan_dahdi.conf
+    chown root.root /etc/asterisk/chan_dahdi.conf
+   else
+    cp -p zapata.conf /etc/asterisk
+    chmod 640 /etc/asterisk/zapata.conf
+    chown root.root /etc/asterisk/zapata.conf
+  fi;
+fi;
+
+if [ ! -h /etc/asterisk/zapata.conf ] && [ -e /etc/asterisk/chan_dahdi.conf ];then
+  rm /etc/asterisk/zapata.conf
+  ln -s /etc/asterisk/chan_dahdi.conf /etc/asterisk/zapata.conf
+fi;
+
+if [ ! -e networksentry-lite ];then
+  if [ "$ASTZTCFG" ];then 
+    if [ -e dahdi.conf ];then
+      cp -p dahdi.conf /etc/dahdi/system.conf
+      chmod 640 /etc/dahdi/system.conf
+      chown root.root /etc/dahdi/system.conf
+      /usr/sbin/dahdi_cfg
+     else
+      cp -p zaptel.conf /etc/
+      chmod 640 /etc/zaptel.conf
+      chown root.root /etc/zaptel.conf
+      /sbin/ztcfg
+    fi;
+  fi;
+  if [ "$ASTZTCFGR" ];then
+    if [ -e dahdir.conf ];then
+      cp -p dahdir.conf /etc/dahdi/systemr.conf
+      chmod 640 /etc/dahdi/systemr.conf
+      chown root.root /etc/dahdi/systemr.conf
+     else
+      cp -p zaptelr.conf /etc/
+      chmod 640 /etc/zaptelr.conf
+      chown root.root /etc/zaptelr.conf
+    fi;
+  fi;
+fi;
+
+if [ "$ASTMISDN" ] && [ ! -e networksentry-lite ];then
+  cp -p misdn.conf /etc/asterisk
+  chmod 640 /etc/asterisk/misdn.conf
+  chown root.root /etc/asterisk/misdn.conf
+  if [ -e /dev/mISDN ];then
+    /usr/sbin/asterisk -rx "misdn reload" > /dev/null 2>&1
+  fi;
+fi;
+
+if [ "$ASTBLF" ] && [ ! -e networksentry-lite ];then
+  cp -p exten_blf.conf /etc/asterisk
+  chmod 640 /etc/asterisk/exten_blf.conf
+  chown root.root /etc/asterisk/exten_blf.conf
+  EXTENREL=1
+fi;
+
+if [ "$EXTENREL" ];then
+  /usr/sbin/asterisk -rx "extensions reload"
+fi;
+
+if [ "$ASTMON" ] && [ ! -e networksentry-lite ];then
+  cp -p ast_monitor /usr/bin/
+  chmod 750 /usr/bin/ast_monitor
+  chown root.root /usr/bin/ast_monitor
+  /usr/sbin/asterisk -r -x "sip reload"
+  /usr/sbin/asterisk -r -x "reload"
+  ps ax |grep asterisk_monitor |grep -v grep |awk '{printf "kill -9 %s\n",$1}' |sh
+  /usr/bin/ast_monitor
+fi;
+
+if [ -e odbc.ini ] && [ -e /etc/odbc.ini ];then
+  ODBCDSN=`diff odbc.ini /etc/odbc.ini`  
+ else
+  ODBCDSN="NO FILE";
+fi;
+
+if [ "$ODBCDSN" ] && [ ! -e networksentry-lite ];then
+  cp -p odbc.ini /etc/odbc.ini
+  chmod 640 /etc/odbc.ini
+  chown root.root /etc/odbc.ini
+fi;
+
+#if [ -e /root/.odbc.ini ] && [ -e /etc/odbc.ini ];then
+#  ODBCDSN=`diff /root/.odbc.ini /etc/odbc.ini`  
+# else
+#  ODBCDSN="NO FILE";
+#fi;
+
+#if [ "$ODBCDSN" ] && [ ! -e networksentry-lite ];then
+#  rm /root/.odbc.ini
+#  ln -s /etc/odbc.ini /root/.odbc.ini
+#fi;
+
+if [ "$ASTDIFF" ] || [ "$ASTVM" ] || [ "$ASTZAP" ];then 
+  if [ ! -e networksentry-lite ];then
+    cp -p astmod.conf /etc/asterisk/modules.conf
+    cp -p voicemail.conf /etc/asterisk
+
+    chmod 640 /etc/asterisk/modules.conf
+    chown root.root /etc/asterisk/modules.conf
+
+    chmod 640 /etc/asterisk/voicemail.conf
+    chown root.root /etc/asterisk/voicemail.conf
+
+    if [ "`pidof mpg123`" ];then
+      killall mpg123
+    fi;
+    sleep 2
+    if [ "`pidof mpg123`" ];then
+      killall -9 mpg123
+    fi;
+    /usr/sbin/asterisk -rx "restart when convenient" > /dev/null 2>&1
+  fi;
+fi;
+
+if [ -e intinfo.inc ] && [ -e /var/spool/apache/htdocs/rrdgraph/intinfo.inc ];then
+  IIDIFF=`diff intinfo.inc /var/spool/apache/htdocs/rrdgraph/intinfo.inc`
+ else
+  if [ -e intinfo.inc ];then
+    IIDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$IIDIFF" ] && [ ! -e /etc/.cdrom ];then
+  cp intinfo.inc /var/spool/apache/htdocs/rrdgraph/intinfo.inc
+  chown www.www /var/spool/apache/htdocs/rrdgraph/intinfo.inc
+  chmod 640 /var/spool/apache/htdocs/rrdgraph/intinfo.inc
+fi;
+
+if [ -e slapd.conf ] && [ -e /etc/openldap/slapd.conf ];then
+  SLDIFF=`diff slapd.conf /etc/openldap/slapd.conf`
+ else
+  if [ -e slapd.conf ];then
+    SLDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$SLDIFF" ] && [ ! -e /etc/.cdrom ] && [ ! -e /etc/.firstboot ];then
+  cp -p slapd.conf /etc/openldap/slapd.conf
+  chmod 400 /etc/openldap/slapd.conf
+  chown root.root /etc/openldap/slapd.conf
+  if [ "`pidof slapd`" ];then
+    killall -9 slapd > /dev/null 2>&1
+  fi;
+  /etc/rc.d/rc.ldap
+fi;
+
+if [ -e sqlpasswd ] && [ -e /usr/sbin/sqlpasswd ];then 
+  SPDIFF=`diff sqlpasswd /usr/sbin/sqlpasswd`
+ else
+  if [ -e sqlpasswd ];then 
+    SPDIFF="NO FILE";
+  fi;
+fi;
+
+if [ -e networksentry-full ] && [ ! -e /etc/.firstboot ];then
+  if [ "$SPDIFF" ] || [ /opt/apache2/conf/httpd.conf.orig -nt /opt/apache2/conf/httpd.conf ];then
+    if [ -e /etc/apache/php.ini ] && [ ! -e /opt/apache2/conf/php.ini ];then
+      cp /etc/apache/php.ini /opt/apache2/conf/php.ini
+      /opt/apache2/bin/apachectl restart
+    fi;
+    if [ ! -d /var/spool/mysql/mysql ];then
+      webserver startsql
+    fi;
+    cp sqlpasswd /usr/sbin/ > /dev/null 2>&1
+    chown root.root /usr/sbin/sqlpasswd > /dev/null 2>&1
+    chmod 700 /usr/sbin/sqlpasswd > /dev/null 2>&1
+    if [ -x /usr/sbin/sqlpasswd ];then
+      killall -9 winbindd smbd sendmail
+      /bin/su - root -c "/usr/sbin/sqlpasswd > /dev/null 2>&1"
+      /usr/sbin/winbindd > /dev/null 2>&1 &
+      /usr/sbin/smbd -D > /dev/null 2>&1 &
+      /etc/rc.d/rc.mail
+      AST_RESTART=1
+    else
+      /bin/sh sqlpasswd > /dev/null 2>&1
+    fi;
+    kill -1 `pidof inetd` >/dev/null 2>&1
+    kill -9 `pidof ulogd` >/dev/null 2>&1
+    sleep 2
+    (/usr/sbin/ulogd >/dev/null 2>&1) &
+    if [ -e /tmp/.firstconfig ];then
+      rm /usr/sbin/sqlpasswd
+    fi;
+  fi;
+fi;
+
+
+if [ "$SPDIFF" ] && [ -e networksentry-lite ] && [ ! -e /etc/.install ];then
+  cp sqlpasswd /usr/sbin/ > /dev/null 2>&1
+  chown root.root /usr/sbin/sqlpasswd > /dev/null 2>&1
+  chmod 700 /usr/sbin/sqlpasswd > /dev/null 2>&1
+  if [ -x /usr/sbin/sqlpasswd ];then
+    /usr/sbin/sqlpasswd
+  else
+    sh sqlpasswd
+  fi;
+  if [ -e /tmp/.firstconfig ];then
+    rm /usr/sbin/sqlpasswd
+  fi;
+fi;
+
+if [ -e exports ] && [ -e /etc/exports ];then 
+  NFSDIFF=`diff exports /etc/exports`
+ else
+  if [ -e exports ];then 
+    NFSDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$NFSDIFF" ] && [ ! -e networksentry-lite ];then
+  cp exports /etc/
+  chmod 600 /etc/exports
+  chown root.root /etc/exports
+  /usr/sbin/exportfs -r
+fi;
+
+if [ -e autofs.conf ] && [ -e /etc/autofs.conf ];then 
+  NFSDIFF=`diff autofs.conf /etc/autofs.conf`
+ else
+  if [ -e autofs.conf ];then 
+    NFSDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$NFSDIFF" ] && [ ! -e networksentry-lite ];then
+  cp autofs.conf /etc/
+  chmod 600 /etc/autofs.conf
+  chown root.root /etc/autofs.conf
+  AMT_RESTART="TRUE";
+ else
+  touch /etc/autofs.conf
+fi;
+
+if [ -e rc.mount ] && [ -e /etc/rc.d/rc.mount ];then 
+  NFSDIFF=`diff rc.mount /etc/rc.d/rc.mount`
+ else
+  if [ -e rc.mount ];then 
+    NFSDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$NFSDIFF" ] && [ ! -e networksentry-lite ];then
+  cp rc.mount /etc/rc.d/
+  chmod 750 /etc/rc.d/rc.mount
+  chown root.root /etc/rc.d/rc.mount
+  AMT_RESTART="TRUE";
+ else
+  touch /etc/rc.d/rc.mount
+fi;
+
+
+if [ "$AMT_RESTART" ];then
+  /etc/rc.d/rc.mount
+fi;
+
+if [ -e backup ] && [ -e /usr/bin/backup ];then 
+  BUPDIFF=`diff backup /usr/bin/backup`
+ else
+  if [ -e backup ];then 
+    BUPDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$BUPDIFF" ] && [ ! -e networksentry-lite ];then
+  cp backup /usr/bin
+  chown root.root /usr/bin/backup
+  chmod 500 /usr/bin/backup
+fi;
+
+
+if [ -e iptables2 ] && [ -e /etc/rc.d/rc.firewall2 ];then 
+  FWDIFF2=`diff iptables2 /etc/rc.d/rc.firewall2`
+ else
+  if [ -e iptables2 ];then 
+    FWDIFF2="NO FILE";
+  fi;
+fi;
+
+if [ "$FWDIFF2" ];then
+  cp -p iptables2 /etc/rc.d/rc.firewall2
+  chmod 750 /etc/rc.d/rc.firewall2
+  chown root.root /etc/rc.d/rc.firewall2
+fi;
+
+if [ -e ipdown ] && [ -e /etc/ppp/ip-down ];then 
+  FWDOWN=`diff ipdown /etc/ppp/ip-down`
+ else
+  if [ -e ipdown ];then 
+    FWDOWN="NO FILE";
+  fi;
+fi;
+
+if [ "$FWDOWN" ];then
+  cp -p ipdown /etc/ppp/ip-down
+  chmod 750 /etc/ppp/ip-down
+  chown root.root /etc/ppp/ip-down
+ else
+  touch /etc/ppp/ip-down
+fi;
+
+if [ -e iptables ] && [ -e /etc/rc.d/rc.firewall ];then 
+  FWDIFF=`diff iptables /etc/rc.d/rc.firewall`
+ else
+  if [ -e iptables ];then 
+    FWDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$FWDIFF" ];then
+  cp -p iptables /etc/rc.d/rc.firewall
+  chmod 750 /etc/rc.d/rc.firewall
+  chown root.root /etc/rc.d/rc.firewall
+fi;
+
+if [ -e dnsupdate ] && [ -e /var/named/dnsupdate ];then 
+  DNDIFF=`diff dnsupdate /var/named/dnsupdate`
+ else
+  if [ -e dnsupdate ];then 
+    DNDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$DNDIFF" ] && [ ! -e networksentry-lite ];then
+  cp -p dnsupdate /var/named/dnsupdate
+  chmod 600 /var/named/dnsupdate
+  chown root.root /var/named/dnsupdate
+  /usr/bin/nsupdate /var/named/dnsupdate >/dev/null 2>&1
+  (ls /var/named/*.in-addr.arpa |cut -d/ -f 4 |awk '{print "host -lv "$0}' |sh |grep -v `/usr/bin/hostname -f` |awk '($4 == "NS") {print "server 127.0.0.1\nzone "$1"\nupdate delete "$1" NS "$5"\nshow\n send"}'  |/usr/bin/nsupdate) >/dev/null 2>&1
+fi;
+
+if [ -e chilli.conf ] && [ -e /etc/chilli.conf ];then
+  HOTDIFF=`diff chilli.conf /etc/chilli.conf`
+ else
+  if [ -e chilli.conf ];then
+    HOTDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$HOTDIFF" ];then
+  CHILPID=`pidof chilli`
+  if [ "${CHILPID}" ];then
+    kill ${CHILPID}
+  fi;
+  cp chilli-up /usr/bin
+  chmod 750 /usr/bin/chilli-up
+  cp chilli.php /var/spool/apache/htdocs/hotspot/lib/config.php
+  chmod 640 /var/spool/apache/htdocs/hotspot/lib/config.php
+  chown www.www /var/spool/apache/htdocs/hotspot/lib/config.php
+  cp chilli.conf /etc/
+  chmod 640 /etc/chilli.conf
+  if [ -s /etc/chilli.conf ];then
+    /usr/sbin/chilli &
+  fi
+fi;
+
+if [ -e sogo.conf ] && [ -e /etc/sogo.conf ];then
+  SGWDIFF=`diff sogo.conf /etc/sogo.conf`;
+ else
+  SGWDIFF="NO FILE";
+fi;
+
+if [ "$SGWDIFF" ] || [ ! -h /var/home/sogo/GNUstep/Defaults/.GNUstepDefaults ];then
+  if [ ! -h /var/home/sogo/GNUstep/Defaults/.GNUstepDefaults ];then
+    rm /var/home/sogo/GNUstep/Defaults/.GNUstepDefaults
+    ln -s /etc/sogo.conf /var/home/sogo/GNUstep/Defaults/.GNUstepDefaults
+  fi;
+
+  touch /etc/sogo.conf
+  chown sogo.root /etc/sogo.conf
+  chmod 640 /etc/sogo.conf
+  cp sogo.conf /etc/
+  if [ -e /var/run/sogo/sogo.pid ] && [ "${SGWDIFF}" ];then
+    rm /var/run/sogo/sogo.pid
+    safe_sogo
+  fi;
+fi;
+
+if [ -e proxy.conf ] && [ -e /etc/raddb/proxy.conf ];then
+  RPDIFF=`diff proxy.conf /etc/raddb/proxy.conf`
+ else
+  if [ -e proxy.conf ];then
+    RPDIFF="NO FILE";
+  fi;
+fi;
+
+if [ -e clients.conf ] && [ -e /etc/raddb/clients.conf ];then
+  RCDIFF=`diff clients.conf /etc/raddb/clients.conf`
+ else
+  if [ -e proxy.conf ];then
+    RCDIFF="NO FILE";
+  fi;
+fi;
+
+if [ -e radcserver ] && [ -e /etc/radiusclient/servers ];then
+  RCCDIFF=`diff radcserver /etc/radiusclient/servers`
+ else
+  if [ -e proxy.conf ];then
+    RCCDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$RPDIFF" ] || [ "$RCCDIFF" ] || [ "$RCDIFF" ];then
+  if [ ! -e networksentry-lite ];then
+
+    cp -p proxy.conf /etc/raddb/
+    chmod 640 /etc/raddb/proxy.conf
+    chown root.root /etc/raddb/proxy.conf
+
+    cp -p clients.conf /etc/raddb/
+    chmod 640 /etc/raddb/clients.conf
+    chown root.root /etc/raddb/clients.conf
+
+    cp -p radcserver /etc/radiusclient/servers
+    chmod 640 /etc/radiusclient/servers
+    chown root.root /etc/radiusclient/servers
+
+    if [ -e /var/run/radiusd.pid ];then
+      kill -9 `cat /var/run/radiusd.pid`
+      sleep 2
+    fi;
+    if [ -e /var/log/radutmp ];then
+      rm /var/log/radutmp
+    fi;
+    /usr/sbin/radiusd > /dev/null 2>&1
+  fi;
+ else
+  touch /etc/radiusclient/servers /etc/raddb/clients.conf /etc/raddb/proxy.conf
+fi;
+
+if [ -e port-id-map ] && [ -e /etc/radiusclient/port-id-map ];then
+  PMDIFF=`diff port-id-map /etc/radiusclient/port-id-map`
+ else
+  if [ -e proxy.conf ];then
+    PMDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$PMDIFF" ] && [ ! -e networksentry-lite ];then
+
+    cp -p port-id-map /etc/radiusclient/port-id-map
+    chmod 640 /etc/radiusclient/port-id-map
+    chown root.root /etc/radiusclient/port-id-map
+
+    grep -v "ML.*:3:respawn:" /etc/inittab  > /etc/inittab.orig
+    cat inittab >> /etc/inittab.orig
+    ITDIFF=`diff inittab /etc/inittab.orig`
+    if [ "$ITDIFF" ];then
+      cp /etc/inittab.orig /etc/inittab
+      /sbin/init q
+      sleep 2
+      killall -9 mgetty > /dev/null 2>&1
+    fi;
+ else
+  touch /etc/radiusclient/port-id-map
+fi;
+
+if [ -e radiusclient.conf ] && [ -e /etc/radiusclient/radiusclient.conf ];then
+  RADCDIFF=`diff radiusclient.conf /etc/radiusclient/radiusclient.conf`
+ else
+  if [ -e radiusclient.conf ];then
+    RADCDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$RADCDIFF" ] && [ ! -e networksentry-lite ];then
+
+    cp -p radiusclient.conf /etc/radiusclient/radiusclient.conf
+    chmod 640 /etc/radiusclient/radiusclient.conf
+    chown root.root /etc/radiusclient/radiusclient.conf
+ else
+  touch /etc/radiusclient/radiusclient.conf
+fi;
+
+if [ -e mgetty.conf ] && [ -e /etc/mgetty.config ];then
+  MGDIFF=`diff mgetty.conf /etc/mgetty.config`
+ else
+  if [ -e proxy.conf ];then
+    MGDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$MGDIFF" ] && [ ! -e networksentry-lite ];then
+
+    cp -p mgetty.conf /etc/mgetty.config
+    chmod 640 /etc/mgetty.config
+    chown root.root /etc/mgetty.config
+  else
+    touch /etc/mgetty.config
+fi;
+
+
+if [ -e dhcpd.conf ] && [ -e /etc/dhcpd.conf ];then 
+  DHFDIFF=`diff dhcpd.conf /etc/dhcpd.conf`
+ else
+  if [ -e dhcpd.conf ];then 
+    DHFDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$DHFDIFF" ];then
+  cp -p dhcpd.conf /etc/dhcpd.conf
+  chmod 640 /etc/dhcpd.conf
+  chown root.root /etc/dhcpd.conf
+  kill -9 `cat /var/run/dhcpd.pid` > /dev/null 2>&1
+  /usr/sbin/dhcpd > /dev/null 2>&1
+ else
+  touch /etc/dhcpd.conf
+fi;
+
+if [ ! -e /etc/.cdrom ];then
+  if [ -e rc.mail ] && [ -e /etc/rc.d/rc.mail ];then 
+    SUDIFF=`diff rc.mail /etc/rc.d/rc.mail`
+   else
+    if [ -e rc.mail ];then 
+      SUDIFF="NO FILE";
+    fi;
+  fi;
+
+  if [ "$SUDIFF" ];then
+    cp -p rc.mail /etc/rc.d/
+    touch /etc/dovecot.conf
+    chmod 750 /etc/rc.d/rc.mail
+    chown root.root /etc/rc.d/rc.mail
+    /etc/rc.d/rc.mail
+  fi;
+
+  if [ -e sendmail.mc ] && [ -e /etc/mail/sendmail.mc ];then 
+    CDIFF=`diff sendmail.mc /etc/mail/sendmail.mc`
+   else
+    if [ -e sendmail.mc ];then 
+      CDIFF="NO FILE";
+    fi;
+  fi;
+
+  if [ "$CDIFF" ];then
+    cp sendmail.mc /etc/mail/sendmail.mc
+    chown root.root /etc/mail/sendmail.mc
+    chmod 640 /etc/mail/sendmail.mc
+    (m4  -I /usr/mailconf /usr/mailconf/m4/cf.m4 /etc/mail/sendmail.mc |grep -vE "(^#)|(^$)" > /etc/mail/sendmail.cf.orig) > /dev/null 2>&1
+    cp /etc/mail/sendmail.cf.orig /etc/mail/sendmail.cf
+    chmod 644 /etc/mail/sendmail.cf
+  fi;
+
+  if [ -e submit.mc ] && [ -e /etc/mail/submit.mc ];then 
+    CSDIFF=`diff submit.mc /etc/mail/submit.mc`
+   else
+    if [ -e submit.mc ];then 
+      CSDIFF="NO FILE";
+    fi;
+  fi;
+
+  if [ -e procmailrc.pub ] && [ -e /etc/procmailrc.pub ];then 
+    PBDIFF=`diff procmailrc.pub /etc/procmailrc.pub`
+   else
+    if [ -e procmailrc.pub ];then 
+      PBDIFF="NO FILE";
+    fi;
+  fi;
+
+  if [ "$PBDIFF" ];then
+    cp procmailrc.pub /etc/procmailrc.pub
+    chmod 644 /etc/procmailrc.pub
+  fi;
+
+  if [ "$CSDIFF" ];then
+    cp submit.mc /etc/mail/submit.mc
+    chown root.root /etc/mail/submit.mc
+    chmod 640 /etc/mail/sendmail.mc
+    (m4  -I /usr/mailconf /usr/mailconf/m4/cf.m4 /etc/mail/submit.mc |grep -vE "(^#)|(^$)" > /etc/mail/submit.cf) > /dev/null 2>&1
+    chmod 644 /etc/mail/submit.cf
+  fi;
+
+  if [ -e popper.conf ] && [ -e /etc/popper.conf ];then
+    PCDIFF=`diff popper.conf /etc/popper.conf`
+   else
+    if [ -e popper.conf ];then 
+      PCDIFF="NO FILE";
+    fi;
+  fi;
+
+  if [ "$PCDIFF" ] && [ ! -e networksentry-lite ];then
+    cp -p popper.conf /etc/
+    chmod 640 /etc/popper.conf
+    chown root.root /etc/popper.conf
+   else
+    touch /etc/popper.conf
+  fi;
+
+  if [ "$CDIFF" ] || [ "$CSDIFF" ] || [ "$SUDIFF" ] || [ "$PCDIFF" ];then
+    for poppid in `pidof popper`;do 
+      kill -9 $poppid;
+    done;
+
+    if [ -e /var/run/sendmail.pid ];then
+      kill -9 `head -1 /var/run/sendmail.pid` >/dev/null 2>&1
+    fi
+
+    if [ -e /etc/iscan/sendmail ];then
+      ps ax |grep "/etc/iscan/sendmail" |grep -v grep |awk '{print "kill -9 "$1}' |sh
+    fi
+
+    /etc/rc.d/rc.mail
+  fi;
+fi;
+
+if [ -e tunnels ] && [ -e /etc/rc.d/rc.tunnels ];then 
+  TUDIFF=`diff tunnels /etc/rc.d/rc.tunnels`
+ else
+  if [ -e tunnels ];then 
+    TUDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$TUDIFF" ];then
+  cp -p tunnels /etc/rc.d/rc.tunnels
+  chmod 750 /etc/rc.d/rc.tunnels
+  chown root.root /etc/rc.d/rc.tunnels
+  /sbin/ip tun ls |grep -E "tun[0-9]+:" |awk -F: '{print "/sbin/ip tun del "$1}' |sh > /dev/null 2>&1
+  /etc/rc.d/rc.tunnels > /dev/null 2>&1
+ else
+  touch /etc/rc.d/rc.tunnels
+fi;
+
+if [ -e fetchmailrc ] && [ -e /root/.fetchmailrc ];then 
+  FMFDIFF=`diff fetchmailrc /root/.fetchmailrc`
+ else
+  if [ -e fetchmailrc ];then 
+    FMFDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$FMFDIFF" ];then
+  cp -p fetchmailrc /root/.fetchmailrc
+  chmod 710 /root/.fetchmailrc
+  chown root.root /root/.fetchmailrc
+fi;
+
+if [ -e faxtty ] && [ -e /var/spool/hylafax/etc/faxtty ];then
+  FTCONF=`diff faxtty /var/spool/hylafax/etc/faxtty`;
+ else
+  if [ -e faxtty ];then
+    FTCONF="NO FILE";
+  fi;
+fi;
+
+if [ -e faxconfig ] && [ -e /var/spool/hylafax/etc/config ];then
+  FGCONF=`diff faxconfig /var/spool/hylafax/etc/config`;
+ else
+  if [ -e faxconfig ];then
+    FGCONF="NO FILE";
+  fi;
+fi;
+
+if [ -e rc.hfax ] && [ -e /etc/rc.d/rc.hfax ];then
+  FSCONF=`diff rc.hfax /etc/rc.d/rc.hfax`;
+ else
+  if [ -e rc.hfax ];then
+    FSCONF="NO FILE";
+  fi;
+fi;
+
+if [ -e t38modem_start ] && [ -e /usr/libexec/t38modem_start ];then
+  T38CONF=`diff t38modem_start /usr/libexec/t38modem_start`;
+ else
+  if [ -e t38modem_start ];then
+    T38CONF="NO FILE";
+  fi;
+fi;
+
+if [ ! -e networksentry-lite ];then
+  if [ "$FTCONF" ] || [ "$FGCONF" ] || [ "$FSCONF" ] || [ "$T38CONF" ];then
+    cp faxtty /var/spool/hylafax/etc/faxtty
+    cp faxconfig /var/spool/hylafax/etc/config
+    cp rc.hfax /etc/rc.d/
+    cp t38modem_start /usr/libexec/t38modem_start
+
+    chown fax.fax /var/spool/hylafax/etc/faxtty
+    chown fax.fax /var/spool/hylafax/etc/config
+    chown root.root /usr/libexec/t38modem_start
+    chown root.root /etc/rc.d/rc.hfax
+
+    chmod 640 /var/spool/hylafax/etc/faxtty
+    chmod 640 /var/spool/hylafax/etc/config
+    chmod 750 /usr/libexec/t38modem_start
+    chmod 750 /etc/rc.d/rc.hfax
+
+    killall hfaxd faxq faxgetty > /dev/null 2>&1
+    /etc/rc.d/rc.hfax
+    /usr/libexec/t38modem_start
+  fi;
+fi;
+
+if [ -e crontab ] && [ -e /root/crontab ];then 
+  CTFDIFF=`diff crontab /root/crontab`
+ else
+  if [ -e crontab ];then 
+    CTFDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$CTFDIFF" ];then
+  if [ -e /var/spool/cron/crontabs/root ];then
+    /usr/bin/crontab -d root
+    if [ -e /var/spool/cron/crontabs/root ];then
+      rm /var/spool/cron/crontabs/root
+    fi;
+  fi;
+  if [ -e /var/spool/cron/crontabs/admin ];then
+    /usr/bin/crontab -d admin
+    if [ -e /var/spool/cron/crontabs/root ];then
+      rm /var/spool/cron/crontabs/root
+    fi;
+  fi;
+  cp -p crontab /root/
+  chmod 640 /root/crontab
+  chown root.root /root/crontab
+  /usr/bin/crontab /root/crontab -u root
+fi;
+
+if [ -e logon.bat ] && [ -e /var/spool/samba/netlogon/logon.bat ];then 
+  LFDIFF=`diff logon.bat /var/spool/samba/netlogon/logon.bat`
+ else
+  if [ -e logon.bat ];then 
+    LFDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$LFDIFF" ] && [ ! -e networksentry-lite ];then
+  cp -p logon.bat /var/spool/samba/netlogon/ > /dev/null 2>&1
+  chmod 644 /var/spool/samba/netlogon/logon.bat > /dev/null 2>&1
+  chown root.root /var/spool/samba/netlogon/logon.bat > /dev/null 2>&1
+fi;
+
+
+if [ -e printcap ] && [ -e /etc/printcap ];then 
+  PCFDIFF=`diff printcap /etc/printcap`
+ else
+  if [ -e printcap ];then 
+    PCFDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$PCFDIFF" ] && [ ! -e networksentry-lite ];then
+  cp printcap /etc/printcap
+  chmod 644 /etc/printcap
+  chown root.root /etc/printcap
+  checkpc -f > /dev/null 2>&1
+  lpc reread > /dev/null 2>&1
+fi;
+
+(for pcfilt in lpd_filter.*;do
+  if [ ! -e "/var/spool/lpd/$pcfilt" ];then
+    cp $pcfilt /var/spool/lpd
+    chmod 755 /var/spool/lpd/$pcfilt
+   else
+    PFILTDIFF=`diff $pcfilt /var/spool/lpd/$pcfilt`
+    if [ "$PFILTDIFF" ];then
+      cp $pcfilt /var/spool/lpd
+      chmod 755 /var/spool/lpd/$pcfilt
+    fi;
+  fi;
+done;) > /dev/null 2>&1
+
+if [ ! -d /etc/ippool ];then
+  mkdir /etc/ippool
+fi;
+
+(for ippool in ippool_*;do
+   RECONFIPPOOL=0
+   IPPOOLN=${ippool:7}
+   if [ ! -e /etc/ippool/${IPPOOLN} ];then
+     cp ${ippool} /etc/ippool/${IPPOOLN}
+     RECONFIPPOOL=1
+    elif [ "`diff /etc/ippool/${IPPOOLN} ${ippool}`" ];then
+     cp ${ippool} /etc/ippool/${IPPOOLN}
+     RECONFIPPOOL=1
+   fi;
+   if [ ${RECONFIPPOOL} == 1 ];then
+     /usr/bin/ippoolconfig "pool delete pool_name=$IPPOOLN"
+     /usr/bin/ippoolconfig "config  restore  file=/etc/ippool/${IPPOOLN}"
+   fi;
+done) > /dev/null 2>&1
+
+if [ -e openl2tpd.conf ] && [ -e /etc/openl2tpd.conf ];then
+  L2TPDIFF=`diff openl2tpd.conf /etc/openl2tpd.conf`
+ elif [ -e openl2tpd.conf ];then
+  L2TPDIFF=NOFILE
+ elif [ ! -e /etc/openl2tpd.conf ] && [ -e /etc/openl2tpd.conf.orig ];then
+  cp /etc/openl2tpd.conf.orig /etc/openl2tpd.conf
+  L2TPDIFF=ORIG
+fi;
+
+if [ "${L2TPDIFF}" ] && [ ! -e networksentry-lite ];then
+  KSTOP=
+  while [ `pidof openl2tpd` ] && [ "$KSTOP" != "XXXXXXX" ];do
+    killall openl2tpd
+    sleep 1
+    KSTOP=${KSTOP}X
+  done;
+  if [ -e /var/run/openl2tpd.pid ];then
+    rm /var/run/openl2tpd.pid
+  fi;
+  if [ -e /etc/openl2tpd.conf ];then
+    openl2tpd -p ipsec.so > /dev/null 2>&1
+  fi;
+fi;
+
+if [ -e vhost.conf ] && [ -e /etc/fp/vhost.conf ];then 
+  FVDIFF=`diff vhost.conf /etc/fp/vhost.conf`
+ else
+  if [ -e vhost.conf ];then 
+    FVDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$FVDIFF" ] && [ ! -e networksentry-lite ];then
+  cp -p vhost.conf /etc/fp/
+  chmod 640 /etc/fp/vhost.conf
+  chown root.root /etc/fp/vhost.conf
+
+  if [ ! -d /var/spool/apache/vhosts ];then
+    mkdir /var/spool/apache/vhosts
+    chown www.www /var/spool/apache/vhosts
+    chmod 755 /var/spool/apache/vhosts
+  fi;
+
+  if [ ! -d /var/spool/apache/usage ];then
+    mkdir /var/spool/apache/usage
+    chown www.www /var/spool/apache/usage
+    chmod 755 /var/spool/apache/usage
+  fi;
+
+  awk -F\| '{print "if [ ! -d \"/var/spool/apache/vhosts/"$1"\" ];then mkdir -p \"/var/spool/apache/vhosts/"$1"\";chmod -R 750 \"/var/spool/apache/vhosts/"$1"\";chown -R "$2".www \"/var/spool/apache/vhosts/"$1"\";fi"}' /etc/fp/vhost.conf |sh
+  awk -F\| '{print "if [ ! -d \"/var/spool/apache/usage/"$1"\" ];then mkdir \"/var/spool/apache/usage/"$1"\";mkdir \"/var/spool/apache/usage/"$1"/squid\";mkdir \"/var/spool/apache/usage/"$1"/apache\";chmod 750 -R \"/var/spool/apache/usage/"$1"\";chown -R "$2".www \"/var/spool/apache/usage/"$1"\";fi"}' /etc/fp/vhost.conf |sh
+  awk -F\| '{print "if [ ! -d \"/var/spool/apache/usage/"$1"/index.html\" ];then sed -e \"s/DOMAIN/"$1"/\" /etc/apache/usage.tmpl > \"/var/spool/apache/usage/"$1"/index.html\";chmod 640 \"/var/spool/apache/usage/"$1"/index.html\";chown "$2".www \"/var/spool/apache/usage/"$1"/index.html\";fi"}' /etc/fp/vhost.conf |sh
+
+  fp_domain;
+fi;
+
+
+#if [ -e frox.conf ] && [ -e /etc/frox.conf ];then 
+#  FXFDIFF=`diff frox.conf /etc/frox.conf`
+# else
+#  if [ -e frox.conf ];then 
+#    FXFDIFF="NO FILE";
+#  fi;
+#fi;
+
+#if [ ! -e networksentry-lite ] && [ "$FXFDIFF" ];then
+#  cp frox.conf /etc/frox.conf
+#  if [ ! -d /var/spool/frox ];then
+#    mkdir /var/spool/frox
+#  fi;
+#  chown nobody.nogroup /var/spool/frox
+#  chmod 700 /var/spool/frox
+#  killall frox > /dev/null 2>&1
+#  sleep 2
+#  killall -9 frox > /dev/null 2>&1
+#  /usr/sbin/frox
+#fi;
+
+FDIFF="";
+CDIFF="";
+
+if [ -e freshclam.conf ] && [ -e /etc/freshclam.conf ];then 
+  FCCDIFF=`diff freshclam.conf /etc/freshclam.conf`
+ else
+  if [ -e freshclam.conf ];then 
+    FCCDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$FCCDIFF" ] && [ ! -e networksentry-lite ];then
+  cp freshclam.conf /etc/freshclam.conf
+  chown root.root /etc/freshclam.conf
+  chmod 640 /etc/freshclam.conf
+ else
+  touch /etc/freshclam.conf
+fi;
+
+if [ -e squid.conf ] && [ -e /etc/squid/squid.conf ];then 
+  CDIFF=`diff squid.conf /etc/squid/squid.conf`
+ else
+  if [ -e squid.conf ];then 
+    CDIFF="NO FILE";
+  fi;
+fi;
+
+if [ ! -d /var/db/squid ];then
+  mkdir -p /var/db/squid
+  chown nobody.nogroup /var/db/squid
+fi;
+
+if [ -e local_allow_exp ] && [ -e /var/db/squid/local_allow_exp ];then 
+  AKDIFF=`diff local_allow_exp /var/db/squid/local_allow_exp`
+ else
+  if [ -e local_allow_exp ];then 
+    AKDIFF="NO FILE";
+  fi;
+fi;
+
+if [ -e local_allow_urls ] && [ -e /var/db/squid/local_allow_urls ];then 
+  AUDIFF=`diff local_allow_urls /var/db/squid/local_allow_urls`
+ else
+  if [ -e local_allow_urls ];then 
+    AUDIFF="NO FILE";
+  fi;
+fi;
+
+if [ -e local_allow_domains ] && [ -e /var/db/squid/local_allow_domains ];then 
+  ADDIFF=`diff local_allow_domains /var/db/squid/local_allow_domains`
+ else
+  if [ -e local_allow_domains ];then 
+    ADDIFF="NO FILE";
+  fi;
+fi;
+
+if [ -e local_deny_exp ] && [ -e /var/db/squid/local_deny_exp ];then 
+  DKDIFF=`diff local_deny_exp /var/db/squid/local_deny_exp`
+ else
+  if [ -e local_deny_exp ];then 
+    DKDIFF="NO FILE";
+  fi;
+fi;
+
+if [ -e local_deny_urls ] && [ -e /var/db/squid/local_deny_urls ];then 
+  DUDIFF=`diff local_deny_urls /var/db/squid/local_deny_urls`
+ else
+  if [ -e local_deny_urls ];then 
+    DUDIFF="NO FILE";
+  fi;
+fi;
+
+if [ -e local_deny_domains ] && [ -e /var/db/squid/local_deny_domains ];then 
+  DDDIFF=`diff local_deny_domains /var/db/squid/local_deny_domains`
+ else
+  if [ -e local_deny_domains ];then 
+    DDDIFF="NO FILE";
+  fi;
+fi;
+
+if [ -e filter.conf ] && [ -e /etc/squid/filter.conf ];then 
+  SGFDIFF=`diff filter.conf /etc/squid/filter.conf`
+ else
+  if [ -e filter.conf ];then 
+    SGFDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$SGFDIFF" ];then
+  cp -p filter.conf /etc/squid/
+  chmod 644 /etc/squid/filter.conf
+  chown root.root /etc/squid/filter.conf
+ else
+  touch /etc/squid/filter.conf
+fi
+
+if [ -e filter.cnf ] && [ -e /etc/squid/filter.cnf ];then 
+  SGFCDIFF=`diff filter.cnf /etc/squid/filter.cnf`
+ else
+  if [ -e filter.cnf ];then 
+    SGFCDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$SGFCDIFF" ];then
+  cp -p filter.cnf /etc/squid/
+  chmod 644 /etc/squid/filter.cnf
+  chown root.root /etc/squid/filter.cnf
+ else
+  touch /etc/squid/filter.cnf
+fi
+
+if [ "$AKDIFF" ] || [ "$AUDIFF" ] || [ "$ADDIFF" ] || [ "$DKDIFF" ] || [ "$DUDIFF" ] || [ "$DDDIFF" ] || [ "$SGFCDIFF" ] || [ "$SGFDIFF" ] || [ "$CDIFF" ] || [ "$DNSRDIFF" ];then
+  cp -p local_allow_* /var/db/squid
+  cp -p local_deny_* /var/db/squid
+  chmod 640 /var/db/squid/local_*
+  chown -R nobody.nogroup /var/db/squid
+  cp -p filter.conf /etc/squid/
+  chmod 644 /etc/squid/filter.conf
+  chown root.root /etc/squid/filter.conf
+
+  cp -p squid.conf /etc/squid/
+  chmod 644 /etc/squid/squid.conf
+  chown root.root /etc/squid/squid.conf
+
+  if [ ! -e /var/log/squid ];then
+    mkdir /var/log/squid
+  fi;
+  chown nobody.nogroup /var/log/squid
+  chmod 750 /var/log/squid
+
+  if [ ! -e /var/spool/squid ];then 
+    mkdir /var/spool/squid;
+    chown nobody.nogroup /var/spool/squid;
+  fi;
+  if [ ! -e /var/spool/squid/00 ];then 
+    chown nobody.nogroup /var/spool/squid;
+    /usr/sbin/squid -z > /dev/null 2>&1
+  fi; 
+
+  RCPID=`ps ax |grep RunCache |grep -v grep`
+  SQUIDPID=`pidof squid`
+  if [ ! "$RCPID" ];then 
+    if [ "$SQUIDPID" ];then
+      killall -9 squid
+    fi;
+    /usr/bin/RunCache >/dev/null 2>&1 &
+   else
+    if [ "$SQUIDPID" ];then
+      killall -9 squid
+    fi;
+  fi;
+  (ls /var/db/squid/*_urls /var/db/squid/*_domains /var/db/squid/blacklists/*/urls /var/db/squid/blacklists/*/domains |awk '{printf "if [ %s -nt %s.db ];then squidGuard -C %s;chown nobody.nogroup %s.db >/dev/null 2>&1;fi;\n",$1,$1,$1,$1}'  |sh) &
+  /usr/sbin/squid -k reconfigure > /dev/null 2>&1
+fi;
+
+if [ -e options ] && [ -e /etc/ppp/options ];then 
+  ODIFF=`diff options /etc/ppp/options`
+ else
+  if [ -e options ];then 
+    ODIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$ODIFF" ];then
+  cp -p options /etc/ppp/options
+  chmod 644 /etc/ppp/options
+  chown root.root /etc/ppp/options
+  if [ -e /etc/ppp/options.port ];then
+    echo "" > /etc/ppp/options.port
+  fi;
+ else
+  touch /etc/ppp/options
+fi;
+
+if [ -e diald.scr ] && [ -e /etc/ppp/diald.scr ];then 
+  SDIFF=`diff diald.scr /etc/ppp/diald.scr`
+ else
+  if [ -e diald.scr ];then 
+    SDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$SDIFF" ];then
+  cp -p diald.scr /etc/ppp/diald.scr
+  chmod 640 /etc/ppp/diald.scr
+  chown root.root /etc/ppp/diald.scr
+ else
+  touch /etc/ppp/diald.scr
+fi;
+
+if [ -e diald.3g ] && [ -e /etc/ppp/diald.3g ];then 
+  S3GDIFF=`diff diald.3g /etc/ppp/diald.3g`
+ else
+  if [ -e diald.3g ];then 
+    S3GDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$S3GDIFF" ];then
+  cp -p diald.3g /etc/ppp/diald.3g
+  chmod 644 /etc/ppp/diald.3g
+  chown root.root /etc/ppp/diald.3g
+fi;
+
+if [ -e secret ] && [ -e /etc/ppp/secret ];then 
+  ADIFF=`diff secret /etc/ppp/secret`
+ else
+  if [ -e secret ];then 
+    ADIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$ADIFF" ];then
+  cp -p secret /etc/ppp/secret
+  chmod 600 /etc/ppp/secret
+  chown root.root /etc/ppp/secret
+  if [ ! -e /etc/ppp/pap-secrets ];then
+    ln -s /etc/ppp/secret /etc/ppp/pap-secrets
+  fi
+  if [ ! -e /etc/ppp/chap-secrets ];then
+    ln -s /etc/ppp/secret /etc/ppp/chap-secrets
+  fi
+ else
+  touch /etc/ppp/secret
+fi;
+
+if [ -e rc.ppp ] && [ -e /etc/rc.d/rc.ppp ];then 
+  RCPDIFF=`diff rc.ppp /etc/rc.d/rc.ppp`
+ else
+  if [ -e rc.ppp ];then 
+    RCPDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$RCPDIFF" ];then
+  cp -p rc.ppp /etc/rc.d/
+  chown root.root /etc/rc.d/rc.ppp
+  chmod 750 /etc/rc.d/rc.ppp
+fi;
+
+if [ -e rc.tos ] && [ -e /etc/rc.d/rc.tos ];then 
+  TOSDIFF=`diff rc.tos /etc/rc.d/rc.tos`
+ else
+  if [ -e rc.tos ];then 
+    TOSDIFF="NO FILE";
+  fi;
+fi;
+
+if [ -e shadow ];then
+  chown 0.0 shadow
+  chmod 600 shadow
+  mv shadow /etc/
+fi;
+
+if [ "$TOSDIFF" ];then
+  cp -p rc.tos /etc/rc.d/
+  chown root.root /etc/rc.d/rc.tos
+  chmod 750 /etc/rc.d/rc.tos
+  /etc/rc.d/rc.tos `ip route show 0.0.0.0/0 table 90|awk '{print }'`
+fi;
+
+if [ "$AST_RESTART" ];then
+    /usr/sbin/asterisk -rx "reload" > /dev/null 2>&1
+fi;
+
+if [ "$WEB_RESTART" ] || [ -e /tmp/.sslrestart ];then
+  if [ -e /tmp/.sslrestart ];then
+    rm /tmp/.sslrestart
+  fi;
+  (killall -9 slapd;  
+  killall -1 sendmail;
+  ps ax |grep -E "popper.*:995" |awk '{printf "kill -9 %s\n",$1}' |sh;
+  grep -E "popper.*:995" /etc/rc.d/rc.mail  |sh
+  killall -9 imapd;
+  killall -1 inetd;
+  killall -9 racoon;
+  /usr/sbin/setkey -FP;
+  /usr/sbin/setkey -F;
+  /sbin/ip tun ls |grep -E "tun[0-9]+:" |awk -F: '{print "/sbin/ip tun del "$1}' |sh;
+  /usr/sbin/apachectl stop;
+  sleep 2;
+  /usr/sbin/apachectl startssl;
+  /etc/rc.d/rc.tunnels;
+  sleep 2;
+  /usr/sbin/setkey -F) > /dev/null 2>&1
+  /etc/rc.d/rc.exchange;
+  Gen_CRL_Cert;
+fi;
+
+if [ ! -x /tmp/pppup/ext.ip-up ];then 
+  DEFINT=`ip route show 0.0.0.0/0 table 90|awk '{print $5}'`
+  if [ "$DEFINT" ];then
+    if [ ! -d /tmp/pppup ];then
+      mkdir /tmp/pppup
+    fi;
+    IPADDR=`ip -f inet -o addr show $DEFINT |head -1 |awk '{print $4}' |cut -d/ -f1`
+    DEFGW=`ip route show 0.0.0.0/0 table 90|awk '{print $3}'`
+    (cat << EOF
+#!/bin/bash
+
+/etc/ppp/ip-up $DEFINT - - $IPADDR $DEFGW
+EOF
+) > /tmp/pppup/ext.ip-up
+    chmod 700 /tmp/pppup/ext.ip-up
+  fi;
+fi;
+
+if [ "$ODIFF" ] || [ "$SDIFF" ] || [ "$ADIFF" ] || [ "$RCPDIFF" ] || [ "$FWDIFF2" ] || [ "$FWDIFF" ];then
+  if [ ! -e /tmp/.firstconfig ] && [ ! -e /etc/.install ] && [ ! -e /etc/.cdrom ];then
+    if [ "$FWDIFF" ];then
+      /etc/rc.d/rc.firewall startup
+     elif [ "$FWDIFF2" ];then
+      for link in /tmp/pppup/ext.ip-up /tmp/pppup/ppp*;do
+        if [ -x $link ];then
+          $link
+        fi;
+      done
+    fi;
+  fi;
+fi;
+
+rm /var/run/netsentry-config
+
+if [ -e /tmp/.firstconfig ];then
+  rm /tmp/.firstconfig
+  /usr/sbin/genconf
+  /usr/sbin/servconfig
+  if [ ! -d /var/spool/cubit ];then
+    /etc/rc.d/rc.cubit
+  fi;
+  if [ ! -e /etc/.firstboot ] && [ ! -e /etc/.install ];then
+    /sbin/shutdown -r now
+  fi;
+fi;
+
+if [ ! "`/sbin/ip route list 0/0`" ];then
+  /sbin/ip route add default via 127.255.255.254 src 127.255.255.253 dev dummy0
+fi;

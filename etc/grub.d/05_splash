@@ -1,0 +1,72 @@
+#!/bin/sh
+set -e
+
+# grub-mkconfig helper script.
+# Copyright (C) 2010  Alexander Kurtz <kurtz.alex@googlemail.com>
+#
+# GRUB is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# GRUB is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with GRUB.  If not, see <http://www.gnu.org/licenses/>.
+
+# Include the GRUB helper library for grub-mkconfig.
+. /usr/lib/grub/grub-mkconfig_lib
+
+set_default_theme(){
+	# Set a monochromatic theme for Ubuntu.
+	echo "${1}set menu_color_normal=white/black"
+	echo "${1}set menu_color_highlight=black/light-gray"
+
+	# Set an aubergine background.
+	echo "${1}if background_color 44,0,30; then"
+	echo "${1}  clear"
+	echo "${1}fi"
+}
+
+set_background_image(){
+	reader="jpeg";
+	# Step #6: Prepare GRUB to read the background image.
+	if ! prepare_grub_to_access_device "`${grub_probe} --target=device "${1}"`"; then
+		return 6
+	fi
+
+	# Step #7: Everything went fine, print out a message to stderr ...
+	echo "Found background image: ${1}" >&2
+
+	# ... and write our configuration snippet to stdout. Use the colors
+	# desktop-base specified. If we're using a user-defined background, use
+	# the default colors since we've got no idea how the image looks like.
+	# If loading the background image fails, use the default theme.
+	echo "insmod ${reader}"
+	echo "if background_image `make_system_path_relative_to_its_root "${1}"`; then"
+	if [ -n "${2}" ]; then
+		echo "  set color_normal=${2}"
+	fi
+	if [ -n "${3}" ]; then
+		echo "  set color_highlight=${3}"
+	fi
+	if [ -z "${2}" ] && [ -z "${3}" ]; then
+		echo "  true"
+	fi
+	echo "else"
+	set_default_theme "  "
+	echo "fi"
+}
+
+# Next search for pictures the user put into /boot/grub/ and use the first one.
+background=/boot/grub/background.jpg
+if test -e "${background}" ;then
+	set_background_image "${background}"
+	exit 0
+fi;
+
+# Finally, if all of the above fails, use the default theme.
+set_default_theme

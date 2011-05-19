@@ -1,0 +1,193 @@
+#!/bin/sh
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+export PATH
+
+pid_file=/var/spool/mysql/mysqld.pid
+
+if [ -e /etc/.cdrom ];then
+  mysql_args="--datadir=/var/spool/mysql --user=mysql --skip-innodb"
+ else
+  mysql_args="--datadir=/var/spool/mysql --user=mysql"
+fi;
+
+mode=$1
+
+if [ ! -d /var/spool/apache/bandwidth ];then
+  mkdir /var/spool/apache/bandwidth
+  chown www.www /var/spool/apache/bandwidth
+fi;
+
+if [ ! -d /var/spool/apache/bandwidth/master ];then
+  mkdir /var/spool/apache/bandwidth/master
+  chown www.www /var/spool/apache/bandwidth/master
+fi;
+
+if [ ! -d /var/spool/apache/bandwidth/link ];then
+  mkdir /var/spool/apache/bandwidth/link
+  chown www.www /var/spool/apache/bandwidth/link
+fi;
+
+
+install_mysqld() {
+  if [ ! -d /var/spool/mysql ];then
+    mkdir /var/spool/mysql
+  fi;
+  chown mysql.mysql /var/spool/mysql
+  /usr/bin/mysql_install_db $mysql_args
+  /usr/bin/mysqld_safe $mysql_args --pid-file=$pid_file >/dev/null 2>&1 &
+  sleep 5
+
+  cat ~www/htdocs/phpBB2/schema/phpBB2_struct.sql  |mysql
+  cat ~www/htdocs/phpBB2/schema/phpBB2_data.sql  |mysql
+  cat /usr/bin/mysql_netsentry.sql |mysql
+
+  (cat <<_EOF_
+GRANT ALL ON *.* TO 'admin'@'localhost' IDENTIFIED BY 'admin' WITH GRANT OPTION;
+GRANT ALL ON *.* TO 'admin'@'%' IDENTIFIED BY 'admin' WITH GRANT OPTION;
+GRANT SELECT,INSERT,UPDATE,DELETE ON networksentry_log.* TO 'logview'@'%' IDENTIFIED BY 'admin';
+GRANT SELECT,INSERT,UPDATE,DELETE ON horde.* TO 'horde'@'%' IDENTIFIED BY 'admin';
+GRANT SELECT,INSERT,UPDATE,DELETE ON horde.* TO 'horde'@'localhost' IDENTIFIED BY 'admin';
+GRANT ALL ON phpBB2.* TO 'phpBB2'@'localhost' IDENTIFIED BY 'forum';
+GRANT SELECT ON mysql.db TO 'control'@'localhost' IDENTIFIED BY 'control';
+GRANT SELECT (Host,Db,User,Table_name,Table_priv,Column_priv) ON mysql.tables_priv TO 'control'@'localhost';
+GRANT SELECT (Host,User,Select_priv,Insert_priv,Update_priv,Delete_priv,Create_priv,Drop_priv,Reload_priv,Shutdown_priv,Process_priv,File_priv,Grant_priv,References_priv,Index_priv,Alter_priv) ON mysql.user TO 'control'@'localhost';
+GRANT SELECT,INSERT,UPDATE,DELETE ON phpmyadmin.* to 'control'@'localhost';
+DELETE FROM user WHERE user='root';
+DROP DATABASE test;
+FLUSH PRIVILEGES;
+_EOF_
+) |/usr/bin/mysql mysql
+}
+
+stop_mysqld() {
+  if [ -e "$pid_file" ];then
+    mysqld_pid=`cat $pid_file`
+    kill -9 $mysqld_pid
+    rm $pid_file
+    sleep 1
+    while [ -s $pid_file -a "$flags" != aaaaaaaaa ];do
+      flags=a$flags
+      sleep 1
+    done
+    if [ -s $pid_file ];then
+      killall -9 mysqld
+    fi
+  fi;
+  if test -f /var/lock/subsys/mysql;then
+    rm /var/lock/subsys/mysql
+  fi
+  killall -9 mysqld
+  if [ -e /tmp/mysql.sock ];then
+    rm /tmp/mysql.sock
+  fi;
+}
+
+# See how we were called.
+case "$1" in
+  start)
+#        echo -n "Executing start script (asp-admin-5100): "
+#	/usr/local/apache/casp/admtool -s > /dev/null 2>&1 && success || failed $1
+#        echo
+#        touch /var/lock/subsys/asp-admin-5100 > /dev/null 2>&1
+#        echo -n "Executing start script (asp-apache-3000): "
+#	/usr/local/apache/casp/asp-apache-3000/startcaspd > /dev/null 2>&1 && success || failed $1
+#        echo
+#        touch /var/lock/subsys/asp-apache-3000 > /dev/null 2>&1
+
+        if [ ! -e /var/spool/apache/htdocs/ns/config/networksentry-lite ];then
+          /usr/sbin/genwebmap
+          if [ ! -d /var/spool/mysql/mysql ];then
+             install_mysqld;
+           else
+            rm /var/spool/mysql/*.err
+            (mysqld_safe --pid-file=$pid_file $mysql_args >/dev/null 2>&1)&
+          fi;
+
+          DOMAIN=`awk '($1 == "DNS") && ($2 == "Domain") {print $3}' /var/spool/apache/htdocs/ns/config/netsentry.conf`
+          HNAME=`awk '($1 == "DNS") && ($2 == "Hostname") {print $3}' /var/spool/apache//htdocs/ns/config/netsentry.conf`
+          if [ "$HNAME" ];then
+            DOMAIN="$HNAME.$DOMAIN";
+          fi;
+         else
+           DOMAIN="networksentry-lite";
+        fi;
+
+        sed -e "s/\(^\|^#\)ServerName.*/ServerName $DOMAIN/" /etc/fp/httpd.conf.fp.orig > /etc/fp/httpd.conf.fp
+
+#        if [ ! -d /var/spool/apache/htdocs/_vti_pvt ] || [ ! -e /usr/local/frontpage/we80.cnf ];then
+#          /usr/local/frontpage/version5.0/bin/owsadm.exe -o install -u admin -p 80 -servconf /etc/fp/httpd.conf.fp -xuser www -pw admin > /dev/null 2>&1
+#          chown -R www.www /var/spool/apache/htdocs/*
+#        fi;
+#        if [ ! -e /usr/local/frontpage/we666.cnf ];then
+#          /usr/local/frontpage/version5.0/bin/owsadm.exe -o install -u admin -p 666 -servconf /etc/fp/httpd.conf.fp -xuser www -pw admin > /dev/null 2>&1
+#          chown -R www.www /var/spool/apache/htdocs/*
+#        fi;
+
+        ps -ea |tail -10 |sed -e 's/ //g' |cut -c10-137 > /usr/local/frontpage/version5.0/apache-fp/suidkey
+        chmod 600 /usr/local/frontpage/version5.0/apache-fp/suidkey
+
+        if [ -d /opt/apache2 ];then
+          /opt/apache2/bin/apachectl start > /dev/null 2>&1
+         else
+          if [ -e /etc/ipsec.d/cacerts/cacert.pem ] && [ -e /etc/openssl/server.signed.pem ] && [ ! -e /etc/.networksentry-lite ];then
+            /usr/sbin/apachectl startssl  > /dev/null 2>&1
+           else
+            /usr/sbin/apachectl start  > /dev/null 2>&1
+          fi
+        fi;
+        ;;
+  stop)
+#        echo -n "Executing stop script (asp-admin-5100): "
+#	/usr/local/apache/casp/admtool -e > /dev/null 2>&1 && success || failed $1
+#        echo
+#        rm -f /var/lock/subsys/asp-admin-5100 > /dev/null 2>&1
+#        echo -n "Executing stop script (asp-apache-3000): "
+#	/usr/local/apache/casp/asp-apache-3000/stopcaspd > /dev/null 2>&1 && success || failed $1
+#        echo
+#        rm -f /var/lock/subsys/asp-apache-3000 > /dev/null 2>&1
+	stop_mysqld;
+        if [ -d /opt/apache2 ];then
+          /opt/apache2/bin/apachectl stop > /dev/null 2>&1
+         else
+          /usr/sbin/apachectl stop > /dev/null 2>&1
+        fi;
+        sleep 1;
+        while [ -s /var/run/httpd.pid -a "$tflag" != "xxxxxxxxx" ] ;do
+          if [ -d /opt/apache2 ];then
+            /opt/apache2/bin/apachectl stop > /dev/null 2>&1
+           else
+            /usr/sbin/apachectl stop > /dev/null 2>&1
+          fi;
+          sleep 1;
+          tflag=x$tflag;
+        done
+        if [ -e /var/run/httpd.pid ];then
+          rm /var/run/httpd.pid
+        fi;
+        ;;
+#  status)
+#        echo "Executing status script(asp-admin-5100): "
+#	/usr/local/apache/casp/admtool -q
+#        ;;
+ stopsql)stop_mysqld;;
+ startsql)
+        if [ ! -e /var/spool/apache/htdocs/ns/config/networksentry-lite ];then
+          if [ ! -d /var/spool/mysql/mysql ];then
+             install_mysqld;
+           else
+            rm /var/spool/mysql/*.err
+            (mysqld_safe --pid-file=$pid_file $mysql_args >/dev/null 2>&1)&
+          fi;
+        fi;
+        ;;
+  restart)
+        $0 stop
+        $0 start
+        ;;
+  *)
+        echo "Usage: $0 {start|stop|restart|status|recover}"
+        exit 1
+esac
+
+exit 0

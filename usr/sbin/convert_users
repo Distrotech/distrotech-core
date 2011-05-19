@@ -1,0 +1,81 @@
+#!/usr/bin/perl
+
+open(SPW,"shadow");
+while(<SPW>) {
+  chop $_;
+  ($uname,$crypt,$last)=split(/:/,$_);
+  $spcrypt{$uname}=$crypt;
+  $splast{$uname}=$last;
+}
+
+open(PW,"passwd");
+while(<PW>) {
+  chop $_;
+  ($uname,$pwc,$uid,$gid,$cn,$hdir)=split(/:/,$_);
+  if ($uid >= "500") {
+    $pos=index($cn," ");
+    $gn=substr($cn,0,$pos);
+
+    $sn=substr($cn,$pos+1);  
+
+    $gn=uc(substr($gn,0,1)) . substr($gn,1);
+    $sn=uc(substr($sn,0,1)) . substr($sn,1);
+
+    $cn=$gn . " " . $sn;
+
+    if ($pwc eq "x") {
+      $pwc=$spcrypt{$uname};
+    }
+ 
+    if ($splast{$uname} eq "") {
+      $splast{$uname}="0";
+    }
+
+    $hdh1=substr($uname,0,1);
+    $hdh2=substr($uname,1,1);
+    $rid=$uid*2+1000;
+print qq~
+dn: uid=$uname,ou=users
+objectClass: person
+objectClass: inetOrgPerson
+objectClass: officePerson
+objectClass: organizationalPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+objectClass: sambaAccount
+objectClass: inetLocalMailRecipient
+objectClass: radiusprofile
+uid: $uname
+homeDirectory: /var/home/$hdh1/$hdh2/$uname
+uidNumber: $uid
+gidNumber: 100
+rid: $rid
+primaryGroupID: 1201
+loginShell: /usr/sbin/smrsh
+shadowLastChange: $splast{$uname}
+shadowMin: 0
+radiusServiceType: Framed-User
+radiusFramedProtocol: PPP
+radiusFramedIPAddress: 255.255.255.254
+radiusFramedIPNetmask: 255.255.255.255
+radiusFramedMTU: 1500
+radiusFramedCompression: Van-Jacobson-TCP-IP
+radiusSimultaneousUse: 1
+mail: $uname\@@ARGV[0]
+mailLocalAddress: $uname\@@ARGV[0]
+quotaFileServer: 5
+quotaMailSpool: 20
+quotaHomeDir: 10
+quotaChanged: yes
+cn: $cn
+displayName: $cn
+givenName: $gn
+sn: $sn
+userPassword: {CRYPT}$pwc
+mailRoutingAddress: $uname
+outOfOfficeActive: no
+maxAliases: 2
+maxWebAliases: 2
+~;
+  }
+}

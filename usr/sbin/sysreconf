@@ -1,0 +1,645 @@
+#!/bin/bash
+
+RELOAD=1;
+
+if [ -e /install/netsentry-version ];then
+  eval `cat /install/netsentry-version`
+ else
+  eval `cat /etc/netsentry-version`
+fi;
+
+if [ "$IP_ADDR" ];then
+  IP_ADDR[1]=$IP_ADDR;
+ else
+  IP_ADDR[1]="0.0.0.0";
+fi;
+if [ "$SN_ADDR" ];then
+  SN_ADDR[1]=$SN_ADDR;
+ else
+  SN_ADDR[1]=24;
+fi;
+
+if [ -e /install/default.conf.full ];then
+  config_file=/install/default.conf.full
+ else
+  config_file=/etc/firewall.conf
+fi;
+
+echo -n "" > /tmp/netsentry.conf
+
+INT_NAME[1]="Internal";
+
+X509_C="ZA";
+X509_ST="Gauteng";
+X509_L="Johanesburg";
+X509_O="Company";
+X509_OU="IT Security";
+NTP_SERV="196.25.1.1 196.25.1.9"
+SMTP_FWD="";
+DOM_DC="";
+DOM_ADS="";
+OSLEVEL="65";
+DTYPE="USER";
+DEL_DNS="0";
+FWALL_INT="ethA";
+FWALL_EXT="ethA";
+MDM_PORT="Com1";
+MDM_SPEED="38400";
+MDM_FLW="crtscts";
+MDM_CONN="ADSL";
+MDM_Init1="AT&F";
+MDM_Init2="ATL1M1";
+MDM_DSTR="ATDT";
+MDM_MTU="1500";
+MDM_ADDR="10.0.0.1";
+MDM_GW="10.0.0.2";
+MDM_TOUT="120";
+MDM_HO="10";
+MDM_MF="5";
+MDM_NUM="";
+MDM_UN="";
+MDM_PW="";
+
+if [ "$1" ];then
+  eval `cat $1`
+  if [ "$1" == "netsentry-sysvars" ];then
+    rm netsentry-sysvars
+  fi;
+ else
+  if [ -e /etc/netsentry-sysvars ];then
+    eval `cat /etc/netsentry-sysvars`
+   else
+    exit;
+  fi;
+fi;
+
+if [ ! "${INT_IFACE[1]}" ];then
+  INT_IFACE[1]="A";
+fi;
+if [ ! "${INT_IFACE[2]}" ];then
+  INT_IFACE[2]="B";
+fi;
+if [ ! "${INT_IFACE[3]}" ];then
+  INT_IFACE[3]="C";
+fi;
+if [ ! "${INT_IFACE[4]}" ];then
+  INT_IFACE[4]="D";
+fi;
+
+MAX_IF=${#INT_IFACE[@]};
+for ((cnt=1;$cnt <= $MAX_IF;cnt=$cnt+1));do 
+  if [ ! "${IP_ADDR[$cnt]}" ];then
+    IP_ADDR[$cnt]="0.0.0.0";
+  fi;
+  if [ ! "${SN_ADDR[$cnt]}" ];then
+    SN_ADDR[$cnt]="32";
+  fi;
+  if [ ! "${IP_SDHCP[$cnt]}" ];then
+    IP_SDHCP[$cnt]="-";
+  fi;
+  if [ ! "${IP_EDHCP[$cnt]}" ];then
+    IP_EDHCP[$cnt]="-";
+  fi;
+  if [ ! "${INT_NAME[$cnt]}" ];then
+    INT_NAME[$cnt]="Int${INT_IFACE[$cnt]}";
+  fi;
+  INT_MAC[$cnt]=`ip -f inet -f inet -o link |grep -E "^[0-9]+: eth[0-9A-Za-z]+:" |awk '{printf "%s?%s\n",$2,$11}' |grep eth${INT_IFACE[$cnt]} |cut -d? -f2 |tr a-z A-Z`
+done
+
+Config_INT() {
+  if [ "`grep ethA /proc/net/wireless`" ];then
+    dialog --backtitle "$BT" --clear --title "Network/ESSID Address" \
+           --inputbox "Wireless Network ID" \
+           9 40 "" 2> /tmp/net_essid
+    NET_ESSID=`cat /tmp/net_essid`;
+    dialog --backtitle "$BT" --clear --title "WEP Key" \
+           --inputbox "Wireless Network Key" \
+           9 40 "" 2> /tmp/net_key
+    NET_KEY=`cat /tmp/net_key`;
+    dialog --backtitle "$BT" --clear --title "Channel" \
+           --inputbox "Wireless Channel" \
+           9 40 "" 2> /tmp/net_chan
+    NET_CHANNEL=`cat /tmp/net_chan`;
+    if [ ! "$NET_KEY" ];then
+      $NET_KEY=off;
+    fi;
+    (cat <<__EOF__
+ESSID="$NET_ESSID";
+NAME="Netsentry Lite";
+MODE=Managed;
+CHANNEL=$NET_CHANNEL;
+KEY=$NET_KEY;
+AP=any;
+TXPOWER=auto;
+RATE=auto;
+__EOF__
+) > /etc/ifconf/ifwl.ethA
+  fi;
+
+  MAX_VLAN=${#VLAN[@]};
+  for ((vcnt=1;$vcnt <= $MAX_VLAN;vcnt=$vcnt+1));do 
+    if [ ! "${IP_ADDRV[$vcnt]}" ];then
+      IP_ADDRV[$vcnt]="0.0.0.0";
+    fi;
+    if [ ! "${SN_ADDRV[$vcnt]}" ];then
+      SN_ADDRV[$vcnt]="24";
+    fi;
+    if [ ! "${IP_SDHCPV[$vcnt]}" ];then
+      IP_SDHCPV[$vcnt]="-";
+    fi;
+    if [ ! "${IP_EDHCPV[$vcnt]}" ];then
+      IP_EDHCPV[$vcnt]="-";
+    fi;
+    if [ ! "${INT_NAME[$vcnt]}" ];then
+      INT_NAMEV[$vcnt]="Vlan${VLAN[$vcnt]}";
+    fi;
+    dialog --backtitle "$BT" --clear --title "Vlan Tag (${INT_NAMEV[$vcnt]})" \
+           --inputbox "Enter The VLAN TAG To Be Used" \
+           9 40 "${VLAN[$vcnt]}" 2> /tmp/vlantag
+   VLAN_LINK=${INT_IFACE[$VLAN_PHY]} 
+   VLAN[$vcnt]=`cat /tmp/vlantag`
+    if [ "${VLAN[$vcnt]}" != "" ];then
+      dialog --backtitle "$BT" --clear --title "IP Address (${INT_NAMEV[$vcnt]})" \
+             --inputbox "Server IP Address For VLAN (${VLAN[$vcnt]})" \
+             9 40 "${IP_ADDRV[$vcnt]}" 2> /tmp/ipaddr
+      IP_ADDRV[$vcnt]=`cat /tmp/ipaddr`
+      if [ "${IP_ADDRV[$vcnt]}" == "0.0.0.0" ];then
+        SN_ADDRV[$vcnt]=32;
+      fi;
+      dialog --backtitle "$BT" --clear --title "Subnet Bits (${INT_NAMEV[$vcnt]})" \
+             --inputbox "Subnet Mask In Form nn For Interface VLAN (${VLAN[$vcnt]})" \
+             9 40 "${SN_ADDRV[$vcnt]}" 2> /tmp/snaddr
+      SN_ADDRV[$vcnt]=`cat /tmp/snaddr`
+      dialog --backtitle "$BT" --clear --title "DHCP Start Address (${INT_NAMEV[$vcnt]})" \
+             --inputbox "Input The DHCP Start Address For VLAN (${VLAN[$vcnt]})" \
+             9 40 "${IP_SDHCPV[$vcnt]}" 2> /tmp/sdhcp
+      IP_SDHCPV[$vcnt]=`cat /tmp/sdhcp`
+      dialog --backtitle "$BT" --clear --title "DHCP End Address (${INT_NAMEV[$vcnt]})" \
+             --inputbox "Input The DHCP End Address For VLAN (${VLAN[$vcnt]})" \
+             9 40 "${IP_EDHCPV[$vcnt]}" 2> /tmp/edhcp
+      IP_EDHCPV[$vcnt]=`cat /tmp/edhcp`
+      INT_PARV[$cnt]=${VLAN_LINK}
+      if [ "${IP_SDHCPV[$vcnt]}" == "" ] || [ "${IP_SDHCPV[$vcnt]}" == "-" ] || [ "${IP_EDHCPV[$vcnt]}" == "" ] || [ "${IP_EDHCPV[$vcnt]}" == "-" ];then
+        IP_SDHCPV[$vcnt]="-"
+        IP_EDHCPV[$vcnt]="-"
+      fi;
+      echo "IP Interface ${INT_NAMEV[$vcnt]} ${IP_ADDRV[$vcnt]} ${SN_ADDRV[$vcnt]} eth${INT_PARV[$cnt]}.${VLAN[$vcnt]} ${IP_SDHCPV[$vcnt]} ${IP_EDHCPV[$vcnt]}   00:00:00:00:00:00" >> /tmp/netsentry.conf
+    fi;
+  done
+}
+
+if [ ! "$1" ];then
+  if [ ! "${VLAN[1]}" ];then
+    VLAN[1]=150;
+    INT_NAMEV[1]="Phones";
+  fi;
+  if [ ! "${VLAN[2]}" ];then
+    VLAN[2]=100;
+    INT_NAMEV[2]="External";
+  fi;
+  if [ ! "$VLAN_PHY" ];then
+    VLAN_PHY=1;
+  fi;
+  dialog --backtitle "$BT" --clear --title "Hostname" \
+         --inputbox "This Is The Name Of The Server In The Domain" \
+         9 40 "$HN_ADDR" 2> /tmp/hnaddr
+  HN_ADDR=`cat /tmp/hnaddr`;
+  dialog --backtitle "$BT" --clear --title "Domain Name" \
+         --inputbox "This Is The Domain The Server Is A Member Of" \
+         9 40 "$DOM_ADDR" 2> /tmp/domaddr
+  DOM_ADDR=`cat /tmp/domaddr`;
+  dialog --backtitle "$BT" --clear --title "Default Gateway" \
+         --inputbox "Please Enter The Default Gateway Of The Server" \
+         9 40 "$GW_ADDR" 2> /tmp/gwaddr
+  GW_ADDR=`cat /tmp/gwaddr`;
+  dialog --backtitle "$BT" --clear --title "SMTP Gateway" \
+         --inputbox "Please Enter The SMTP Gateway To Send Email VIA" \
+         9 40 "$SMTP_FWD" 2> /tmp/smtpaddr
+  SMTP_FWD=`cat /tmp/smtpaddr`;
+  dialog --backtitle "$BT" --clear --title "NTP Server" \
+         --inputbox "Please Enter A List Of NTP Servers To Use" \
+         9 40 "$NTP_SERV" 2> /tmp/ntpserv
+  NTP_SERV=`cat /tmp/ntpserv`;
+  dialog --backtitle "$BT" --clear --title "X.509 CA Setup (Country)" \
+         --inputbox "ISO Country Code IE ZA" \
+         9 40 "$X509_C" 2> /tmp/x509c
+  X509_C=`cat /tmp/x509c`;
+  dialog --backtitle "$BT" --clear --title "X.509 CA Setup (Province/State)" \
+         --inputbox "Enter Your Province/State" \
+         9 40 "$X509_ST" 2> /tmp/x509st
+  X509_ST=`cat /tmp/x509st`;
+  dialog --backtitle "$BT" --clear --title "X.509 CA Setup (City)" \
+         --inputbox "Enter The City" \
+         9 40 "$X509_L" 2> /tmp/x509l
+  X509_L=`cat /tmp/x509l`;
+  dialog --backtitle "$BT" --clear --title "X.509 CA Setup (Company)" \
+         --inputbox "Enter Your Company Name" \
+         9 40 "$X509_O" 2> /tmp/x509o
+  X509_O=`cat /tmp/x509o`;
+  dialog --backtitle "$BT" --clear --title "X.509 CA Setup (Division)" \
+         --inputbox "Enter The Division Responsible For This Server" \
+         9 40 "$X509_OU" 2> /tmp/x509ou
+  X509_OU=`cat /tmp/x509ou`;
+  if [ ! "$X509_CN" ];then
+    X509_CN="$X509_O ($X509_L - $X509_ST)";
+  fi;
+  if [ ! "$X509_EMAIL" ];then
+    X509_EMAIL="info@$DOM_ADDR";
+  fi;
+  dialog --backtitle "$BT" --clear --title "X.509 CA Setup (Name)" \
+         --inputbox "Name To Appear On The Certificate" \
+         9 40 "$X509_CN" 2> /tmp/x509cn
+  X509_CN=`cat /tmp/x509cn`;
+  dialog --backtitle "$BT" --clear --title "X.509 CA Setup (Email Address)" \
+         --inputbox "Email Address Appearing On The Certificate" \
+         9 40 "$X509_EMAIL" 2> /tmp/x509email
+  X509_EMAIL=`cat /tmp/x509email`;
+
+  MAX_NET=${#INT_IFACE[@]};
+  for ((cnt=1;$cnt <= $MAX_NET;cnt=$cnt+1));do 
+    if [ "${INT_MAC[$cnt]}" != "" ];then
+      dialog --backtitle "$BT" --clear --title "IP Address (${INT_NAME[$cnt]})" \
+             --inputbox "Server IP Address For ${INT_NAME[$cnt]}" \
+             9 40 "${IP_ADDR[$cnt]}" 2> /tmp/ipaddr
+      IP_ADDR[$cnt]=`cat /tmp/ipaddr`;
+      if [ "${IP_ADDR[$cnt]}" == "0.0.0.0" ];then
+        SN_ADDR[$cnt]=32;
+      fi;
+      dialog --backtitle "$BT" --clear --title "Subnet Bits (${INT_NAME[$cnt]})" \
+               --inputbox "Subnet Mask In Form nn For ${INT_NAME[$cnt]}" \
+             9 40 "${SN_ADDR[$cnt]}" 2> /tmp/snaddr
+      SN_ADDR[$cnt]=`cat /tmp/snaddr`;
+      dialog --backtitle "$BT" --clear --title "DHCP Start Address (${INT_NAME[$cnt]})" \
+             --inputbox "Input The DHCP Start Address For ${INT_NAME[$cnt]}" \
+             9 40 "${IP_SDHCP[$cnt]}" 2> /tmp/sdhcp
+      IP_SDHCP[$cnt]=`cat /tmp/sdhcp`
+      dialog --backtitle "$BT" --clear --title "DHCP End Address (${INT_NAME[$cnt]})" \
+             --inputbox "Input The DHCP End Address For ${INT_NAME[$cnt]}" \
+             9 40 "${IP_EDHCP[$cnt]}" 2> /tmp/edhcp
+      IP_EDHCP[$cnt]=`cat /tmp/edhcp`
+      if [ "${IP_SDHCP[$cnt]}" == "" ] || [ "${IP_SDHCP[$cnt]}" == "-" ] || [ "${IP_EDHCP[$cnt]}" == "" ] || [ "${IP_EDHCP[$cnt]}" == "-" ];then
+        IP_SDHCP[$cnt]="-"
+        IP_EDHCP[$cnt]="-"
+      fi;
+      echo "IP Interface ${INT_NAME[$cnt]} ${IP_ADDR[$cnt]} ${SN_ADDR[$cnt]} eth${INT_IFACE[$cnt]} ${IP_SDHCP[$cnt]} ${IP_EDHCP[$cnt]}   ${INT_MAC[$cnt]}" >> /tmp/netsentry.conf
+    fi;
+    if [ "$cnt" == "$VLAN_PHY" ] && [ "${INT_MAC[$VLAN_PHY]}" ];then
+      Config_INT;
+    fi;
+  done;
+
+  /usr/bin/dialog --backtitle "$BT" --title "Domain Controller"\
+      --yesno "Is This Server A Domain Controller" 6 35  
+  DOMC=$?
+  if [ $DOMC == "0" ];then
+    echo "FileServer Controler U S" >> /tmp/netsentry.conf          
+    OSLEVEL="65";
+    DTYPE="USER";
+    DOM_DC="";
+    DOM_ADS="";
+    if [ -e /etc/.install ];then
+      DOM_WG=$DOM_ADDR;
+     else
+      if [ "$DOM_WG" == "" ];then
+        DOM_WG=`echo $X509_O |tr a-z A-Z`;
+      fi;
+      dialog --backtitle "$BT" --clear --title "Workgroup/Domain To Join" \
+             --inputbox "Enter The Domain/Workgroup To Join To" \
+             9 40 "$DOM_WG" 2> /tmp/dom_wg
+      DOM_WG=`cat /tmp/dom_wg |tr a-z A-Z`
+      if [ ! "$NB_NAME" ];then
+        NB_NAME=`echo $HN_ADDR |tr a-z A-Z`;
+      fi;
+      dialog --backtitle "$BT" --clear --title "Netbios Name" \
+             --inputbox "Enter The Netbios Name Of The Server" \
+             9 40 "$NB_NAME" 2> /tmp/dom_nb
+      NB_NAME=`cat /tmp/dom_nb |tr a-z A-Z`;
+    fi;
+   else
+     /usr/bin/dialog --backtitle "$BT" --title "Domain Member"\
+         --yesno "Is This Server A Domain Member" 6 35  
+    DOMM=$?
+    if [ $DOMM == "0" ];then
+      OSLEVEL="5";
+      if [ "$DOM_ADS" == "" ];then
+        DOM_ADS=`echo $DOM_ADDR |tr a-z A-Z`;
+      fi;
+      if [ "$DOM_WG" == "" ];then
+        DOM_WG=`echo $X509_O |tr a-z A-Z`;
+      fi;
+      dialog --backtitle "$BT" --clear --title "Workgroup/Domain To Join" \
+             --inputbox "Enter The Domain/Workgroup To Join To" \
+             9 40 "$DOM_WG" 2> /tmp/dom_wg
+      dialog --backtitle "$BT" --clear --title "ADS Realm" \
+             --inputbox "Enter The ADS Realm If Using ADS" \
+             9 40 "$DOM_ADS" 2> /tmp/dom_ads
+      DOM_ADS=`cat /tmp/dom_ads  |tr a-z A-Z`
+      if [ "$DOM_ADS" != "" ];then
+        dialog --backtitle "$BT" --clear --title "ADS Domain Controlers" \
+               --inputbox "Enter A Space Seperated List Of Domain Controllers (PDC, BDC)" \
+               9 40 "$DOM_DC" 2> /tmp/dom_dc
+        DOM_DC=`cat /tmp/dom_dc  |tr a-z A-Z`
+       else
+        DOM_DC="";
+      fi;
+      DOM_WG=`cat /tmp/dom_wg |tr a-z A-Z`
+      if [ "$DOM_ADS" != "" ];then
+        DTYPE="ADS";
+        (cat <<EOF
+FileServer Option ADSServer $DOM_DC
+FileServer Option ADSRealm $DOM_ADS
+EOF
+) >> /tmp/netsentry.conf
+       else
+        DTYPE="DOMAIN";
+      fi;
+     else
+      DOM_DC="";
+      DOM_ADS="";
+      DOM_WG=$DOM_ADDR;
+      OSLEVEL="65";
+      DTYPE="USER";
+    fi;
+  fi;
+  if [ ! "$NB_NAME" ];then
+    NB_NAME=`echo $HN_ADDR |tr a-z A-Z`;
+  fi;
+ else
+  RELOAD=0;
+  MAX_NET=${#INT_IFACE[@]};
+  for ((cnt=1;$cnt <= $MAX_NET;cnt=$cnt+1));do 
+    if [ "${INT_MAC[$cnt]}" != "" ];then
+      echo "IP Interface ${INT_NAME[$cnt]} ${IP_ADDR[$cnt]} ${SN_ADDR[$cnt]} eth${INT_IFACE[$cnt]} ${IP_SDHCP[$cnt]} ${IP_EDHCP[$cnt]} ${INT_BWIN[$cnt]} ${INT_BWOUT[$cnt]} ${INT_MAC[$cnt]} ${INT_GW[$cnt]}" >> /tmp/netsentry.conf
+    fi;
+  done;
+  MAX_VLAN=${#VLAN[@]};
+  for ((cnt=1;$cnt <= $MAX_VLAN;cnt=$cnt+1));do 
+    if [ "${VLAN[1]}" ];then
+      echo "IP Interface ${INT_NAMEV[$cnt]} ${IP_ADDRV[$cnt]} ${SN_ADDRV[$cnt]} eth${INT_PARV[$cnt]}.${VLAN[$cnt]} ${IP_SDHCPV[$cnt]} ${IP_EDHCPV[$cnt]} ${INT_BWINV[$cnt]} ${INT_BWOUTV[$cnt]} 00:00:00:00:00:00 ${INT_GWV[$cnt]}" >> /tmp/netsentry.conf
+    fi;
+  done;
+  MAX_ALIAS=${#ALIAS[@]};
+  for ((cnt=1;$cnt <= $MAX_ALIAS;cnt=$cnt+1));do 
+    if [ "${ALIAS[$cnt]}" ];then
+      echo "IP Interface ${INT_NAMEA[$cnt]} ${IP_ADDRA[$cnt]} ${SN_ADDRA[$cnt]} ${ALIAS[$cnt]} - -   00:00:00:00:00:00 " >> /tmp/netsentry.conf
+    fi;
+  done;
+  if [ "$DOMC" = "0" ];then
+    echo "FileServer Controler U S" >> /tmp/netsentry.conf
+  fi;
+  if [ "$DOM_ADS" != "" ];then
+    (cat <<EOF
+FileServer Option ADSServer $DOM_DC
+FileServer Option ADSRealm $DOM_ADS
+EOF
+) >> /tmp/netsentry.conf
+  fi;
+fi;
+
+if [ "$DNS_SERV1" ];then
+  echo "IP SysConf PrimaryDns $DNS_SERV1" >> /tmp/netsentry.conf
+fi;
+if [ "$DNS_SERV2" ];then
+  echo "IP SysConf SecondaryDns $DNS_SERV2" >> /tmp/netsentry.conf
+fi;
+if [ "$WINS_SERV1" ];then
+  echo "IP SysConf PrimaryWins $WINS_SERV1" >> /tmp/netsentry.conf
+fi;
+if [ "$WINS_SERV2" ];then
+  echo "IP SysConf SecondaryWins $WINS_SERV2" >> /tmp/netsentry.conf
+fi;
+if [ "$DNS_MX1" ];then
+  echo "Email MailExchange1 $DNS_MX1" >> /tmp/netsentry.conf
+fi;
+if [ "$DNS_MX2" ];then
+  echo "Email MailExchange2 $DNS_MX2" >> /tmp/netsentry.conf
+fi;
+if [ "$DYN_SERV" ];then
+  echo "DNS DynServ $DYN_SERV" >> /tmp/netsentry.conf
+fi;
+if [ "$DYN_ZONE" ];then
+  echo "DNS DynZone $DYN_ZONE" >> /tmp/netsentry.conf
+fi;
+if [ "$DYN_KEY" ];then
+  echo "DNS SmartKey $DYN_KEY" >> /tmp/netsentry.conf
+fi;
+
+(cat <<EOF
+IP Modem ComPort $MDM_PORT
+IP Modem Speed $MDM_SPEED
+IP Modem FlowControl $MDM_FLW
+IP Modem Connection $MDM_CONN
+IP Modem Init1 $MDM_Init1
+IP Modem Init2 $MDM_Init2
+IP Modem DialString $MDM_DSTR
+IP Modem Number $MDM_NUM
+IP Modem Username $MDM_UN
+IP Modem Password $MDM_PW
+IP Modem MTU $MDM_MTU
+IP Modem Address $MDM_ADDR
+IP Modem Gateway $MDM_GW
+IP Modem IdleTimeout $MDM_TOUT
+IP Modem Holdoff $MDM_HO
+IP Modem Maxfail $MDM_MF
+EOF
+) >> /tmp/netsentry.conf
+
+if [ ! "$NB_NAME" ];then
+  NB_NAME=`echo $HN_ADDR |tr a-z A-Z`;
+fi;
+
+sed -e "s/IP SysConf External .*/IP SysConf External $FWALL_EXT/" \
+    -e "s/DNS Hostname .*/DNS Hostname $HN_ADDR/" \
+    -e "s/DNS Domain .*/DNS Domain $DOM_ADDR/" \
+    -e "s/FileServer Config netbios name = .*/FileServer Config netbios name = $NB_NAME/" \
+    -e "s/FileServer Option Domain .*/FileServer Option Domain $DOM_WG/" \
+    -e "s/FileServer Config os level .*/FileServer Config os level = $OSLEVEL/" \
+    -e "s/FileServer Option Security .*/FileServer Option Security $DTYPE/" \
+    -e "s/Email Domain .*/Email Domain $DOM_ADDR/" \
+    -e "s/Email Smarthost .*/Email Smarthost $SMTP_FWD/" \
+    -e "s/IP SysConf NTPServer .*/IP SysConf NTPServer $NTP_SERV/" \
+    -e "s/IP SysConf Nexthop .*/IP SysConf Nexthop $GW_ADDR/" \
+    -e "s/X509 Config Country .*/X509 Config Country $X509_C/" \
+    -e "s/X509 Config State .*/X509 Config State $X509_ST/" \
+    -e "s/X509 Config City .*/X509 Config City $X509_L/" \
+    -e "s/X509 Config Company .*/X509 Config Company $X509_O/" \
+    -e "s/X509 Config Division .*/X509 Config Division $X509_OU/" \
+    -e "s/X509 Config Name .*/X509 Config Name $X509_CN/" \
+    -e "s/X509 Config Email .*/X509 Config Email $X509_EMAIL/" \
+    -e "s/X509 Config Locked .*/X509 Config Locked true/" \
+    -e "s/^Serial .*/Serial $SERIAL/" \
+    $config_file |grep -vEf /etc/reconf >> /tmp/netsentry.conf
+
+if [ ! -e /etc/netsentry-version ] && [ -e /etc/.install ];then
+  cp /install/netsentry-version /etc/netsentry-version
+fi;
+
+sed -e "s/IP_ADDR=.*/IP_ADDR=\"${IP_ADDR[1]}\";/" -e "s/SN_ADDR=.*/SN_ADDR=\"${SN_ADDR[1]}\";/" \
+    -e "s/HN_ADDR=.*/HN_ADDR=\"$HN_ADDR\";/" -e "s/DOM_ADDR=.*/DOM_ADDR=\"$DOM_ADDR\";/" \
+    /etc/netsentry-version > /tmp/netsentry-version
+
+(cat <<EOF
+IP_ADDR[1]="${IP_ADDR[1]}";
+SN_ADDR[1]="${SN_ADDR[1]}";
+IP_SDHCP[1]="${IP_SDHCP[1]}";
+IP_EDHCP[1]="${IP_EDHCP[1]}";
+INT_BWIN[1]="${INT_BWIN[1]}";
+INT_BWOUT[1]="${INT_BWOUT[1]}";
+INT_MAC[1]="${INT_MAC[1]}";
+INT_NAME[1]="${INT_NAME[1]}";
+INT_IFACE[1]="${INT_IFACE[1]}";
+VLAN[1]="${VLAN[1]}";
+IP_ADDRV[1]="${IP_ADDRV[1]}";
+SN_ADDRV[1]="${SN_ADDRV[1]}";
+IP_SDHCPV[1]="${IP_SDHCPV[1]}";
+IP_EDHCPV[1]="${IP_EDHCPV[1]}";
+INT_BWINV[1]="${INT_BWINV[1]}";
+INT_BWOUTV[1]="${INT_BWOUTV[1]}";
+INT_NAMEV[1]="${INT_NAMEV[1]}";
+INT_PARV[1]="${INT_PARV[1]}";
+VLAN[2]="${VLAN[2]}";
+IP_ADDRV[2]="${IP_ADDRV[2]}";
+SN_ADDRV[2]="${SN_ADDRV[2]}";
+IP_SDHCPV[2]="${IP_SDHCPV[2]}";
+IP_EDHCPV[2]="${IP_EDHCPV[2]}";
+INT_BWINV[2]="${INT_BWINV[2]}";
+INT_BWOUTV[2]="${INT_BWOUTV[2]}";
+INT_NAMEV[2]="${INT_NAMEV[2]}";
+INT_PARV[2]="${INT_PARV[2]}";
+IP_ADDR[2]="${IP_ADDR[2]}";
+SN_ADDR[2]="${SN_ADDR[2]}";
+IP_SDHCP[2]="${IP_SDHCP[2]}";
+IP_EDHCP[2]="${IP_EDHCP[2]}";
+INT_BWIN[2]="${INT_BWIN[2]}";
+INT_BWOUT[2]="${INT_BWOUT[2]}";
+INT_MAC[2]="${INT_MAC[2]}";
+INT_NAME[2]="${INT_NAME[2]}";
+INT_IFACE[2]="${INT_IFACE[2]}";
+NTP_SERV="$NTP_SERV";
+X509_C="$X509_C";
+X509_ST="$X509_ST";
+X509_L="$X509_L";
+X509_O="$X509_O";
+X509_OU="$X509_OU";
+X509_CN="$X509_CN";
+X509_EMAIL="$X509_EMAIL";
+DOM_ADDR="$DOM_ADDR";
+HN_ADDR="$HN_ADDR";
+SMTP_FWD="$SMTP_FWD";
+NB_NAME="$NB_NAME";
+OSLEVEL="$OSLEVEL";
+DOM_WG="$DOM_WG";
+DTYPE="$DTYPE";
+DOM_ADS="$DOM_ADS";
+DOM_DC="$DOM_DC";
+GW_ADDR="$GW_ADDR";
+DOMC="$DOMC";
+DNS_SERV1="$DNS_SERV1";
+DNS_SERV2="$DNS_SERV2";
+WINS_SERV1="$WINS_SERV1";
+WINS_SERV2="$WINS_SERV2";
+DYN_SERV="$DYN_SERV";
+DYN_ZONE="$DYN_ZONE";
+DYN_KEY="$DYN_KEY";
+DNS_MX1="$DNS_MX1";
+DNS_MX2="$DNS_MX2";
+VLAN_PHY="$VLAN_PHY";
+MDM_PORT="$MDM_PORT";
+MDM_SPEED="$MDM_SPEED";
+MDM_FLW="$MDM_FLW";
+MDM_CONN="$MDM_CONN";
+MDM_Init1="$MDM_Init1";
+MDM_Init2="$MDM_Init2";
+MDM_DSTR="$MDM_DSTR";
+MDM_NUM="$MDM_NUM";
+MDM_UN="$MDM_UN";
+MDM_PW="$MDM_PW";
+MDM_MTU="$MDM_MTU";
+MDM_ADDR="$MDM_ADDR";
+MDM_GW="$MDM_GW";
+MDM_TOUT="$MDM_TOUT";
+MDM_HO="$MDM_HO";
+MDM_MF="$MDM_MF";
+FWALL_INT="$FWALL_INT";
+FWALL_EXT="$FWALL_EXT";
+DEL_DNS="0";
+EOF
+) > /tmp/netsentry-sysvars
+
+if [ -e /etc/.install ];then
+  /sbin/ip addr add dev ethA $IP_ADDR/$SN_ADDR >/dev/null 2>&1
+  /usr/bin/hostname $HN_ADDR >/dev/null 2>&1
+  /bin/domainname $DOM_ADDR >/dev/null 2>&1
+
+  (cat <<EOF
+domain $DOM_ADDR
+search $DOM_ADDR
+nameserver 127.0.0.1
+EOF
+) > /etc/resolv.conf
+
+  (cat <<EOF
+$IP_ADDR            $HN_ADDR.$DOM_ADDR $HN_ADDR
+127.0.0.1           localhost
+EOF
+) > /etc/hosts
+  mv /tmp/netsentry-version /etc/
+  mv /tmp/netsentry-sysvars /etc/
+fi;
+
+if [ ! -e /etc/.install ] && [ ! "$1" ];then
+    /usr/bin/dialog --backtitle "$BT" --title "Activate Changes"\
+        --yesno "Load the new configuration files." 6 35  
+    RELOAD=$?
+fi;
+
+if [ $RELOAD == "0" ] && [ ! -d /install ];then
+  if [ -e /var/run/safe_slapd.pid ] && [ ! -s /var/run/safe_slapd.pid ];then
+    MAXT=""
+    while [ -d /proc/`cat /var/run/safe_slapd.pid` ] && [ "${MAXT}" != "XXXXX" ];do
+      kill -9 `cat /var/run/safe_slapd.pid`
+      sleep 2
+      MAXT=${MAXT}X
+    done
+  fi;
+
+  if [ -e /var/run/slapd.pid ] && [ ! -s /var/run/slapd.pid ];then
+    MAXT=""
+    while [ -d /proc/`cat /var/run/slapd.pid` ] && [ "${MAXT}" != "XXXXX" ];do
+      kill -9 `cat /var/run/slapd.pid`
+      sleep 2
+      MAXT=${MAXT}X
+    done
+  fi;
+
+  if [ -e /var/run/nscd/nscd.pid ] && [ ! -s /var/run/nscd/nscd.pid ];then
+    MAXT=""
+    while [ -d /proc/`cat /var/run/nscd/nscd.pid` ] && [ "${MAXT}" != "XXXXX" ];do
+      kill -9 `cat /var/run/nscd/nscd.pid`
+      sleep 2
+      MAXT=${MAXT}X
+    done
+  fi;
+
+  #Set the basic NSS conf
+  diff /etc/nsswitch.conf.boot /etc/nsswitch.conf > /dev/null 2>&1
+  if [ $? != 0 ];then
+    if [ -e /etc/nsswitch.conf.boot ] && [ -e /etc/nsswitch.conf.ldap ];then
+      cp /etc/nsswitch.conf.boot /etc/nsswitch.conf
+    fi;
+  fi
+
+  mv /tmp/netsentry-version /etc/
+  cp /tmp/netsentry.conf /var/spool/apache/htdocs/ns/config/netsentry.conf
+  chown www.www /var/spool/apache/htdocs/ns/config/netsentry.conf
+  chmod 600 /var/spool/apache/htdocs/ns/config/netsentry.conf
+  if [ "$DEL_DNS" == "1" ];then
+    ls /var/spool/apache/htdocs/ns/config/zones/ |awk '{printf "rm /var/named/%s;rm /var/spool/apache/htdocs/ns/config/zones/%s\n",$1,$1}' |sh
+  fi;
+  if [ -e /etc/.needsreconf ];then
+    rm /etc/.needsreconf
+  fi;
+  /usr/sbin/genconf
+  /usr/sbin/servconfig
+  /usr/sbin/sqlpasswd
+fi;

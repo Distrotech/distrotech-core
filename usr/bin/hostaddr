@@ -1,0 +1,35 @@
+#!/usr/bin/perl
+
+use Socket;
+use Net::LDAPS;
+
+open(LCON,"/etc/ldap.conf");
+while(<LCON>) {
+  chop $_;
+  @centry=split(/\s/,$_);
+  if (@centry[0] eq "master_host") {
+    $host=@centry[1];
+  } elsif (@centry[0] eq "binddn") {
+    $binddn=@centry[1];
+  } elsif (@centry[0] eq "bindpw") {
+    $password=@centry[1];
+  }
+}
+
+$ldap = Net::LDAPS->new($host,port=>"636",verify => 'none',timeout => "10");
+$ldap->bind($binddn,password => $password);
+
+$iaddr = inet_aton(@ARGV[0]); # or whatever address
+$name  = gethostbyaddr($iaddr, AF_INET);
+
+if ($name eq "") {
+  $mesg = $ldap->search(base=>"ou=Hosts",filter =>"(&(cn=" . @ARGV[1] . ")(objectClass=ipHost))",attrs=>['cn']);
+  if ($mesg->count eq 0) {
+    $ldap->add("cn=" . @ARGV[1] . ",ou=Hosts",attr => ['objectclass'=> ['device','ipHost'],
+						       'cn'=> @ARGV[1],
+						       'ipHostNumber' => @ARGV[0]]);
+  } else {
+    $ldap->modify("cn=" . @ARGV[1] . ",ou=Hosts",replace => { 'ipHostNumber' => @ARGV[0] });
+    print "Updateing!!!\n";
+  }
+}

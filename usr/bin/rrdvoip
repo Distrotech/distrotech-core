@@ -1,0 +1,39 @@
+#!/usr/bin/php -d safe_mode=no
+<%
+
+include "/var/spool/apache/htdocs/cdr/auth.inc";
+include "/var/spool/apache/htdocs/cdr/func.inc";
+
+if (is_file("/var/spool/apache/htdocs/mrtg/voip.rrd")) {
+  $concalls=pg_query($db,"SELECT count(uniqueid) from cdr where calldate <= now() - interval '5 minutes' AND calldate + duration * interval '1 second' >= now() - interval '5 minutes' AND disposition = 'ANSWERED'");
+  $conval=pg_fetch_array($concalls,0);
+  $totcalls=pg_query($db,"SELECT count(uniqueid) from cdr where calldate >= now() - interval '5 minutes' AND disposition = 'ANSWERED' ");
+  $totval=pg_fetch_array($totcalls,0);
+  print "/usr/bin/rrdtool update /var/spool/apache/htdocs/mrtg/voip.rrd N:" . $conval[0] . ":" . $totval[0] . "\n";
+}
+
+if (is_file("/var/spool/apache/htdocs/mrtg/voip-tdm.rrd")) {
+  $concalls=pg_query($db,"SELECT count(uniqueid) from cdr where calldate <= now() - interval '5 minutes' AND calldate + duration * interval '1 second' >= now() - interval '5 minutes' AND disposition = 'ANSWERED' AND (channel ~ '" . $tchans[0] . "' OR dstchannel ~ '" . $tchans[0] . "');");
+  $conval=pg_fetch_array($concalls,0);
+  $totcalls=pg_query($db,"SELECT count(uniqueid) from cdr where calldate >= now() - interval '5 minutes' AND disposition = 'ANSWERED' AND (channel ~ '" . $tchans[0] . "' OR dstchannel ~ '" . $tchans[0] . "');");
+  $totval=pg_fetch_array($totcalls,0);
+  print "/usr/bin/rrdtool update /var/spool/apache/htdocs/mrtg/voip-tdm.rrd N:" . $conval[0] . ":" . $totval[0] . "\n";
+}
+
+if (is_file("/var/spool/apache/htdocs/mrtg/voip-lcr.rrd")) {
+  $concalls=pg_query($db,"SELECT count(uniqueid) from cdr where calldate <= now() - interval '5 minutes' AND calldate + duration * interval '1 second' >= now() - interval '5 minutes' AND disposition = 'ANSWERED' AND (channel ~ '" . $tchans[1] . "' OR dstchannel ~ '" . $tchans[1] . "');");
+  $conval=pg_fetch_array($concalls,0);
+  $totcalls=pg_query($db,"SELECT count(uniqueid) from cdr where calldate >= now() - interval '5 minutes' AND disposition = 'ANSWERED' AND (channel ~ '" . $tchans[1] . "' OR dstchannel ~ '" . $tchans[1] . "');");
+  $totval=pg_fetch_array($totcalls,0);
+  print "/usr/bin/rrdtool update /var/spool/apache/htdocs/mrtg/voip-lcr.rrd N:" . $conval[0] . ":" . $totval[0] . "\n";
+}
+
+if (is_file("/var/spool/apache/htdocs/mrtg/gsm.rrd")) {
+  $inuse=pg_query($db,"SELECT count(channel) from gsmchannels where inuse");
+  $fault=pg_query($db,"SELECT count(channel) from gsmchannels where faultcount > 0 AND outofservice > now()");
+  $totiu=pg_fetch_array($inuse,0);
+  $totfu=pg_fetch_array($fault,0);
+  print "/usr/bin/rrdtool update /var/spool/apache/htdocs/mrtg/gsm.rrd N:" . $totiu[0] . ":" . $totfu[0] . "\n";
+}
+
+%>

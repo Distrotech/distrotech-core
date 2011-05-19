@@ -1,0 +1,2 @@
+# Machine-generated file - use "minicom -s" to change parameters.
+pr port             /dev/ttyF0

@@ -1,0 +1,48 @@
+#!/usr/bin/perl
+
+use DBI;
+use Net::Ping;
+
+$user="radius";
+$password="";
+$hostname="";
+$driver="mysql";
+$database="radius";
+$port=3306;
+
+$dsn = "DBI:$driver:database=$database;host=$hostname;port=$port";
+$dbh = DBI->connect($dsn, $user, $password);
+
+
+#only worry about open sessions older than 15 minutes
+$time=time()-900;
+
+$asel=$dbh->prepare("SELECT UserName,NASIPAddress,FramedIPAddress,AcctUniqueID,AcctStartTime FROM radacct WHERE AcctStopTime = 0 AND AcctStartTime < FROM_UNIXTIME($time) ORDER BY AcctStartTime");
+$asel->execute();
+
+$ping=Net::Ping->new("icmp");
+
+while ( @row = $asel->fetchrow_array ) {
+  #Check For Duplicate IP's
+
+  $dup=$dbh->prepare("SELECT COUNT(*) FROM radacct WHERE NASIPAddress='@row[1]' AND AcctUniqueID != '@row[3]' AND AcctStopTime = 0");
+  $dup->execute();
+  ($dupcnt)=$dup->fetchrow_array;
+  if ($dupcnt ne "0") {
+    $del=$dbh->prepare("UPDATE radacct SET AcctStopTime=NOW() WHERE AcctUniqueID='@row[3]'");
+    $del->execute();  
+#  } else {
+#    if ($nasup{@row[1]} eq "") {
+#      $nasup{@row[1]}=$ping->ping(@row[1]);
+#    }
+#    if ($nasup{@row[1]}) {
+#      if (! $ping->ping(@row[2])) {
+#        $del=$dbh->prepare("UPDATE radacct SET AcctStopTime=NOW() WHERE AcctUniqueID='@row[3]'");
+#        $del->execute();  
+#      }
+#    }
+  }
+}
+
+$ping->close();
+

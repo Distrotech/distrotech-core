@@ -1,0 +1,16 @@
+#!/bin/bash
+
+ulimit -n 4096
+
+if [ "$1" ];then
+  if [ -e /etc/dovecot-$1.conf ];then
+    if [ ! -x /usr/sbin/dovecot-$1 ];then
+       ln -s /usr/sbin/dovecot /usr/sbin/dovecot-$1
+    fi;
+    /usr/sbin/dovecot-$1 -c /etc/dovecot-$1.conf
+   else
+    echo "NOT CONFIGURED"
+  fi;
+ else
+  /usr/sbin/dovecot
+fi;

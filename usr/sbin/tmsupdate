@@ -1,0 +1,15 @@
+#!/usr/bin/php -d safe_mode=no
+<%
+include_once "/var/spool/apache/htdocs/cdr/auth.inc";
+
+$getbill=on;
+$ddat=getdate();
+$_POST['date']=$ddat['mon'] . "/" . $ddat['mday'];
+
+if ($argv[1] > 0) {
+  $dateinfo=getdate(time()-86400*$argv[1]);
+  $lgetbdate[0]=$dateinfo['year'] . "-" . $dateinfo['mon'] . "-" . $dateinfo['mday'] . " 00:00:00";
+}
+
+include "/var/spool/apache/htdocs/cdr/func.inc";
+%>

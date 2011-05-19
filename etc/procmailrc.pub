@@ -1,0 +1,7 @@
+MAILDIR=/var/spool/mail/shared/.Administrators/
+DEFAULT=$MAILDIR
+UMASK=0007
+
+:0 H
+* (Envelope-To):.*\<astfax@.*
+"/var/spool/mail/shared/.Incoming Faxes/"

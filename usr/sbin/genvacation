@@ -1,0 +1,15 @@
+#!/bin/bash
+
+if [ -e "/var/home/$1/respond.txt" ];then
+  if [ ! -e "/var/home/$1/.forward" ] || [ ! -e "/var/home/$1/.vacation.db" ];then
+    su - $1 -c "/usr/bin/vacation -i"
+    (cat <<EOF
+$1,"|/usr/bin/vacation -m respond.txt $1"
+EOF
+    )>/var/home/$1/.forward
+  fi;
+ else
+  if [ -e "/var/home/$1/.forward" ];then
+    rm "/var/home/$1/.forward"
+  fi;  
+fi;

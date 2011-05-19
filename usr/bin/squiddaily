@@ -1,0 +1,6 @@
+#!/bin/bash
+/usr/bin/squid -k rotate
+/usr/bin/sleep 30
+DAY=`date +%Y%m%d%H%M`
+/usr/bin/nice -n 20 /usr/bin/calamaris -d 100 -P 60 -r 100 -s -t 20 -p new -u -f squid -R 25 -U K -m -o \
+  /usr/local/squid/logs/$DAY.rep /var/log/squid/access.log.0 |/usr/sbin/sendmail root

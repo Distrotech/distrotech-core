@@ -1,0 +1,8 @@
+#!/usr/bin/php -d safe_mode=no
+<%
+
+include "/var/spool/apache/htdocs/cdr/auth.inc";
+pg_query("UPDATE gsmchannels SET inuse='f',faultcount='0',outofservice=now()");
+pg_query("UPDATE inuse SET cleared='t'");
+pg_query("DELETE FROM inuse USING call WHERE call.uniqueid=inuse.uniqueid  AND cleared");
+%>

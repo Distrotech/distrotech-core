@@ -1,0 +1,5 @@
+HP4200
+  :lp=192.168.25.144%9100
+  :sd=/var/spool/lpd/HP4200
+  :if=/var/spool/lpd/lpd_filter.HP4200
+

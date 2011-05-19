@@ -1,0 +1,89 @@
+#!/bin/bash
+
+#    Copyright (C) 2002  <Gregory Hinton Nietsky>
+#    Copyright (C) 2005  <ZA Telecomunications>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+
+#Auto Probe PCI/PCMCIA
+ACTION=add
+PCI_CLASS=0
+PCI_ID=0:0
+PCI_SLOT=0:0.0
+PCI_SLOT_NAME=0:0.0
+PCI_SUBSYS_ID=0:0
+export ACTION PCI_CLASS PCI_ID PCI_SLOT PCI_SLOT_NAME PCI_SUBSYS_ID
+for PCI_DEVICE in /sys/bus/pci/devices/*; do
+  set `echo $PCI_DEVICE | sed -e 's/\([^:]*\):\(.*\):\(.*\)\.\(.*\)/\1 \2 \3 \4/'`
+  PCI_SLOT_NAME=$2:$3.$4
+  PCI_CLASS="`cat $PCI_DEVICE/class`"
+  PCI_CLASS=${PCI_CLASS#0x}
+  vendor_id=`cat $PCI_DEVICE/vendor`
+  device_id=`cat $PCI_DEVICE/device`
+  PCI_ID="${vendor_id#0x}:${device_id#0x}"
+  sub_vendor_id=`cat $PCI_DEVICE/subsystem_vendor`
+  sub_device_id=`cat $PCI_DEVICE/subsystem_device`
+  PCI_SUBSYS_ID="${sub_vendor_id#0x}:${sub_device_id#0x}"
+  /sbin/hotplug pci
+done
+
+#Load SATA/SCSI Disks On Install
+if [ -e /etc/.install ] && [ "`lsmod |grep scsi_mod`" ];then
+  if [ "`lsmod |grep mptbase`" ];then
+    modprobe mptscsih
+  fi;
+  modprobe sd_mod
+fi;
+
+#for module in `lspci -nm |awk -F\" '{printf "grep -E \"%s.*%s\" /lib/modules/\`uname -r\`/modules.pcimap\n",$4,$6}' |sh |awk '{print $1}' |sort |uniq |sed -e "y/-/_/" `;do
+#  if [ "`lsmod |grep -E "^$module"`" == "" ];then
+#    modprobe $module
+#    if [ "$module" == "mptbase" ];then
+#      modprobe mptscsih
+#      modprobe mptlan
+#    fi;
+#  fi;
+#done
+
+#Auto Probe Connected USB Devices
+ACTION=add
+PRODUCT=0/0/0
+export ACTION PRODUCT
+for device in /sys/bus/usb/devices/[0-9]*; do
+  devlink=`readlink -f $device`
+  DEVPATH=${devlink#/sys}
+  if [ -f $devlink/../idVendor ]; then
+    PRODUCT="$(cat $devlink/../idVendor)/$(cat $devlink/../idProduct)/$(cat $devlink/../bcdDevice)"
+    for I in "/etc/hotplug.d/usb/"*.hotplug; do
+      if [ -f $I ]; then
+        test -x $I && $I $1 ;
+      fi
+    done
+  fi
+done
+
+#ISA PNP Devices
+/etc/rc.d/rc.pnp
+
+#Input Devices
+/etc/rc.d/rc.input
+
+#16bit PCMCIA Cards
+if [ "`lsmod | grep pcmcia_core`" ];then
+  /sbin/cardmgr > /dev/null 2>&1
+fi;
