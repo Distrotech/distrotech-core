@@ -1,0 +1,15 @@
+ALTER TABLE queue_log ADD data1 varchar(100);
+ALTER TABLE queue_log ADD data2 varchar(100);
+ALTER TABLE queue_log ADD data3 varchar(100);
+ALTER TABLE queue_log ADD data4 varchar(100);
+ALTER TABLE queue_log ADD data5 varchar(100);
+ALTER TABLE queue_log add eventdate TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL;
+UPDATE queue_log set eventdate = time from information_schema.columns where table_catalog='asterisk' and table_name='queue_log' AND (column_name = 'time') AND data_type = 'timestamp with time zone';
+UPDATE queue_log SET data1=split_part(data,'|',1),data2=split_part(data,'|',2),data3=split_part(data,'|',3),data4=split_part(data,'|',4),data5=split_part(data,'|',5);
+UPDATE queue_log SET eventdate=TIMESTAMP WITH TIME ZONE 'epoch' + time * interval '1 second' from information_schema.columns where table_catalog='asterisk' and table_name='queue_log' AND (column_name = 'time') AND data_type != 'timestamp with time zone';
+ALTER TABLE queue_log DROP time;
+ALTER TABLE queue_log RENAME eventdate to time;
+ALTER TABLE queue_table ADD setqueuevar varchar(8) default 'yes';
+ALTER TABLE queue_table RENAME autologout TO autopausedelay;
+ALTER TABLE cdr ADD linkedid varchar(80);
+UPDATE cdr SET linkedid=uniqueid WHERE linkedid is NULL;

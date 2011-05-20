@@ -1,0 +1,20 @@
+CREATE TABLE sogolog (
+    tstamp timestamp with time zone DEFAULT now(),
+    "hour" integer,
+    http200 integer,
+    http304 integer,
+    http502 integer,
+    http503 integer,
+    httpother integer,
+    mailsent integer,
+    mailimap integer
+);
+ALTER TABLE public.sogolog OWNER TO exchange;
+CREATE TABLE user_shares (
+    from_user character varying(100) NOT NULL,
+    to_user character varying(100) NOT NULL,
+    dummy character(1)
+);
+ALTER TABLE public.user_shares OWNER TO exchange;
+ALTER TABLE ONLY user_shares
+    ADD CONSTRAINT user_shares_key PRIMARY KEY (from_user, to_user);

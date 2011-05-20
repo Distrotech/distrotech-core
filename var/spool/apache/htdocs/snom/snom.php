@@ -226,6 +226,8 @@ if ($domain != "") {
     if ($exten != "") {
       print "phone_name&: exten-" . $exten . "\n";
       print "user_symmetrical_rtp1&: on\n";
+      print "use_srtp1&: on\n";
+      print "user_savp1&: optional\n";
       if ($dtmfmode == "info") {
         print "user_dtmf_info1&: on\n";
       } else {
