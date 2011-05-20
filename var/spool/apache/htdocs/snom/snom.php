@@ -47,7 +47,7 @@ $suser=ldap_get_attributes($ds,$auth_ures);
 $pwlen=8;
 $getphoneq="SELECT name,secret,fullname,register.value,usermode.value,nat,dtmfmode,vlanid.value,nodnd.value,
                    (name=secret OR length(secret) != " . $pwlen . " OR secret='' OR secret IS NULL OR
-                    secret !~ '[0-9]' OR secret !~ '[a-z]' OR secret !~ '[A-Z]')
+                    secret !~ '[0-9]' OR secret !~ '[a-z]' OR secret !~ '[A-Z]'),encryption
               FROM users 
                 LEFT OUTER JOIN astdb AS nodnd ON (nodnd.family=name AND nodnd.key='CDND') 
                 LEFT OUTER JOIN astdb AS register ON (register.family=name AND register.key='REGISTRAR') 
@@ -63,7 +63,7 @@ if (pg_num_rows($getphone) == 0) {
   }
 }
 
-list($exten,$pass,$name,$domain,$usermode,$nat,$dtmfmode,$vlantag,$dndsetting,$pwchange)=pg_fetch_array($getphone,0);
+list($exten,$pass,$name,$domain,$usermode,$nat,$dtmfmode,$vlantag,$dndsetting,$pwchange,$encrypt)=pg_fetch_array($getphone,0);
 
 if ($pwchange == "t") {
   if (! isset($agi)) {
@@ -226,8 +226,13 @@ if ($domain != "") {
     if ($exten != "") {
       print "phone_name&: exten-" . $exten . "\n";
       print "user_symmetrical_rtp1&: on\n";
-      print "use_srtp1&: on\n";
-      print "user_savp1&: optional\n";
+      if (($encrypt == "yes") || ($encrypt == "32bit")) {
+        print "use_srtp1&: on\n";
+        print "user_savp1&: optional\n";
+      } else {
+        print "use_srtp1&: off\n";
+        print "user_savp1&: off\n";
+      }
       if ($dtmfmode == "info") {
         print "user_dtmf_info1&: on\n";
       } else {

@@ -81,10 +81,16 @@ function createexten($mac,$phonetype,$prefix,$start,$tdmport) {
       $newexten="'" . $autovars['DefaultPrefix'] . "'||lpad('" . $cno . "',2,0)";
       $newepass=randpwgen(8);
 
+      if ($phonetype == "SNOM") {
+        $encrypt="yes";
+      } else {
+        $encrypt="no";
+      }
+
       $exaddq="INSERT INTO users (context,name,defaultuser,mailbox,secret,password,usertype,
-                                       fullname,email,callgroup,pickupgroup,qualify) VALUES (
+                                       fullname,email,callgroup,pickupgroup,qualify,encryption) VALUES (
                                        '6'," . $newexten . "," . $newexten . "," . $newexten . ",'" . $newepass . "'," . $newexten . "
-                                       ,'0','Exten '||" . $newexten . ",'','1','1','yes')";
+                                       ,'0','Exten '||" . $newexten . ",'','1','1','yes','" . $encrypt . "')";
       pg_query($db,$exaddq);
       pg_query($db,"DELETE FROM astdb where family=" . $newexten);
       pg_query($db,"INSERT INTO astdb (family,key,value) SELECT " . $newexten . ",'TOUT',value FROM astdb WHERE family='Setup' AND key='Timeout'");

@@ -230,6 +230,12 @@ if ((isset($pbxupdate)) && ($pbxupdate == "Save Changes")) {
     $canreinvite="no";
   }
 
+  if ($encryption == "on") {
+    $encryption="yes";
+  } else {
+    $encryption="no";
+  }
+
   if ($t38pt_udptl == "on") {
     $t38pt_udptl="yes,redundancy";
   } else {
@@ -363,7 +369,7 @@ if ((isset($pbxupdate)) && ($pbxupdate == "Save Changes")) {
                                  canreinvite='$canreinvite',qualify='$qualify',allow='$codecs',activated='$activated',language='" . $language . "',
                                  callgroup='$cgroup',pickupgroup='$pgroup',insecure='$insecure',h323prefix='$h323prefix',simuse='$simuse',tariff='$tariff',
                                  h323gkid='$h323gkid',h323permit='$h323permit',h323neighbor='$h323neighbor'$pwcng,
-                                 t38pt_udptl='$t38pt_udptl'
+                                 t38pt_udptl='$t38pt_udptl',encryption='$encryption'
                                 WHERE name='" . $_POST['exten'] . "'");
 
 
@@ -390,7 +396,7 @@ $qgetdata=pg_query($db,"SELECT key,value FROM astdb WHERE family='" . $_POST['ex
 $qconsdata=pg_query($db,"SELECT context,count FROM console WHERE mailbox = '" . $_POST['exten'] . "'");
 
 $qgetudata=pg_query($db,"SELECT nat,dtmfmode,fullname,email,canreinvite,qualify,password,allow,callgroup,pickupgroup,insecure,
-                                h323permit,h323gkid,h323prefix,h323neighbor,ipaddr,language,secret,usertype,activated,simuse,tariff,t38pt_udptl FROM users WHERE name='" . $_POST['exten'] . "'");
+                                h323permit,h323gkid,h323prefix,h323neighbor,ipaddr,language,secret,usertype,activated,simuse,tariff,t38pt_udptl,encryption FROM users WHERE name='" . $_POST['exten'] . "'");
 
 
 $udata=pg_fetch_array($qgetudata,0);
@@ -441,6 +447,7 @@ $activated=$udata[19];
 $simuse=$udata[20];
 $tariff=$udata[21];
 $t38pt_udptl=$udata[22];
+$encryption=$udata[23];
 
 $conscont=$consdata[0];
 $conscount=$consdata[1];
@@ -1418,6 +1425,10 @@ if ($SUPER_USER == 1) {
 <TR CLASS=list-color2>
   <TD onmouseover=myHint.show('ES39') ONMOUSEOUT=myHint.hide()><%print _("Allow T.38 Support");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=t38pt_udptl <%if ($t38pt_udptl != "no") {print "CHECKED";}%>></TD>
+</TR>
+<TR CLASS=list-color1>
+  <TD onmouseover=myHint.show('ES39') ONMOUSEOUT=myHint.hide()><%print _("SRTP Encryption");%></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=encryption <%if ($encryption != "no") {print "CHECKED";}%>></TD>
 </TR>
 </TABLE>
 </DIV>
