@@ -81,8 +81,8 @@ function createexten($mac,$phonetype,$prefix,$start,$tdmport) {
       $newexten="'" . $autovars['DefaultPrefix'] . "'||lpad('" . $cno . "',2,0)";
       $newepass=randpwgen(8);
 
-      if ($phonetype == "SNOM") {
-        $encrypt="try";
+      if (($phonetype == "SNOM") || ($phonetype == "POLYCOM") || (substr($phonetype,0,3) == "IP_")) {
+        $encrypt="yes";
       } else {
         $encrypt="no";
       }
