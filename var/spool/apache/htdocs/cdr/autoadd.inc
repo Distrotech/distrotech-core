@@ -82,7 +82,7 @@ function createexten($mac,$phonetype,$prefix,$start,$tdmport) {
       $newepass=randpwgen(8);
 
       if ($phonetype == "SNOM") {
-        $encrypt="yes";
+        $encrypt="try";
       } else {
         $encrypt="no";
       }
