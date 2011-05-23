@@ -230,12 +230,6 @@ if ((isset($pbxupdate)) && ($pbxupdate == "Save Changes")) {
     $canreinvite="no";
   }
 
-  if ($encryption == "on") {
-    $encryption="yes";
-  } else {
-    $encryption="no";
-  }
-
   if ($t38pt_udptl == "on") {
     $t38pt_udptl="yes,redundancy";
   } else {
@@ -1411,24 +1405,32 @@ if ($SUPER_USER == 1) {
   </TD>
 </TR>
 <TR CLASS=list-color1>
+  <TD onmouseover=myHint.show('ES39') ONMOUSEOUT=myHint.hide()><%print _("SRTP Encryption");%></TD>
+  <TD>
+    <SELECT NAME=encryption>
+      <OPTION VALUE="no">None</OPTION>
+      <OPTION VALUE="yes"<%if ($encryption == "yes") {print " SELECTED";}%>><%print _("Enforce (80bit Auth Tag)");%></OPTION>
+      <OPTION VALUE="yes"<%if ($encryption == "yes,32bit") {print " SELECTED";}%>><%print _("Enforce (32bit Auth Tag)");%></OPTION>
+      <OPTION VALUE="try"<%if ($encryption == "try") {print " SELECTED";}%>><%print _("Attempt (80bit Auth Tag)");%></OPTION>
+      <OPTION VALUE="try,32bit"<%if ($encryption == "try,32bit") {print " SELECTED";}%>><%print _("Attempt (32bit Auth Tag)");%></OPTION>
+    </SELECT>
+  </TD>
+</TR>
+<TR CLASS=list-color2>
   <TD onmouseover=myHint.show('ES37') ONMOUSEOUT=myHint.hide()><%print _("Allow Peer To Peer Connections (Reinvite)");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=canreinvite <%if ($canreinvite == "yes") {print "CHECKED";}%>></TD>
 </TR>
-<TR CLASS=list-color2>
+<TR CLASS=list-color1>
   <TD onmouseover=myHint.show('ES39') ONMOUSEOUT=myHint.hide()><%print _("Send Nat Keep Alive Packets");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=qualify <%if ($qualify == "yes") {print "CHECKED";}%>></TD>
 </TR>
-<TR CLASS=list-color1>
+<TR CLASS=list-color2>
   <TD onmouseover=myHint.show('ES39') ONMOUSEOUT=myHint.hide()><%print _("Pass DDI To Extension");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=DDIPASS <%if ($origdata["DDIPASS"] == "1") {print "CHECKED";}%>></TD>
 </TR>
-<TR CLASS=list-color2>
+<TR CLASS=list-color1>
   <TD onmouseover=myHint.show('ES39') ONMOUSEOUT=myHint.hide()><%print _("Allow T.38 Support");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=t38pt_udptl <%if ($t38pt_udptl != "no") {print "CHECKED";}%>></TD>
-</TR>
-<TR CLASS=list-color1>
-  <TD onmouseover=myHint.show('ES39') ONMOUSEOUT=myHint.hide()><%print _("SRTP Encryption");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=encryption <%if ($encryption != "no") {print "CHECKED";}%>></TD>
 </TR>
 </TABLE>
 </DIV>

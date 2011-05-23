@@ -227,10 +227,15 @@ if ($domain != "") {
       print "phone_name&: exten-" . $exten . "\n";
       print "user_symmetrical_rtp1&: on\n";
       if ($encrypt != "no") {
-        print "use_srtp1&: on\n";
+        print "user_srtp1&: on\n";
         print "user_savp1&: optional\n";
+	if (stristr($exten,"32bit") === FALSE) {
+          print "user_auth_tag1&: off\n";
+        } else {
+          print "user_auth_tag1&: on\n";
+	}
       } else {
-        print "use_srtp1&: off\n";
+        print "user_srtp1&: off\n";
         print "user_savp1&: off\n";
       }
       if ($dtmfmode == "info") {
