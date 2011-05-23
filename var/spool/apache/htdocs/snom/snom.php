@@ -47,7 +47,8 @@ $suser=ldap_get_attributes($ds,$auth_ures);
 $pwlen=8;
 $getphoneq="SELECT name,secret,fullname,register.value,usermode.value,nat,dtmfmode,vlanid.value,nodnd.value,
                    (name=secret OR length(secret) != " . $pwlen . " OR secret='' OR secret IS NULL OR
-                    secret !~ '[0-9]' OR secret !~ '[a-z]' OR secret !~ '[A-Z]'),encryption
+                    secret !~ '[0-9]' OR secret !~ '[a-z]' OR secret !~ '[A-Z]'),
+		   case when (encryption_taglen = '32') then encryption||',32bit' else encryption end
               FROM users 
                 LEFT OUTER JOIN astdb AS nodnd ON (nodnd.family=name AND nodnd.key='CDND') 
                 LEFT OUTER JOIN astdb AS register ON (register.family=name AND register.key='REGISTRAR') 

@@ -8,7 +8,8 @@ $mac=strtoupper($mac);
 $pwlen=8;
 $getports="SELECT users.name,proxy.value,users.fullname,users.secret,users.nat,ptype.value,callgroup,
                   dgroup.value,lndir.value,(name=secret OR length(secret) != " . $pwlen . " OR secret='' OR 
-                    secret IS NULL OR secret !~ '[0-9]' OR secret !~ '[a-z]' OR secret !~ '[A-Z]'),encryption
+                   secret IS NULL OR secret !~ '[0-9]' OR secret !~ '[a-z]' OR secret !~ '[A-Z]'),
+                  case when (encryption_taglen = '32') then encryption||',32bit' else encryption end
              FROM astdb AS mac LEFT OUTER JOIN astdb AS proxy ON (proxy.family=mac.family AND proxy.key='REGISTRAR') 
                LEFT OUTER JOIN astdb AS ptype ON (ptype.family=mac.family AND ptype.key='PTYPE')
                LEFT OUTER JOIN users ON (name=mac.family)

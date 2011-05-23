@@ -359,11 +359,18 @@ if ((isset($pbxupdate)) && ($pbxupdate == "Save Changes")) {
 <%
   }
 
+  $encdat=explode(",",$encryption);
+  if ($encdat[1] ==  "32bit") {
+    $enctaglen="32";
+  } else {
+    $enctaglen="80";
+  }
+
   pg_query($db,"UPDATE users SET nat='$nat',dtmfmode='$dtmfmode',fullname='$fullname',email='$email',
                                  canreinvite='$canreinvite',qualify='$qualify',allow='$codecs',activated='$activated',language='" . $language . "',
                                  callgroup='$cgroup',pickupgroup='$pgroup',insecure='$insecure',h323prefix='$h323prefix',simuse='$simuse',tariff='$tariff',
                                  h323gkid='$h323gkid',h323permit='$h323permit',h323neighbor='$h323neighbor'$pwcng,
-                                 t38pt_udptl='$t38pt_udptl',encryption='$encryption'
+                                 t38pt_udptl='$t38pt_udptl',encryption='$encryption',encryption_taglen='$enctaglen'
                                 WHERE name='" . $_POST['exten'] . "'");
 
 
@@ -389,8 +396,11 @@ $qgetdata=pg_query($db,"SELECT key,value FROM astdb WHERE family='" . $_POST['ex
 
 $qconsdata=pg_query($db,"SELECT context,count FROM console WHERE mailbox = '" . $_POST['exten'] . "'");
 
-$qgetudata=pg_query($db,"SELECT nat,dtmfmode,fullname,email,canreinvite,qualify,password,allow,callgroup,pickupgroup,insecure,
-                                h323permit,h323gkid,h323prefix,h323neighbor,ipaddr,language,secret,usertype,activated,simuse,tariff,t38pt_udptl,encryption FROM users WHERE name='" . $_POST['exten'] . "'");
+$qgetudata=pg_query($db,"SELECT nat,dtmfmode,fullname,email,canreinvite,qualify,password,allow,callgroup,pickupgroup,
+                                insecure,h323permit,h323gkid,h323prefix,h323neighbor,ipaddr,language,secret,usertype,
+                                activated,simuse,tariff,t38pt_udptl,
+                                case when (encryption_taglen = '32') then encryption||',32bit' else encryption end
+                              FROM users WHERE name='" . $_POST['exten'] . "'");
 
 
 $udata=pg_fetch_array($qgetudata,0);
