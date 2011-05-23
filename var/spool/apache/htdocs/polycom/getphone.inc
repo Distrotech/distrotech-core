@@ -8,7 +8,7 @@ $mac=strtoupper($mac);
 $pwlen=8;
 $getports="SELECT users.name,proxy.value,users.fullname,users.secret,users.nat,ptype.value,callgroup,
                   dgroup.value,lndir.value,(name=secret OR length(secret) != " . $pwlen . " OR secret='' OR 
-                    secret IS NULL OR secret !~ '[0-9]' OR secret !~ '[a-z]' OR secret !~ '[A-Z]')
+                    secret IS NULL OR secret !~ '[0-9]' OR secret !~ '[a-z]' OR secret !~ '[A-Z]'),encryption
              FROM astdb AS mac LEFT OUTER JOIN astdb AS proxy ON (proxy.family=mac.family AND proxy.key='REGISTRAR') 
                LEFT OUTER JOIN astdb AS ptype ON (ptype.family=mac.family AND ptype.key='PTYPE')
                LEFT OUTER JOIN users ON (name=mac.family)
@@ -36,7 +36,7 @@ if (pg_num_rows($uports) == 0) {
     $uports=pg_query($db,$getports);
   }
 }
-list($exten,$proxy,$dname,$passwd,$pnat,$ptype,$callgroup,$dirgroup,$lnsort,$pwchange)=pg_fetch_array($uports,$port);
+list($exten,$proxy,$dname,$passwd,$pnat,$ptype,$callgroup,$dirgroup,$lnsort,$pwchange,$encryption)=pg_fetch_array($uports,$port);
 if ($pwchange == "t") {
   if (! isset($agi)) {
     require_once("/var/lib/asterisk/agi-bin/phpagi/phpagi-asmanager.php");

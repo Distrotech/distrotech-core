@@ -15,6 +15,19 @@ if (($ptype == "IP_601") || ($ptype == "IP_600")){
   $linecnt=2;
 }
 
+if ($encryption ==  "no") {
+  $srtp=0;
+  $aes_32=0;
+  $encoffer=0;
+  $encforce=0;
+} else {
+  $srtp=1;
+  $encoffer=1;
+  $encdat=explode(",",$encryption);
+  $encforce= ($encdat[0] == "yes") ? 1 : 0;
+  $aes_32= ($encdat[1] == "32bit") ? 1 : 0;
+}
+
 %><<%print "?"%>xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <!-- Example Per-phone Configuration File -->
 <!-- $Revision: 2.1.2 $  $Date: 2007/07/28 17:05:46 $ -->
@@ -157,5 +170,16 @@ if (($ptype == "IP_601") || ($ptype == "IP_600")){
     <TCP_IP>
       <SNTP tcpIpApp.sntp.daylightSavings.enable="0"/>
     </TCP_IP>
+    <security sec.tagSerialNo="0">
+      <SRTP
+        sec.srtp.enable="<%print $srtp;%>"
+        sec.srtp.leg.enable="<%print $srtp;%>"
+        sec.srtp.offer="<%print $encoffer;%>"
+        sec.srtp.require="<%print $encforce;%>"
+        sec.srtp.leg.allowLocalConf="0"
+        sec.srtp.offer.HMAC_SHA1_32="<%print ($aes_32 == "1") ? 1 : 0;%>"
+        sec.srtp.offer.HMAC_SHA1_80="<%print ($aes_32 == "1") ? 0 : 1;%>"
+      />
+    </security>
   </sip>
 </phone1>

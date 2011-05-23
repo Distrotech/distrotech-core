@@ -1410,7 +1410,7 @@ if ($SUPER_USER == 1) {
     <SELECT NAME=encryption>
       <OPTION VALUE="no">None</OPTION>
       <OPTION VALUE="yes"<%if ($encryption == "yes") {print " SELECTED";}%>><%print _("Enforce (80bit Auth Tag)");%></OPTION>
-      <OPTION VALUE="yes"<%if ($encryption == "yes,32bit") {print " SELECTED";}%>><%print _("Enforce (32bit Auth Tag)");%></OPTION>
+      <OPTION VALUE="yes,32bit"<%if ($encryption == "yes,32bit") {print " SELECTED";}%>><%print _("Enforce (32bit Auth Tag)");%></OPTION>
       <OPTION VALUE="try"<%if ($encryption == "try") {print " SELECTED";}%>><%print _("Attempt (80bit Auth Tag)");%></OPTION>
       <OPTION VALUE="try,32bit"<%if ($encryption == "try,32bit") {print " SELECTED";}%>><%print _("Attempt (32bit Auth Tag)");%></OPTION>
     </SELECT>
