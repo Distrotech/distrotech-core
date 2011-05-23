@@ -170,7 +170,7 @@ function openstatus(page) {
   window.open('<%print $_SESSION['server'];%>'+page,'StatusPage');
 }
 function openns() {
-  popup('<%print $_SESSION['server'];%>ns.html',650,900);
+  popup('<%print $_SESSION['server'];%>ns.html',650,950);
 }
 function openmclass(menu,classi) {
   document.loadpage.classi.value=classi;

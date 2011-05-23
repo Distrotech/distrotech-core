@@ -226,7 +226,7 @@ if ($domain != "") {
     if ($exten != "") {
       print "phone_name&: exten-" . $exten . "\n";
       print "user_symmetrical_rtp1&: on\n";
-      if (($encrypt == "yes") || ($encrypt == "32bit")) {
+      if ($encrypt != "no") {
         print "use_srtp1&: on\n";
         print "user_savp1&: optional\n";
       } else {
