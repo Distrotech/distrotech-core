@@ -78,7 +78,7 @@ if (isset($pbxupdate)) {
   $voipcbset=array("VoipFallover","NatAreaCode","AutoAuth","AutoLock","UNKDEF","DEFRECORD","DialAreaCode","AddExCLI",
              "AutoCLI","MaxAll","mISDNimm","mISDNrr","NoEnum","GSMRoute","GSMTrunk","LocalFwd","Default_9","REMDEF","NoOper","ADVPIN",
              "E1mfcr2_get_ani_first","E1mfcr2_allow_collect_calls","mfcr2_double_answer","E1mfcr2_immediate_accept",
-             "E1mfcr2_forced_relea","E1mfcr2_charge_call","PPDIS","PRIcrc4","DISADDI","NoBridge");
+             "E1mfcr2_forced_relea","E1mfcr2_charge_call","PPDIS","PRIcrc4","DISADDI","NoBridge","AddGroup");
 
   for($cbcnt=0;$cbcnt < count($voipcbset);$cbcnt++) {
     $cbval=$voipcbset[$cbcnt];
@@ -886,6 +886,10 @@ if ($origdata['FAXBOX'] == "") {
 <TR CLASS=list-color1>
   <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Require Extension Number With PIN");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=ADVPIN<%if ($origdata["ADVPIN"] == "1") {print " CHECKED";}%>></TD>
+</TR>
+<TR CLASS=list-color2>
+  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Add Billing Group To CLI (Inbound)");%></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=AddGroup<%if ($origdata["AddGroup"] == "1") {print " CHECKED";}%>></TD>
 </TR>
 </TABLE>
 </DIV>
