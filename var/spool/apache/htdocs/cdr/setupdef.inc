@@ -8,6 +8,7 @@ $vadmindef=array(
 	"AATimeout" => "30",
 	"ADVPIN" => "0",
 	"AddExCLI" => "1",
+	"AddGroup" => "1",
 	"AdminPass" => "1234",
 	"AreaCode" => "011",
 	"Attendant" => "0",
