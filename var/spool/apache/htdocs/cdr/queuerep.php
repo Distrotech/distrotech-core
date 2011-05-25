@@ -24,7 +24,7 @@ if ($ADMIN_USER != "admin") {
   return;
 }
 
-  $qlistq="SELECT name,description FROM queue_table";
+  $qlistq="SELECT name,CASE WHEN (description != '') THEN description ELSE name END FROM queue_table";
   if ($SUPER_USER != 1) {
     $qlistq.=" LEFT OUTER JOIN astdb AS bgrp ON ('Q'||name=bgrp.family AND bgrp.key='BGRP') WHERE " . $clogacl;
   }

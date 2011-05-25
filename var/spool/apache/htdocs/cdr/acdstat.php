@@ -132,12 +132,12 @@
      $rcnt++;
   }
 
-  $acdlistq="SELECT DISTINCT description,name from queue_log
+  $acdlistq="SELECT DISTINCT description,queuename from queue_log
                       left outer join queue_table on (queuename=name) ";
   if ($SUPER_USER != 1) {
     $acdlistq.="LEFT OUTER JOIN astdb AS bgrp ON ('Q'||name=bgrp.family AND bgrp.key='BGRP') ";
   }
-  $acdlistq.="where " . $acdls;
+  $acdlistq.="where queuename != 'NONE' AND " . $acdls;
   if ($SUPER_USER != 1) {
     $acdlistq.=" AND " . $clogacl;
   }
@@ -204,7 +204,7 @@ ACD Report For Period (<%print $time_year . "-" . str_pad($time_month,2,"0",STR_
                       where 
                         time > '" . $time_year . "-" . $time_month . "-" . $time_day ." " . $time_hour . ":" . $time_min . ":" . $time_sec . "' AND
                         time < '" . $mtime_year . "-" . $mtime_month . "-" . $mtime_day ." " . $mtime_hour . ":" . $mtime_min . ":" . $mtime_sec . "' AND
-                        queue_table.name = '" . $acd[1] . "' 
+                        queuename = '" . $acd[1] . "' 
                       group by description,queuename,event 
                       order by queue_log.queuename,event";
 //print $acdstatq . "<P><P>\n";
