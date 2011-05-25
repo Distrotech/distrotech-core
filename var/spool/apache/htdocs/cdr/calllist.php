@@ -72,7 +72,6 @@
   print "<TH ALIGN=LEFT CLASS=heading-body2>" . _("Download") . "</TH>";
   print "</TR>\n";
   $ccnt=0;
-  $toc=0;
  
 
   $rcnt=0;
@@ -81,38 +80,37 @@
   for($i=0;$i < pg_num_rows($getcdr);$i++) {
     $r=pg_fetch_row($getcdr,$i);
     $rem=$rcnt % 2;
-    print "<TR $bcolor[$rem]>";
 
-    print "  <TD>" . $r[0] . "&nbsp;&nbsp;</TD>\n";
-    print "  <TD>" . $r[1] . "&nbsp;&nbsp;</TD>\n";
-    print "  <TD>" . $r[2] . "&nbsp;&nbsp;</TD>\n";
-    print "  <TD";
     if ($r[4] < 10) {
       $r[4]="0" . $r[4];
     }
     if ($r[5] < 10) {
       $r[5]="0" . $r[5];
     }
+
     $r[3]=$r[3] . "-" . $r[4] . "-" . $r[5] . $r[6];
     $fname="/var/spool/asterisk/monitor/" . $r[3];
     if (is_file($fname)) {
+      print "<TR $bcolor[$rem]>";
+      print "  <TD>" . $r[0] . "&nbsp;&nbsp;</TD>\n";
+      print "  <TD>" . $r[1] . "&nbsp;&nbsp;</TD>\n";
+      print "  <TD>" . $r[2] . "&nbsp;&nbsp;</TD>\n";
+      print "  <TD";
+
       $fsize=gtime(ceil((((filesize($fname)-44)/1024)*24)/41));
       print ">" . $fsize . "</TD>\n";
       print "  <TD><embed src=\"/auth/getlog.php?logfile=" . urlencode($r[3]) . "\" autostart=false loop=false height=62 width=144 controls=console></TD>\n";
       print "  <TD><A HREF=/cdr/logdload/" . $r[3] . ">";
       print "<IMAGE SRC=/images/dload.png width=32 height=32 border=0></A></TD>\n";
-    } else {
-      print ">&nbsp;</TD>\n  <TD>No Recording</TD>\n  <TD>&nbsp</TD>\n";
+      print "</TD>\n</TR>\n";
+      $ccnt=$ccnt+$r[5];
+      $rcnt++;
     }
-    print "</TD>\n</TR>\n";
-    $ccnt=$ccnt+$r[5];
-    $rcnt++;
-    $toc=$toc+$r[2];
   }
 
   $rem=$rcnt % 2;
   $getprevq="SELECT cdr.uniqueid from cdr left outer join calllog on (cdr.channel=calllog.dstchannel) where 
-             calllog.uniqueid='" . $callid . "' order by calllog.uniqueid LIMIT 1";
+             calllog.uniqueid='" . $callid . "' AND cdr.uniqueid != '" . $callid . "' order by calllog.uniqueid LIMIT 1";
 //  print $getprevq . ";<P>";
   $getprev=pg_query($db,$getprevq);
   print "<TR " . $bcolor[$rem] . ">\n<TH COLSPAN=3 CLASS=heading-body>";
@@ -130,7 +128,7 @@
                left outer join cdr as cdr2 on (cdr.channel=cdr2.dstchannel) 
                left outer join calllog on (cdr.channel=calllog.dstchannel) 
              where (cdr2.calldate <= cdr.calldate + cdr.duration * interval '1 second' OR calllog.uniqueid is not null) AND
-                cdr.uniqueid = '" . $callid . "' order by calllog.uniqueid LIMIT 1"; 
+                cdr.uniqueid = '" . $callid . "' AND calllog.uniqueid != '" . $callid . "'  order by calllog.uniqueid LIMIT 1"; 
 //  print $getnextq . ";<P>";
   $getnext=pg_query($db,$getnextq);
   if (pg_num_rows($getnext) > 0) {
