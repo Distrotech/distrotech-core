@@ -46,6 +46,7 @@ $vadmindef=array(
 	"ExCode" => "",
 	"FAXBOX" => "",
 	"FAXT" => "",
+	"FollowDDI" => "1",
 	"FTrunk" => "NONE",
 	"FreePat" => "(^080)|(^101999$)",
 	"GSMFOPat" => "",
