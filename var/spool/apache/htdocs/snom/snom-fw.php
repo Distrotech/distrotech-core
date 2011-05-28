@@ -1,6 +1,6 @@
 <%
 $msubrel[7]="5";
-$mpatch[7]="15";
+$mpatch[7]="20";
 
 
 $uadata=explode(";",$_SERVER['HTTP_USER_AGENT']);
@@ -37,11 +37,11 @@ if (($sipver[0] < 5) && (is_file("snom" . $phone . "-5.5a-SIP-j.bin"))) {
   print "firmware: http://" . $SERVER_NAME . "/snom/snom" . $phone . "-ramdiskToJffs2-3.36-br.bin\n";
 } else if (($linver != $curver) && (is_file("snom" . $phone . "-3.38-l.bin")) && ($sipver[0] == "6")) {
   print "firmware: http://" . $SERVER_NAME . "/snom/snom" . $phone . "-3.38-l.bin\n";
-} else if (($msubrel[7] <= $sipver[1]) && ($mpatch[7] <= $sipver[2]) &&
-    ($linver == $curver) && ($nfsver == $fsver) && ($sipver[0] == "6")) {
-  print "firmware: http://" . $SERVER_NAME . "/snom/snom" . $phone . "-7.3.30-bf.bin\n";
 } else if ((($sipver[0] == "6") || ($sipver[0] == "5")) && (is_file("snom" . $phone . "-6.5.20-SIP-j.bin"))) {
   print "firmware: http://" . $SERVER_NAME . "/snom/snom" . $phone . "-6.5.20-SIP-j.bin\n";
+} else if (($msubrel[7] <= $sipver[1]) && ($mpatch[7] <= $sipver[2]) &&
+    ($linver == $curver) && ($nfsver == $fsver) && ($sipver[0] == "6")) {
+  print "firmware: http://" . $SERVER_NAME . "/snom/snom" . $phone . "-7.3.30-SIP-bf.bin\n";
 } else if (($sipver[0] == "7") && ($newver == 8) && (is_file($firmware_file))) {
   print "firmware: http://" . $SERVER_NAME . "/snom/" . $firmware_file . "\n";
 } else if (($newver == $sipver[0]) && ($newver > 6) && (is_file($firmware_file))) {
