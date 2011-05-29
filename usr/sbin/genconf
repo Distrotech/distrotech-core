@@ -556,6 +556,7 @@ __EOB__
        printf ZONE ("%-25s%s IN     %-5s 0 1 4569 %s.\n","_iax._udp",$dnsconf{'DefaultTTL'},"SRV",$fqdn);
        printf ZONE ("%-25s%s IN     %-5s 0 1 5060 %s.\n","_sip._udp",$dnsconf{'DefaultTTL'},"SRV",$fqdn);
        printf ZONE ("%-25s%s IN     %-5s 0 1 5060 %s.\n","_sip._tcp",$dnsconf{'DefaultTTL'},"SRV",$fqdn);
+       printf ZONE ("%-25s%s IN     %-5s 0 1 5061 %s.\n","_sips._tcp",$dnsconf{'DefaultTTL'},"SRV",$fqdn);
        printf ZONE ("%-25s%s IN     %-5s 0 1 3478 %s.\n","_stun._udp",$dnsconf{'DefaultTTL'},"SRV",$fqdn);
        close(ZONE);
        if (@words[2] ne "true") {
@@ -11019,6 +11020,7 @@ __EOB__
   printf ZONE ("%-25s%s IN     %-5s 0 1 4569 %s.\n","_iax._udp",$dnsconf{'DefaultTTL'},"SRV",$fqdn);
   printf ZONE ("%-25s%s IN     %-5s 0 1 5060 %s.\n","_sip._udp",$dnsconf{'DefaultTTL'},"SRV",$fqdn);
   printf ZONE ("%-25s%s IN     %-5s 0 1 5060 %s.\n","_sip._tcp",$dnsconf{'DefaultTTL'},"SRV",$fqdn);
+  printf ZONE ("%-25s%s IN     %-5s 0 1 5061 %s.\n","_sips._tcp",$dnsconf{'DefaultTTL'},"SRV",$fqdn);
   printf ZONE ("%-25s%s IN     %-5s 0 1 3478 %s.\n","_stun._udp",$dnsconf{'DefaultTTL'},"SRV",$fqdn);
 
   print DUP "update add wpad.$dnsconf{'Domain'}. $dnsconf{'DefaultTTL'} CNAME $fqdn.\n";
@@ -11278,6 +11280,7 @@ __EOB__
   printf ZONE ("%-25s%s IN     %-5s 0 1 4569 %s.\n","_iax._udp",$dnsconf{'DefaultTTL'},"SRV",$fqdn);
   printf ZONE ("%-25s%s IN     %-5s 0 1 5060 %s.\n","_sip._udp",$dnsconf{'DefaultTTL'},"SRV",$fqdn);
   printf ZONE ("%-25s%s IN     %-5s 0 1 5060 %s.\n","_sip._tcp",$dnsconf{'DefaultTTL'},"SRV",$fqdn);
+  printf ZONE ("%-25s%s IN     %-5s 0 1 5061 %s.\n","_sips._tcp",$dnsconf{'DefaultTTL'},"SRV",$fqdn);
   printf ZONE ("%-25s%s IN     %-5s 0 1 3478 %s.\n","_stun._udp",$dnsconf{'DefaultTTL'},"SRV",$fqdn);
   $ldom=$dnsconf{'Domain'};
 #  foreach $edns (@extdns) {
