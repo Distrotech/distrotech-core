@@ -291,5 +291,5 @@ objectclass     ( 1.3.6.1.4.1.4203.666.100.7
         DESC 'User Certificate Store'
     SUP top STRUCTURAL
         MUST ( uid $ cn $ userCertificate )
-        MAY ( certificateRequest $ certificateSign )
+        MAY ( certificateRequest $ certificateSign $ userPKCS12 $ userSMIMECertificate )
     )

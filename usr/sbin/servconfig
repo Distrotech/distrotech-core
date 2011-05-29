@@ -686,6 +686,9 @@ if [ ! -e networksentry-lite ];then
       echo -n "01" > /etc/openssl/serial
       touch /etc/openssl/index.txt
 
+      if [ -e /etc/openssl/voipca/ca.conf ];then
+        rm /etc/openssl/voipca/ca.conf
+      fi;
       if [ -e /etc/openssl/private/cakey.pem ];then
         /usr/bin/openssl req -x509 -new -days 3650 -out /etc/ipsec.d/cacerts/cacert.pem \
                              -key /etc/openssl/private/cakey.pem -config /etc/openssl/ca.conf -set_serial 0\
@@ -699,6 +702,9 @@ if [ ! -e networksentry-lite ];then
       fi;
      else
       if [ ! -e /etc/ipsec.d/cacerts/cacert.pem ];then
+        if [ -e /etc/openssl/voipca/ca.conf ];then
+          rm /etc/openssl/voipca/ca.conf
+        fi;
         /usr/bin/openssl req -x509 -new -out /etc/ipsec.d/cacerts/cacert.pem \
                              -key /etc/openssl/private/cakey.pem -set_serial 0\
                              -days 3650 -extensions v3_ca -batch >/dev/null 2>&1
@@ -737,6 +743,69 @@ if [ ! -e networksentry-lite ];then
     fi;
     Gen_CRL_Cert;
   fi;
+fi;
+
+if [ -e voipca.conf ] && [ -e /etc/openssl/voipca/ca.conf ];then
+  VOIPCAC=`diff voipca.conf /etc/openssl/voipca/ca.conf`
+ else
+  VOIPCAC="NO FILE";
+fi; 
+
+if [ "$VOIPCAC" ] && [ ! -e networksentry-lite ];then
+  voiptls -D
+  if [ -e /etc/openssl/voipca/ca.pem ];then
+    openssl ca -config /etc/openssl/ca.conf -batch -revoke /etc/openssl/voipca/ca.pem
+  fi;
+  rm -rf /etc/openssl/voipca
+  mkdir /etc/openssl/voipca
+  for cadir in misc certs newcerts private cacerts;do
+    if [ ! -d /etc/openssl/voipca/$cadir ];then
+      mkdir /etc/openssl/voipca/$cadir
+    fi;
+  done;
+  cp voipca.conf /etc/openssl/voipca/ca.conf
+
+  openssl genrsa 1024 > /etc/openssl/voipca/private/cakey.pem
+  chown root.root /etc/openssl/voipca/private/cakey.pem
+  chmod 600 /etc/openssl/voipca/private/cakey.pem
+  /usr/bin/openssl req -new -out /etc/openssl/voipca/ca.req \
+                       -key /etc/openssl/voipca/private/cakey.pem -config /etc/openssl/voipca/ca.conf 
+  /usr/bin/openssl ca -in /etc/openssl/voipca/ca.req -out /etc/openssl/voipca/ca.pem \
+                      -extensions ca_cert -config /etc/openssl/ca.conf -batch
+  echo -n "01" > /etc/openssl/voipca/serial
+  touch /etc/openssl/voipca/index.txt
+  ln -s /etc/openssl/voipca/ca.pem /etc/openssl/voipca/cacerts/`openssl x509 -in /etc/openssl/voipca/ca.pem  -noout -hash`.0
+  ln -s /etc/ipsec.d/cacerts/cacert.pem /etc/openssl/voipca/cacerts/`openssl x509 -in /etc/ipsec.d/cacerts/cacert.pem  -noout -hash`.0
+fi;
+
+if [ -e voipssl.conf ] && [ -e /etc/openssl/voipca/server.conf ];then
+  VOIPCAS=`diff voipssl.conf /etc/openssl/voipca/server.conf`
+ else
+  VOIPCAS="NO FILE";
+fi; 
+
+if [ "$VOIPCAS" ] && [ ! -e networksentry-lite ];then
+  cp voipssl.conf /etc/openssl/voipca/server.conf
+  if [ -e /etc/openssl/voipca/server.pem ];then
+    openssl ca -config /etc/openssl/voipca/ca.conf -batch -revoke /etc/openssl/voipca/server.pem
+  fi;
+  openssl genrsa 2048 > /etc/openssl/voipca/private/serverkey.pem
+  chown root.root /etc/openssl/voipca/private/serverkey.pem
+  chmod 600 /etc/openssl/voipca/private/serverkey.pem
+  /usr/bin/openssl req -new -out /etc/openssl/voipca/server.req \
+                       -key /etc/openssl/voipca/private/serverkey.pem -config /etc/openssl/voipca/ca.conf 
+  /usr/bin/openssl ca -in /etc/openssl/voipca/server.req -out /etc/openssl/voipca/server.pem \
+                      -config /etc/openssl/voipca/ca.conf -batch
+  /usr/bin/openssl x509 -in /etc/openssl/voipca/server.pem -out /etc/openssl/voipca/server.pem
+fi;
+
+if [ "$VOIPCAC" ] && [ ! -e networksentry-lite ];then
+  voiptls -C SNOM
+  voiptls -C POLYCOM
+  voiptls -C IP_500
+  voiptls -C IP_600
+  voiptls -C IP_601
+  voiptls -C IP_4000
 fi;
 
 if [ -e sysvars ] && [ -e /etc/netsentry-sysvars ];then

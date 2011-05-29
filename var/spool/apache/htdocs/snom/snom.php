@@ -48,7 +48,8 @@ $pwlen=8;
 $getphoneq="SELECT name,secret,fullname,register.value,usermode.value,nat,dtmfmode,vlanid.value,nodnd.value,
                    (name=secret OR length(secret) != " . $pwlen . " OR secret='' OR secret IS NULL OR
                     secret !~ '[0-9]' OR secret !~ '[a-z]' OR secret !~ '[A-Z]'),
-		   case when (encryption_taglen = '32') then encryption||',32bit' else encryption end
+		   case when (encryption_taglen = '32') then encryption||',32bit' else encryption end,
+                   transport
               FROM users 
                 LEFT OUTER JOIN astdb AS nodnd ON (nodnd.family=name AND nodnd.key='CDND') 
                 LEFT OUTER JOIN astdb AS register ON (register.family=name AND register.key='REGISTRAR') 
@@ -64,7 +65,7 @@ if (pg_num_rows($getphone) == 0) {
   }
 }
 
-list($exten,$pass,$name,$domain,$usermode,$nat,$dtmfmode,$vlantag,$dndsetting,$pwchange,$encrypt)=pg_fetch_array($getphone,0);
+list($exten,$pass,$name,$domain,$usermode,$nat,$dtmfmode,$vlantag,$dndsetting,$pwchange,$encrypt,$transport)=pg_fetch_array($getphone,0);
 
 if ($pwchange == "t") {
   if (! isset($agi)) {
@@ -187,9 +188,10 @@ for($gotring=0;$gotring <= 3;$gotring++) {
 }
 
 if ($domain != "") {
+  $proxy = ($transport == "tcp") ? $domain . ";transport=tcp" : $domain;
   if ($usermode == "0") {
     print "user_host1&: " . $domain . "\n";
-    print "user_outbound1&: " . $domain . "\n";
+    print "user_outbound1&: " . $proxy . "\n";
     if ($nat == "yes") {
       print "stun_server1&: " . $domain . "\n";
     } else {
@@ -197,7 +199,7 @@ if ($domain != "") {
     }
   } else {
     print "user_host1&: " . $domain . "\n";
-    print "user_outbound1&: " . $domain . "\n";
+    print "user_outbound1&: " . $proxy . "\n";
     if ($nat == "yes") {
       print "stun_server1&: " . $domain . "\n";
     } else {

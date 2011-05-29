@@ -4851,8 +4851,12 @@ sub printcaconf() {
   if (($caconf{'Locked'}) || ( ! -e "ca.conf" )) {
     open(CC,">ca.conf");
     chmod(0600,"ca.conf");
+    open(VCA,">voipca.conf");
+    chmod(0600,"voipcaca.conf");
     open(SCC,">server.conf");
     chmod(0600,"server.conf");
+    open(VCC,">voipssl.conf");
+    chmod(0600,"voipssl.conf");
     if ($dnsconf{'Hostname'} eq "") {
       $fqdn=$dnsconf{'Domain'};
     } else {
@@ -4891,6 +4895,36 @@ extendedKeyUsage       = 1.3.6.1.5.5.7.3.2
 extendedKeyUsage       = 1.3.6.1.5.5.7.3.1
 __EOB__
   close(SCC);
+
+print VCC<<__EOB__;
+HOME                   = .
+RANDFILE               = \$ENV::HOME/.rnd
+
+[ req ]
+default_bits           = 2048
+distinguished_name     = req_dn
+prompt                 = no
+encrypt_key            = no
+req_extensions         = v3_req
+default_md             = sha1
+
+[ req_dn ]
+C                      = $caconf{'Country'}
+ST                     = $caconf{'State'}
+L                      = $caconf{'City'}
+O                      = $caconf{'Company'}
+OU                     = $caconf{'Division'}
+CN                     = Network Sentry VOIP CA Of $caconf{'Company'}
+
+[ v3_req ]
+nsComment              = "Generated On Network Sentinel Solutions Firewall"
+subjectAltName         = DNS:$fqdn,email:root\@$fqdn,IP:$localip
+nsSslServerName        = $fqdn
+extendedKeyUsage       = 1.3.6.1.5.5.7.3.2
+extendedKeyUsage       = 1.3.6.1.5.5.7.3.1
+__EOB__
+  close(VCC);
+
     print CC<<__EOB__;
 HOME                   = .
 RANDFILE               = \$ENV::HOME/.rnd
@@ -5006,6 +5040,109 @@ extendedKeyUsage       = serverAuth,clientAuth,emailProtection
 authorityKeyIdentifier = keyid:always,issuer:always
 __EOB__
     close(CC);
+
+    print VCA<<__EOB__;
+HOME                   = .
+RANDFILE               = \$ENV::HOME/.rnd
+
+oid_section            = new_oids
+
+[ new_oids ]
+
+[ req ]
+default_bits           = 512
+distinguished_name     = req_distinguished_name
+attributes             = req_attributes
+prompt                 = no
+encrypt_key            = no
+req_extensions         = v3_req
+default_md             = sha1
+
+[ ca ]
+default_ca             = ca_func
+
+[ ca_func ]
+unique_subject         = yes
+default_days           = 1460
+dir                    = /etc/openssl/voipca
+certs                  = \$dir/certs
+database               = \$dir/index.txt
+new_certs_dir          = \$dir/newcerts
+certificate            = \$dir/ca.pem
+serial                 = \$dir/serial
+crl                    = \$dir/crl.pem
+private_key            = \$dir/private/cakey.pem
+RANDFILE               = \$dir/private/.rand
+default_crl_days       = 30
+default_bits           = 1024
+default_md             = sha1
+preserve               = no
+email_in_dn            = no
+policy                 = policy_match
+x509_extensions        = user_cert
+crl_extensions         = crl_ext
+copy_extensions        = copy
+
+[ policy_match ]
+countryName             = optional
+stateOrProvinceName     = optional
+localityName            = optional
+organizationName        = optional
+organizationalUnitName  = optional
+commonName              = supplied
+emailAddress            = optional
+
+[ req_distinguished_name ]
+C                      = $caconf{'Country'}
+ST                     = $caconf{'State'}
+L                      = $caconf{'City'}
+O                      = $caconf{'Company'}
+OU                     = $caconf{'Division'}
+CN                     = $caconf{'Name'} (VOIP)
+
+[ req_attributes ]
+#challengePassword      = A challenge password
+#challengePassword_min  = 4
+#challengePassword_max  = 20
+
+[ v3_req ]
+nsComment              = "Generated On Network Sentinel Solutions Firewall"
+subjectAltName         = DNS:$fqdn,email:root\@$fqdn,IP:$localip
+nsSslServerName        = $fqdn
+
+[ user_cert ]
+subjectKeyIdentifier   = hash
+basicConstraints       = CA:FALSE
+nsCertType             = client, email, server, objsign
+keyUsage               = nonRepudiation, digitalSignature, keyEncipherment
+authorityKeyIdentifier = keyid:always,issuer:always
+issuerAltName          = DNS:$fqdn,email:root\@$fqdn,IP:$localip
+
+[ ca_cert ]
+subjectKeyIdentifier   = hash
+basicConstraints       = CA:TRUE, pathlen:1
+nsCertType             = client, email, server, objsign, sslCA, emailCA, objCA
+keyUsage               = cRLSign,keyCertSign
+authorityKeyIdentifier = keyid:always,issuer:always
+issuerAltName          = DNS:$fqdn,email:root\@$fqdn,IP:$localip
+
+[ v3_ca ]
+#nsCaPolicyUrl
+nsSslServerName        = $fqdn
+subjectKeyIdentifier   = hash
+basicConstraints       = CA:TRUE, pathlen:2
+nsComment              = "Generated On Network Sentinel Solutions Firewall"
+nsCertType             = client, email, server, objsign, sslCA, emailCA, objCA
+keyUsage               = cRLSign,keyCertSign
+subjectAltName         = DNS:$fqdn,email:root\@$fqdn,IP:$localip
+authorityKeyIdentifier = keyid:always,issuer:always
+issuerAltName          = DNS:$fqdn,email:root\@$fqdn,IP:$localip
+extendedKeyUsage       = serverAuth,clientAuth,emailProtection
+
+[ crl_ext ]
+authorityKeyIdentifier = keyid:always,issuer:always
+__EOB__
+    close(VCA);
   }
 }
 
@@ -5637,7 +5774,7 @@ if ($sysconf{'External'} eq $sysconf{'Internal'}) {
 /sbin/iptables -t nat -A PREROUTING -j NATMAPI
 /sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p udp -s $localip --sport 5000 --dport 1024:65535
 /sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p udp -s $localip --sport 5060 --dport 1024:65535
-/sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p tcp -s $localip --sport 5060 --dport 1024:65535
+/sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p tcp -s $localip --sport 5060:5061 --dport 1024:65535
 /sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p udp -s $localip --sport 1718:1720 --dport 1024:65535
 /sbin/iptables -t nat -A POSTROUTING -j MANGLE -o ppp+
 /sbin/iptables -t nat -A POSTROUTING -j NATMAPO
@@ -5650,7 +5787,7 @@ __EOB__
 /sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 4569
 /sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 5000
 /sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 5060
-/sbin/iptables -A DEFPROXY -j DNAT -t nat -p tcp --to-destination $localip --sport 1024:65535 --dport 5060
+/sbin/iptables -A DEFPROXY -j DNAT -t nat -p tcp --to-destination $localip --sport 1024:65535 --dport 5060:5061
 /sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 10000:20000
 /sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 1718:1720
 
@@ -6014,14 +6151,14 @@ __EOB__
 
 /sbin/iptables -A VOIPIN -j ACCEPT -p udp $sfnew --dport 5000
 /sbin/iptables -A VOIPIN -j ACCEPT -p udp $sfnew --dport 5060
-/sbin/iptables -A VOIPIN -j ACCEPT -p tcp $sfnew --dport 5060
+/sbin/iptables -A VOIPIN -j ACCEPT -p tcp $sfnew --dport 5060:5061
 /sbin/iptables -A VOIPIN -j ACCEPT -p udp $sfnew --dport 4569
 /sbin/iptables -A VOIPIN -j ACCEPT -p udp $sfnew --dport 1719:1722
 /sbin/iptables -A VOIPIN -j ACCEPT -p udp $sfnew --dport 10000:20000
 
 /sbin/iptables -A VOIPOUT -j ACCEPT -p udp $sfnew --sport 5000
 /sbin/iptables -A VOIPOUT -j ACCEPT -p udp $sfnew --sport 5060
-/sbin/iptables -A VOIPOUT -j ACCEPT -p tcp $sfnew --sport 5060
+/sbin/iptables -A VOIPOUT -j ACCEPT -p tcp $sfnew --sport 5060:5061
 /sbin/iptables -A VOIPOUT -j ACCEPT -p udp $sfnew --sport 4569
 /sbin/iptables -A VOIPOUT -j ACCEPT -p udp $sfnew --sport 1719:1722
 /sbin/iptables -A VOIPOUT -j ACCEPT -p udp $sfnew --sport 10000:20000
@@ -6136,7 +6273,7 @@ print FW <<__EOB__;
 /sbin/iptables -t nat -A PREROUTING -j SIPMAP
 /sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p udp -s $localip --sport 5000 --dport 1024:65535
 /sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p udp -s $localip --sport 5060 --dport 1024:65535
-/sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p tcp -s $localip --sport 5060 --dport 1024:65535
+/sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p tcp -s $localip --sport 5060:5061 --dport 1024:65535
 /sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p udp -s $localip --sport 1718:1720 --dport 1024:65535
 /sbin/iptables -t nat -A POSTROUTING -j MANGLE -o ppp+
 /sbin/iptables -t nat -A POSTROUTING -j 3GNAT
@@ -6494,7 +6631,7 @@ __EOB__
   print FWP "#Allow SIP Out From Server\n";
   print FWP "/sbin/iptables -A EXTNAT -j $nat -t nat $rout-p udp $sfnew -s $localip/32 -d 0/0 --sport 5000 --dport 1024:65535\n\n";
   print FWP "/sbin/iptables -A EXTNAT -j $nat -t nat $rout-p udp $sfnew -s $localip/32 -d 0/0 --sport 5060 --dport 1024:65535\n\n";
-  print FWP "/sbin/iptables -A EXTNAT -j $nat -t nat $rout-p tcp $sfnew -s $localip/32 -d 0/0 --sport 5060 --dport 1024:65535\n\n";
+  print FWP "/sbin/iptables -A EXTNAT -j $nat -t nat $rout-p tcp $sfnew -s $localip/32 -d 0/0 --sport 5060:5061 --dport 1024:65535\n\n";
 
 #  $locallan=getnw(@idata[2],@idata[1]);
 #  $localname=join(" ",split(/_/,@idata[0]));
@@ -6941,7 +7078,7 @@ __EOB__
 #SIP
 /sbin/iptables -A SYSIN -j ACCEPT -p udp -m state --state NEW --sport 1024:65535 --dport 5000
 /sbin/iptables -A SYSIN -j ACCEPT -p udp -m state --state NEW --sport 1024:65535 --dport 5060
-/sbin/iptables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 5060
+/sbin/iptables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 5060:5061
 
 #H323
 /sbin/iptables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 1720:1722
@@ -7132,11 +7269,11 @@ __EOR__
   print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -s 0/0 --sport 1024:65535 --dport 4445\n";
   print FW "/sbin/iptables -A DEFIN -j ACCEPT -p udp $sfnew -s 0/0 --sport 1024:65535 --dport 5000\n";
   print FW "/sbin/iptables -A DEFIN -j ACCEPT -p udp $sfnew -s 0/0 --sport 1024:65535 --dport 5060\n";
-  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -s 0/0 --sport 1024:65535 --dport 5060\n";
+  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -s 0/0 --sport 1024:65535 --dport 5060:5061\n";
   print FW "/sbin/iptables -A DEFIN -j ACCEPT -p udp $sfnew -s 0/0 --sport 1024:65535 --dport 4569\n";
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p udp $sfnew -d 0/0 --sport 5000 --dport 1024:65535\n";
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p udp $sfnew -d 0/0 --sport 5060 --dport 1024:65535\n";
-  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfnew -d 0/0 --sport 5060 --dport 1024:65535\n";
+  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfnew -d 0/0 --sport 5060:5061 --dport 1024:65535\n";
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p udp $sfnew -d 0/0 --dport 4569 --sport 1024:65535\n\n";
 
   print FW "#Allow Remote H.323 Registrations\n";
@@ -7353,7 +7490,7 @@ __EOR__
       print FW "/sbin/iptables -I SIPOUT -j ACCEPT -p udp -o $fint -m state --state NEW,RELATED,ESTABLISHED --sport 10000:20000 -s $localip/32 --dport 1024:65535\n";
       print FW "/sbin/iptables -I SIPOUT -j ACCEPT -p udp -o $fint -m state --state NEW,ESTABLISHED --sport 5000 -s $localip/32 --dport 1024:65535\n";
       print FW "/sbin/iptables -I SIPOUT -j ACCEPT -p udp -o $fint -m state --state NEW,ESTABLISHED --sport 5060 -s $localip/32 --dport 1024:65535\n";
-      print FW "/sbin/iptables -I SIPOUT -j ACCEPT -p tcp -o $fint -m state --state NEW,ESTABLISHED --sport 5060 -s $localip/32 --dport 1024:65535\n";
+      print FW "/sbin/iptables -I SIPOUT -j ACCEPT -p tcp -o $fint -m state --state NEW,ESTABLISHED --sport 5060:5061 -s $localip/32 --dport 1024:65535\n";
       print FW "/sbin/iptables -I SIPIN -j VOIPIN -p udp -i $fint --sport 1024:65535 -d $localip/32\n";
     }
 #    print FW "#Flush VPN Table\n";
@@ -7504,7 +7641,7 @@ __EOB__
 /sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 4569
 /sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 5000
 /sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 5060
-/sbin/iptables -A DEFPROXY -j DNAT -t nat -p tcp --to-destination $localip --sport 1024:65535 --dport 5060
+/sbin/iptables -A DEFPROXY -j DNAT -t nat -p tcp --to-destination $localip --sport 1024:65535 --dport 5060:5061
 /sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 10000:20000
 /sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 1718:1720
 /sbin/iptables -A DEFPROXY -j EXTPROXY -t nat
@@ -7709,7 +7846,7 @@ _EOB_
   print FW "/sbin/iptables -A INPUT -j SIPIN\n";
   print FW "/sbin/iptables -A INPUT -j TARPIT -p udp --dport 5000 -m state --state ESTABLISHED\n";
   print FW "/sbin/iptables -A INPUT -j TARPIT -p udp --dport 5060 -m state --state ESTABLISHED\n";
-  print FW "/sbin/iptables -A INPUT -j TARPIT -p tcp --dport 5060 -m state --state ESTABLISHED\n";
+  print FW "/sbin/iptables -A INPUT -j TARPIT -p tcp --dport 5060:5061 -m state --state ESTABLISHED\n";
   print FW "/sbin/iptables -A INPUT -j TARPIT -m state --state NEW\n";
   print FW "/sbin/iptables -A TARPIT -j RETURN -p tcp --dport 3128\n";
   print FW "/sbin/iptables -A TARPIT -j RETURN -p tcp --dport 8080\n";
@@ -8457,8 +8594,8 @@ __EOS__
 
   #Set Rules To Allow IAX/SIP Requests
 #  /sbin/iptables -t nat -A SIPMAP -j DNAT \$INT_IN -p udp -s 0.0.0.0/0 -d \$EXT_IP --sport 1024:65535 --dport 5000 --to-destination $localip:5000
-#  /sbin/iptables -t nat -A SIPMAP -j DNAT \$INT_IN -p udp -s 0.0.0.0/0 -d \$EXT_IP --sport 1024:65535 --dport 5060 --to-destination $localip:5060
-#  /sbin/iptables -t nat -A SIPMAP -j DNAT \$INT_IN -p tcp -s 0.0.0.0/0 -d \$EXT_IP --sport 1024:65535 --dport 5060 --to-destination $localip:5060
+#  /sbin/iptables -t nat -A SIPMAP -j DNAT \$INT_IN -p udp -s 0.0.0.0/0 -d \$EXT_IP --sport 1024:65535 --dport 5060 --to-destination $localip
+#  /sbin/iptables -t nat -A SIPMAP -j DNAT \$INT_IN -p tcp -s 0.0.0.0/0 -d \$EXT_IP --sport 1024:65535 --dport 5060:5061 --to-destination $localip
 #  /sbin/iptables -t nat -A SIPMAP -j DNAT \$INT_IN -p udp -d \$EXT_IP --dport 10000:20000 -s 0/0 --sport 1024:65535 --to-destination $localip
 
   #Clear TOS Values on marked packets
@@ -13472,9 +13609,9 @@ sub printrctos() {
 /sbin/iptables -t mangle -A SYSINGRESS -j MARK --set-mark 0x101 -m mark --mark 0x102 -p udp -s 0/0 --sport 5000 --dport 1024:65535
 /sbin/iptables -t mangle -A SYSEGRESS -j MARK --set-mark 0x101 -m mark --mark 0x102 -p udp -d 0/0 --dport 5000 --sport 1024:65535
 
-/sbin/iptables -t mangle -A SYSTOS -j TOS -p tcp -d 0/0 --dport 5060 --sport 1024:65535 --set-tos Minimize-Delay
-/sbin/iptables -t mangle -A SYSINGRESS -j MARK --set-mark 0x101 -m mark --mark 0x102 -p tcp -s 0/0 --sport 5060 --dport 1024:65535
-/sbin/iptables -t mangle -A SYSEGRESS -j MARK --set-mark 0x101 -m mark --mark 0x102 -p tcp -d 0/0 --dport 5060 --sport 1024:65535
+/sbin/iptables -t mangle -A SYSTOS -j TOS -p tcp -d 0/0 --dport 5060:5061 --sport 1024:65535 --set-tos Minimize-Delay
+/sbin/iptables -t mangle -A SYSINGRESS -j MARK --set-mark 0x101 -m mark --mark 0x102 -p tcp -s 0/0 --sport 5060:5061 --dport 1024:65535
+/sbin/iptables -t mangle -A SYSEGRESS -j MARK --set-mark 0x101 -m mark --mark 0x102 -p tcp -d 0/0 --dport 5060:5061 --sport 1024:65535
 
 __EOB__
 
@@ -13790,10 +13927,9 @@ videosupport=yes
 mohinterpret=default
 mohsuggest=default
 encryption=try
-tcpenable=no
-tlsenable=no
+tcpenable=yes
 tcpbindaddr=$localip
-transport=udp
+transport=udp,tcp
 t38pt_udptl=yes,redundancy
 callcounter=yes
 faxdetect=yes
@@ -13804,6 +13940,15 @@ rtpholdtimeout=300
 alwaysauthreject=yes
 __EOF__
 
+if ( -d "/etc/openssl/voipca") {
+  print SC "tlscertfile=/etc/openssl/voipca/server.pem\n";
+  print SC "tlsprivatekey=/etc/openssl/voipca/private/serverkey.pem\n";
+  print SC "tlscapath=/etc/openssl/voipca/cacerts\n";
+  print SC "tlsenable=yes\n";
+  print SC "tlsbindaddr=$localip:5061\n";
+} else {
+  print SC "tlsenable=no\n";
+}
 
 if ( -e "/usr/lib/asterisk/modules-1.8/codec_g729.so") {
   print SC "allow=g729\n";
