@@ -180,6 +180,7 @@ if ($domain != "") {
   $proxy = ($transport == "udp" || $transport == "") ? $domain . ":" . $port : $domain . ":" . $port . ";transport=" . $transport;
   print "    <user_host idx=\"1\" perm=\"R\">" . $domain . "</user_host>\n";
   print "    <user_outbound idx=\"1\" perm=\"R\">" . $proxy . "</user_outbound>\n";
+  print "    <retry_after_failed_subscribe idx=\"1\" perm=\"R\">30</retry_after_failed_subscribe>\n";
   if ($nat == "yes") {
     print "    <stun_server idx=\"1\" perm=\"R\">" . $domain . "</stun_server>\n";
   } else {
