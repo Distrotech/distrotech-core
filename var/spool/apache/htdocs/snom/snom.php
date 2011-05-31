@@ -3,8 +3,6 @@ include "../cdr/auth.inc";
 include "../cdr/autoadd.inc";
 include "../ldap/ldapcon.inc";
 
-header('Content-type: text/xml');
-
 $mac=strtoupper($mac);
 
 $auth_uss=ldap_bind($ds,$LDAP_ROOT_DN,$LDAP_ROOT_PW);
