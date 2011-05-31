@@ -13932,7 +13932,7 @@ mohsuggest=default
 encryption=try
 tcpenable=yes
 tcpbindaddr=$localip
-transport=udp,tcp
+transport=udp,tcp,tls
 t38pt_udptl=yes,redundancy
 callcounter=yes
 faxdetect=yes
@@ -13949,6 +13949,9 @@ if ( -d "/etc/openssl/voipca") {
   print SC "tlscapath=/etc/openssl/voipca/cacerts\n";
   print SC "tlsenable=yes\n";
   print SC "tlsbindaddr=$localip:5061\n";
+#  print SC "tlsdontverifyserver=no\n";
+#  print SC "tlsverifyclient=yes\n";
+#  print SC "tlsclientmethod=tlsv1\n";
 } else {
   print SC "tlsenable=no\n";
 }
