@@ -9,7 +9,7 @@ print "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
     <dnd_on_code perm="R">*541</dnd_on_code>
     <dnd_off_code perm="R">*540</dnd_off_code>
     <utc_offset perm="R">7200</utc_offset>
-    <ntp_server perm="R">192.168.150.1</ntp_server>
+    <ntp_server perm="R"><%print $domain;%></ntp_server>
     <timezone perm="R">CAT+2</timezone>
     <challenge_response perm="R">off</challenge_response>
     <filter_registrar perm="!">off</filter_registrar>
