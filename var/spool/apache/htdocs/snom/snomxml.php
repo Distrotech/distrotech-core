@@ -21,7 +21,7 @@ print "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
 <%
 if ($sipver[0] >= 8) {%>
     <guess_number perm="R">on</guess_number>
-    <guess_start_length perm="R">2</guess_start_length>
+    <guess_start_length perm="R">5</guess_start_length>
     <ldap_predict_text perm="R">on</ldap_predict_text>
     <ldap_sort_results perm="R">on</ldap_sort_results>
 <%
