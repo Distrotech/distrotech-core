@@ -266,46 +266,46 @@ if ($phone != "300") {
         }
         for($lkey=$lastfk;$lkey<=$rdat[0]-1;$lkey++) {
   	  if (($lkey < 12) && ($kdef[$lkey] != "")) {
-            print "    <fkey idx=\"" . $lkey . "\" perm=\"R\">" . $kdef[$lkey] . "</fkey>\n";
+            print "    <fkey idx=\"" . $lkey . "\" context=\"active\" perm=\"R\">" . $kdef[$lkey] . "</fkey>\n";
             $kdone[$lkey]=1;
           } else {
-            print "    <fkey idx=\"" . $lkey . "\" perm=\"R\">line</fkey>\n";
+            print "    <fkey idx=\"" . $lkey . "\" context=\"active\" perm=\"R\">line</fkey>\n";
           }
         }
         $lastfk=$rdat[0]+1;
         if ($rdat[1] == "1") {
-          print "    <fkey idx=\"" . $rdat[0] . "\" perm=\"R\">line</fkey>\n";
+          print "    <fkey idx=\"" . $rdat[0] . "\" context=\"active\" perm=\"R\">line</fkey>\n";
         } else if ($rdat[1] == "700") {
-          print "    <fkey idx=\"" . $rdat[0] . "\" perm=\"R\">orbit 700</fkey>\n";
+          print "    <fkey idx=\"" . $rdat[0] . "\" context=\"active\" perm=\"R\">orbit 700</fkey>\n";
         } else if ((($rdat[1] > 700) && ($rdat[1] < 750)) || (($rdat[1] >= 900) && ($rdat[1] <= 999))) {
-          print "    <fkey idx=\"" . $rdat[0] . "\" perm=\"R\">dest " . $rdat[1] . "</fkey>\n";
+          print "    <fkey idx=\"" . $rdat[0] . "\" context=\"active\" perm=\"R\">dest " . $rdat[1] . "</fkey>\n";
         } else {
-          print "    <fkey idx=\"" . $rdat[0] . "\" perm=\"R\">";
-          print htmlentities("blf <sip:" . $rdat[1] . "@" . $domain . ";user=phone>|*8");
+          print "    <fkey idx=\"" . $rdat[0] . "\" context=\"active\" perm=\"R\">";
+          print "blf <sip:" . $rdat[1] . "@192.168.150.1;user=phone>|*8
           print "</fkey>\n";
         }
       }
       for($lkey=$lastfk;$lkey< 54;$lkey++) {
-          print "    <fkey idx=\"" . $lkey . "\" perm=\"R\">line</fkey>\n";
+          print "    <fkey idx=\"" . $lkey . "\" context=\"active\" perm=\"R\">line</fkey>\n";
       }
       for($kcnt=0;$kcnt<12;$kcnt++) {
         if (! $kdone[$kcnt]) {
           if ($kdef[$kcnt]) {
-            print "    <fkey idx=\"" . $kcnt . "\" perm=\"R\">" . $kdef[$kcnt] . "</fkey>\n";
+            print "    <fkey idx=\"" . $kcnt . "\" context=\"active\" perm=\"R\">" . $kdef[$kcnt] . "</fkey>\n";
           } else {
-            print "    <fkey idx=\"" . $kcnt . "\" perm=\"R\">line</fkey>\n";
+            print "    <fkey idx=\"" . $kcnt . "\" context=\"active\" perm=\"R\">line</fkey>\n";
           }
         }
       }
     }
   } else {
 %>
-    <fkey idx="0" perm="R">line</fkey>
-    <fkey idx="1" perm="R">line</fkey>
-    <fkey idx="2" perm="R">keyevent F_REDIAL</fkey>
-    <fkey idx="3" perm="R">keyevent F_DIRECTORY_SEARCH</fkey>
-    <fkey idx="4" perm="R">keyevent F_TRANSFER</fkey>
-    <fkey idx="5" perm="R">keyevent F_MUTE</fkey>
+    <fkey idx="0" context=\"active\" perm="R">line</fkey>
+    <fkey idx="1" context=\"active\" perm="R">line</fkey>
+    <fkey idx="2" context=\"active\" perm="R">keyevent F_REDIAL</fkey>
+    <fkey idx="3" context=\"active\" perm="R">keyevent F_DIRECTORY_SEARCH</fkey>
+    <fkey idx="4" context=\"active\" perm="R">keyevent F_TRANSFER</fkey>
+    <fkey idx="5" context=\"active\" perm="R">keyevent F_MUTE</fkey>
 <%
   }
 }
