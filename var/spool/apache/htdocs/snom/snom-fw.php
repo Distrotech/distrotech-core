@@ -28,10 +28,10 @@ if (($sipver[0] < 5) && (is_file("snom" . $phone . "-5.5a-SIP-j.bin"))) {
 } else if (($sipver[0] == 5) || (($sipver[0] == 6) && ($sipver[1] < 5)) || 
            (($sipver[0] == 6) && ($sipver[1] == 5) && ($sipver[2] < 20))) {
   print "firmware: http://" . $SERVER_NAME . "/snom/snom" . $phone . "-6.5.20-SIP-j.bin\n";
-} else if ((($sipver[1] == 7) && ($sipver[1] < 3)) || (($sipver[1] == 7) && ($sipver[1] == 3) && ($sipver[2] < 33)) ||
+} else if ((($sipver[0] == 7) && ($sipver[1] < 3)) || (($sipver[0] == 7) && ($sipver[1] == 3) && ($sipver[2] < 33)) ||
            (($sipver[0] == 6) && ($sipver[1] == 5) && ($sipver[2] == 20))) {
   print "firmware: http://" . $SERVER_NAME . "/snom/snom" . $phone . "-7.3.30-SIP-bf.bin\n";
-} else if ((($sipver[1] == 8) && ($sipver[1] < 4)) || (($sipver[1] == 8) && ($sipver[1] == 4) && ($sipver[2] < 31))) {
+} else if ((($sipver[0] == 8) && ($sipver[1] < 4)) || (($sipver[0] == 8) && ($sipver[1] == 4) && ($sipver[2] < 31))) {
   print "firmware: http://" . $SERVER_NAME . "/snom/snom" . $phone . "-8.4.31-SIP-f.bin\n";
 } else if (is_file($firmware_file)) {
   print "firmware: http://" . $SERVER_NAME . "/snom/" . $firmware_file . "\n";
