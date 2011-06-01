@@ -281,7 +281,7 @@ if ($phone != "300") {
           print "    <fkey idx=\"" . $rdat[0] . "\" context=\"active\" perm=\"R\">dest " . $rdat[1] . "</fkey>\n";
         } else {
           print "    <fkey idx=\"" . $rdat[0] . "\" context=\"active\" perm=\"R\">";
-          print "blf <sip:" . $rdat[1] . "@192.168.150.1;user=phone>|*8
+          print "blf <sip:" . $rdat[1] . "@192.168.150.1;user=phone>|*8";
           print "</fkey>\n";
         }
       }
