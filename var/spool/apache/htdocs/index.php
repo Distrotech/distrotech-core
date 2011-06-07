@@ -305,7 +305,17 @@ if ($_POST['print'] !=2) {%>
      * This is a print form popup or a no menu page we need to set it up
      */
     print "</head>\n<body class=popup>\n<DIV ID=main-body CLASS=popup>\n";
-
+%>
+      <DIV ID=blanket></DIV>
+      <div id="popUpDiv">
+        <div>
+          <div id=popUpDivTitle border=0 height=20 width=100% align=RIGHT>
+            <a href=javascript:popdown()><IMG SRC=/images/exit.png HEIGHT=20></A>
+          </div>
+          <div id=popUpDivContent width=100% height=100%></div>
+        </div>
+      </div>
+<%
     include "/var/spool/apache/htdocs/" . $showpage;%>
     </DIV><%
     if ($_POST['print'] == "1") {%>
