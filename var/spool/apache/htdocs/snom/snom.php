@@ -3,6 +3,8 @@ include "../cdr/auth.inc";
 include "../cdr/autoadd.inc";
 include "../ldap/ldapcon.inc";
 
+header('Content-type: text/xml');
+
 $mac=strtoupper($mac);
 
 $auth_uss=ldap_bind($ds,$LDAP_ROOT_DN,$LDAP_ROOT_PW);
@@ -94,6 +96,7 @@ if ($sipver[0] < 8) {
   print "language&: English(UK)\n";
   print "web_language&: English\n";
   print "admin_mode_password&: 1234\n";
+  print "update_policy&: auto_update\n";
 
   if (($SERVER_NAME != "") && ($phone != "") && (is_file("snom" . $phone . "-fw.php"))) {
     print "firmware_status&: http://" . $SERVER_NAME . "/snom/snom" . $phone . "-fw.php\n";
