@@ -80,6 +80,7 @@ $vadmindef=array(
 	"QAPenalty" => "20",
 	"QATimeout" => "30",
 	"QTimeout" => "600",
+	"RecOpt" => "vol 3 Db",
 	"REMDEF" => "0",
 	"SnomNet" => "auto",
 	"TPremiumPat" => "(^102[0-9]$)|(^1021[0-9]$)|(^0903$)|(^10118$)",

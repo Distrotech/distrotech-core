@@ -864,34 +864,38 @@ if ($origdata['FAXBOX'] == "") {
   <TD><INPUT TYPE=TEXT NAME=QAPenalty VALUE="<%print $origdata["QAPenalty"];%>"></TD>
 </TR>
 <TR CLASS=list-color2>
+  <TD onmouseover="myHint.show('PS17')" onmouseout="myHint.hide()"><%print _("Recording Options");%></TD>
+  <TD><INPUT TYPE=TEXT NAME=RecOpt VALUE="<%print $origdata["RecOpt"];%>"></TD>
+</TR>
+<TR CLASS=list-color1>
   <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Record Calls By Default");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=DEFRECORD<%if ($origdata["DEFRECORD"] == "1") {print " CHECKED";}%>></TD>
 </TR>
-<TR CLASS=list-color1>
+<TR CLASS=list-color2>
   <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Enable Voice Mail By Default");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=DEFNOVMAIL<%if ($origdata["DEFNOVMAIL"] == "0") {print " CHECKED";}%>></TD>
 </TR>
-<TR CLASS=list-color2>
+<TR CLASS=list-color1>
   <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Hangup Calls To Unknown Numbers/DDI");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=UNKDEF<%if ($origdata["UNKDEF"] == "1") {print " CHECKED";}%>></TD>
 </TR>
-<TR CLASS=list-color1>
+<TR CLASS=list-color2>
   <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Extensions Are Remote By Default");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=REMDEF<%if ($origdata["REMDEF"] == "1") {print " CHECKED";}%>></TD>
 </TR>
-<TR CLASS=list-color2>
+<TR CLASS=list-color1>
   <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Disable Routing Of Voice Mail To Reception");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=NoOper<%if ($origdata["NoOper"] == "1") {print " CHECKED";}%>></TD>
 </TR>
-<TR CLASS=list-color1>
+<TR CLASS=list-color2>
   <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Require Extension Number With PIN");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=ADVPIN<%if ($origdata["ADVPIN"] == "1") {print " CHECKED";}%>></TD>
 </TR>
-<TR CLASS=list-color2>
+<TR CLASS=list-color1>
   <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Add Billing Group To CLI (Inbound)");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=AddGroup<%if ($origdata["AddGroup"] == "1") {print " CHECKED";}%>></TD>
 </TR>
-<TR CLASS=list-color1>
+<TR CLASS=list-color2>
   <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Follow DDI If Exten (Inbound)");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=FollowDDI<%if ($origdata["FollowDDI"] == "1") {print " CHECKED";}%>></TD>
 </TR>
