@@ -1,6 +1,11 @@
 #!/bin/bash
 
-/usr/bin/sox -m $1 $2 $3
+infile=$1
+outfile=$2
+mixfile=$3
+shift 3
+
+/usr/bin/sox -m $infile $outfile $mixfile $@
 if [ -d /var/spool/asterisk/monitor.bak ];then
   BACKBASE=`echo $3 |sed -e "s/\/monitor\//\/monitor.bak\//"`
   /usr/bin/rsync -a $3 ${BACKBASE}
