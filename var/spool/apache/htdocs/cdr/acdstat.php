@@ -99,8 +99,21 @@
      }
 
      if (($qfilt != "") && ($okey != 'LOST')) {
-       $agetinfq="SELECT fullname,agent,count(queue_log.id)" . $edata[$okey][0] . " from queue_log LEFT OUTER JOIN users ON (name=agent) where " . $acdls . "AND agent != 'NONE' AND event='" . $okey . "' group by agent,users.fullname order by count(queue_log.id) desc";
-//print $agentinfq . "<P><P>";
+       if (($okey == "ADDMEMBER") || ($okey == "REMOVEMEMBER")) {
+         $agetinfq="SELECT users.fullname,membername,count(queue_log.callid)" . $edata[$okey][0] . " 
+                      from queue_log LEFT OUTER JOIN queue_members ON (queuename = queue_name AND (membername=agent OR interface=agent)) 
+                        LEFT OUTER JOIN users ON (name=membername) where " . $acdls . "AND agent != 'NONE' AND event='" . $okey . "' 
+                      group by users.fullname,membername,event order by count(queue_log.id) desc";
+       } else {
+         $agetinfq="SELECT users.fullname,membername,count(queue_log.callid)" . $edata[$okey][0] . " 
+                      from (SELECT DISTINCT ON (callid) callid,data1,data2,data3,data4,queuename,agent FROM queue_log
+                       where " . $acdls . "AND agent != 'NONE' AND event='" . $okey . "' 
+                        GROUP BY agent,queuename,callid,data1,data2,data3,data4) AS queue_log
+                        LEFT OUTER JOIN queue_members ON (queuename = queue_name AND (membername=agent OR interface=agent)) 
+                        LEFT OUTER JOIN users ON (name=membername)
+                      group by users.fullname,membername order by count(callid) desc";
+       }
+//print $agetinfq . "<P><P>";
        $agetinf=pg_query($db,$agetinfq);
        for($agr=0;$agr < pg_num_rows($agetinf);$agr++) {
          $rcnt++;
@@ -199,7 +212,8 @@ ACD Report For Period (<%print $time_year . "-" . str_pad($time_month,2,"0",STR_
   $stats=array();
   for($ia=0;$ia < pg_num_rows($acdlist);$ia++) {
     $acd=pg_fetch_row($acdlist, $ia);
-    $acdstatq="SELECT count(distinct callid),case when (description is not null) then description else queuename end,event,queuename from queue_log
+    $acdstatq="SELECT count(distinct CASE WHEN (event = 'ADDMEMBER' OR event = 'REMOVEMEMBER') THEN callid||id ELSE callid END),
+                       case when (description is not null) then description else queuename end,event,queuename from queue_log
                         left outer join queue_table on (queuename=name) 
                       where 
                         time > '" . $time_year . "-" . $time_month . "-" . $time_day ." " . $time_hour . ":" . $time_min . ":" . $time_sec . "' AND

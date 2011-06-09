@@ -49,9 +49,10 @@
   $popinf['ABANDON']['title']=array("Date","Caller ID","Final Pos","Initial Pos.","Hold Time");
   $popinf['ABANDON']['descrip']=_("Calls Abandonded By Caller");
 
-  $popinf['CONNECT']['report']="SELECT calldate,src,agent,duration,billsec,duration-billsec from cdr left outer join queue_log ON (uniqueid=callid) where 
+  $popinf['CONNECT']['report']="SELECT DISTINCT ON (callid) time,src,agent,duration,billsec,duration-billsec 
+                        from queue_log left outer join cdr ON (uniqueid=callid) where 
                         queue_log.time > '" . $frmtime . "' AND queue_log.time < '" . $totime . "' AND 
-                        queue_log.queuename='" . $_POST['fqueue'] . "' AND queue_log.event='CONNECT' ORDER BY cdr.calldate,queue_log.time";
+                        queue_log.queuename='" . $_POST['fqueue'] . "' AND queue_log.event='CONNECT' ORDER BY callid,cdr.calldate,queue_log.time";
   $popinf['CONNECT']['title']=array("Date","Caller ID","Agent","Total Time","Talk Time","Ring Time");
   $popinf['CONNECT']['descrip']=_("All Connected Calls For Queue");
 
