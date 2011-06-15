@@ -33,8 +33,10 @@
 
   $popinf['AGENTCALLBACKLOGOFF']['descrip']=_("Agent Login/Logoff");
   $popinf['AGENTCALLBACKLOGOFF']['report']="SELECT date_trunc('second',time),CASE WHEN (event = 'AGENTCALLBACKLOGOFF' OR event = 'REMOVEMEMBER') THEN 'Off' ELSE 'On' END,
-                         users.fullname||' ('||agent||')',extract('epoch' from time)
-                       FROM queue_log LEFT OUTER JOIN users ON (name=agent) WHERE
+                         users.fullname||' ('||membername||')',extract('epoch' from time)
+                       FROM queue_log 
+                       LEFT OUTER JOIN queue_members ON (queue_name = queuename AND (membername = agent OR interface=agent))
+                       LEFT OUTER JOIN users ON (name=membername) WHERE
                         queue_log.time > '" . $frmtime . "' AND queue_log.time < '" . $totime . "' AND 
                         (queue_log.event='AGENTCALLBACKLOGOFF' OR queue_log.event='AGENTCALLBACKLOGIN' OR
                         queue_log.event='REMOVEMEMBER' OR queue_log.event='ADDMEMBER') AND 
