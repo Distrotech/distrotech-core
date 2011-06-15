@@ -222,7 +222,7 @@
       $acty="Calls"; 
     }
 
-    $data=array($aedir,$acty,"State","Time","Std. Dev.","Av. Hold Time","Total Cost");
+    $data=array($aedir,$acty,"State","Time","Average","Std. Dev.","Av. Hold Time","Total Cost");
     $dataout="\"" . str_replace(array("\"","--!@#%^&--"),array("\"\"","\",\""),implode("--!@#%^&--",$data)). "\"\n";
     print $dataout;
   }
