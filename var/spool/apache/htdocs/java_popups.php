@@ -580,9 +580,9 @@ function pushconf(ipaddrin) {
     atapopupwin(ipaddr);
   }
 }
-function delexten(etodel,enum) {
+function delexten(etodel,enumv) {
   if(confirm("Are You Sure You Want To Remove This Extension Off This Device:\n"+etodel)) {
-    document.atapush.edelete.value=enum;
+    document.atapush.edelete.value=enumv;
     document.atapush.submit();
   }
 }
