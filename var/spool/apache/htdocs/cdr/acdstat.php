@@ -56,6 +56,7 @@
   $discrip['ADDMEMBER']="Agent Login";
   $discrip['AGENTCALLBACKLOGOFF']="Agent Logoff";
   $discrip['REMOVEMEMBER']="Agent Logoff";
+  $discrip['PENALTY']="PENALTY";
 
   $edata['CONNECT']=array(",avg(CAST (data1 AS integer))",1,"Average Hold Time");
   $edata['TRANSFER']=array(",avg(CAST (data3 AS integer)),avg(CAST (data4 AS integer))",2,"Average Hold Time","Average Call Time");
