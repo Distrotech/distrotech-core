@@ -221,6 +221,7 @@ if ($domain != "") {
       print ($dtmfmode == "info") ? "on" : "off";
       print "</user_dtmf_info>\n";
       print "    <user_name idx=\"1\" perm=\"R\">" . $exten . "</user_name>\n";
+      print "    <user_mailbox idx=\"1\" perm=\"R\"></user_mailbox>\n";
       print "    <http_user perm=\"R\">" . $exten . "</http_user>\n";
     }
     if ($pass != "") {
