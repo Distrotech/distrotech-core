@@ -14134,7 +14134,7 @@ format=wav49
 serveremail=asterisk
 attach=yes
 maxsecs=180
-minsecs=5
+minsecs=2
 maxgreet=60
 skipms=3000
 maxsilence=3
@@ -14464,7 +14464,6 @@ max_outgoing=-1
 faxdetect_context=ddi
 faxdetect=incoming
 faxdetect_timeout=60
-incoming_early_audio=yes
 msns=*
 __EOF__
     if ($conts ne "") {
