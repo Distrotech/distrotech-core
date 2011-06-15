@@ -38,10 +38,10 @@ function create_exten_x509($euser) {
     $x509cert = ldap_get_values_len($ds, $ent, "usercertificate;binary");
   }
 
-  $x509file=tempnam("/tmp","sslreq");
-  $keyfile=tempnam("/tmp","sslkey");
 
   if (!is_array($pkcs12)) {
+    $x509file=tempnam("/tmp","sslreq");
+    $keyfile=tempnam("/tmp","sslkey");
     $certconf=tempnam("/tmp","sslconf");
     $ccfile=fopen($certconf,"w");
     fwrite($ccfile,"HOME                   = .
@@ -94,23 +94,9 @@ keyUsage               = nonRepudiation, digitalSignature, keyEncipherment\n");
       ldap_modify($ds,$dn,$certsave);
     }
     unlink($certconf);
-  } else {
-    $pk12=tempnam("/tmp","sslpk12");
-    $pkcs12file=fopen($pk12,"w");
-    fwrite($pkcs12file,$pkcs12[0]);
-    fclose($pkcs12file);
-    system("/usr/bin/openssl pkcs12 -in $pk12  -password pass:\"\" -nodes -nocerts -descert -out $keyfile >/dev/null 2>&1");
-    unlink($pk12);
+    unlink($x509file);
+    unlink($keyfile);
   }
-
-/*
-  $key=`/usr/bin/openssl rsa -in $keyfile 2>/dev/null`;
-  $cert=`/usr/bin/openssl x509 -in $x509file 2>/dev/null`;
-*/
-  unlink($x509file);
-  unlink($keyfile);
-
-  return $cert . $key;
 }
 
 function delete_exten_x509($euser) {
@@ -159,4 +145,46 @@ function create_phone_x509($ptype) {
   }
 }
 
+function dump_phone_x509($euser) {
+  global $ds;
+
+  $iarr=array("userPKCS12","usercertificate;binary");
+
+
+  $dn="uid=" . $euser . ",ou=snom";
+  $sr=ldap_search($ds, $dn,"(&(objectClass=userCertStore)(uid=$euser))",$iarr);
+
+  if (($sr === FALSE)  || (ldap_count_entries($ds, $sr) == 0)) {
+    return;
+  } else {
+    $ent = ldap_first_entry($ds, $sr);
+    $pkcs12 =ldap_get_values_len($ds, $ent, "userPKCS12");
+    $x509cert = ldap_get_values_len($ds, $ent, "usercertificate;binary");
+  }
+
+  $x509file=tempnam("/tmp","sslreq");
+  $keyfile=tempnam("/tmp","sslkey");
+
+  $pk12=tempnam("/tmp","sslpk12");
+  $pkcs12file=fopen($pk12,"w");
+  fwrite($pkcs12file,$pkcs12[0]);
+  fclose($pkcs12file);
+  system("/usr/bin/openssl pkcs12 -in $pk12  -password pass:\"\" -nodes -nocerts -descert -out $keyfile >/dev/null 2>&1");
+  unlink($pk12);
+
+  $x509file=tempnam("/tmp","sslreq");
+  $certfd=fopen("$x509file","w");  
+  fwrite($certfd,"-----BEGIN CERTIFICATE-----\n");
+  fwrite($certfd,chunk_split(base64_encode($x509cert[0]),64));
+  fwrite($certfd,"-----END CERTIFICATE-----\n");
+  fclose($certfd);
+
+
+  $key=`/usr/bin/openssl rsa -in $keyfile 2>/dev/null`;
+  $cert=`/usr/bin/openssl x509 -in $x509file 2>/dev/null`;
+
+  unlink($x509file);
+
+  return $cert . $key;
+}
 %>

@@ -26,12 +26,13 @@ include "/var/spool/apache/htdocs/cdr/voiptls.inc";
 ldap_bind($ds,$LDAP_ROOT_DN,$LDAP_ROOT_PW);
 
 if ($argc < 2) {
-  print "Usage Is $argv[0] [-C <TYPE>]|[-c <exten>]|[-n <exten>][-D]|[-d <exten>]\n";
+  print "Usage Is $argv[0] [-C <TYPE>]|[-c <exten>]|[-n <exten>][-D]|[-d <exten>]|[-g <exten>]\n";
   print " -C Create All For Type ie SNOM\n";
   print " -c Create A Extension\n";
   print " -n [New] Delete / Create A Extension\n";
   print " -D Delete All\n";
   print " -d Delete A Extension\n";
+  print " -g Get User Cert\n";
 } else {
   switch($argv[1]) {
     case "-D":delete_allexten_x509();
@@ -44,6 +45,8 @@ if ($argc < 2) {
       break;
     case "-n":delete_exten_x509($argv[2]);
         create_exten_x509($argv[2]);
+      break;
+    case "-g":print dump_phone_x509($argv[2]);
       break;
   }
 }
