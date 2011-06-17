@@ -13941,6 +13941,8 @@ t38pt_tcp=no
 rtptimeout=60
 rtpholdtimeout=300
 alwaysauthreject=yes
+prematuremedia=no
+
 __EOF__
 
 if ( -d "/etc/openssl/voipca") {
