@@ -5775,6 +5775,7 @@ if ($sysconf{'External'} eq $sysconf{'Internal'}) {
 /sbin/iptables -t nat -A PREROUTING -j NATMAPI
 /sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p udp -s $localip --sport 5000 --dport 1024:65535
 /sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p udp -s $localip --sport 5060 --dport 1024:65535
+/sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p udp -s $localip --sport 4569 --dport 1024:65535
 /sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p tcp -s $localip --sport 5060:5061 --dport 1024:65535
 /sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p udp -s $localip --sport 1718:1720 --dport 1024:65535
 /sbin/iptables -t nat -A POSTROUTING -j MANGLE -o ppp+
@@ -6273,6 +6274,7 @@ print FW <<__EOB__;
 /sbin/iptables -t nat -A PREROUTING -j TXPROXY -p tcp --dport 80 --sport 1024:65535 -m state --state NEW,ESTABLISHED
 /sbin/iptables -t nat -A PREROUTING -j SIPMAP
 /sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p udp -s $localip --sport 5000 --dport 1024:65535
+/sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p udp -s $localip --sport 4569 --dport 1024:65535
 /sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p udp -s $localip --sport 5060 --dport 1024:65535
 /sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p tcp -s $localip --sport 5060:5061 --dport 1024:65535
 /sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p udp -s $localip --sport 1718:1720 --dport 1024:65535
@@ -14220,6 +14222,9 @@ print IC "allow=h261\n";
 
 print IC "\n";
 
+  if (-e "/etc/asterisk/iax.conf.local") {
+    print IC "\n#include /etc/asterisk/iax.conf.local\n\n";
+  }
 
   foreach $proxy (@iaxproxys) {
     @iaxreg=split(/\|/,$proxy);
