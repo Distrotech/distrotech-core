@@ -14228,7 +14228,7 @@ print IC "\n";
 
   foreach $proxy (@iaxproxys) {
     @iaxreg=split(/\|/,$proxy);
-    if ((@iaxreg[0] ne "") && (((@iaxreg[11] eq "parent") && (@iaxreg[6] eq "true")) || (@iaxreg[11] ne "parent"))) { 
+    if ((@iaxreg[0] ne "") && (((@iaxreg[12] eq "parent") && (@iaxreg[6] eq "true")) || (@iaxreg[12] ne "parent"))) { 
       if (@iaxreg[1] ne "") {
         $pass=":@iaxreg[1]";
       } else {
@@ -14255,7 +14255,7 @@ trunk=yes
 
 __EOB__
       } else {
-        if (@iaxreg[11] eq "parent") {
+        if (@iaxreg[12] eq "parent") {
           if (@iaxreg[0] ne "") {
             $user="\nusername=@iaxreg[0]";
             if (@iaxreg[1] ne "") {
