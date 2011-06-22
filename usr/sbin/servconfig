@@ -1112,6 +1112,17 @@ if [ -e zones/domain.dyn ] && [ -e /var/named/domain.dyn.orig ];then
   fi;
 fi;
 
+for tfile in `ls  tftptmpl`;do
+  if [ -e /tftpboot/$tfile ];then 
+    TFTPDIFF=`diff tftptmpl/$tfile /tftpboot/$tfile`
+   else
+    TFTPDIFF="NO FILE";
+  fi;
+  if [ "$TFTPDIFF" ];then
+    cp tftptmpl/$tfile /tftpboot/
+  fi;
+done
+
 #if [ -e atalkd.conf ] && [ -e /etc/netatalk/atalkd.conf.orig ];then 
 #  ATCDIFF=`diff atalkd.conf /etc/netatalk/atalkd.conf.orig`
 # else
