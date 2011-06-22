@@ -1188,6 +1188,7 @@ if ($SUPER_USER == 1) {
       <OPTION VALUE=IP_600<%if ($origdata["PTYPE"] == "IP_600") {print " SELECTED";}%>>Polycom 600
       <OPTION VALUE=IP_601<%if ($origdata["PTYPE"] == "IP_601") {print " SELECTED";}%>>Polycom 601/650
       <OPTION VALUE=IP_4000<%if ($origdata["PTYPE"] == "IP_4000") {print " SELECTED";}%>>Polycom 4000
+      <OPTION VALUE=CISCO<%if ($origdata["PTYPE"] == "YEALINK") {print " SELECTED";}%>>Yealink
       <OPTION VALUE=CISCO<%if ($origdata["PTYPE"] == "CISCO") {print " SELECTED";}%>>Cisco 79XX
       <OPTION VALUE=OTHER<%if ($origdata["PTYPE"] == "OTHER") {print " SELECTED";}%>>Other
     </SELECT>
