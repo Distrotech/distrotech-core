@@ -11503,6 +11503,7 @@ option wpad-url code 252 = text;
 option tftp-cisco-server-name code 150 = ip-address;
 option polycom-vlanid code 251 = unsigned integer 16;
 option nortel_ipt code 128 = string;
+option yealink-url code 250 = string;
 
 option domain-name "$dnsconf{'Domain'}";
 option nis-domain "$dnsconf{'Domain'}";
@@ -11585,8 +11586,10 @@ foreach $iface (@ints){
       }
       if ($sysconf{'Internal'} eq @idata[3]) {
         $tftpserv=$intip;
+        $yeahelp="\n  option yealink-url \"http://$fqdn\";";
       } else {
         $tftpserv="http://" . $intip;
+        $yeahelp="";
       }
       if (($sysconf{'Internal'} eq $sysconf{'External'}) && (@idata[3] eq $sysconf{'External'}) && ($dns eq "")) {
         $dnssrv=$sysconf{'Nexthop'};
@@ -11636,7 +11639,7 @@ subnet $nwaddr netmask $snmask {
   option domain-name-servers $dnssrv;
   option subnet-mask $snmask;	
   option broadcast-address $bcaddr;
-  option tftp-server-name "$tftpserv";$lwins
+  option tftp-server-name "$tftpserv";$yeahelp$lwins
   option tftp-cisco-server-name @idata[1];
 }
 __EOL__
@@ -15972,7 +15975,6 @@ close(TFTP);
   $getagent->execute;
   
   while(@row=$getagent->fetchrow_array) {
-    print "@row\n";
     $pbxsetup{@row[0]}=@row[1];
   }
 
@@ -15985,18 +15987,59 @@ path = /config/Setting/autop.cfg
 mode = 6
 schedule_min = 240
 
+[ cutom_option  ]
+path = /config/Setting/autop.cfg
+cutom_option_code0 = 250
+cutom_option_type0 = 1
+
+[ PNP ]
+path = /config/Setting/autop.cfg
+Pnp = 0
+
 [ autoprovision ]
 path = /config/Setting/autop.cfg
-server_address = http://$fqdn/yealink/\${mac}.cfg
+server_address = http://$fqdn/\${mac}.cfg
 
+[ account ]
+path = /config/voip/sipAccount0.cfg
+Enable = 1
+SIPServerHost = $dnsconf{'Domain'}
+SIPServerPort = 5060
+UseOutboundProxy = 0
+SubsribeRegister = 1
+SubsribeMWI = 1
+dialoginfo_callpickup = 1
+
+[ NAT ]
+path = /config/voip/sipAccount0.cfg
+EnableUDPUpdate = 1
+
+[ Time ]
+path = /config/Setting/Setting.cfg
+TimeZone = +2
+TimeServer1 = $fqdn
+TimeServer2 = $fqdn
+SummerTime = 0
+
+__EOF__
+    if ($pbxsetup{'AutoVLAN'} > 1) {
+      print TFTP <<__EOF__;
 [ VLAN ]
 path = /config/Network/Network.cfg
 ISVLAN = 1
 VID = $pbxsetup{'AutoVLAN'}
+USRPRIORITY = 5
 __EOF__
+    } else {
+      print TFTP <<__EOF__;
+[ VLAN ]
+path = /config/Network/Network.cfg
+ISVLAN = 0
+VID = 0
+__EOF__
+    }
     close(TFTP);
   }
-
 }
 
 #sub getsn() {
