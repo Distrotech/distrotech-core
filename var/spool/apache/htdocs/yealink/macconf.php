@@ -70,6 +70,14 @@ if ($domain == "" ) {
   $domain=$LOCAL_DOMAIN;
 }
 %>
+[ AdminPassword ]
+path = /config/Setting/autop.cfg
+password = <%print $pass . "\n";%>
+
+[ UserPassword ]
+path = /config/Setting/autop.cfg
+password = <%print $exten . "\n";%>
+
 [ autoprovision ]
 path = /config/Setting/autop.cfg  
 server_address = http://<%print $SERVER_NAME . "/" . $mac . ".cfg\n";%>
@@ -93,6 +101,8 @@ dialoginfo_callpickup = 1
 
 [ DTMF ]
 path = /config/voip/sipAccount0.cfg
+DTMFPayload = 101
+DTMFToneLen = 300
 DTMFInbandTransfer = <%print $dtmfm . "\n";%>
 InfoType = 2
 
@@ -215,6 +225,7 @@ path = /config/Network/Network.cfg
 USRPRIORITY = 5
 ISVLAN = 1
 VID = <%print $vlantag . "\n";%>
+
 <%
 } else {
 %>
@@ -229,6 +240,17 @@ path = /config/Network/Network.cfg
 USRPRIORITY = 0
 ISVLAN = 0
 VID = 0
+
+<%
+}
+
+for ($lkey=11;$lkey <=16;$lkey++) {
+%>
+[ memory<%print $lkey;%> ]
+path = /config/vpPhone/vpPhone.ini
+Line = 1
+DKtype = 15
+
 <%
 }
 %>
