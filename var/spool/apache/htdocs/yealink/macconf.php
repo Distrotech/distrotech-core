@@ -5,6 +5,31 @@ include "../ldap/ldapcon.inc";
 
 $mac=strtoupper($mac);
 
+$auth_uss=ldap_bind($ds,$LDAP_ROOT_DN,$LDAP_ROOT_PW);
+$auth_ussr=ldap_search($ds,"ou=snom","(&(objectClass=person)(cn=snom))");
+
+if (ldap_count_entries($ds,$auth_ussr) <= 0 ) {
+  $dn="cn=Snom,ou=Snom";
+  $info["objectclass"][0]="person";
+  $info["cn"]="snom";
+  $info["sn"]="Snom Global Phone Book";
+  $info["userpassword"]="snom";
+
+  ldap_add($ds,$dn,$info);
+  
+  if (ldap_errno($ds) == "32") {
+    $info2["objectclass"][0]="organizationalUnit";
+    $info2["ou"]="snom";
+    $dn2="ou=snom";
+    ldap_add($ds,$dn2,$info2);
+    ldap_add($ds,$dn,$info);
+  }
+  $auth_ussr=ldap_search($ds,"ou=snom","(&(objectClass=person)(cn=snom))");
+}
+
+$auth_ures=ldap_first_entry($ds,$auth_ussr);
+$suser=ldap_get_attributes($ds,$auth_ures);
+
 $pwlen=8;
 $getphoneq="SELECT name,secret,fullname,register.value,nat,dtmfmode,vlanid.value,
                    (name=secret OR length(secret) != " . $pwlen . " OR secret='' OR secret IS NULL OR
@@ -69,6 +94,7 @@ if ($transport == "udp") {
 if ($domain == "" ) {
   $domain=$LOCAL_DOMAIN;
 }
+
 %>
 [ AdminPassword ]
 path = /config/Setting/autop.cfg
@@ -212,6 +238,25 @@ VoiceNumber5 = 100
 path = /config/voip/tone.ini
 Country = Great Britain
 
+[ LDAP ]
+path = /config/Contacts/LDAP.cfg
+NameFilter = (&(telephoneNumber=*)(cn=%))
+NumberFilter = (&(telephoneNumber=%)(cn=*))
+host = <%print $SERVER_NAME . "\n";%>
+port = 389
+base =
+user = cn=Snom,ou=Snom
+pswd = <%print $suser["userPassword"][0] . "\n";%>
+MaxHits = 50
+NameAttr = cn
+NumbAttr = telephoneNumber
+DisplayName = %cn
+version = 3
+SearchDelay = 0
+CallInLookup = 1
+LDAPSort = 1
+DialLookup = 1
+
 <%
 if ($vlantag > 1) {
 %>
@@ -253,4 +298,9 @@ DKtype = 15
 
 <%
 }
+[ programablekey3 ]
+path = /config/vpPhone/vpPhone.ini
+DKtype = 9
+Line = 1
+Value = *8
 %>
