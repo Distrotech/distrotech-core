@@ -15971,12 +15971,11 @@ __EOF__
 close(TFTP);
 
 
-  $getagent=$dbh->prepare("SELECT key,value FROM astdb WHERE family='Setup'");
-  $getagent->execute;
-  
-  while(@row=$getagent->fetchrow_array) {
-    $pbxsetup{@row[0]}=@row[1];
-  }
+#  $getagent=$dbh->prepare("SELECT key,value FROM astdb WHERE family='Setup'");
+#  $getagent->execute;  
+#  while(@row=$getagent->fetchrow_array) {
+#    $pbxsetup{@row[0]}=@row[1];
+#  }
 
   for($yphone=0; $yphone <= 9;$yphone++) {
     open(TFTP,">tftptmpl/y00000000000" . $yphone . ".cfg");
@@ -15998,7 +15997,7 @@ Pnp = 0
 
 [ autoprovision ]
 path = /config/Setting/autop.cfg
-server_address = http://$fqdn/\${mac}.cfg
+server_address = 
 
 [ account ]
 path = /config/voip/sipAccount0.cfg
@@ -16022,22 +16021,6 @@ TimeServer2 = $fqdn
 SummerTime = 0
 
 __EOF__
-    if ($pbxsetup{'AutoVLAN'} > 1) {
-      print TFTP <<__EOF__;
-[ VLAN ]
-path = /config/Network/Network.cfg
-ISVLAN = 1
-VID = $pbxsetup{'AutoVLAN'}
-USRPRIORITY = 5
-__EOF__
-    } else {
-      print TFTP <<__EOF__;
-[ VLAN ]
-path = /config/Network/Network.cfg
-ISVLAN = 0
-VID = 0
-__EOF__
-    }
     close(TFTP);
   }
 }

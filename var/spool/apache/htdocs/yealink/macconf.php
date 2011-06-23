@@ -70,6 +70,10 @@ if ($domain == "" ) {
   $domain=$LOCAL_DOMAIN;
 }
 %>
+[ autoprovision ]
+path = /config/Setting/autop.cfg  
+server_address = http://<%print $SERVER_NAME . "/" . $mac . ".cfg\n";%>
+
 [ account ]
 path = /config/voip/sipAccount0.cfg
 Enable = 1
@@ -201,6 +205,11 @@ Country = Great Britain
 <%
 if ($vlantag > 1) {
 %>
+[ cutom_option  ]
+path = /config/Setting/autop.cfg
+cutom_option_code0 = 
+cutom_option_type0 = 1
+
 [ VLAN ]
 path = /config/Network/Network.cfg
 USRPRIORITY = 5
@@ -209,6 +218,12 @@ VID = <%print $vlantag . "\n";%>
 <%
 } else {
 %>
+
+[ cutom_option  ]
+path = /config/Setting/autop.cfg
+cutom_option_code0 = 250
+cutom_option_type0 = 1
+
 [ VLAN ]
 path = /config/Network/Network.cfg
 USRPRIORITY = 0

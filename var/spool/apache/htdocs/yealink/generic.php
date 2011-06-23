@@ -7,10 +7,6 @@ schedule_min = 240
 path = /config/Setting/autop.cfg
 Pnp = 0
 
-[ autoprovision ]
-path = /config/Setting/autop.cfg
-server_address = http://pbx.distrotech.co.za/${mac}.cfg
-
 [ account ]
 path = /config/voip/sipAccount0.cfg
 Enable = 1
