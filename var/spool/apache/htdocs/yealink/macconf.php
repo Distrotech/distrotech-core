@@ -238,6 +238,13 @@ VoiceNumber5 = 100
 path = /config/voip/tone.ini
 Country = Great Britain
 
+[ Time ]  
+path = /config/Setting/Setting.cfg
+TimeZone = +2
+TimeServer1 = <%print $SERVER_NAME . "\n";%>
+TimeServer2 = <%print $SERVER_NAME . "\n";%>
+SummerTime = 0
+
 [ LDAP ]
 path = /config/Contacts/LDAP.cfg
 NameFilter = (&(telephoneNumber=*)(cn=%))
@@ -298,9 +305,9 @@ DKtype = 15
 
 <%
 }
+%>
 [ programablekey3 ]
 path = /config/vpPhone/vpPhone.ini
 DKtype = 9
 Line = 1
 Value = *8
-%>

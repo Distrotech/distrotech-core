@@ -10,8 +10,6 @@ Pnp = 0
 [ account ]
 path = /config/voip/sipAccount0.cfg
 Enable = 1
-SIPServerHost = distrotech.co.za
-SIPServerPort = 5060
 UseOutboundProxy = 0
 SubsribeRegister = 1
 SubsribeMWI = 1
@@ -20,10 +18,3 @@ dialoginfo_callpickup = 1
 [ NAT ]
 path = /config/voip/sipAccount0.cfg
 EnableUDPUpdate = 1
-
-[ Time ]
-path = /config/Setting/Setting.cfg
-TimeZone = +2
-TimeServer1 = pbx.distrotech.co.za
-TimeServer2 = pbx.distrotech.co.za
-SummerTime = 0
