@@ -180,6 +180,7 @@ function getchanstatus($channel,$socket) {
       $pcnt++;
     }
     if ($chaninf['Event'] == "StatusComplete") {
+      $chaninf=array();
       break;
     }
   }
