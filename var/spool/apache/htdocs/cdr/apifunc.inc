@@ -179,6 +179,9 @@ function getchanstatus($channel,$socket) {
       $chaninf=array();
       $pcnt++;
     }
+    if ($chaninf['Event'] == "StatusComplete") {
+      break;
+    }
   }
 
   if (count($chaninf) > 0) {
