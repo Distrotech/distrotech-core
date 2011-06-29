@@ -21,7 +21,7 @@
               "DEF:cps=/var/spool/apache/htdocs/mrtg/voip" . $type . ".rrd:Calls:AVERAGE",
               "DEF:concur=/var/spool/apache/htdocs/mrtg/voip" . $type . ".rrd:CCalls:LAST",
               "CDEF:cpm=cps,60,*",
-              "LINE1:concur#0000FF:Concurent",
+              "LINE1:concur#0000FF:Concurrent",
               "LINE1:cpm#008000:Calls/Min");
 
   $ret=rrd_graph("voip" . $type . ".png", $opts, count($opts));

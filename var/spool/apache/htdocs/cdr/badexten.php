@@ -27,7 +27,7 @@ if ($_POST['print'] != "1") {
   $colspan=5;
 }
 
-print "<TR CLASS=list-color2><TH CLASS=heading-body COLSPAN=" . $colspan . ">Unused/Unregeisted Extensions</TH></TR>\n";
+print "<TR CLASS=list-color2><TH CLASS=heading-body COLSPAN=" . $colspan . ">Unused/Unregistered Extensions</TH></TR>\n";
 print "<TR CLASS=list-color1>\n";
 
 if (($_POST['print'] != "1") && ($SUPER_USER == 1)) {

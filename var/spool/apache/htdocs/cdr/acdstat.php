@@ -44,14 +44,14 @@
 
   $discrip['ENTERQUEUE']="Total Amount Of Calls";
   $discrip['CONNECT']="Calls Connected With Agent";
-  $discrip['ABANDON']="Calls Abandonded By Caller";
+  $discrip['ABANDON']="Calls Abandoned By Caller";
   $discrip['EXITWITHTIMEOUT']="Calls Ignored By Agents";
-  $discrip['EXITWITHKEY']="Calls Abandonded By Caller (Exit Key)";
+  $discrip['EXITWITHKEY']="Calls Abandoned By Caller (Exit Key)";
   $discrip['LOST']="Calls Lost/Droped/Queued";
-  $discrip['TRANSFER']="Connected Calls Transfered";
-  $discrip['COMPLETEAGENT']="Connected Calls Hungup By Agents";
-  $discrip['COMPLETECALLER']="Connected Calls Hungup By Caller";
-  $discrip['RINGNOANSWER']="Nuber Of Times A Call Rang Without Answer";
+  $discrip['TRANSFER']="Connected Calls Transferred";
+  $discrip['COMPLETEAGENT']="Connected Calls Hangup By Agents";
+  $discrip['COMPLETECALLER']="Connected Calls Hangup By Caller";
+  $discrip['RINGNOANSWER']="Number Of Times A Call Rang Without Answer";
   $discrip['AGENTCALLBACKLOGIN']="Agent Login";
   $discrip['ADDMEMBER']="Agent Login";
   $discrip['AGENTCALLBACKLOGOFF']="Agent Logoff";

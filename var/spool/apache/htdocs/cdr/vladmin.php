@@ -838,7 +838,7 @@ if ($usertype == 1) {
   </TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover=myHint.show('ES3') ONMOUSEOUT=myHint.hide()><%print _("Call Forward Immeadiate");%></TD>
+  <TD onmouseover=myHint.show('ES3') ONMOUSEOUT=myHint.hide()><%print _("Call Forward Immediate");%></TD>
   <TD>
      <INPUT TYPE=TEXT NAME=CFIM VALUE="<%if ($origdata["CFIM"] != "0") {print $origdata["CFIM"];}%>">
   </TD>
@@ -904,7 +904,7 @@ if ($usertype == 1) {
 <TABLE CLASS=formtable>
 
 <TR CLASS=list-color2>
-  <TD ALIGN=LEFT onmouseover=myHint.show('ES12') ONMOUSEOUT=myHint.hide()><%print _("Extension Permision");%></TD>
+  <TD ALIGN=LEFT onmouseover=myHint.show('ES12') ONMOUSEOUT=myHint.hide()><%print _("Extension Permission");%></TD>
   <TD>
     <SELECT NAME=ACCESS>
 <%
@@ -920,7 +920,7 @@ if ($usertype == 1) {
 </TR>
 
 <TR CLASS=list-color1>
-  <TD ALIGN=LEFT onmouseover=myHint.show('ES13') ONMOUSEOUT=myHint.hide()><%print _("Auth Extension Permision");%></TD>
+  <TD ALIGN=LEFT onmouseover=myHint.show('ES13') ONMOUSEOUT=myHint.hide()><%print _("Auth Extension Permission");%></TD>
   <TD>
     <SELECT NAME=AUTHACCESS>
 <%
@@ -935,7 +935,7 @@ if ($usertype == 1) {
     </SELECT>
 </TR>
 <TR CLASS=list-color2>
-  <TD ALIGN=LEFT onmouseover=myHint.show('ES19') ONMOUSEOUT=myHint.hide()><%print _("After Hours Extension Permision");%></TD>
+  <TD ALIGN=LEFT onmouseover=myHint.show('ES19') ONMOUSEOUT=myHint.hide()><%print _("After Hours Extension Permission");%></TD>
   <TD>
     <SELECT NAME=ALOCK>
 <%
@@ -1158,7 +1158,7 @@ if ($SUPER_USER == 1) {
   <TD><INPUT TYPE=CHECKBOX NAME=FAXMAIL <%if ($origdata["FAXMAIL"] == "1") {print "CHECKED";}%>></TD>
 </TR>
 <TR CLASS=list-color<%print ($cnt % 2) + 1;$cnt++;%>>
-  <TD ALIGN=LEFT onmouseover=myHint.show('ES8') ONMOUSEOUT=myHint.hide()><%print _("Distintive Ring Support (Some Phones)");%></TD>
+  <TD ALIGN=LEFT onmouseover=myHint.show('ES8') ONMOUSEOUT=myHint.hide()><%print _("Distinctive Ring Support (Some Phones)");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=DRING <%if ($origdata["DRING"] == "1") {print "CHECKED";}%>></TD>
 </TR>
 </TABLE>
@@ -1243,7 +1243,7 @@ if ($SUPER_USER == 1) {
   </TD>
 </TR>
 <TR  CLASS=list-color1>
-  <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><%print _("Current IP Address.") . "<BR>" . _("This Must Be Set And Reachable From Your Browser To Initilise The Phone Correctly.");%></TD>
+  <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><%print _("Current IP Address.") . "<BR>" . _("This Must Be Set And Reachable From Your Browser To Initialize The Phone Correctly.");%></TD>
   <TD><INPUT TYPE=TEXT NAME=LSYSIPADDR VALUE="<%print $curipaddr;%>"></TD>
 </TR>
 <TR CLASS=list-color2>
@@ -1281,7 +1281,7 @@ if ($SUPER_USER == 1) {
 if ($SUPER_USER == 1) {
 %>
 <TR CLASS=list-color2>
-  <TD onmouseover=myHint.show('ES29') ONMOUSEOUT=myHint.hide()>Conslole Group</TD>
+  <TD onmouseover=myHint.show('ES29') ONMOUSEOUT=myHint.hide()>Console Group</TD>
   <TD>
     <SELECT NAME=conscont>
       <OPTION VALUE="">Add New Group Bellow</OPTION>
@@ -1455,7 +1455,7 @@ if ($SUPER_USER == 1) {
   <TD><INPUT TYPE=TEXT NAME=ZAPLine VALUE="<%print $origdata["ZAPLine"];%>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD ALIGN=LEFT onmouseover=myHint.show('ES46') ONMOUSEOUT=myHint.hide()><%print _("Signaling Used For ZAP Channel");%><BR></TD>
+  <TD ALIGN=LEFT onmouseover=myHint.show('ES46') ONMOUSEOUT=myHint.hide()><%print _("Signalling Used For ZAP Channel");%><BR></TD>
   <TD><SELECT NAME=ZAPProto>
     <OPTION VALUE="fxo_ks"<%if ($origdata["ZAPProto"] == "fxo_ks") {print " SELECTED";}%>><%print _("Kewl Start");%></OPTION>
     <OPTION VALUE="fxo_ls"<%if ($origdata["ZAPProto"] == "fxo_ls") {print " SELECTED";}%>><%print _("Loop Start");%></OPTION>
@@ -1478,14 +1478,14 @@ if ($SUPER_USER == 1) {
   <TD ALIGN=LEFT onmouseover=myHint.show('ES41') ONMOUSEOUT=myHint.hide()><%print _("Gatekeeper IP") . "<BR>0.0.0.0 " . _("For Any IP Or Blank To Deny Access");%></TD>
   <TD><INPUT TYPE=TEXT NAME=h323permit VALUE="<%print $h323permit;%>"></TD></TR>
 <TR CLASS=list-color1>
-  <TD ALIGN=LEFT onmouseover=myHint.show('ES42') ONMOUSEOUT=myHint.hide()><%print _("Recived Prefix");%></TD>
+  <TD ALIGN=LEFT onmouseover=myHint.show('ES42') ONMOUSEOUT=myHint.hide()><%print _("Received Prefix");%></TD>
   <TD><INPUT TYPE=TEXT NAME=h323prefix VALUE="<%print $h323prefix;%>"></TD></TR>
 <TR CLASS=list-color2>
   <TD ALIGN=LEFT onmouseover=myHint.show('ES43') ONMOUSEOUT=myHint.hide()><%print _("Gatekeeper ID");%></TD>
   <TD><INPUT TYPE=TEXT NAME=h323gkid VALUE="<%print $h323gkid;%>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD ALIGN=LEFT onmouseover=myHint.show('ES50') ONMOUSEOUT=myHint.hide()><%print _("Trusted Neighbor");%><BR></TD>
+  <TD ALIGN=LEFT onmouseover=myHint.show('ES50') ONMOUSEOUT=myHint.hide()><%print _("Trusted Neighbour");%><BR></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=h323neighbor <%if ($h323neighbor) {print "CHECKED";}%>></TD>
 </TR>
 </TABLE>
