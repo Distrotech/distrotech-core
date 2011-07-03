@@ -1718,9 +1718,10 @@ __EOF__
     print SP<<__EOF__;
 
 if [ ! -e "/var/spool/ldap/replica.$syncreplsid" ];then
-  touch /var/spool/ldap/replica.$syncreplsid
   killall -9 slapd
   rm -rf /var/spool/ldap /var/log/ldap
+  mkdir /var/spool/ldap
+  touch /var/spool/ldap/replica.$syncreplsid
 fi;
 
 __EOF__
@@ -7293,7 +7294,9 @@ __EOR__
 
   print FW "#Allow Access To LDAP/TLS Remotely\n";
   print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp -m state --state ESTABLISHED,NEW,INVALID -s 0/0 --sport 1024:65535 --dport 636\n";
-  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp -m state --state ESTABLISHED,NEW,INVALID -d 0/0 --dport 1024:65535 --sport 636\n\n";
+  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp -m state --state ESTABLISHED,NEW,INVALID -d 0/0 --dport 1024:65535 --sport 636\n";
+  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp -m state --state ESTABLISHED,NEW,INVALID -s 0/0 --sport 1024:65535 --dport 389\n";
+  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp -m state --state ESTABLISHED,NEW,INVALID -d 0/0 --dport 1024:65535 --sport 389\n\n";
 
   print FW "#Allow Remote SMTP Connections\n";
   $mailconf{'Delivery'}=lc($mailconf{'Delivery'});
