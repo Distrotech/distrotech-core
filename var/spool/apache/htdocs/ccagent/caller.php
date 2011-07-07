@@ -22,12 +22,11 @@ include "/var/spool/apache/htdocs/cdr/apifunc.inc";
 
 function dialchan($channel) {
   global $db;
-  $linetype=pg_query($db,"SELECT CASE WHEN (tdm.value > 0) THEN 'Zap/'||tdm.value ELSE
-                                   CASE WHEN (iax.value = '1') THEN 'IAX2/'||name ELSE 'SIP/'||name
+  $linetype=pg_query($db,"SELECT CASE WHEN (zapline > 0) THEN 'Zap/'||zapline ELSE
+                                   CASE WHEN (iaxline = '1') THEN 'IAX2/'||name ELSE 'SIP/'||name
                                    END
                                  END
-                            FROM users LEFT OUTER JOIN astdb AS iax ON (family = name AND key='IAXLine')
-                                       LEFT OUTER JOIN astdb AS tdm ON (tdm.family=name and tdm.key='ZAPLine')
+                            FROM users LEFT OUTER JOIN features ON (exten = name)
                                 WHERE name='" . $channel . "'");
   if (pg_num_rows($linetype) > 0) {
     $ltype=pg_fetch_row($linetype,0);

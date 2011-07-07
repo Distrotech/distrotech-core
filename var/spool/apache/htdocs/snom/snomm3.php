@@ -4,7 +4,8 @@ include "../cdr/autoadd.inc";
 
 $mac=strtoupper($mac);
 
-$getphoneq="SELECT name,secret,fullname,register.value,usermode.value,nat,dtmfmode,vlanid.value,nodnd.value from users LEFT OUTER JOIN astdb AS nodnd ON (nodnd.family=name AND nodnd.key='CDND') LEFT OUTER JOIN astdb AS register ON (register.family=name AND register.key='REGISTRAR') LEFT OUTER JOIN astdb AS usermode ON (usermode.family=name AND usermode.key='SNOMLOCK') LEFT OUTER JOIN astdb AS vlanid ON (vlanid.family=name AND vlanid.key='VLAN') LEFT OUTER JOIN astdb ON (astdb.family=name AND astdb.key='SNOMMAC') WHERE astdb.value='" . $mac . "' LIMIT 1";
+$getphoneq="SELECT name,secret,fullname,registrar,snomlock,nat,dtmfmode,vlan,cdnd from users 
+               LEFT OUTER JOIN features ON (name=exten) WHERE snommac='" . $mac . "' LIMIT 1";
 $getphone=pg_query($db,$getphoneq);
 
 if (pg_num_rows($getphone) == 0) {

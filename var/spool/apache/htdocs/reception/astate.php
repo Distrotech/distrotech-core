@@ -28,13 +28,14 @@ include "auth.inc";
   <TH COLSPAN=4 CLASS=heading-body><%print _("User Available State")%></TH>
 </TR><TR CLASS=list-color1>
 <%
-$ustateq="SELECT '    <TD CLASS=option-'||CASE WHEN (astdb.value = 1) THEN 'red' ELSE 'green' END ||'>'||astdb.family||' ('||fullname||')</TD>\n' from astdb 
-  LEFT OUTER JOIN astdb AS lpre ON (substr(astdb.family,1,2) = lpre.key AND lpre.family='LocalPrefix')  
-  LEFT OUTER JOIN users ON (name=astdb.family)
-  LEFT OUTER JOIN astdb AS dgroup ON (dgroup.family=users.name AND dgroup.key='DGROUP')  
-  WHERE astdb.key='CDND' AND lpre.value='1' AND 
-    (dgroup.value = '" . $msqldat[5] . "' OR dgroup.value IS NULL) order by astdb.family";
+$ustateq="SELECT '    <TD CLASS=option-'||CASE WHEN (cdnd = 1) THEN 'red' ELSE 'green' END ||'>'||name||' ('||fullname||')</TD>\n' from 
+users 
+  LEFT OUTER JOIN astdb AS lpre ON (substr(name,1,2) = lpre.key AND lpre.family='LocalPrefix')  
+  LEFT OUTER JOIN features ON (exten=users.name)  
+  WHERE lpre.value='1' AND 
+    (dgroup = '" . $msqldat[5] . "' OR dgroup IS NULL) order by name";
 $ustates=pg_query($db,$ustateq);
+//print $ustateq . "<P>";
 $rcnt=1;
 for($qcnt=0;$qcnt<pg_num_rows($ustates);$qcnt++) {
   $ustate=pg_fetch_array($ustates);

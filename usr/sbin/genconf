@@ -13274,7 +13274,7 @@ BDATE=`date +%Y-%m-%d`
 BFILE=/var/spool/backup/backup-\${BDATE}.tar
 
 if [ `"whoami"` == "root" ] || [ `"whoami"` == "admin" ];then
-  /usr/bin/pg_dump -U asterisk -h 127.0.0.1 -aDt users -t astdb -t queues -t queue_members -t queue_table -t dynspan -t zapspan -t zapchan -t zapgroup -t gsmchannels -t provider -t trunk -t officehours -t cc_callerid |/usr/bin/grep -vE "(^\$)|(^--)" |/usr/bin/gzip -c > /var/spool/backup/pbxdata-\${BDATE}.sql.gz
+  /usr/bin/pg_dump -U asterisk -h 127.0.0.1 -aDt users -t features -t astdb -t queues -t queue_members -t queue_table -t dynspan -t zapspan -t zapchan -t zapgroup -t gsmchannels -t provider -t trunk -t officehours -t cc_callerid |/usr/bin/grep -vE "(^\$)|(^--)" |/usr/bin/gzip -c > /var/spool/backup/pbxdata-\${BDATE}.sql.gz
 fi;
 
 rm /var/spool/backup/pbxdata.sql.gz
@@ -13391,7 +13391,7 @@ if ( $voipbackup eq "true") {
   print BUS "echo $fcnt VOIP Configuration\n";
   print BUS "/bin/touch /tmp/asterisk.psql.gz\n/bin/chmod 600 /tmp/asterisk.psql.gz\n";
   print BUS <<__EOF__;
-pg_dump -U asterisk -h 127.0.0.1 -dat users -t astdb -t queue_members -t queue_tables -t officehours -t dynspan \\
+pg_dump -U asterisk -h 127.0.0.1 -dat users -t features -t astdb -t queue_members -t queue_tables -t officehours -t dynspan \\
                                  -t zapchan -t zapspan -t zapgroup -t gsmchannels -t trunk -t localrates \\
                                  -t provider -t tariff -t tariffrate -t reseller |gzip -c |dd of=/tmp/asterisk.psql.gz
 
@@ -14398,7 +14398,15 @@ __EOF__
 sub printmisdn() {
   $dsn = "DBI:ODBC:Asterisk";
   $dbh = DBI->connect($dsn,"asterisk","$sqlvoippass") or return;
-  $isdnportq="SELECT astdb.value,ians.value,irrr.value,rxgain.value,txgain.value,iports.value,fports.value FROM astdb LEFT OUTER JOIN astdb AS ians ON (ians.family=astdb.family AND ians.key='mISDNimm') LEFT OUTER JOIN astdb AS irrr ON (irrr.family=astdb.family AND irrr.key='mISDNrr') LEFT OUTER JOIN astdb AS rxgain ON (rxgain.family=astdb.family AND rxgain.key='mISDNgainrx') LEFT OUTER JOIN astdb AS txgain ON (txgain.family=astdb.family AND txgain.key='mISDNgaintx') LEFT OUTER JOIN astdb AS iports ON (iports.family=iports.family AND iports.key='mISDNinports') LEFT OUTER JOIN astdb AS fports ON (fports.family=fports.family AND fports.key='mISDNfwdports') WHERE astdb.family='Setup' AND astdb.key='mISDNports'";
+  $isdnportq="SELECT astdb.value,ians.value,irrr.value,rxgain.value,txgain.value,iports.value,fports.value FROM astdb
+    LEFT OUTER JOIN astdb AS ians ON (ians.family=astdb.family AND ians.key='mISDNimm') 
+    LEFT OUTER JOIN astdb AS irrr ON (irrr.family=astdb.family AND irrr.key='mISDNrr') 
+    LEFT OUTER JOIN astdb AS rxgain ON (rxgain.family=astdb.family AND rxgain.key='mISDNgainrx') 
+    LEFT OUTER JOIN astdb AS txgain ON (txgain.family=astdb.family AND txgain.key='mISDNgaintx')
+    LEFT OUTER JOIN astdb AS iports ON (iports.family=iports.family AND iports.key='mISDNinports')
+    LEFT OUTER JOIN astdb AS fports ON (fports.family=fports.family AND fports.key='mISDNfwdports') 
+   WHERE astdb.family='Setup' AND astdb.key='mISDNports'";
+
   $getisdnport=$dbh->prepare($isdnportq);
   $getisdnport->execute;
   @row=$getisdnport->fetchrow_array;
@@ -14627,7 +14635,7 @@ sub printzapata() {
         $firstas=$index+1;
         $lastas=$firstas;
         foreach $chan ($span->chans()) {
-          $checkchan=$dbh->prepare("SELECT id FROM astdb WHERE key='ZAPLine' AND value='" . $chan->num . "'");
+          $checkchan=$dbh->prepare("SELECT id FROM features WHERE zapline = '" . $chan->num . "'");
           $checkchan->execute;
           $chantype{$chan->num}=$chan->type;
           if (($chan->type eq "FXO") && ($chan->info eq "")) {
@@ -14692,7 +14700,7 @@ sub printzapata() {
         }
       }
       if (($lastas ne "" ) && ($lastas == $firstas)  && (-e "/dev/dahdi/" . $firstas) && ($chantype{$lastas} eq "FXS")) {
-        $checkchan=$dbh->prepare("SELECT id FROM astdb WHERE key='ZAPLine' AND value='" . $lastas . "'");
+        $checkchan=$dbh->prepare("SELECT id FROM features WHERE zapline='" . $lastas . "'");
         $checkchan->execute;
         if ($checkchan->rows == 0) {
           push(@fxs,$firstas);
@@ -14834,7 +14842,14 @@ __EOB__
 #    print ZC "\n";
 #  }
 
-  $zapchanq=" SELECT name as label,'\"'||fullname||'\" <'||name||'>' as callerid,mailbox||'\@'||context as mailbox,context,callgroup,pickupgroup,case when (zsig.value is not null) then zsig.value else 'fxo_ks' end as signalling,case when (zaprxgain.value is not null) then zaprxgain.value else '0' end as rxgain,case when (zaptxgain.value is not null) then zaptxgain.value else '0' end as txgain,case when (zap.value is not null and zap.value != '0') then zap.value else '' end as channel from users left outer join astdb as zap on (zap.family=name AND zap.key='ZAPLine') left outer join astdb as cli on (cli.family=name AND cli.key='CLI') left outer join astdb as zsig on (zsig.family=name and zsig.key='ZAPProto') left outer join astdb as zaprxgain on (zaprxgain.family=name and zaprxgain.key='ZAPRXGain') left outer join astdb as zaptxgain on (zaptxgain.family=name and zaptxgain.key='ZAPTXGain') left outer join astdb as lpre on (lpre.family='LocalPrefix' AND lpre.key=substring(name,1,2)) where lpre.value=1 and length(name) = 4 and zap.value is not null and zap.value != '0' ORDER BY name";
+  $zapchanq=" SELECT name as label,'\"'||fullname||'\" <'||name||'>' as callerid,mailbox||'\@'||context as mailbox,context,
+        callgroup,pickupgroup,case when (zapproto is not null) then zapproto else 'fxo_ks' end as signalling,
+        case when (zaprxgain is not null) then zaprxgain else '0' end as rxgain,
+        case when (zaptxgain is not null) then zaptxgain else '0' end as txgain,
+        case when (zapline is not null and zapline != '0') then zapline else '' end as channel from users 
+      left outer join features on (exten=name) 
+      left outer join astdb as lpre on (lpre.family='LocalPrefix' AND lpre.key=substring(name,1,2))
+    where lpre.value=1 and length(name) = 4 and zapline is not null and zapline != '0' ORDER BY name";
 
   $getzap=$dbh->prepare($zapchanq);
   $getzap->execute;
@@ -15070,7 +15085,10 @@ __EOB__
 
 
   $chans="";
-  $zapspanq="SELECT zap.value,case when (zsig.value is null) then 'fxoks' else case when (substr(zsig.value,1,3) = 'fxo') then 'fxo'||substr(zsig.value,5) else zsig.value end end from astdb as zap left outer join astdb as zsig ON (zap.family=zsig.family AND zsig.key='ZAPProto') where zap.key='ZAPLine' and zap.value != 0 and zap.value is not null order by zap.value";
+  $zapspanq="SELECT zapline,case when (zapproto is null) then 'fxoks' else 
+                case when (substr(zapproto,1,3) = 'fxo') then 'fxo'||substr(zapproto,5) else zapproto end end 
+           from features where zapline != 0 and zapline is not null order by zapline";
+
   $getzap=$dbh->prepare($zapspanq);
   $getzap->execute;
   while(@row=$getzap->fetchrow_array) {
@@ -15135,7 +15153,9 @@ __EOF__
 ;Extensions
 __EOF__
 
-  $blfquery="SELECT CASE WHEN (zapuser.value > 0) THEN 'exten => '||name||',hint,Zap/'||zapuser.value WHEN (iaxuser.value > 0) THEN 'exten => '||name||',hint,IAX2/'||name ELSE 'exten => '||name||',hint,SIP/'||name END FROM users left outer join astdb as iaxuser on (iaxuser.family=name AND iaxuser.key='IAXLine') left outer join astdb as zapuser on (zapuser.family=name AND zapuser.key='ZAPLine') left outer join astdb as h323user on (h323user.family=name AND h323user.key='H323Line') where length(name)=4 ORDER BY name";
+  $blfquery="SELECT CASE WHEN (zapline > 0) THEN 'exten => '||exten||',hint,Zap/'||zapline 
+               WHEN (iaxline > 0) THEN 'exten => '||exten||',hint,IAX2/'||exten ELSE 'exten => '||exten||',hint,SIP/'||exten END 
+             FROM features where length(exten)=4 ORDER BY exten";
 
 #  $blfquery="SELECT CASE WHEN (zapuser.value > 0) THEN 'exten => '||name||',hint,SLA:Zap/'||zapuser.value WHEN (iaxuser.value > 0) THEN 'exten => '||name||',hint,SLA:IAX2/'||name ELSE 'exten => '||name||',hint,SLA:SIP/'||name END FROM users left outer join astdb as iaxuser on (iaxuser.family=name AND iaxuser.key='IAXLine') left outer join astdb as zapuser on (zapuser.family=name AND zapuser.key='ZAPLine') left outer join astdb as h323user on (h323user.family=name AND h323user.key='H323Line') where length(name)=4 ORDER BY name";
 

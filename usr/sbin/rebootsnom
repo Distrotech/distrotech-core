@@ -9,7 +9,7 @@ if (! isset($agi)) {
 
 $agi->connect("127.0.0.1","admin","admin");
 
-$curext=pg_query("SELECT name,ipaddr,(name=secret OR length(secret) > 4 OR secret='' OR secret IS NULL) from users left outer join astdb as lkey on (substr(name,0,3)=lkey.key) LEFT OUTER JOIN astdb AS ptype ON (name=ptype.family AND ptype.key='PTYPE') LEFT OUTER JOIN astdb AS macok ON (name=macok.family AND macok.key='SNOMMAC') WHERE macok.value != '' AND macok.value IS NOT NULL AND ptype.value='SNOM' AND length(name) = 4 AND lkey.family = 'LocalPrefix' AND lkey.value=1");
+$curext=pg_query("SELECT name,ipaddr,(name=secret OR length(secret) > 4 OR secret='' OR secret IS NULL) from users left outer join astdb as lkey on (substr(name,0,3)=lkey.key) LEFT OUTER JOIN features ON (name=exten)  WHERE snommac != '' AND snommac IS NOT NULL AND ptype='SNOM' AND length(name) = 4 AND lkey.family = 'LocalPrefix' AND lkey.value=1");
 $num=pg_num_rows($curext);
 for($i=0;$i < $num;$i++) {
   $r = pg_fetch_array($curext,$i,PGSQL_NUM);

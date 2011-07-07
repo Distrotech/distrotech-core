@@ -27,18 +27,16 @@ if (is_file("auth.inc")) {
   $dgroup=$msqldat[5];
 }
 
-$cclistq="SELECT name,fullname,email,altc.value,office.value FROM users
+$cclistq="SELECT name,fullname,email,altc,office FROM users
                          LEFT OUTER JOIN astdb ON (key=substr(name,1,2) AND Family='LocalPrefix')
-                         LEFT OUTER JOIN astdb AS altc ON (name = altc.family AND altc.key = 'ALTC')
-                         LEFT OUTER JOIN astdb AS office ON (name = office.family AND office.key = 'OFFICE')
-                         LEFT OUTER JOIN astdb AS dgroup ON (name = dgroup.family AND dgroup.key = 'DGROUP')";
+                         LEFT OUTER JOIN features ON (name = exten)";
 if ($SUPER_USER != 1) {
  $cclistq.=" LEFT OUTER JOIN astdb AS bgrp ON (bgrp.family=name AND bgrp.key='BGRP')";
 }
 
 $cclistq.=" WHERE astdb.value=1";
 if ($dgroup != "") {
-  $cclistq.=" AND dgroup.value='" . $dgroup . "'";
+  $cclistq.=" AND dgroup='" . $dgroup . "'";
 }
 if ($SUPER_USER != 1) {
   $cclistq.=" AND " . $clogacl;

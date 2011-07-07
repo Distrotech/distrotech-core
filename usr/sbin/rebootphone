@@ -4,12 +4,23 @@
 $pwlen=8;
 $validpw="(name=secret OR length(secret) != " . $pwlen . " OR secret='' OR secret IS NULL OR secret !~ '[0-9]' OR secret !~ '[a-z]' OR secret !~ '[A-Z]')";
 
-$ptype['snom']="SELECT name,ipaddr," . $validpw . " from users left outer join astdb as lkey on (substr(name,0,3)=lkey.key) LEFT OUTER JOIN astdb AS ptype ON (name=ptype.family AND ptype.key='PTYPE') LEFT OUTER JOIN astdb AS macok ON (name=macok.family AND macok.key='SNOMMAC') WHERE macok.value != '' AND macok.value IS NOT NULL AND ptype.value='SNOM' AND length(name) = 4 AND lkey.family = 'LocalPrefix' AND lkey.value=1";
-$ptype['polycom']="SELECT name,ipaddr," . $validpw . " from users left outer join astdb as lkey on (substr(name,0,3)=lkey.key) LEFT OUTER JOIN astdb AS ptype ON (name=ptype.family AND ptype.key='PTYPE') LEFT OUTER JOIN astdb AS macok ON (name=macok.family AND macok.key='SNOMMAC') WHERE macok.value != '' AND macok.value IS NOT NULL AND (ptype.value='POLYCOM' OR ptype.value ~ '^IP_[0-9]+$') AND length(name) = 4 AND lkey.family = 'LocalPrefix' AND lkey.value=1";
-$ptype['zap']="SELECT name,value," . $validpw . " from users left outer join astdb on (name=family AND key='ZAPLine') where value ~ '^[1-9]'";
-$ptype['queue']="SELECT users.name,1," . $validpw . " from users left outer join queue_table USING (name) where queue_table.name IS NOT NULL";
+$ptype['snom']="SELECT name,ipaddr," . $validpw . " from users 
+  left outer join astdb as lkey on (substr(name,0,3)=lkey.key) 
+  LEFT OUTER JOIN features ON (name=exten)
+ WHERE snommac != '' AND snommac IS NOT NULL AND ptype='SNOM' AND length(name) = 4 AND lkey.family = 'LocalPrefix' AND 
+    lkey.value=1";
+$ptype['polycom']="SELECT name,ipaddr," . $validpw . " from users 
+  left outer join astdb as lkey on (substr(name,0,3)=lkey.key) 
+  LEFT OUTER JOIN features ON (name=exten)
+ WHERE snommac != '' AND snommac IS NOT NULL AND (ptype='POLYCOM' OR ptype ~ '^IP_[0-9]+$') AND length(name) = 4 AND lkey.family = 'LocalPrefix' AND lkey.value=1";
+$ptype['zap']="SELECT name,zapline," . $validpw . " from users 
+  LEFT OUTER JOIN features ON (name=exten) where zapline ~ '^[1-9]'";
+$ptype['queue']="SELECT users.name,1," . $validpw . " from users 
+  left outer join queue_table USING (name) where queue_table.name IS NOT NULL";
 $ptype['h323']="SELECT name,ipaddr," . $validpw . " from users where h323neighbor and h323gkid is not null";
-$ptype['trunk']="SELECT name,value," . $validpw . " from users LEFT OUTER JOIN astdb ON (family=name AND key = 'FWDU') where value != '0' AND value != '1' AND value IS NOT NULL";
+  $ptype['trunk']="SELECT name,fwdu," . $validpw . " from users 
+  LEFT OUTER JOIN features ON (name=exten)
+ where fwdu != '0' AND fwdu != '1' AND fwdu IS NOT NULL";
 
 $boot['snom']=TRUE;
 $boot['polycom']=TRUE;
@@ -40,6 +51,7 @@ while(list($phone,$query) = each($ptype)) {
       $newpass=randpwgen($pwlen);
       if ($boot[$phone]) {
         $agi->command("sip notify reboot-" . $phone . " " . $r[0]);
+        $agi->command("sip prune realtime peer " . $r[0]);
       }
       pg_query($db,"UPDATE users SET secret='" . $newpass . "' WHERE name='" . $r[0] . "'");
       if ($boot[$phone]) {
@@ -49,6 +61,8 @@ while(list($phone,$query) = each($ptype)) {
       }
     } else if ((($_SERVER['argv'][1] == "") || ($_SERVER['argv'][1] == "1")) && ($boot[$phone]))  {
       $agi->command("sip notify reboot-" . $phone . " " . $r[0]);
+      $agi->command("sip prune realtime peer " . $r[0]);
+      $agi->command("sip prune realtime user " . $r[0]);
     }
   }
 }

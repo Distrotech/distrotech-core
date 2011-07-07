@@ -37,18 +37,14 @@ $auth_ures=ldap_first_entry($ds,$auth_ussr);
 $suser=ldap_get_attributes($ds,$auth_ures);
 
 $pwlen=8;
-$getphoneq="SELECT name,secret,fullname,register.value,usermode.value,nat,dtmfmode,vlanid.value,nodnd.value,
+$getphoneq="SELECT name,secret,fullname,registrar,snomlock,nat,dtmfmode,vlan,cdnd,
                    (name=secret OR length(secret) != " . $pwlen . " OR secret='' OR secret IS NULL OR
                     secret !~ '[0-9]' OR secret !~ '[a-z]' OR secret !~ '[A-Z]'),
 		   case when (encryption_taglen = '32') then encryption||',32bit' else encryption end,
                    transport
               FROM users 
-                LEFT OUTER JOIN astdb AS nodnd ON (nodnd.family=name AND nodnd.key='CDND') 
-                LEFT OUTER JOIN astdb AS register ON (register.family=name AND register.key='REGISTRAR') 
-                LEFT OUTER JOIN astdb AS usermode ON (usermode.family=name AND usermode.key='SNOMLOCK') 
-                LEFT OUTER JOIN astdb AS vlanid ON (vlanid.family=name AND vlanid.key='VLAN') 
-                LEFT OUTER JOIN astdb ON (astdb.family=name AND astdb.key='SNOMMAC') 
-              WHERE astdb.value='" . $mac . "' LIMIT 1";
+                LEFT OUTER JOIN features ON (name=exten)
+              WHERE snommac='" . $mac . "' LIMIT 1";
 $getphone=pg_query($db,$getphoneq);
 
 if (pg_num_rows($getphone) == 0) {

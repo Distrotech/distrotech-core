@@ -9,8 +9,8 @@
 <%
 include_once "autoadd.inc";
 $extensq="SELECT name,fullname,secret,
-            CASE WHEN (ptype.value = 'SNOM') THEN 'snom' ELSE CASE WHEN (ptype.value ~ '(^POLYCOM$)|(^IP_[0-9]+$)') THEN 'polycom' END END from users 
-           LEFT OUTER JOIN astdb AS ptype ON (name=ptype.family AND ptype.key='PTYPE') ";
+            CASE WHEN (ptype = 'SNOM') THEN 'snom' ELSE CASE WHEN (ptype ~ '(^POLYCOM$)|(^IP_[0-9]+$)') THEN 'polycom' END END from users 
+           LEFT OUTER JOIN features ON (name=exten) ";
 if ($SUPER_USER != 1) {
   $extensq.=" LEFT OUTER JOIN astdb AS bgrp ON (name=bgrp.family AND bgrp.key='BGRP')";
 }

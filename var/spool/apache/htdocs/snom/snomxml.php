@@ -31,7 +31,7 @@ if ($sipver[0] >= 8) {%>
     <display_method perm="R">display_name_number</display_method>
     <update_policy perm="R">auto_update</update_policy>
 <% 
-if ($sipver[0] >= 8) {
+if (($sipver[0] >= 8) && ($sipver[1] >= 4)) {
   if (($vlantag != "") && ($vlantag > 1)) {
 %>
     <vlan_id perm="R"><%print $vlantag;%></vlan_id>
@@ -129,37 +129,20 @@ if (($SERVER_NAME != "") && ($phone != "") && (is_file("snom" . $phone . "-fw.ph
     <dkey_directory perm="R">keyevent F_DIRECTORY_SEARCH</dkey_directory>
 <%
 
-$getring=pg_query($db,"SELECT substr(key,6,1),value FROM astdb WHERE family = '" . $exten . "' AND key ~ '^SRING[0-3]$'");
+$getring=pg_query($db,"SELECT sring0,sring1,sring2,sring3 from features where exten = '" . $exten . "' LIMIT 1");
 
-for($i=0;$i < pg_num_rows($getring);$i++){
-  $getdata=pg_fetch_array($getring,$i);
-  $dring[$getdata[0]]=true;
-  switch ($getdata[0]) {
-    case 0:print "    <ring_sound perm=\"R\">Ringer" . $getdata[1] . "</ring_sound>\n";
-	   $defring=$getdata[1];
-           break;
-    case 1:print "    <alert_internal_ring_sound perm=\"R\">Ringer" . $getdata[1] . "</alert_internal_ring_sound>\n";
-           break;
-    case 2:print "    <alert_group_ring_sound perm=\"R\">Ringer" . $getdata[1] . "</alert_group_ring_sound>\n";
-           break;
-    case 3:print "    <alert_external_ring_sound perm=\"R\">Ringer" . $getdata[1] . "</alert_external_ring_sound>\n";
-           break;
-  }
-}
-
+$getdata=pg_fetch_array($getring,0,PGSQL_NUM);
 for($gotring=0;$gotring <= 3;$gotring++) {
-  if (!$dring[$gotring]) {
-    switch ($gotring) {
-      case 0:print "    <ring_sound perm=\"R\">Ringer6</ring_sound>\n";
-  	     $defring=6;
-             break;
-      case 1:print "    <alert_internal_ring_sound perm=\"R\">Ringer3</alert_internal_ring_sound>\n";
-             break;
-      case 2:print "    <alert_group_ring_sound perm=\"R\">Ringer1</alert_group_ring_sound>\n";
-             break;
-      case 3:print "    <alert_external_ring_sound perm=\"R\">Ringer6</alert_external_ring_sound>\n";
-             break;
-    }
+  switch ($gotring) {
+    case 0:print "    <ring_sound perm=\"R\">Ringer" . $getdata[$gotring] . "</ring_sound>\n";
+	   $defring=$getdata[$gotring];
+           break;
+    case 1:print "    <alert_internal_ring_sound perm=\"R\">Ringer" . $getdata[$gotring] . "</alert_internal_ring_sound>\n";
+           break;
+    case 2:print "    <alert_group_ring_sound perm=\"R\">Ringer" . $getdata[$gotring] . "</alert_group_ring_sound>\n";
+           break;
+    case 3:print "    <alert_external_ring_sound perm=\"R\">Ringer" . $getdata[$gotring] . "</alert_external_ring_sound>\n";
+           break;
   }
 }
 

@@ -40,6 +40,7 @@ if (isset($_POST['saveuser'])) {
   pg_query($db,"UPDATE reseller set rcallocated=rcallocated-" . $booth[1] . " WHERE id = " . $_SESSION['resellerid']);
   pg_query("DELETE FROM users WHERE name='" . $_SESSION['number'] . "'");
   pg_query("DELETE FROM astdb WHERE family='" . $_SESSION['number'] . "'");
+  pg_query("DELETE FROM features WHERE exten='" . $_SESSION['number'] . "'");
   include "getbooth.php";
   return;
 }

@@ -8,8 +8,8 @@
 <INPUT TYPE=HIDDEN NAME=print>
 <%
 include_once "auth.inc";
-$extensq="SELECT name,fullname,secret,password,astdb.value from users
- left outer join astdb on (name = astdb.family and astdb.key='RoamPass')
+$extensq="SELECT name,fullname,secret,password,roampass from users
+ left outer join features on (name = exten)
  left outer join astdb as lpre on (lpre.family = 'LocalPrefix' and lpre.key = substr(name,0,3))";
 if ($SUPER_USER != 1) {
   $extensq.=" LEFT OUTER JOIN astdb AS bgrp ON (name=bgrp.family AND bgrp.key='BGRP')";
@@ -31,15 +31,12 @@ function newpin($exten) {
   while (($pintry <= 10) && ($pincnt > 0)) {
     $randpin=rand(0,9999);
     $randpin=str_pad($randpin,4,"0",STR_PAD_LEFT);
-    $pincntq=pg_query($db,"SELECT count(id) FROM astdb WHERE key='RoamPass' AND value='" . $randpin . "'");
+    $pincntq=pg_query($db,"SELECT count(id) FROM features WHERE roampass='" . $randpin . "'");
     list($pincnt)=pg_fetch_array($pincntq,0);
     $pintry++;
   }
   if ($pincnt == 0) {
-    $ud=pg_query($db,"UPDATE astdb SET value='" . $randpin . "' WHERE key='RoamPass' AND family='" . $exten . "'");
-    if (pg_affected_rows($ud) <= 0) {
-      pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','RoamPass','" . $randpin . "')");
-    }
+    $ud=pg_query($db,"UPDATE features SET roampass='" . $randpin . "' WHERE exten='" . $exten . "'");
   }
   return $randpin;
 }

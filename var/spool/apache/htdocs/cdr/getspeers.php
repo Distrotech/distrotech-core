@@ -32,7 +32,7 @@ if (! isset($agi)) {
 
 if (($dbfam != "") && ($dbkey != "")) {
   if (($dbkey != "qualify") && ($dbkey != "nat")){
-    pg_query($db,"UPDATE astdb SET value='" . strtolower($dbval) . "' WHERE family='" . $dbfam . "' AND key='" . $dbkey . "'");
+    pg_query($db,"UPDATE features SET " . $dbkey . "='" . strtolower($dbval) . "' WHERE exten='" . $dbfam . "'");
   } else {
     if ($dbval == 0) {
       if ($dbkey == "nat") {
@@ -78,15 +78,9 @@ $allexten=array();
 foreach(explode("\n",$speer['data']) as $line) {
   if (! ereg("(^[a-zA-Z])|(^$)|(^[0-9]+ sip peers \[)",$line)) {
     if (ereg("^([0-9]{4})/[0-9]{4}[ ]+([0-9]*\.[0-9]*\.[0-9]*\.[0-9]*|\(Unspecified\))[ ]+(D|[ ])[ ]+(N|[ ])[ ]+([0-9]*)[ ]+(UNKNOWN|Unmonitored|OK \([0-9]+ ms\)|LAGGED \([0-9]+ ms\))",$line,$data)) {
-      $getastq="SELECT dnd.value,cfim.value,cfbu.value,cfna.value,fullname,tout.value,novmail.value,cwait.value FROM 
+      $getastq="SELECT cdnd,cfim,cfbu,cfna,fullname,tout,novmail,wait FROM 
                   users 
-                  LEFT OUTER JOIN astdb AS dnd ON (dnd.family=name AND dnd.key='CDND')
-                  LEFT OUTER JOIN astdb AS novmail ON (novmail.family=name AND novmail.key='NOVMAIL') 
-                  LEFT OUTER JOIN astdb AS tout ON (tout.family=name AND tout.key='TOUT') 
-                  LEFT OUTER JOIN astdb AS cfim ON (cfim.family=name AND cfim.key='CFIM')
-                  LEFT OUTER JOIN astdb AS cfbu ON (cfbu.family=name AND cfbu.key='CFBU')
-                  LEFT OUTER JOIN astdb AS cwait ON (cwait.family=name AND cwait.key='WAIT')
-                  LEFT OUTER JOIN astdb AS cfna ON (cfna.family=name AND cfna.key='CFNA')";
+                  LEFT OUTER JOIN features ON (exten=name)";
       if ($SUPER_USER != 1) {
                   $getastq.=" LEFT OUTER JOIN astdb AS bgrp ON (bgrp.family=name AND bgrp.key='BGRP')";
       }

@@ -19,15 +19,12 @@ function newpin($exten) {
   while (($pintry <= 10) && ($pincnt > 0)) {
     $randpin=rand(0,9999);
     $randpin=str_pad($randpin,4,"0",STR_PAD_LEFT);
-    $pincntq=pg_query($db,"SELECT count(id) FROM astdb WHERE key='RoamPass' AND value='" . $randpin . "'");
+    $pincntq=pg_query($db,"SELECT count(id) FROM features WHERE roampass='" . $randpin . "'");
     list($pincnt)=pg_fetch_array($pincntq,0);
     $pintry++;
   }
   if ($pincnt == 0) {
-    $ud=pg_query($db,"UPDATE astdb SET value='" . $randpin . "' WHERE key='RoamPass' AND family='" . $exten . "'");
-    if (pg_affected_rows($ud) <= 0) {
-      pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','RoamPass','" . $randpin . "')");
-    }
+    $ud=pg_query($db,"UPDATE features SET roampass='" . $randpin . "' WHERE exten=" . $exten);
   }
   return $randpin;
 }
@@ -99,38 +96,37 @@ function createexten($mac,$phonetype,$prefix,$start,$tdmport) {
                                        ,'0','Exten '||" . $newexten . ",'','1','1','yes','" . $encrypt . "','" . $transport . "')";
       pg_query($db,$exaddq);
       pg_query($db,"DELETE FROM astdb where family=" . $newexten);
-      pg_query($db,"INSERT INTO astdb (family,key,value) SELECT " . $newexten . ",'TOUT',value FROM astdb WHERE family='Setup' AND key='Timeout'");
-      pg_query($db,"INSERT INTO astdb (family,key,value) SELECT " . $newexten . ",'NOVMAIL',value FROM astdb WHERE family='Setup' AND key='DEFNOVMAIL'");
+      pg_query($db,"DELETE FROM features where exten=" . $newexten);
+      pg_query($db,"INSERT INTO features (exten) VALUES (" . $newexten . ")");
+      $defaults=pg_query($db,"SELECT key,value FROM astdb where family='Setup' and 
+                      (key='DEFNOVMAIL' OR key='Timeout' OR key='Context' OR key='AuthContext' OR key='DEFALOCK' OR key='DEFRECORD')");
 
-      pg_query($db,"INSERT INTO astdb (family,key,value) SELECT " . $newexten . ",'ACCESS',value FROM astdb WHERE family='Setup' AND key='Context'");
-      pg_query($db,"INSERT INTO astdb (family,key,value) SELECT " . $newexten . ",'AUTHACCESS',value FROM astdb WHERE family='Setup' AND key='AuthContext'");
-      pg_query($db,"INSERT INTO astdb (family,key,value) SELECT " . $newexten . ",'ALOCK',value FROM astdb WHERE family='Setup' AND key='DEFALOCK'");
-      pg_query($db,"INSERT INTO astdb (family,key,value) SELECT " . $newexten . ",'RECORD',value FROM astdb WHERE family='Setup' AND key='DEFRECORD'");
+      $setdef['Timeout']="TOUT";
+      $setdef['DEFNOVMAIL']="NOVMAIL";
+      $setdef['Context']="ACCESS";
+      $setdef['AuthContext']="AUTHACCESS";
+      $setdef['DEFALOCK']="ALOCK";
+      $setdef['DEFRECORD']="RECORD";
 
-      pg_query("INSERT INTO astdb (family,key,value) VALUES (" . $newexten . ",'FWDU','0')");
-      pg_query("INSERT INTO astdb (family,key,value) VALUES (" . $newexten . ",'WAIT','1')");
-      pg_query("INSERT INTO astdb (family,key,value) VALUES (" . $newexten . ",'CFIM','0')");
-      pg_query("INSERT INTO astdb (family,key,value) VALUES (" . $newexten . ",'CFNA','0')");
-      pg_query("INSERT INTO astdb (family,key,value) VALUES (" . $newexten . ",'CFBU','0')");
-      pg_query("INSERT INTO astdb (family,key,value) VALUES (" . $newexten . ",'FWDU','0')");
+      for($def=0;$def < pg_num_rows($defaults);$def++) {
+        $r=pg_fetch_array($defaults,$def,PGSQL_NUM);
+        pg_query($db,"UPDATE features SET " . $setdef[$r[0]] . "='" . $r[1] . "' where exten=" . $newexten);
+      }
 
       if ($autovars['AutoVLAN'] > 1) {
-        pg_query("INSERT INTO astdb (family,key,value) VALUES (" . $newexten . ",'VLAN','" . $autovars['AutoVLAN'] . "')");
-      } else {
-        pg_query("INSERT INTO astdb (family,key,value) VALUES (" . $newexten . ",'VLAN','')");
+        pg_query("UPDATE features SET vlan='" . $autovars['AutoVLAN'] . "' where exten=" . $newexten);
       }
-
-      pg_query("INSERT INTO astdb (family,key,value) VALUES (" . $newexten . ",'SNOMLOCK','" . $autovars['AutoLock'] . "')");
+      pg_query("UPDATE features SET snommac='" . $autovars['AutoLock'] . "' where exten=" . $newexten);
       if ($phonetype != "") {
-        pg_query("INSERT INTO astdb (family,key,value) VALUES (" . $newexten . ",'PTYPE','" . $phonetype . "')");
+        pg_query("UPDATE features SET ptype='" . $phonetype . "' where exten=" . $newexten);
       }
       if (($tdmport > 0) && ($tdmport != "")) {
-        pg_query("INSERT INTO astdb (family,key,value) VALUES (" . $newexten . ",'ZAPLine','" . $tdmport . "')");
+        pg_query("UPDATE features SET zapline='" . $tdmport . "' where exten=" . $newexten);
       } else {
-        pg_query("INSERT INTO astdb (family,key,value) VALUES (" . $newexten . ",'AUTOAUTH','" . $autovars['AutoAuth'] . "')");
+        pg_query("UPDATE features SET autoauth='" . $autovars['AutoAuth'] . "' where exten=" . $newexten);
       }
       if ($mac != "") {
-        pg_query("INSERT INTO astdb (family,key,value) VALUES (" . $newexten . ",'SNOMMAC','" . $mac . "')");
+        pg_query("UPDATE features SET snommac='" . $mac . "' where exten=" . $newexten);
       }
       $ret=$extennum;
       newpin($newexten);

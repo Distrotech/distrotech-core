@@ -92,7 +92,6 @@ if (isset($pbxupdate)) {
   $vadmintemp=$vadmindef;
   while(list($defkey,$defval) = each($vadmintemp)) {
     if (isset($$defkey)) {
-//      print "UPDATE astdb SET value='" . $$defkey . "' WHERE family='Setup' AND key='" . $defkey . "'";
       pg_query("UPDATE astdb SET value='" . $$defkey . "' WHERE family='Setup' AND key='" . $defkey . "'");
     }
   }
@@ -741,7 +740,7 @@ if ($origdata['FAXBOX'] == "") {
       <SELECT NAME=FAXT>
         <OPTION VALUE=><%print _("Auto Fax Detect & Receive");%></OPTION>
 <%
-	$exusers=pg_query($db,"SELECT fullname,name FROM users LEFT OUTER JOIN astdb ON (name=family AND key='ZAPLine') LEFT OUTER JOIN astdb AS epre ON (epre.family='LocalPrefix' AND epre.key=substring(name,1,2)) WHERE length(name) = 4 AND (allow ~ '(ulaw)|(alaw)' OR astdb.value > 0) AND epre.value = 1 ORDER BY fullname");
+	$exusers=pg_query($db,"SELECT fullname,name FROM users LEFT OUTER JOIN features ON (name=exten) LEFT OUTER JOIN astdb AS epre ON (epre.family='LocalPrefix' AND epre.key=substring(name,1,2)) WHERE length(name) = 4 AND (allow ~ '(ulaw)|(alaw)' OR zapline > 0) AND epre.value = 1 ORDER BY fullname");
         $unum=pg_num_rows($exusers);
         for($i=0;$i<$unum;$i++){
           $adata=pg_fetch_array($exusers,$i);

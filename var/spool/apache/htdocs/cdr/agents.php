@@ -181,12 +181,11 @@ if (isset($queue)) {
     $oweight=$weight;
     if ((!strpos($channel,"/")) && ($olagent == "")) {
       $origchan=$channel;
-      $linetype=pg_query($db,"SELECT CASE WHEN (tdm.value > 0) THEN 'DAHDI/'||tdm.value ELSE 
-                                       CASE WHEN (iax.value = '1') THEN 'IAX2/'||name ELSE 'SIP/'||name
+      $linetype=pg_query($db,"SELECT CASE WHEN (zapline > 0) THEN 'DAHDI/'||zapline ELSE 
+                                       CASE WHEN (iaxline = '1') THEN 'IAX2/'||name ELSE 'SIP/'||name
                                        END 
                                      END
-                                FROM users LEFT OUTER JOIN astdb AS iax ON (family = name AND key='IAXLine') 
-                                           left OUTER JOIN astdb AS tdm ON (tdm.family=name and tdm.key='ZAPLine') 
+                                FROM users LEFT OUTER JOIN features ON (exten = name)
                                 WHERE name='" . $channel . "'");
       if (pg_num_rows($linetype) > 0) {
         $ltype=pg_fetch_row($linetype,0);
@@ -225,7 +224,12 @@ if (isset($queue)) {
   print "<TR CLASS=list-color1>";
   print "<TH CLASS=heading-body2 WIDTH=100>" . _("Active")  . "</TH><TH CLASS=heading-body2>" . _("Agent") . "</TH><TH CLASS=heading-body2>" . _("Channel") . "</TH><TH CLASS=heading-body2>" . _("Perm.") . "<TH CLASS=heading-body2>" . _("Weight") . "</TH><TH CLASS=heading-body2>" . _("Ignore Busy Status") . "</TH>";
   print "</TR>";
-  $getagentq="SELECT penalty > 0 as active,CASE WHEN (users.uniqueid is not null) THEN users.fullname ELSE 'Unknown User' END as agent,interface as channel,CASE WHEN (penalty is not null) THEN defpenalty ELSE '" . $dqpenalty. "' END as weight,CASE WHEN (name is not null) THEN name ELSE interface END, ignorebusy,paused > 0 from queue_members left outer join astdb as tdm ON (tdm.value=substr(interface,5) AND tdm.key='ZAPLine') left outer join users on (users.name=substring(interface from position('/' in interface)+1) OR tdm.family=name) where queue_name='" . $queue . "' ORDER BY defpenalty,name";
+  $getagentq="SELECT penalty > 0 as active,CASE WHEN (users.uniqueid is not null) THEN users.fullname ELSE 'Unknown User' END as agent,
+                     interface as channel,CASE WHEN (penalty is not null) THEN defpenalty ELSE '" . $dqpenalty. "' END as weight,
+                     CASE WHEN (name is not null) THEN name ELSE interface END, ignorebusy,paused > 0 
+                   from queue_members left outer join features ON (zapline=substr(interface,5)) 
+                     left outer join users on (users.name=substring(interface from position('/' in interface)+1) OR exten=name)
+                   where queue_name='" . $queue . "' ORDER BY defpenalty,name";
   $getagents=pg_query($getagentq);
   $num=pg_num_rows($getagents);
   $bcolor[1]=" CLASS=list-color1";

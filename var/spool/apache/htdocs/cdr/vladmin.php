@@ -20,7 +20,7 @@
 
 $exten=$_POST['exten'];
 
-function newrpin() {
+function newrpin($exten) {
   global $db;
 
   $pincnt=1;
@@ -29,12 +29,12 @@ function newrpin() {
   while (($pintry <= 10) && ($pincnt > 0)) {
     $randpin=rand(0,9999);
     $randpin=str_pad($randpin,4,"0",STR_PAD_LEFT);
-    $pincntq=pg_query($db,"SELECT count(id) FROM astdb WHERE key='RoamPass' AND value='" . $randpin . "'");
+    $pincntq=pg_query($db,"SELECT count(id) FROM features WHERE roampass='" . $randpin . "'");
     list($pincnt)=pg_fetch_array($pincntq,0);
     $pintry++;
   }
   if ($pincnt == 0) {
-    pg_query($db,"UPDATE astdb SET value='" . $randpin . "' WHERE key='RoamPass' AND family='" . $_POST['exten'] . "'");
+    pg_query($db,"UPDATE features SET roampass='" . $randpin . "' WHERE exten='" . $exten . "'");
   }
   return $randpin;
 }
@@ -91,237 +91,135 @@ $codecd[10]=_("h261 Video Codec");
 $langs=array("es","fr");
 $langn=array(_("Spanish"),_("French"));
 
+$poscb=array("CDND","DRING","WAIT","RECORD","NOPRES","DFEAT","NOVOIP","CRMPOP","IAXLine","H323Line","Locked",
+             "FAXMAIL","SNOMLOCK","POLYDIRLN","DDIPASS","DDIPASS");
+$negcb=array("NOVMAIL");
+$astdbarr=array("CDND","CFBU","CFIM","CFNA","BGRP","CFFAX","ALTC","OFFICE","WAIT","RECORD",
+                "ALOCK","NOPRES","DFEAT","NOVOIP","CRMPOP","NOVMAIL","FAXMAIL","SNOMLOCK","POLYDIRLN","EFAXD",
+                "TOUT","DGROUP","ZAPLine","DDIPASS","ZAPProto","ZAPRXGain","ZAPTXGain","CLI","TRUNK","ACCESS",
+                "AUTHACCESS","IAXLine","H323Line","FWDU","Locked","SNOMMAC","VLAN","REGISTRAR","PTYPE","PURSE",
+                "DRING","SRING0","SRING1","SRING2","SRING3");
+
+/*
+do not move 
+BGRP
+*/
+
 if ((isset($pbxupdate)) && ($pbxupdate == "Save Changes")) {
-  if ($CFIM == "") {
-    $CFIM="0";
+  if ($_POST['CFIM'] == "") {
+    $_POST['CFIM']="0";
   }
-  if ($ZAPLine == "") {
-    $ZAPLine="0";
-  } else if ($ZAPLine != "0") {
+  if ($_POST['CFBU'] == "") {
+    $_POST['CFBU']="0";
+  }
+  if ($_POST['CFNA'] == "") {
+    $_POST['CFNA']="0";
+  }
+  if ($_POST['CFFAX'] == "") {
+    $_POST['CFFAX']="0";
+  }
+
+  if ($_POST['ZAPLine'] == "") {
+    $_POST['ZAPLine']="0";
+  } else if ($_POST['ZAPLine'] != "0") {
 %>
 <SCRIPT>
   alert("ZAP Analogue Extensions Are Not Realtime\nChanges Made To The Channel May Only Reflect On The Hour\n");
 </SCRIPT>
 <%
   }
-  if ($CFBU == "") {
-    $CFBU="0";
-  }
-  if ($CFNA == "") {
-    $CFNA="0";
-  }
-  if ($CFFAX == "") {
-    $CFFAX="0";
-  }
 
   if (($newbgroup != "") && ($SUPER_USER == 1)) {
-    $BGRP=$newbgroup;
+    $_POST['BGRP']=$newbgroup;
   }
 
   if (($newdgroup != "") && ($SUPER_USER == 1)) {
-    $DGROUP=$newdgroup;
+    $_POST['DGROUP']=$newdgroup;
   }
 
-  if ($CDND == "on") {
-    $CDND="1";
-  } else if ($CDND == "") {
-    $CDND="0";
+  for ($cbcnt=0;$cbcnt < count($poscb);$cbcnt++) {
+    if ($_POST[$poscb[$cbcnt]] == "on") {
+      $_POST[$poscb[$cbcnt]] = "1";
+      $$poscb[$cbcnt] = "1";
+    } else {
+      $_POST[$poscb[$cbcnt]] = "0";
+      $$poscb[$cbcnt] = "0";
+    }
   }
 
-  if ($DRING == "on") {
-    $DRING="1";
+  for ($cbcnt=0;$cbcnt < count($negcb);$cbcnt++) {
+    if ($_POST[$negcb[$cbcnt]] == "on") {
+      $_POST[$negcb[$cbcnt]] = "0";
+      $$negcb[$cbcnt] = "0";
+    } else {
+      $_POST[$negcb[$cbcnt]] = "1";
+      $$negcb[$cbcnt] = "1";
+    }
+  }
+
+  if ($_POST['qualify'] == "on") {
+    $_POST['qualify']="yes";
   } else {
-    $DRING="0";
+    $_POST['qualify']="";
   }
 
-  if ($WAIT == "on") {
-    $WAIT="1";
+  if ($_POST['canreinvite'] == "on") {
+    $_POST['canreinvite']="yes";
   } else {
-    $WAIT="0";
+    $_POST['canreinvite']="no";
   }
 
-  if ($RECORD == "on") {
-    $RECORD="1";
+  if ($_POST['t38pt_udptl'] == "on") {
+    $_POST['t38pt_udptl']="yes,redundancy";
   } else {
-    $RECORD="0";
+    $_POST['t38pt_udptl']="no";
   }
 
-  if ($NOPRES == "on") {
-    $NOPRES="1";
+  if ($_POST['activated'] == "on") {
+    $_POST['activated']="t";
   } else {
-    $NOPRES="0";
+    $_POST['activated']="f";
   }
 
-  if ($DFEAT == "on") {
-    $DFEAT="1";
-  } else {
-    $DFEAT="0";
-  }
+  $_POST['SNOMMAC'] = strtoupper($_POST['SNOMMAC']);
 
-  if ($NOVOIP == "on") {
-    $NOVOIP="1";
+  if (($_POST['h323neighbor'] == "on") && ($_POST['h323permit'] != "") && ($_POST['h323permit'] != "0.0.0.0")) {
+    $_POST['h323neighbor']="t";
+    pg_query($db,"UPDATE users SET ipaddr='" . $_POST['h323permit'] . "' WHERE name='" . $_POST['exten'] . "'");
+    $_POST['h323permit']="allow";
   } else {
-    $NOVOIP="0";
-  }
-
-  if ($CRMPOP == "on") {
-    $CRMPOP="1";
-  } else {
-    $CRMPOP="0";
-  }
-
-  if ($IAXLine == "on") {
-    $IAXLine="1";
-  } else {
-    $IAXLine="0";
-  }
-
-  if ($H323Line == "on") {
-    $H323Line="1";
-  } else {
-    $H323Line="0";
-  }
-
-  if ($Locked == "on") {
-    $Locked="1";
-  } else {
-    $Locked="0";
-  }
-
-  if ($NOVMAIL == "on") {
-    $NOVMAIL="0";
-  } else {
-    $NOVMAIL="1";
-  }
-
-  if ($FAXMAIL == "on") {
-    $FAXMAIL="1";
-  } else {
-    $FAXMAIL="0";
-  }
-
-  if ($SNOMLOCK == "on") {
-    $SNOMLOCK="1";
-  } else {
-    $SNOMLOCK="0";
-  }
-
-  if ($POLYDIRLN == "on") {
-    $POLYDIRLN="1";
-  } else {
-    $POLYDIRLN="0";
-  }
-
-  if ($qualify == "on") {
-    $qualify="yes";
-  } else {
-    $qualify="";
-  }
-
-  if ($DDIPASS == "on") {
-    $DDIPASS="1";
-  } else {
-    $DDIPASS="0";
-  }
-
-  if ($canreinvite == "on") {
-    $canreinvite="yes";
-  } else {
-    $canreinvite="no";
-  }
-
-  if ($t38pt_udptl == "on") {
-    $t38pt_udptl="yes,redundancy";
-  } else {
-    $t38pt_udptl="no";
-  }
-
-  if ($activated == "on") {
-    $activated="t";
-  } else {
-    $activated="f";
-  }
-
-  if (($h323neighbor == "on") && ($h323permit != "") && ($h323permit != "0.0.0.0")) {
-    $h323neighbor="t";
-    pg_query($db,"UPDATE users SET ipaddr='" . $h323permit . "' WHERE name='" . $_POST['exten'] . "'");
-    $h323permit="allow";
-  } else {
-    $h323neighbor="f";
-    if ($h323permit == "0.0.0.0") {
-      $h323permit="allow";
-    } else if ($h323permit == "") {
-      $h323permit="deny";
+    $_POST['h323neighbor']="f";
+    if ($_POST['h323permit'] == "0.0.0.0") {
+      $_POST['h323permit']="allow";
+    } else if ($_POST['h323permit'] == "") {
+      $_POST['h323permit']="deny";
     }
   }
 
 
   $codecs=$codec[$acodec1] . ";" . $codec[$acodec2] . ";" . $codec[$acodec3] . ";" . $codec[$vcodec1] . ";" . $codec[$vcodec2] . ";" . $codec[$vcodec3];
 
-  pg_query($db,"UPDATE astdb SET value='" . $CDND . "' WHERE family='" . $_POST['exten'] . "' AND key='CDND'");
-  pg_query($db,"UPDATE astdb SET value='" . $CFBU . "' WHERE family='" . $_POST['exten'] . "' AND key='CFBU'");
-  pg_query($db,"UPDATE astdb SET value='" . $CFIM . "' WHERE family='" . $_POST['exten'] . "' AND key='CFIM'");
-  pg_query($db,"UPDATE astdb SET value='" . $CFNA . "' WHERE family='" . $_POST['exten'] . "' AND key='CFNA'");
-  pg_query($db,"UPDATE astdb SET value='" . $BGRP . "' WHERE family='" . $_POST['exten'] . "' AND key='BGRP'");
-  pg_query($db,"UPDATE astdb SET value='" . $CFFAX . "' WHERE family='" . $_POST['exten'] . "' AND key='CFFAX'");
-  pg_query($db,"UPDATE astdb SET value='" . $ALTC . "' WHERE family='" . $_POST['exten'] . "' AND key='ALTC'");
-  pg_query($db,"UPDATE astdb SET value='" . $OFFICE . "' WHERE family='" . $_POST['exten'] . "' AND key='OFFICE'");
-  pg_query($db,"UPDATE astdb SET value='" . $WAIT . "' WHERE family='" . $_POST['exten'] . "' AND key='WAIT'");
-  pg_query($db,"UPDATE astdb SET value='" . $RECORD . "' WHERE family='" . $_POST['exten'] . "' AND key='RECORD'");
-  pg_query($db,"UPDATE astdb SET value='" . $ALOCK . "' WHERE family='" . $_POST['exten'] . "' AND key='ALOCK'");
-  pg_query($db,"UPDATE astdb SET value='" . $NOPRES . "' WHERE family='" . $_POST['exten'] . "' AND key='NOPRES'");
-  pg_query($db,"UPDATE astdb SET value='" . $DFEAT . "' WHERE family='" . $_POST['exten'] . "' AND key='DFEAT'");
-  pg_query($db,"UPDATE astdb SET value='" . $NOVOIP . "' WHERE family='" . $_POST['exten'] . "' AND key='NOVOIP'");
-  pg_query($db,"UPDATE astdb SET value='" . $CRMPOP . "' WHERE family='" . $_POST['exten'] . "' AND key='CRMPOP'");
-  pg_query($db,"UPDATE astdb SET value='" . $NOVMAIL . "' WHERE family='" . $_POST['exten'] . "' AND key='NOVMAIL'");
-  pg_query($db,"UPDATE astdb SET value='" . $FAXMAIL . "' WHERE family='" . $_POST['exten'] . "' AND key='FAXMAIL'");
-  pg_query($db,"UPDATE astdb SET value='" . $SNOMLOCK . "' WHERE family='" . $_POST['exten'] . "' AND key='SNOMLOCK'");
-  pg_query($db,"UPDATE astdb SET value='" . $POLYDIRLN . "' WHERE family='" . $_POST['exten'] . "' AND key='POLYDIRLN'");
-  pg_query($db,"UPDATE astdb SET value='" . $EFAXD . "' WHERE family='" . $_POST['exten'] . "' AND key='EFAXD'");
-  pg_query($db,"UPDATE astdb SET value='" . $TOUT . "' WHERE family='" . $_POST['exten'] . "' AND key='TOUT'");
-  pg_query($db,"UPDATE astdb SET value='" . $DGROUP . "' WHERE family='" . $_POST['exten'] . "' AND key='DGROUP'");
-  pg_query($db,"UPDATE astdb SET value='" . $ZAPLine . "' WHERE family='" . $_POST['exten'] . "' AND key='ZAPLine'");
-  pg_query($db,"UPDATE astdb SET value='" . $DDIPASS . "' WHERE family='" . $_POST['exten'] . "' AND key='DDIPASS'");
-  pg_query($db,"UPDATE astdb SET value='" . $ZAPProto . "' WHERE family='" . $_POST['exten'] . "' AND key='ZAPProto'");
-  pg_query($db,"UPDATE astdb SET value='" . $ZAPRXGain . "' WHERE family='" . $_POST['exten'] . "' AND key='ZAPRXGain'");
-  pg_query($db,"UPDATE astdb SET value='" . $ZAPTXGain . "' WHERE family='" . $_POST['exten'] . "' AND key='ZAPTXGain'");
-  pg_query($db,"UPDATE astdb SET value='" . $CLI . "' WHERE family='" . $_POST['exten'] . "' AND key='CLI'");
-  pg_query($db,"UPDATE astdb SET value='" . $TRUNK . "' WHERE family='" . $_POST['exten'] . "' AND key='TRUNK'");
-  pg_query($db,"UPDATE astdb SET value='" . $ACCESS . "' WHERE family='" . $_POST['exten'] . "' AND key='ACCESS'");
-  pg_query($db,"UPDATE astdb SET value='" . $AUTHACCESS . "' WHERE family='" . $_POST['exten'] . "' AND key='AUTHACCESS'");
-  pg_query($db,"UPDATE astdb SET value='" . $IAXLine . "' WHERE family='" . $_POST['exten'] . "' AND key='IAXLine'");
-  pg_query($db,"UPDATE astdb SET value='" . $H323Line . "' WHERE family='" . $_POST['exten'] . "' AND key='H323Line'");
-  pg_query($db,"UPDATE astdb SET value='" . $FWDU . "' WHERE family='" . $_POST['exten'] . "' AND key='FWDU'");
-  pg_query($db,"UPDATE astdb SET value='" . $Locked . "' WHERE family='" . $_POST['exten'] . "' AND key='Locked'");
-  pg_query($db,"UPDATE astdb SET value='" . strtoupper($SNOMMAC) . "' WHERE family='" . $_POST['exten'] . "' AND key='SNOMMAC'");
-  pg_query($db,"UPDATE astdb SET value='" . $VLAN . "' WHERE family='" . $_POST['exten'] . "' AND key='VLAN'");
-  pg_query($db,"UPDATE astdb SET value='" . $REGISTRAR . "' WHERE family='" . $_POST['exten'] . "' AND key='REGISTRAR'");
-  pg_query($db,"UPDATE astdb SET value='" . $PTYPE . "' WHERE family='" . $_POST['exten'] . "' AND key='PTYPE'");
-  pg_query($db,"UPDATE astdb SET value='" . $PURSE . "' WHERE family='" . $_POST['exten'] . "' AND key='PURSE'");
+  for($icnt=0;$icnt < count($astdbarr);$icnt++) {
+    pg_query($db, "UPDATE features SET " . $astdbarr[$icnt] . "='" . $_POST[$astdbarr[$icnt]] . "' WHERE exten='" . $_POST['exten'] . "'");
+  }
 
-  pg_query($db,"UPDATE astdb SET value='" . $DRING . "' WHERE family='" . $_POST['exten'] . "' AND key='DRING'");
-  pg_query($db,"UPDATE astdb SET value='" . $SRING0 . "' WHERE family='" . $_POST['exten'] . "' AND key='SRING0'");
-  pg_query($db,"UPDATE astdb SET value='" . $SRING1 . "' WHERE family='" . $_POST['exten'] . "' AND key='SRING1'");
-  pg_query($db,"UPDATE astdb SET value='" . $SRING2 . "' WHERE family='" . $_POST['exten'] . "' AND key='SRING2'");
-  pg_query($db,"UPDATE astdb SET value='" . $SRING3 . "' WHERE family='" . $_POST['exten'] . "' AND key='SRING3'");
-
-  if ($NEWPIN == "on") {
-    $getpin=newrpin();
+  if ($_POST['NEWPIN'] == "on") {
+    $getpin=newrpin($_POST['exten']);
     print "<SCRIPT>\nalert('The New PIN Code Is\\n\\t" . $getpin . "');\n</SCRIPT>\n";
   }
 
   if (($SNOMMAC != '') && ($PTYPE == "LINKSYS")) {
+    if ($LSYSNAT == "on") {
+      $LSYSNAT="NAT";
+    } else {
+      $LSYSNAT="Bridge";
+    }
     pg_query($db,"UPDATE astdb SET value='" . $LSYSPROFILE . "' WHERE key='PROFILE' AND family='" . $SNOMMAC . "'");
     pg_query($db,"UPDATE astdb SET value='" . $LSYSSTUNSRV . "' WHERE key='STUNSRV' AND family='" . $SNOMMAC . "'");
     pg_query($db,"UPDATE astdb SET value='" . $LSYSLINKSYS . "' WHERE key='LINKSYS' AND family='" . $SNOMMAC . "'");
     pg_query($db,"UPDATE astdb SET value='" . $LSYSLSYSRXGAIN . "' WHERE key='LSYSRXGAIN' AND family='" . $SNOMMAC . "'");
     pg_query($db,"UPDATE astdb SET value='" . $LSYSLSYSTXGAIN . "' WHERE key='LSYSTXGAIN' AND family='" . $SNOMMAC . "'");
     pg_query($db,"UPDATE astdb SET value='" . $LSYSVLAN . "' WHERE key='VLAN' AND family='" . $SNOMMAC . "'");
-    if ($LSYSNAT == "on") {
-      $LSYSNAT="NAT";
-    } else {
-      $LSYSNAT="Bridge";
-    }
     pg_query($db,"UPDATE astdb SET value='" . $LSYSNAT . "' WHERE key='NAT' AND family='" . $SNOMMAC . "'");
   } else if (($SNOMMAC != '') && ($PTYPE == "CISCO") && ($REGISTRAR != "")) {
     if (($pass1 == $pass2) && ($pass1 != "") && ($pass1 != $secret)) {
@@ -340,8 +238,9 @@ if ((isset($pbxupdate)) && ($pbxupdate == "Save Changes")) {
       pg_query($db,"UPDATE console SET context='" . $conscont . "',count='" . $conscount . "'  WHERE mailbox='" . $_POST['exten'] . "'");
     }
   }
+
   if (($pass1 == $pass2) && ($pass1 != "") && ($pass1 != $secret)) {
-    $pwcng.=",secret='$pass1'";
+    $pwcng.="secret='$pass1',";
   } else if (($pass1 != "") && ($pass1 != $secret)) {
 %>
     <SCRIPT>
@@ -350,7 +249,7 @@ if ((isset($pbxupdate)) && ($pbxupdate == "Save Changes")) {
 <%
   }
   if (($VMPass1 == $VMPass2) && ($VMPass1 != "") && ($VMPass1 != $password)) {
-    $pwcng.=",password='$VMPass1'";
+    $pwcng.="password='$VMPass1',";
   } else if (($VMpass1 != "") && ($VMPass1 != $password)) {
 %>
     <SCRIPT>
@@ -359,20 +258,23 @@ if ((isset($pbxupdate)) && ($pbxupdate == "Save Changes")) {
 <%
   }
 
-  $encdat=explode(",",$encryption);
+  $encdat=explode(",",$_POST['encryption']);
   if ($encdat[1] ==  "32bit") {
-    $enctaglen="32";
+    $_POST['encryption_taglen']="32";
   } else {
-    $enctaglen="80";
+    $_POST['encryption_taglen']="80";
   }
 
-  pg_query($db,"UPDATE users SET nat='$nat',dtmfmode='$dtmfmode',fullname='$fullname',email='$email',
-                                 canreinvite='$canreinvite',qualify='$qualify',allow='$codecs',activated='$activated',language='" . $language . "',
-                                 callgroup='$cgroup',pickupgroup='$pgroup',insecure='$insecure',h323prefix='$h323prefix',simuse='$simuse',tariff='$tariff',
-                                 h323gkid='$h323gkid',h323permit='$h323permit',h323neighbor='$h323neighbor'$pwcng,
-                                 t38pt_udptl='$t38pt_udptl',encryption='$encryption',encryption_taglen='$enctaglen'
-                                WHERE name='" . $_POST['exten'] . "'");
+  $userarr=array("nat","dtmfmode","fullname","email","canreinvite","qualify","activated",
+                 "language","callgroup","pickupgroup","insecure","h323prefix","simuse",
+                 "tariff","h323gkid","h323permit","h323neighbor","t38pt_udptl","encryption",
+                 "encryption_taglen");
 
+  $dbq="";
+  for($ucnt=0;$ucnt < count($userarr);$ucnt++) {
+    $dbq.=$userarr[$ucnt] . "='" . $_POST[$userarr[$ucnt]] . "',";
+  }
+  pg_query($db,"UPDATE users SET " . $dbq . $pwcng . "allow='" . $codecs . "' WHERE name='" . $_POST['exten'] . "'");
 
   if (! isset($agi)) {
     require_once("/var/lib/asterisk/agi-bin/phpagi/phpagi-asmanager.php");
@@ -381,7 +283,7 @@ if ((isset($pbxupdate)) && ($pbxupdate == "Save Changes")) {
   }
   $agi->command("sip prune realtime peer " . $_POST['exten']);
   $agi->command("sip prune realtime user " . $_POST['exten']);
-  if (($ZAPLine == "0") && ($IAXLine == "0") && ($H323Line == "0") && ($FWDU == "0")) {
+  if (($_POST['ZAPLine'] == "0") && ($_POST['IAXLine'] == "0") && ($_POST['H323Line'] == "0") && ($_POST['FWDU'] == "0")) {
     $agi->command("sip show peer " . $_POST['exten'] . " load");
   }
   if ($PTYPE == "SNOM") {
@@ -392,7 +294,7 @@ if ((isset($pbxupdate)) && ($pbxupdate == "Save Changes")) {
   $agi->disconnect();
 }
 
-$qgetdata=pg_query($db,"SELECT key,value FROM astdb WHERE family='" . $_POST['exten'] . "'");
+$qgetdata=pg_query($db,"SELECT * FROM features WHERE exten='" . $_POST['exten'] . "'");
 
 $qconsdata=pg_query($db,"SELECT context,count FROM console WHERE mailbox = '" . $_POST['exten'] . "'");
 
@@ -489,14 +391,15 @@ while($icodec=array_shift($codecs)) {
   }
 }
 
-$dnum=pg_num_rows($qgetdata);
-for($i=0;$i<$dnum;$i++){
-  $getdata=pg_fetch_array($qgetdata,$i);
-  $origdata[$getdata[0]]=$getdata[1]; 
-}
+$origdata=pg_fetch_array($qgetdata,0,PGSQL_ASSOC);
+unset($origdata['id']);
+unset($origdata['exten']);
 
+$lsysgetconf=pg_query($db,"SELECT astdb.key,astdb.value FROM  astdb 
+ LEFT OUTER JOIN astdb AS exten ON 
+   (astdb.family=exten.value AND exten.key='SNOMMAC' AND astdb.family != '' AND exten.family='" . $_POST['exten'] . "') 
+  WHERE astdb.family=exten.value AND astdb.family='" . $origdata['snommac'] . "'");
 
-$lsysgetconf=pg_query($db,"SELECT astdb.key,astdb.value FROM  astdb LEFT OUTER JOIN astdb AS exten ON (astdb.family=exten.value AND exten.key='SNOMMAC' AND astdb.family != '' AND exten.family='" . $_POST['exten'] . "') WHERE astdb.family=exten.value AND astdb.family='" . $origdata['SNOMMAC'] . "'");
 for($lsyscnt=0;$lsyscnt < pg_num_rows($lsysgetconf);$lsyscnt++) {
   $getdata=pg_fetch_array($lsysgetconf,$lsyscnt);
   $lsysdata[$getdata[0]]=$getdata[1]; 
@@ -514,12 +417,12 @@ $lsysdef["NAT"]="Bridge";
 $reload=0;
 for($lval=0;$lval < count($lsysconf);$lval++) {
   if (! isset($lsysdata[$lsysconf[$lval]])) {
-    if (($origdata["SNOMMAC"] != "") && ($origdata["PTYPE"] == "LINKSYS")) {
+    if (($origdata["snommac"] != "") && ($origdata["ptype"] == "LINKSYS")) {
       $curval="LSYS" . $lsysconf[$lval];
       if ($$curval != "") {
-        pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('" . $origdata["SNOMMAC"] . "','" . $lsysconf[$lval] . "','" . $$curval . "')");
+        pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('" . $origdata["snommac"] . "','" . $lsysconf[$lval] . "','" . $$curval . "')");
       } else {
-        pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('" . $origdata["SNOMMAC"] . "','" . $lsysconf[$lval] . "','" . $lsysdef[$lsysconf[$lval]] . "')");
+        pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('" . $origdata["snommac"] . "','" . $lsysconf[$lval] . "','" . $lsysdef[$lsysconf[$lval]] . "')");
       }
       $reload=1; 
     } else {
@@ -529,7 +432,7 @@ for($lval=0;$lval < count($lsysconf);$lval++) {
 }
 
 if ($reload) {
-  $lsysgetconf=pg_query($db,"SELECT astdb.key,astdb.value FROM  astdb LEFT OUTER JOIN astdb AS exten ON (astdb.family=exten.value AND exten.key='SNOMMAC' AND astdb.family != '' AND exten.family='" . $_POST['exten'] . "') WHERE astdb.family=exten.value AND astdb.family='" . $origdata['SNOMMAC'] . "'");
+  $lsysgetconf=pg_query($db,"SELECT astdb.key,astdb.value FROM  astdb LEFT OUTER JOIN astdb AS exten ON (astdb.family=exten.value AND exten.key='SNOMMAC' AND astdb.family != '' AND exten.family='" . $_POST['exten'] . "') WHERE astdb.family=exten.value AND astdb.family='" . $origdata['snommac'] . "'");
   for($lsyscnt=0;$lsyscnt < pg_num_rows($lsysgetconf);$lsyscnt++) {
     $getdata=pg_fetch_array($lsysgetconf,$lsyscnt);
     $lsysdata[$getdata[0]]=$getdata[1]; 
@@ -543,218 +446,31 @@ if (($LSYSIPADDR != "") && ($LSYSPUSH == "on")) {%>
 <%
 }
 
-if ($origdata["CDND"] == "") {
-  $origdata["CDND"]="";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $_POST['exten'] . "','CDND','0')");
-}
-if ($origdata["CFBU"] == "") {
-  $origdata["CFBU"]="";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $_POST['exten'] . "','CFBU','0')");
-}
-if ($origdata["CFIM"] == "") {
-  $origdata["CFIM"]="";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $_POST['exten'] . "','CFIM','0')");
-}
-if ($origdata["CFNA"] == "") {
-  $origdata["CFNA"]="";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $_POST['exten'] . "','CFNA','0')");
-}
-if ($origdata["BGRP"] == "") {
-  $origdata["BGRP"]="";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $_POST['exten'] . "','BGRP','')");
-}
-if ($origdata["DGROUP"] == "") {
-  $origdata["DGROUP"]="";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','DGROUP','')");
-}
-if ($origdata["CFFAX"] == "") {
-  $origdata["CFFAX"]="";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','CFFAX','0')");
-}
 
-if ($origdata["ALTC"] == "") {
-  $origdata["ALTC"]="";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','ALTC','')");
-}
+$dbdef=array("access","authaccess","record","alock","fwdu","novmail");
 
-if ($origdata["OFFICE"] == "") {
-  $origdata["OFFICE"]="";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','OFFICE','')");
-}
+$def['access']="Context";
+$def['authaccess']="AuthContext";
+$def['record']="DEFRECORD";
+$def['alock']="DEFALOCK";
+$def['fwdu']="REMDEF";
+$def['novmail']="DEFNOVMAIL";
 
-if ($origdata["ACCESS"] == "") {
-  $origdata["ACCESS"]=getdefval("Context");
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','ACCESS','" . $origdata["ACCESS"] . "')");
-}
-
-if ($origdata["AUTHACCESS"] == "") {
-  $origdata["AUTHACCESS"]=getdefval("AuthContext");;
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','AUTHACCESS','" . $origdata["AUTHACCESS"] . "')");
-}
-
-if ($origdata["WAIT"] == "") {
-  $origdata["WAIT"]="1";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','WAIT','1')");
-}
-
-if ($origdata["DRING"] == "") {
-  $origdata["DRING"]="1";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','DRING','1')");
-}
-
-if ($origdata["NOVOIP"] == "") {
-  $origdata["NOVOIP"]="0";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','NOVOIP','0')");
-}
-
-if ($origdata["CRMPOP"] == "") {
-  $origdata["CRMPOP"]="0";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','CRMPOP','0')");
-}
-
-if ($origdata["RECORD"] == "") {
-  $origdata["RECORD"]=getdefval("DEFRECORD");
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','RECORD','" . $origdata["RECORD"] . "')");
-}
-
-if ($origdata["ALOCK"] == "") {
-  $origdata["ALOCK"]=getdefval("DEFALOCK");
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','ALOCK','" . $origdata["ALOCK"] . "')");
-}
-
-if ($origdata["NOPRES"] == "") {
-  $origdata["NOPRES"]="0";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','NOPRES','0')");
-}
-
-if ($origdata["DFEAT"] == "") {
-  $origdata["DFEAT"]="1";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','DFEAT','1')");
-}
-
-if ($origdata["IAXLine"] == "") {
-  $origdata["IAXLine"]="0";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','IAXLine','0')");
-}
-if ($origdata["H323Line"] == "") {
-  $origdata["H323Line"]="0";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','H323Line','0')");
-}
-
-if ($origdata["FWDU"] == "") {
-  $origdata["FWDU"]=getdefval("REMDEF");
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','FWDU','" . $origdata["FWDU"] . "')");
-}
-
-if ($origdata["Locked"] == "") {
-  $origdata["Locked"]="0";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','Locked','0')");
-}
-
-if ($origdata["RoamPass"] == "") {
-  $origdata["RoamPass"]=newrpin();
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','RoamPass','" . $origdata["RoamPass"] . "')");
-}
-
-if ($origdata["SRING0"] == "") {
-  $origdata["SRING0"]="6";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','SRING0','" . $origdata["SRING0"] . "')");
-}
-
-if ($origdata["SRING1"] == "") {
-  $origdata["SRING1"]="3";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','SRING1','" . $origdata["SRING1"] . "')");
-}
-if ($origdata["SRING2"] == "") {
-  $origdata["SRING2"]="1";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','SRING2','" . $origdata["SRING2"] . "')");
-}
-if ($origdata["SRING3"] == "") {
-  $origdata["SRING3"]="6";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','SRING3','" . $origdata["SRING3"] . "')");
-}
-
-if (!isset($origdata["NOVMAIL"])) {
-  $origdata["NOVMAIL"]=getdefval("DEFNOVMAIL");
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','NOVMAIL','" . $origdata["NOVMAIL"] . "')");
-}
-
-if ($origdata["FAXMAIL"] == "") {
-  $origdata["FAXMAIL"]="0";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','FAXMAIL','0')");
-}
-
-if ($origdata["SNOMLOCK"] == "") {
-  $origdata["SNOMLOCK"]="1";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','SNOMLOCK','1')");
-}
-
-if ($origdata["POLYDIRLN"] == "") {
-  $origdata["POLYDIRLN"]="0";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','POLYDIRLN','0')");
-}
-
-if ($origdata["EFAXD"] == "") {
-  $origdata["EFAXD"]="0";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','EFAXD','0')");
-}
-
-if ($origdata["TOUT"] == "") {
-  $origdata["TOUT"]=getdefval("Timeout");
-  if ($origdata["TOUT"] == "0") {
-    $origdata["TOUT"]=21;
+for($dcnt=0;$dcnt < count($dbdef);$dcnt++) {
+  if ($origdata[$dbdef[$dcnt]] == "") {
+    $origdata[$dbdef[$dcnt]]=getdefval($def[$dbdef[$dcnt]]);
   }
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','TOUT','" . $origdata["TOUT"] . "')");
 }
 
-if ($origdata["ZAPLine"] == "") {
-  $origdata["ZAPLine"]="0";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','ZAPLine','0')");
+if ($origdata["roampass"] == "") {
+  $origdata["roampass"]=newrpin($_POST['exten']);
 }
 
-if ($origdata["DDIPASS"] == "") {
-  $origdata["DDIPASS"]="0";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','DDIPASS','0')");
-}
-
-if ($origdata["ZAPProto"] == "") {
-  $origdata["ZAPProto"]="fxo_ks";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','ZAPProto','fxo_ks')");
-}
-
-if ($origdata["ZAPRXGain"] == "") {
-  $origdata["ZAPRXGain"]="0";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','ZAPRXGain','0')");
-}
-
-if ($origdata["ZAPTXGain"] == "") {
-  $origdata["ZAPTXGain"]="0";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','ZAPTXGain','0')");
-}
-
-if ($origdata["CLI"] == "") {
-  $origdata["CLI"]="";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','CLI','')");
-}
-
-if (!isset($origdata["TRUNK"])) {
-  $origdata["TRUNK"]="";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','TRUNK','')");
-}
-
-if ($origdata["SNOMMAC"] == "") {
-  $origdata["SNOMMAC"]="";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','SNOMMAC','')");
-}
-
-if ($origdata["VLAN"] == "") {
-  $origdata["VLAN"]="";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','VLAN','')");
-}
-
-if (!isset($origdata["PURSE"])) {
-  $origdata["PURSE"]="";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','PURSE','')");
+if ($origdata["tout"] == "") {
+  $origdata["tout"]=getdefval("Timeout");
+  if ($origdata["tout"] == "0") {
+    $origdata["tout"]=21;
+  }
 }
 
 if (isset($rndpin)){%>
@@ -764,16 +480,6 @@ if (isset($rndpin)){%>
 <%
 }
 
-
-if ($origdata["REGISTRAR"] == "") {
-  $origdata["REGISTRAR"]="";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','REGISTRAR','')");
-}
-
-if ($origdata["PTYPE"] == "") {
-  $origdata["PTYPE"]="";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','PTYPE','SNOM')");
-}
 %>
 <INPUT TYPE=HIDDEN NAME=exten VALUE=<%print $_POST['exten'];%>>
 <INPUT TYPE=HIDDEN NAME=curdiv VALUE=basic>
@@ -828,42 +534,42 @@ if ($usertype == 1) {
 <TR CLASS=list-color2>
   <TD onmouseover=myHint.show('ES6') ONMOUSEOUT=myHint.hide()><%print _("Alternate Contact Shown On Extension List");%></TD>
   <TD>
-     <INPUT TYPE=TEXT NAME=ALTC VALUE="<%if ($origdata["ALTC"] != "") {print $origdata["ALTC"];}%>">
+     <INPUT TYPE=TEXT NAME=ALTC VALUE="<%if ($origdata["altc"] != "") {print $origdata["altc"];}%>">
   </TD>
 </TR>
 <TR CLASS=list-color1>
   <TD onmouseover=myHint.show('ES6') ONMOUSEOUT=myHint.hide()><%print _("Office/Location Shown On Extension List");%></TD>
   <TD>
-     <INPUT TYPE=TEXT NAME=OFFICE VALUE="<%if ($origdata["OFFICE"] != "") {print $origdata["OFFICE"];}%>">
+     <INPUT TYPE=TEXT NAME=OFFICE VALUE="<%if ($origdata["office"] != "") {print $origdata["office"];}%>">
   </TD>
 </TR>
 <TR CLASS=list-color2>
   <TD onmouseover=myHint.show('ES3') ONMOUSEOUT=myHint.hide()><%print _("Call Forward Immediate");%></TD>
   <TD>
-     <INPUT TYPE=TEXT NAME=CFIM VALUE="<%if ($origdata["CFIM"] != "0") {print $origdata["CFIM"];}%>">
+     <INPUT TYPE=TEXT NAME=CFIM VALUE="<%if ($origdata["cfim"] != "0") {print $origdata["cfim"];}%>">
   </TD>
 </TR>
 <TR CLASS=list-color1>
   <TD onmouseover=myHint.show('ES4') ONMOUSEOUT=myHint.hide()><%print _("Call Forward On Busy");%></TD>
   <TD>
-     <INPUT TYPE=TEXT NAME=CFBU VALUE="<%if ($origdata["CFBU"] != "0") {print $origdata["CFBU"];}%>">
+     <INPUT TYPE=TEXT NAME=CFBU VALUE="<%if ($origdata["cfbu"] != "0") {print $origdata["cfbu"];}%>">
   </TD>
 </TR>
 <TR CLASS=list-color2>
   <TD onmouseover=myHint.show('ES5') ONMOUSEOUT=myHint.hide()><%print _("Call Forward On No Answer");%></TD>
   <TD>
-     <INPUT TYPE=TEXT NAME=CFNA VALUE="<%if ($origdata["CFNA"] != "0") {print $origdata["CFNA"];}%>">
+     <INPUT TYPE=TEXT NAME=CFNA VALUE="<%if ($origdata["cfna"] != "0") {print $origdata["cfna"];}%>">
   </TD>
 </TR>
 <TR CLASS=list-color1>
   <TD onmouseover=myHint.show('ES6') ONMOUSEOUT=myHint.hide()><%print _("Call Forward On FAX");%></TD>
   <TD>
-     <INPUT TYPE=TEXT NAME=CFFAX VALUE="<%if ($origdata["CFFAX"] != "0") {print $origdata["CFFAX"];}%>">
+     <INPUT TYPE=TEXT NAME=CFFAX VALUE="<%if ($origdata["cffax"] != "0") {print $origdata["cffax"];}%>">
   </TD>
 </TR>
 <TR CLASS=list-color2>
   <TD onmouseover=myHint.show('ES7') ONMOUSEOUT=myHint.hide()><%print _("Ring Timeout");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=TOUT VALUE="<%print $origdata["TOUT"];%>"></TD>
+  <TD><INPUT TYPE=TEXT NAME=TOUT VALUE="<%print $origdata["tout"];%>"></TD>
 </TR>
 <%
   if ($SUPER_USER == 1) {
@@ -889,14 +595,14 @@ if ($usertype == 1) {
   <TD onmouseover=myHint.show('ES9') ONMOUSEOUT=myHint.hide()><%print _("Do Not Disturb");%></TD>
   <TD><SELECT NAME=CDND>
         <OPTION VALUE="">Off 
-        <OPTION VALUE="on"<%if ($origdata["CDND"] == "1") {print " SELECTED";}%>><%print _("On");%> 
-        <OPTION VALUE="-1"<%if ($origdata["CDND"] == "-1") {print " SELECTED";}%>><%print _("Disabled");%>
+        <OPTION VALUE="on"<%if ($origdata["cdnd"] == "1") {print " SELECTED";}%>><%print _("On");%> 
+        <OPTION VALUE="-1"<%if ($origdata["cdnd"] == "-1") {print " SELECTED";}%>><%print _("Disabled");%>
      </SELECT>
 </TD>
 </TR>
 <TR CLASS=list-color<%print ($cnt % 2) + 1;$cnt++;%>>
   <TD onmouseover=myHint.show('ES8') ONMOUSEOUT=myHint.hide()><%print _("Call Waiting");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=WAIT <%if ($origdata["WAIT"] == "1") {print "CHECKED";}%>></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=WAIT <%if ($origdata["wait"] == "1") {print "CHECKED";}%>></TD>
 </TR>
 </TABLE>
 </DIV>
@@ -910,7 +616,7 @@ if ($usertype == 1) {
 <%
       for($i=0;$i<6;$i++) {
         print "<OPTION VALUE=" . $i;
-        if ($i == $origdata["ACCESS"]) {
+        if ($i == $origdata["access"]) {
           print " SELECTED";
         }
         print ">" . $context[$i] . "</OPTION>\n";
@@ -926,7 +632,7 @@ if ($usertype == 1) {
 <%
       for($i=0;$i<6;$i++) {
         print "<OPTION VALUE=" . $i;
-        if ($i == $origdata["AUTHACCESS"]) {
+        if ($i == $origdata["authaccess"]) {
           print " SELECTED";
         }
         print ">" . $context[$i] . "</OPTION>\n";
@@ -941,7 +647,7 @@ if ($usertype == 1) {
 <%
       for($i=0;$i<6;$i++) {
         print "<OPTION VALUE=" . $i;
-        if ($i == $origdata["ALOCK"]) {
+        if ($i == $origdata["alock"]) {
           print " SELECTED";
         }
         print ">" . $context[$i] . "</OPTION>\n";
@@ -952,7 +658,7 @@ if ($usertype == 1) {
 </TR>
 <TR CLASS=list-color1>
   <TD ALIGN=LEFT onmouseover=myHint.show('ES14') ONMOUSEOUT=myHint.hide()><%print _("Monthly Call Cost Limit");%></TD>
-  <TD><INPUT TYPE=INPUT NAME=PURSE VALUE="<%print $origdata["PURSE"];%>"></TD>
+  <TD><INPUT TYPE=INPUT NAME=PURSE VALUE="<%print $origdata["purse"];%>"></TD>
 </TR>
 <TR CLASS=list-color2>
   <INPUT TYPE=HIDDEN name=secret VALUE="<%print $secret;%>">
@@ -975,7 +681,7 @@ if ($usertype == 1) {
 <TR CLASS=list-color2>
   <TD ALIGN=LEFT onmouseover=myHint.show('ES16') ONMOUSEOUT=myHint.hide()><%print _("Roaming Password");%></TD>
   <TD>
-    <INPUT TYPE=BUTTON VALUE="Click To See PIN" ONCLICK="javascript:alert('The PIN Code Is\n\t<%print $origdata["RoamPass"];%>')">
+    <INPUT TYPE=BUTTON VALUE="Click To See PIN" ONCLICK="javascript:alert('The PIN Code Is\n\t<%print $origdata["roampass"];%>')">
   </TD>
 </TR>
 <TR CLASS=list-color1>
@@ -1009,7 +715,7 @@ if ($usertype == 1) {
       for($i=0;$i<$bgnum;$i++){
         $getbgdata=pg_fetch_array($bgroups,$i);
         print "<OPTION VALUE=\"" . $getbgdata[0] . "\"";
-        if ($getbgdata[0] == $origdata["BGRP"]) {
+        if ($getbgdata[0] == $origdata["bgrp"]) {
           print " SELECTED";
         }
         print ">" . $getbgdata[0] . "</OPTION>\n";
@@ -1035,7 +741,7 @@ if ($usertype == 1) {
   <TD onmouseover=myHint.show('ES7') ONMOUSEOUT=myHint.hide()><%print _("Directory Group");%></TD><TD>
     <SELECT NAME=DGROUP>
 <%
-      $dgrpq="SELECT DISTINCT value FROM astdb WHERE key='DGROUP' AND value != '' AND value IS NOT NULL";
+      $dgrpq="SELECT DISTINCT dgroup FROM features WHERE dgroup != '' AND dgroup IS NOT NULL";
 %>
      <OPTION VALUE=""><%print _("Select Existing Group/Add New Group Bellow");%></OPTION>
 <%
@@ -1045,7 +751,7 @@ if ($usertype == 1) {
       for($i=0;$i<$dgnum;$i++){
         $getdgdata=pg_fetch_array($dgroups,$i);
         print "<OPTION VALUE=\"" . $getdgdata[0] . "\"";
-        if ($getdgdata[0] == $origdata["DGROUP"]) {
+        if ($getdgdata[0] == $origdata["dgroup"]) {
           print " SELECTED";
         }
         print ">" . $getdgdata[0] . "</OPTION>\n";
@@ -1059,7 +765,7 @@ if ($usertype == 1) {
 } else {
   $cnt=1;
 %>
-  <INPUT TYPE=HIDDEN NAME="DGROUP" VALUE="<%print $origdata["DGROUP"];%>">
+  <INPUT TYPE=HIDDEN NAME="DGROUP" VALUE="<%print $origdata["dgroup"];%>">
 <%
 }
 %>
@@ -1088,22 +794,22 @@ if ($SUPER_USER == 1) {
   <TD>
     <SELECT NAME=TRUNK>
       <OPTION VALUE=""><%print _("Not Set - Follow System Routing");%></OPTION>
-      <OPTION VALUE="mISDN/g:out/"<%if ($origdata["TRUNK"] == "mISDN/g:out/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 1");%></OPTION>
-      <OPTION VALUE="mISDN/g:out2/"<%if ($origdata["TRUNK"] == "mISDN/g:out2/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 2");%></OPTION>
-      <OPTION VALUE="mISDN/g:out3/"<%if ($origdata["TRUNK"] == "mISDN/g:out3/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 3");%></OPTION>
-      <OPTION VALUE="mISDN/g:out4/"<%if ($origdata["TRUNK"] == "mISDN/g:out4/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 4");%></OPTION>
-      <OPTION VALUE="DAHDI/r1/"<%if (($origdata["TRUNK"] == "Zap/r1/") || ($origdata["TRUNK"] == "DAHDI/r1/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 1");%></OPTION>
-      <OPTION VALUE="DAHDI/r2/"<%if (($origdata["TRUNK"] == "Zap/r2/") || ($origdata["TRUNK"] == "DAHDI/r2/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 2");%></OPTION>
-      <OPTION VALUE="DAHDI/r3/"<%if (($origdata["TRUNK"] == "Zap/r3/") || ($origdata["TRUNK"] == "DAHDI/r3/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 3");%></OPTION>
-      <OPTION VALUE="DAHDI/r4/"<%if (($origdata["TRUNK"] == "Zap/r4/") || ($origdata["TRUNK"] == "DAHDI/r4/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 4");%></OPTION>
-      <OPTION VALUE="WOOMERA/g1/"<%if ($origdata["TRUNK"] == "WOOMERA/g1/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 1");%></OPTION>
-      <OPTION VALUE="WOOMERA/g2/"<%if ($origdata["TRUNK"] == "WOOMERA/g2/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 2");%></OPTION>
-      <OPTION VALUE="WOOMERA/g3/"<%if ($origdata["TRUNK"] == "WOOMERA/g3/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 3");%></OPTION>
-      <OPTION VALUE="WOOMERA/g4/"<%if ($origdata["TRUNK"] == "WOOMERA/g4/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 4");%></OPTION>
+      <OPTION VALUE="mISDN/g:out/"<%if ($origdata["trunk"] == "mISDN/g:out/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 1");%></OPTION>
+      <OPTION VALUE="mISDN/g:out2/"<%if ($origdata["trunk"] == "mISDN/g:out2/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 2");%></OPTION>
+      <OPTION VALUE="mISDN/g:out3/"<%if ($origdata["trunk"] == "mISDN/g:out3/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 3");%></OPTION>
+      <OPTION VALUE="mISDN/g:out4/"<%if ($origdata["trunk"] == "mISDN/g:out4/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 4");%></OPTION>
+      <OPTION VALUE="DAHDI/r1/"<%if (($origdata["trunk"] == "Zap/r1/") || ($origdata["trunk"] == "DAHDI/r1/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 1");%></OPTION>
+      <OPTION VALUE="DAHDI/r2/"<%if (($origdata["trunk"] == "Zap/r2/") || ($origdata["trunk"] == "DAHDI/r2/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 2");%></OPTION>
+      <OPTION VALUE="DAHDI/r3/"<%if (($origdata["trunk"] == "Zap/r3/") || ($origdata["trunk"] == "DAHDI/r3/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 3");%></OPTION>
+      <OPTION VALUE="DAHDI/r4/"<%if (($origdata["trunk"] == "Zap/r4/") || ($origdata["trunk"] == "DAHDI/r4/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 4");%></OPTION>
+      <OPTION VALUE="WOOMERA/g1/"<%if ($origdata["trunk"] == "WOOMERA/g1/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 1");%></OPTION>
+      <OPTION VALUE="WOOMERA/g2/"<%if ($origdata["trunk"] == "WOOMERA/g2/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 2");%></OPTION>
+      <OPTION VALUE="WOOMERA/g3/"<%if ($origdata["trunk"] == "WOOMERA/g3/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 3");%></OPTION>
+      <OPTION VALUE="WOOMERA/g4/"<%if ($origdata["trunk"] == "WOOMERA/g4/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 4");%></OPTION>
 <%
       for($ipcnt=0;$ipcnt < count($ipgw);$ipcnt++) {
         print "<OPTION VALUE=\"" . $ipgw[$ipcnt]['gw'] . "\"";
-        if ($origdata['TRUNK'] == $ipgw[$ipcnt]['gw']) {
+        if ($origdata['trunk'] == $ipgw[$ipcnt]['gw']) {
           print " SELECTED";
         }
         print ">" . $ipgw[$ipcnt]['name'] . "</OPTION>\n";
@@ -1115,7 +821,7 @@ if ($SUPER_USER == 1) {
 <%
 } else {
 %>
-  <INPUT TYPE=HIDDEN NAME=TRUNK VALUE="<%print $origdata["TRUNK"];%>">
+  <INPUT TYPE=HIDDEN NAME=TRUNK VALUE="<%print $origdata["trunk"];%>">
 <%
 }
 %>
@@ -1123,43 +829,43 @@ if ($SUPER_USER == 1) {
   <TD ALIGN=LEFT onmouseover=myHint.show('ES23') ONMOUSEOUT=myHint.hide()><%print _("Early Fax Detect");%></TD>
   <TD>
     <SELECT NAME=EFAXD> 
-      <OPTION VALUE=0<%if ($origdata["EFAXD"] == "0") {print " SELECTED";}%>>No Fax Detect</VALUE>
-      <OPTION VALUE=1<%if ($origdata["EFAXD"] == "1") {print " SELECTED";}%>>Incoming Fax Detect</VALUE>
-      <OPTION VALUE=2<%if ($origdata["EFAXD"] == "2") {print " SELECTED";}%>>In And Out</VALUE>
+      <OPTION VALUE=0<%if ($origdata["efaxd"] == "0") {print " SELECTED";}%>>No Fax Detect</VALUE>
+      <OPTION VALUE=1<%if ($origdata["efaxd"] == "1") {print " SELECTED";}%>>Incoming Fax Detect</VALUE>
+      <OPTION VALUE=2<%if ($origdata["efaxd"] == "2") {print " SELECTED";}%>>In And Out</VALUE>
     </SELECT>
   </TD>
 </TR>
 <TR CLASS=list-color<%print ($cnt % 2) + 1;$cnt++;%>>
   <TD ALIGN=LEFT onmouseover=myHint.show('ES18') ONMOUSEOUT=myHint.hide()><%print _("Outbound CLI");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=CLI VALUE="<%if ($origdata["CLI"] != "0") {print $origdata["CLI"];}%>"></TD>
+  <TD><INPUT TYPE=TEXT NAME=CLI VALUE="<%if ($origdata["cli"] != "0") {print $origdata["cli"];}%>"></TD>
 </TR>
 <TR CLASS=list-color<%print ($cnt % 2) + 1;$cnt++;%>>
   <TD ALIGN=LEFT onmouseover=myHint.show('ES19') ONMOUSEOUT=myHint.hide()><%print _("Withhold Presentation");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=NOPRES <%if ($origdata["NOPRES"] == "1") {print "CHECKED";}%>></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=NOPRES <%if ($origdata["nopres"] == "1") {print "CHECKED";}%>></TD>
 </TR>
 <TR CLASS=list-color<%print ($cnt % 2) + 1;$cnt++;%>>
   <TD ALIGN=LEFT onmouseover=myHint.show('ES19') ONMOUSEOUT=myHint.hide()><%print _("Call Recording");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=RECORD <%if ($origdata["RECORD"] == "1") {print "CHECKED";}%>></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=RECORD <%if ($origdata["record"] == "1") {print "CHECKED";}%>></TD>
 </TR>
 <TR CLASS=list-color<%print ($cnt % 2) + 1;$cnt++;%>>
   <TD ALIGN=LEFT onmouseover=myHint.show('ES19') ONMOUSEOUT=myHint.hide()><%print _("Enable Dial Features (Transfer/One Touch Recording)");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=DFEAT <%if ($origdata["DFEAT"] == "1") {print "CHECKED";}%>></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=DFEAT <%if ($origdata["dfeat"] == "1") {print "CHECKED";}%>></TD>
 </TR>
 <TR CLASS=list-color<%print ($cnt % 2) + 1;$cnt++;%>>
   <TD ALIGN=LEFT onmouseover=myHint.show('ES20') ONMOUSEOUT=myHint.hide()><%print _("Enable Voice Mail");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=NOVMAIL <%if ($origdata["NOVMAIL"] == "0") {print "CHECKED";}%>></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=NOVMAIL <%if ($origdata["novmail"] == "0") {print "CHECKED";}%>></TD>
 </TR>
 <TR CLASS=list-color<%print ($cnt % 2) + 1;$cnt++;%>>
   <TD ALIGN=LEFT onmouseover=myHint.show('ES21') ONMOUSEOUT=myHint.hide()><%print _("Lock Extension");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=Locked <%if ($origdata["Locked"] == "1") {print "CHECKED";}%>></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=Locked <%if ($origdata["locked"] == "1") {print "CHECKED";}%>></TD>
 </TR>
 <TR CLASS=list-color<%print ($cnt % 2) + 1;$cnt++;%>>
   <TD ALIGN=LEFT onmouseover=myHint.show('ES22') ONMOUSEOUT=myHint.hide()><%print _("Enable Fax To Mail");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=FAXMAIL <%if ($origdata["FAXMAIL"] == "1") {print "CHECKED";}%>></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=FAXMAIL <%if ($origdata["faxmail"] == "1") {print "CHECKED";}%>></TD>
 </TR>
 <TR CLASS=list-color<%print ($cnt % 2) + 1;$cnt++;%>>
   <TD ALIGN=LEFT onmouseover=myHint.show('ES8') ONMOUSEOUT=myHint.hide()><%print _("Distinctive Ring Support (Some Phones)");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=DRING <%if ($origdata["DRING"] == "1") {print "CHECKED";}%>></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=DRING <%if ($origdata["dring"] == "1") {print "CHECKED";}%>></TD>
 </TR>
 </TABLE>
 </DIV>
@@ -1170,27 +876,27 @@ if ($SUPER_USER == 1) {
 <TABLE CLASS=formtable>
 <TR CLASS=list-color2>
   <TD ALIGN=LEFT onmouseover=myHint.show('ES24') ONMOUSEOUT=myHint.hide()><%print _("Phones MAC Address");%><BR></TD>
-  <TD><INPUT TYPE=TEXT NAME=SNOMMAC VALUE="<%print $origdata["SNOMMAC"];%>"></TD>
+  <TD><INPUT TYPE=TEXT NAME=SNOMMAC VALUE="<%print $origdata["snommac"];%>"></TD>
 </TR>
 <TR CLASS=list-color1>
   <TD ALIGN=LEFT onmouseover=myHint.show('ES25') ONMOUSEOUT=myHint.hide()><%print _("Registration Domain (SRV/IP)");%><BR></TD>
-  <TD><INPUT TYPE=TEXT NAME=REGISTRAR VALUE="<%print $origdata["REGISTRAR"];%>"></TD>
+  <TD><INPUT TYPE=TEXT NAME=REGISTRAR VALUE="<%print $origdata["registrar"];%>"></TD>
 </TR>
 <TR CLASS=list-color2>
   <TD ALIGN=LEFT onmouseover=myHint.show('ES25') ONMOUSEOUT=myHint.hide()><%print _("Phone Manufacturer/Model.");%></TD>
   <TD>
     <SELECT NAME=PTYPE>
-      <OPTION VALUE=SNOM<%if ($origdata["PTYPE"] == "SNOM") {print " SELECTED";}%>>Snom
-      <OPTION VALUE=SNOM_M9<%if ($origdata["PTYPE"] == "SNOM_M9") {print " SELECTED";}%>>Snom M9
-      <OPTION VALUE=LINKSYS<%if ($origdata["PTYPE"] == "LINKSYS") {print " SELECTED";}%>>Linksys/Audiocodes MP-202
-      <OPTION VALUE=POLYCOM<%if ($origdata["PTYPE"] == "POLYCOM") {print " SELECTED";}%>>Polycom 300/301/320/330/430
-      <OPTION VALUE=IP_500<%if ($origdata["PTYPE"] == "IP_500") {print " SELECTED";}%>>Polycom 500/501/550
-      <OPTION VALUE=IP_600<%if ($origdata["PTYPE"] == "IP_600") {print " SELECTED";}%>>Polycom 600
-      <OPTION VALUE=IP_601<%if ($origdata["PTYPE"] == "IP_601") {print " SELECTED";}%>>Polycom 601/650
-      <OPTION VALUE=IP_4000<%if ($origdata["PTYPE"] == "IP_4000") {print " SELECTED";}%>>Polycom 4000
-      <OPTION VALUE=CISCO<%if ($origdata["PTYPE"] == "YEALINK") {print " SELECTED";}%>>Yealink
-      <OPTION VALUE=CISCO<%if ($origdata["PTYPE"] == "CISCO") {print " SELECTED";}%>>Cisco 79XX
-      <OPTION VALUE=OTHER<%if ($origdata["PTYPE"] == "OTHER") {print " SELECTED";}%>>Other
+      <OPTION VALUE=SNOM<%if ($origdata["ptype"] == "SNOM") {print " SELECTED";}%>>Snom
+      <OPTION VALUE=SNOM_M9<%if ($origdata["ptype"] == "SNOM_M9") {print " SELECTED";}%>>Snom M9
+      <OPTION VALUE=LINKSYS<%if ($origdata["ptype"] == "LINKSYS") {print " SELECTED";}%>>Linksys/Audiocodes MP-202
+      <OPTION VALUE=POLYCOM<%if ($origdata["ptype"] == "POLYCOM") {print " SELECTED";}%>>Polycom 300/301/320/330/430
+      <OPTION VALUE=IP_500<%if ($origdata["ptype"] == "IP_500") {print " SELECTED";}%>>Polycom 500/501/550
+      <OPTION VALUE=IP_600<%if ($origdata["ptype"] == "IP_600") {print " SELECTED";}%>>Polycom 600
+      <OPTION VALUE=IP_601<%if ($origdata["ptype"] == "IP_601") {print " SELECTED";}%>>Polycom 601/650
+      <OPTION VALUE=IP_4000<%if ($origdata["ptype"] == "IP_4000") {print " SELECTED";}%>>Polycom 4000
+      <OPTION VALUE=CISCO<%if ($origdata["ptype"] == "YEALINK") {print " SELECTED";}%>>Yealink
+      <OPTION VALUE=CISCO<%if ($origdata["ptype"] == "CISCO") {print " SELECTED";}%>>Cisco 79XX
+      <OPTION VALUE=OTHER<%if ($origdata["ptype"] == "OTHER") {print " SELECTED";}%>>Other
     </SELECT>
   </TD>
 </TR>
@@ -1198,11 +904,11 @@ if ($SUPER_USER == 1) {
   <TH COLSPAN=2>Snom Settings</TH></TR>
 <TR CLASS=list-color2>
   <TD ALIGN=LEFT onmouseover=myHint.show('ES24') ONMOUSEOUT=myHint.hide()><%print _("VLAN ID");%><BR></TD>
-  <TD><INPUT TYPE=TEXT NAME=VLAN VALUE="<%print $origdata["VLAN"];%>"></TD>
+  <TD><INPUT TYPE=TEXT NAME=VLAN VALUE="<%print $origdata["vlan"];%>"></TD>
 </TR>
 <TR CLASS=list-color1>
   <TD onmouseover=myHint.show('ES26') ONMOUSEOUT=myHint.hide()><%print _("Lock Phone Settings (Snom's Only)");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=SNOMLOCK <%if ($origdata["SNOMLOCK"] == "1") {print "CHECKED";}%>></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=SNOMLOCK <%if ($origdata["snomlock"] == "1") {print "CHECKED";}%>></TD>
 </TR>
 <TR  CLASS=list-color2>
   <TD onmouseover=myHint.show('ES27') ONMOUSEOUT=myHint.hide()><%print _("Configure Keypad Function Keys ");%></TD>
@@ -1215,7 +921,7 @@ if ($SUPER_USER == 1) {
   <TH COLSPAN=2>Polycom Settings</TH></TR>
 <TR CLASS=list-color2>
   <TD onmouseover=myHint.show('ES26') ONMOUSEOUT=myHint.hide()><%print _("Search Directory By Last Name");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=POLYDIRLN <%if ($origdata["POLYDIRLN"] == "1") {print "CHECKED";}%>></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=POLYDIRLN <%if ($origdata["polydirln"] == "1") {print "CHECKED";}%>></TD>
 </TR>
 <TR CLASS=list-color1>
   <TH COLSPAN=2>Linksys/Audiocodes MP-202 Settings (Shared By All Ports)</TH></TR>
@@ -1259,12 +965,12 @@ if ($SUPER_USER == 1) {
 <%
 } else {
 %>
-  <INPUT TYPE=HIDDEN NAME=SNOMMAC VALUE="<%print $origdata["SNOMMAC"];%>">
-  <INPUT TYPE=HIDDEN NAME=REGISTRAR VALUE="<%print $origdata["REGISTRAR"];%>">
-  <INPUT TYPE=HIDDEN NAME=PTYPE VALUE="<%print $origdata["PTYPE"];%>">
-  <INPUT TYPE=HIDDEN NAME=VLAN VALUE="<%print $origdata["VLAN"];%>">
-  <INPUT TYPE=HIDDEN NAME=SNOMLOCK VALUE="<%if ($origdata["SNOMLOCK"] == "1") {print "on";}%>">
-  <INPUT TYPE=HIDDEN NAME=POLYDIRLN VALUE="<%if ($origdata["POLYDIRLN"] == "1") {print "on";}%>">
+  <INPUT TYPE=HIDDEN NAME=SNOMMAC VALUE="<%print $origdata["snommac"];%>">
+  <INPUT TYPE=HIDDEN NAME=REGISTRAR VALUE="<%print $origdata["registrar"];%>">
+  <INPUT TYPE=HIDDEN NAME=PTYPE VALUE="<%print $origdata["ptype"];%>">
+  <INPUT TYPE=HIDDEN NAME=VLAN VALUE="<%print $origdata["vlan"];%>">
+  <INPUT TYPE=HIDDEN NAME=SNOMLOCK VALUE="<%if ($origdata["snomlock"] == "1") {print "on";}%>">
+  <INPUT TYPE=HIDDEN NAME=POLYDIRLN VALUE="<%if ($origdata["polydirln"] == "1") {print "on";}%>">
   <INPUT TYPE=HIDDEN NAME=LSYSLINKSYS VALUE="<%print $lsysdata["LINKSYS"];%>">
   <INPUT TYPE=HIDDEN NAME=LSYSPROFILE VALUE="<%print $lsysdata["PROFILE"];%>">
   <INPUT TYPE=HIDDEN NAME=LSYSSTUNSRV VALUE="<%print $lsysdata["STUNSRV"];%>">
@@ -1319,7 +1025,7 @@ if ($SUPER_USER == 1) {
 }
 %>
   <TD onmouseover=myHint.show('ES31') ONMOUSEOUT=myHint.hide()><%print _("Open Up CRM Page On Incoming Call");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=CRMPOP <%if ($origdata["CRMPOP"] == "1") {print "CHECKED";}%>></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=CRMPOP <%if ($origdata["crmpop"] == "1") {print "CHECKED";}%>></TD>
 </TR>
 
 </TABLE>
@@ -1335,24 +1041,24 @@ if ($SUPER_USER == 1) {
   <TD>
     <SELECT NAME=FWDU>
       <OPTION VALUE="0">None</OPTION>
-      <OPTION VALUE="1"<%if ($origdata["FWDU"] == "1") { print " SELECTED";}%>>Default</OPTION>
-      <OPTION VALUE="mISDN/g:fwd/"<%if ($origdata["FWDU"] == "mISDN/g:fwd/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Forward Group");%></OPTION>
-      <OPTION VALUE="mISDN/g:out/"<%if ($origdata["FWDU"] == "mISDN/g:out/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 1");%></OPTION>
-      <OPTION VALUE="mISDN/g:out2/"<%if ($origdata["FWDU"] == "mISDN/g:out2/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 2");%></OPTION>
-      <OPTION VALUE="mISDN/g:out3/"<%if ($origdata["FWDU"] == "mISDN/g:out3/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 3");%></OPTION>
-      <OPTION VALUE="mISDN/g:out4/"<%if ($origdata["FWDU"] == "mISDN/g:out4/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 4");%></OPTION>
-      <OPTION VALUE="DAHDI/r1/"<%if (($origdata["FWDU"] == "Zap/r1/") || ($origdata["FWDU"] == "DAHDI/r1/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 1");%></OPTION>
-      <OPTION VALUE="DAHDI/r2/"<%if (($origdata["FWDU"] == "Zap/r2/") || ($origdata["FWDU"] == "DAHDI/r2/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 2");%></OPTION>
-      <OPTION VALUE="DAHDI/r3/"<%if (($origdata["FWDU"] == "Zap/r3/") || ($origdata["FWDU"] == "DAHDI/r3/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 3");%></OPTION>
-      <OPTION VALUE="DAHDI/r4/"<%if (($origdata["FWDU"] == "Zap/r4/") || ($origdata["FWDU"] == "DAHDI/r4/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 4");%></OPTION>
-      <OPTION VALUE="WOOMERA/g1/"<%if ($origdata["FWDU"] == "WOOMERA/g1/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 1");%></OPTION>
-      <OPTION VALUE="WOOMERA/g2/"<%if ($origdata["FWDU"] == "WOOMERA/g2/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 2");%></OPTION>
-      <OPTION VALUE="WOOMERA/g3/"<%if ($origdata["FWDU"] == "WOOMERA/g3/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 3");%></OPTION>
-      <OPTION VALUE="WOOMERA/g4/"<%if ($origdata["FWDU"] == "WOOMERA/g4/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 4");%></OPTION>
+      <OPTION VALUE="1"<%if ($origdata["fwdu"] == "1") { print " SELECTED";}%>>Default</OPTION>
+      <OPTION VALUE="mISDN/g:fwd/"<%if ($origdata["fwdu"] == "mISDN/g:fwd/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Forward Group");%></OPTION>
+      <OPTION VALUE="mISDN/g:out/"<%if ($origdata["fwdu"] == "mISDN/g:out/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 1");%></OPTION>
+      <OPTION VALUE="mISDN/g:out2/"<%if ($origdata["fwdu"] == "mISDN/g:out2/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 2");%></OPTION>
+      <OPTION VALUE="mISDN/g:out3/"<%if ($origdata["fwdu"] == "mISDN/g:out3/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 3");%></OPTION>
+      <OPTION VALUE="mISDN/g:out4/"<%if ($origdata["fwdu"] == "mISDN/g:out4/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 4");%></OPTION>
+      <OPTION VALUE="DAHDI/r1/"<%if (($origdata["fwdu"] == "Zap/r1/") || ($origdata["fwdu"] == "DAHDI/r1/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 1");%></OPTION>
+      <OPTION VALUE="DAHDI/r2/"<%if (($origdata["fwdu"] == "Zap/r2/") || ($origdata["fwdu"] == "DAHDI/r2/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 2");%></OPTION>
+      <OPTION VALUE="DAHDI/r3/"<%if (($origdata["fwdu"] == "Zap/r3/") || ($origdata["fwdu"] == "DAHDI/r3/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 3");%></OPTION>
+      <OPTION VALUE="DAHDI/r4/"<%if (($origdata["fwdu"] == "Zap/r4/") || ($origdata["fwdu"] == "DAHDI/r4/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 4");%></OPTION>
+      <OPTION VALUE="WOOMERA/g1/"<%if ($origdata["fwdu"] == "WOOMERA/g1/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 1");%></OPTION>
+      <OPTION VALUE="WOOMERA/g2/"<%if ($origdata["fwdu"] == "WOOMERA/g2/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 2");%></OPTION>
+      <OPTION VALUE="WOOMERA/g3/"<%if ($origdata["fwdu"] == "WOOMERA/g3/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 3");%></OPTION>
+      <OPTION VALUE="WOOMERA/g4/"<%if ($origdata["fwdu"] == "WOOMERA/g4/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 4");%></OPTION>
 <%
       for($ipcnt=0;$ipcnt < count($ipgw);$ipcnt++) {
         print "<OPTION VALUE=\"" . $ipgw[$ipcnt]['gw'] . "\"";
-        if ($origdata['FWDU'] == $ipgw[$ipcnt]['gw']) {
+        if ($origdata['fwdu'] == $ipgw[$ipcnt]['gw']) {
           print " SELECTED";
         }
         print ">" . $ipgw[$ipcnt]['name'] . "</OPTION>\n";
@@ -1362,23 +1068,23 @@ if ($SUPER_USER == 1) {
   </TD>
 </TR> <TR CLASS=list-color1>
   <TD onmouseover=myHint.show('ES33') ONMOUSEOUT=myHint.hide()><%print _("Use IAX As VOIP Protocol");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=IAXLine <%if ($origdata["IAXLine"] == "1") {print "CHECKED";}%>></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=IAXLine <%if ($origdata["iaxline"] == "1") {print "CHECKED";}%>></TD>
 </TR> <TR CLASS=list-color2>
   <TD onmouseover=myHint.show('ES49') ONMOUSEOUT=myHint.hide()><%print _("Use H323 As VOIP Protocol (See H.323 Settings Bellow)")%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=H323Line <%$rcnt++;if ($origdata["H323Line"] == "1") {print "CHECKED";}%>></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=H323Line <%$rcnt++;if ($origdata["h323line"] == "1") {print "CHECKED";}%>></TD>
 </TR> <TR CLASS=list-color1>
   <TD onmouseover=myHint.show('ES32') ONMOUSEOUT=myHint.hide()><%print _("Exclude From LCR (VOIP/GSM)");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=NOVOIP <%if ($origdata["NOVOIP"] == "1") {print "CHECKED";}%>></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=NOVOIP <%if ($origdata["novoip"] == "1") {print "CHECKED";}%>></TD>
 </TR>
 </TABLE>
 </DIV>
 <%
 } else {
 %>
-  <INPUT TYPE=HIDDEN NAME=NOVOIP VALUE="<%if ($origdata["NOVOIP"] == "1") {print "on";}%>">
-  <INPUT TYPE=HIDDEN NAME=IAXLine VALUE="<%if ($origdata["IAXLine"] == "1") {print "on";}%>">
-  <INPUT TYPE=HIDDEN NAME=H323Line VALUE="<%if ($origdata["H323Line"] == "1") {print "on";}%>">
-  <INPUT TYPE=HIDDEN NAME=FWDU VALUE="<%print $origdata["FWDU"];%>">
+  <INPUT TYPE=HIDDEN NAME=NOVOIP VALUE="<%if ($origdata["novoip"] == "1") {print "on";}%>">
+  <INPUT TYPE=HIDDEN NAME=IAXLine VALUE="<%if ($origdata["iaxline"] == "1") {print "on";}%>">
+  <INPUT TYPE=HIDDEN NAME=H323Line VALUE="<%if ($origdata["h323line"] == "1") {print "on";}%>">
+  <INPUT TYPE=HIDDEN NAME=FWDU VALUE="<%print $origdata["fwdu"];%>">
 <%
 }
 %>
@@ -1437,7 +1143,7 @@ if ($SUPER_USER == 1) {
 </TR>
 <TR CLASS=list-color2>
   <TD onmouseover=myHint.show('ES39') ONMOUSEOUT=myHint.hide()><%print _("Pass DDI To Extension");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=DDIPASS <%if ($origdata["DDIPASS"] == "1") {print "CHECKED";}%>></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=DDIPASS <%if ($origdata["ddipass"] == "1") {print "CHECKED";}%>></TD>
 </TR>
 <TR CLASS=list-color1>
   <TD onmouseover=myHint.show('ES39') ONMOUSEOUT=myHint.hide()><%print _("Allow T.38 Support");%></TD>
@@ -1452,23 +1158,23 @@ if ($SUPER_USER == 1) {
 <TABLE CLASS=formtable>
 <TR CLASS=list-color2>
   <TD ALIGN=LEFT onmouseover=myHint.show('ES40') ONMOUSEOUT=myHint.hide()><%print _("TDM Port Non VOIP (ZAP Channel)");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=ZAPLine VALUE="<%print $origdata["ZAPLine"];%>"></TD>
+  <TD><INPUT TYPE=TEXT NAME=ZAPLine VALUE="<%print $origdata["zapline"];%>"></TD>
 </TR>
 <TR CLASS=list-color1>
   <TD ALIGN=LEFT onmouseover=myHint.show('ES46') ONMOUSEOUT=myHint.hide()><%print _("Signalling Used For ZAP Channel");%><BR></TD>
   <TD><SELECT NAME=ZAPProto>
-    <OPTION VALUE="fxo_ks"<%if ($origdata["ZAPProto"] == "fxo_ks") {print " SELECTED";}%>><%print _("Kewl Start");%></OPTION>
-    <OPTION VALUE="fxo_ls"<%if ($origdata["ZAPProto"] == "fxo_ls") {print " SELECTED";}%>><%print _("Loop Start");%></OPTION>
-    <OPTION VALUE="fxo_gs"<%if ($origdata["ZAPProto"] == "fxo_gs") {print " SELECTED";}%>><%print _("Ground Start");%></OPTION>
+    <OPTION VALUE="fxo_ks"<%if ($origdata["zapproto"] == "fxo_ks") {print " SELECTED";}%>><%print _("Kewl Start");%></OPTION>
+    <OPTION VALUE="fxo_ls"<%if ($origdata["zapproto"] == "fxo_ls") {print " SELECTED";}%>><%print _("Loop Start");%></OPTION>
+    <OPTION VALUE="fxo_gs"<%if ($origdata["zapproto"] == "fxo_gs") {print " SELECTED";}%>><%print _("Ground Start");%></OPTION>
   </SELECT></TD>
 </TR>
 <TR CLASS=list-color2>
   <TD ALIGN=LEFT onmouseover=myHint.show('ES47') ONMOUSEOUT=myHint.hide()><%print _("RX Gain");%><BR></TD>
-  <TD><INPUT TYPE=TEXT NAME=ZAPRXGain VALUE="<%print $origdata["ZAPRXGain"];%>"></TD>
+  <TD><INPUT TYPE=TEXT NAME=ZAPRXGain VALUE="<%print $origdata["zaprxgain"];%>"></TD>
 </TR>
 <TR CLASS=list-color1>
   <TD ALIGN=LEFT onmouseover=myHint.show('ES48') ONMOUSEOUT=myHint.hide()><%print _("TX Gain");%><BR></TD>
-  <TD><INPUT TYPE=TEXT NAME=ZAPTXGain VALUE="<%print $origdata["ZAPTXGain"];%>"></TD>
+  <TD><INPUT TYPE=TEXT NAME=ZAPTXGain VALUE="<%print $origdata["zaptxgain"];%>"></TD>
 </TR>
 </TABLE>
 </DIV>
@@ -1493,9 +1199,9 @@ if ($SUPER_USER == 1) {
 <%
 } else {
 %>
-  <INPUT TYPE=HIDDEN NAME=ZAPProto VALUE="<%print $origdata["ZAPProto"];%>">
-  <INPUT TYPE=HIDDEN NAME=ZAPRXGain VALUE="<%print $origdata["ZAPRXGain"];%>">
-  <INPUT TYPE=HIDDEN NAME=ZAPTXGain VALUE="<%print $origdata["ZAPTXGain"];%>">
+  <INPUT TYPE=HIDDEN NAME=ZAPProto VALUE="<%print $origdata["zapproto"];%>">
+  <INPUT TYPE=HIDDEN NAME=ZAPRXGain VALUE="<%print $origdata["zaprxgain"];%>">
+  <INPUT TYPE=HIDDEN NAME=ZAPTXGain VALUE="<%print $origdata["zaptxgain"];%>">
   <INPUT TYPE=HIDDEN NAME=h323permit VALUE="<%print $h323permit;%>">
   <INPUT TYPE=HIDDEN NAME=h323prefix VALUE="<%print $h323prefix;%>">
   <INPUT TYPE=HIDDEN NAME=h323gkid VALUE="<%print $h323gkid;%>">
@@ -1648,7 +1354,7 @@ if ($SUPER_USER == 1) {
 <%
   for ($ring=1;$ring <= 10;$ring++) {
     print "<OPTION VALUE=" . $ring;
-    if ($origdata["SRING0"] == $ring) {
+    if ($origdata["sring0"] == $ring) {
       print " SELECTED";
     }
     print ">" . $ring . "</OPTION>\n";
@@ -1661,7 +1367,7 @@ if ($SUPER_USER == 1) {
 <%
   for ($ring=1;$ring <= 10;$ring++) {
     print "<OPTION VALUE=" . $ring;
-    if ($origdata["SRING1"] == $ring) {
+    if ($origdata["sring1"] == $ring) {
       print " SELECTED";
     }
     print ">" . $ring . "</OPTION>\n";
@@ -1674,7 +1380,7 @@ if ($SUPER_USER == 1) {
 <%
   for ($ring=1;$ring <= 10;$ring++) {
     print "<OPTION VALUE=" . $ring;
-    if ($origdata["SRING2"] == $ring) {
+    if ($origdata["sring2"] == $ring) {
       print " SELECTED";
     }
     print ">" . $ring . "</OPTION>\n";
@@ -1687,7 +1393,7 @@ if ($SUPER_USER == 1) {
 <%
   for ($ring=1;$ring <= 10;$ring++) {
     print "<OPTION VALUE=" . $ring;
-    if ($origdata["SRING3"] == $ring) {
+    if ($origdata["sring3"] == $ring) {
       print " SELECTED";
     }
     print ">" . $ring . "</OPTION>\n";

@@ -65,6 +65,7 @@ if ((isset($_POST['pbxupdate'])) && ($_POST['exten'] == "") && (($_POST['prefix'
                                      '6','" . $_POST['prefix'] . $_POST['cno'] . "','" . $_POST['prefix'] . $_POST['cno'] . "','" . $_POST['prefix'] . $_POST['cno'] . "',
                                      '" . $rndpin . "','" . $_POST['prefix'] . $_POST['cno'] . "','0','Exten " . $_POST['prefix'] . $_POST['cno'] . "','','1','1','yes')";
     $exadd=pg_query($db,$exaddq);
+    pg_query($db,"INSERT INTO features (exten) VALUES ('" . $_POST['prefix'] . $_POST['cno'] . "')");
     include "vladmin.php";
   }
 } else if ((isset($_POST['pbxupdate'])) && ($_POST['exten'] != "")) {
@@ -77,6 +78,7 @@ if ((isset($_POST['pbxupdate'])) && ($_POST['exten'] == "") && (($_POST['prefix'
   if ((isset($delext)) && ($_POST['exten'] != "")) {
     pg_query($db,"DELETE FROM users WHERE name='" . $_POST['exten'] . "'");
     pg_query($db,"DELETE FROM astdb WHERE family='" . $_POST['exten'] . "'");
+    pg_query($db,"DELETE FROM features WHERE exten='" . $_POST['exten'] . "'");
     pg_query($db,"DELETE FROM console WHERE mailbox='" . $_POST['exten'] . "'");
     $delpre=pg_query($db,"SELECT name from users where name ~ '^" . substr($_POST['exten'],0,2) . "'");
     if (pg_num_rows($delpre) <= 0) {

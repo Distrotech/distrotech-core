@@ -82,6 +82,7 @@ if (isset($_POST['adduser'])) {
                                      '$cno','$cno','$cno','$cno','$lpass','$vmpass','0','" . $_POST['tariff'] . "','" . $_POST['active'] . "',
                                      '1','$bnameout','" . $_POST['email'] . "'," . $_SESSION['resellerid'] . ",'yes',
                                      '" . $_POST['nat'] . "','" . $_POST['canreinvite'] . "')");
+    pg_query($db,"INSERT INTO features (exten) VALUES ('$cno')");
     if ($_POST['aloccredit'] > 0) {
       $rcred=pg_query("SELECT credit,exchangerate,description,credit*oratio-rcallocated FROM reseller WHERE id='" . $_SESSION['resellerid'] . "'");
       $ccred=pg_fetch_row($rcred,0);
@@ -109,10 +110,10 @@ if (isset($_POST['adduser'])) {
       pg_query($db,"INSERT INTO callerid (cid,username) VALUES ('" . $_POST['cbnum'] . "','" . $cno . "')");
     }
     if ($_POST['iaxline'] == "on") {
-      pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('" . $cno . "','IAXLine','1')");
+      pg_query($db,"UPDATE features SET iaxline='1' WHERE exten='" . $cno . "'");
     }
     if ($_POST['DDIPASS'] == "on") {
-      pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('" . $cno . "','DDIPASS','1')");
+      pg_query($db,"UPDATE features SET ddipass='1' WHERE exten='" . $cno . "'");
     }
     $rowcol=$acnum%2;%>
       <TR CLASS=list-color<%print $rowcol+1;%>>

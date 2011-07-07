@@ -20,11 +20,10 @@ $curset=pg_query("SELECT DISTINCT name FROM users WHERE name='" . $PHP_AUTH_USER
 if ((!isset($PHP_AUTH_USER)) || (pg_num_rows($curset) == "0") || (!isset($PHP_AUTH_PW))) {
   authenticate();
 } else {
-  $profile=pg_query("SELECT DISTINCT users.context,position,fullname,console.context,crmpop.value,dgroup.value
+  $profile=pg_query("SELECT DISTINCT users.context,position,fullname,console.context,crmpop,dgroup
   FROM users 
     LEFT OUTER JOIN console USING (mailbox)
-    LEFT OUTER JOIN astdb AS crmpop ON (crmpop.family=users.name AND crmpop.key='CRMPOP')
-    LEFT OUTER JOIN astdb AS dgroup ON (dgroup.family=users.name AND dgroup.key='DGROUP')
+    LEFT OUTER JOIN features ON (exten=users.name)
     WHERE name='" . $PHP_AUTH_USER . "'");
   $msqldat=pg_fetch_array($profile,0,PGSQL_NUM);
   $exten=$PHP_AUTH_USER;

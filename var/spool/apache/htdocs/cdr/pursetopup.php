@@ -16,20 +16,20 @@ if (($_POST['account'] != "") && ($_POST['ammount'] != "")) {
   pg_query($db,"INSERT INTO purse_limit (name,ammount) VALUES ('" . $_POST['account'] . "','" . $_POST['ammount'] . "')");
 }
 
-$extensq="SELECT users.name,fullname,astdb.value,ammount,sum(cost) FROM cdr
+$extensq="SELECT users.name,fullname,purse,ammount,sum(cost) FROM cdr
  LEFT OUTER JOIN trunkcost USING (uniqueid) 
  LEFT OUTER JOIN users ON (cdr.accountcode=users.name)
- LEFT OUTER JOIN astdb ON (users.name=astdb.family AND astdb.key='PURSE')
+ LEFT OUTER JOIN features ON (users.name=exten)
  LEFT OUTER JOIN purse_update ON (users.name=purse_update.name)
  LEFT OUTER join astdb AS lpre ON (lpre.family = 'LocalPrefix' and lpre.key = substr(users.name,0,3))";
 if ($SUPER_USER != 1) {
   $extensq.=" LEFT OUTER JOIN astdb AS bgrp ON (users.name=bgrp.family AND bgrp.key='BGRP')";
 }
-$extensq.=" WHERE cdr.calldate > date_trunc('month',now()) AND cdr.disposition='ANSWERED' AND lpre.value='1' AND astdb.value IS NOT NULL AND astdb.value != ''";
+$extensq.=" WHERE cdr.calldate > date_trunc('month',now()) AND cdr.disposition='ANSWERED' AND lpre.value='1' AND purse IS NOT NULL AND purse != ''";
 if ($SUPER_USER != 1) {
   $extensq.=" AND " . $clogacl;
 }
-$extensq.=" GROUP BY astdb.id,users.name,users.fullname,astdb.value,ammount order by users.name";
+$extensq.=" GROUP BY users.name,users.fullname,purse,ammount order by users.name";
 
 //print $extensq . "<p>";
 

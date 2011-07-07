@@ -277,7 +277,7 @@ if (isset($csvup)) {
                                     "callgroup='" . $out[19] . "',pickupgroup='" . $out[20] . "' WHERE name='" . $exten . "'");
 
           for($dbq=0;$dbq < count($astdbk);$dbq++) {
-            pg_query("UPDATE astdb SET value='" . $out[$astdbm[$astdbk[$dbq]]] . "' WHERE family='" . $exten . "' AND key='" . $astdbk[$dbq] . "'");
+            pg_query("UPDATE features SET $astdbk[$dbq]='" . $out[$astdbm[$astdbk[$dbq]]] . "' WHERE exten='" . $exten . "'");
           }
         } else {
           print "<TR" . $bcolor[$rcnt % 2] . "><TD>Inserting " . $out[0] . " [" . $out[1];
@@ -288,9 +288,10 @@ if (isset($csvup)) {
           pg_query("INSERT INTO users (context,name,defaultuser,mailbox,secret,password,usertype,fullname,email,callgroup,pickupgroup)
                                VALUES ('6','" . $exten . "','" . $exten . "','" . $exten . "','" . $out[5] . "','" . $out[6] . "','0','" .
                                        trim($out[1]) . "','" . trim($out[2]) . "','" . $out[19] . "','" . $out[20] . "')");
+          pg_query("INSERT INTO features (exten) VALUES ('" . $exten . "')");
 
           for($dbq=0;$dbq < count($astdbk);$dbq++) {
-            pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','" . $astdbk[$dbq] . "','" . $out[$astdbm[$astdbk[$dbq]]] . "')");
+            pg_query("UPDATE features SET $astdbk[$dbq]='" . $out[$astdbm[$astdbk[$dbq]]] . "' WHERE exten='" . $exten . "'");
           }
         }
       } else if ($filetype == "elist") {
@@ -314,14 +315,7 @@ if (isset($csvup)) {
           print "]</TD></TR>\n";
 
           pg_query("UPDATE users SET fullname='" . $out[1] . "',email='" . $out[2] . "' WHERE name='" . $exten . "'");
-          $ud=pg_query("UPDATE astdb SET value='" . $out[3] . "' WHERE family='" . $exten . "' AND key='ALTC'");
-          if (pg_affected_rows($ud) <= 0) {
-            pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','ALTC','" . $out[3] . "')");
-          }
-          $ud=pg_query("UPDATE astdb SET value='" . $out[4] . "' WHERE family='" . $exten . "' AND key='OFFICE'");
-          if (pg_affected_rows($ud) <= 0) {
-            pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','OFFICE','" . $out[4] . "')");
-          }
+          pg_query("UPDATE features SET altc='" . $out[3] . "',office='" . $out[4] . "' WHERE exten='" . $exten . "'");
         }
       } else if ($filetype == "protocol") {
         $rcnt++;
@@ -357,7 +351,7 @@ if (isset($csvup)) {
                                     "cancallforward='" . $out[5] . "',qualify='" . $out[6] . "',h323permit='" . $out[7] . "',h323gkid='" . $out[8] .
                                     "',h323prefix='" . $out[9] . "',allow='" . $codecs . "' WHERE name='" . $exten . "'");
           for($dbq=0;$dbq < count($astpdbk);$dbq++) {
-            pg_query($db,"UPDATE astdb SET value='" . $out[$astpdbm[$astpdbk[$dbq]]] . "' WHERE family='" . $exten . "' AND key='" . $astpdbk[$dbq] . "'");
+            pg_query("UPDATE features SET $astdbk[$dbq]='" . $out[$astdbm[$astdbk[$dbq]]] . "' WHERE exten='" . $exten . "'");
           }
         } else {
           print "<TR" . $bcolor[$rcnt % 2] . "><TD>Can't Update " . $out[0] . " (Extention Does Not Exist)</TD></TR>\n";
@@ -378,18 +372,7 @@ if (isset($csvup)) {
         if ($out[1] != "") {
           $rcnt++;
           print "<TR" . $bcolor[$rcnt % 2] . "><TD>Adding " . $out[0] . " (" . $name[0] . " - " . $out[1] . ")</TD></TR>\n";
-          pg_query($db,"DELETE FROM astdb WHERE family='" . $out[0] . "' AND (key='SNOMMAC' OR key='VLAN' OR key='PTYPE' OR key='SNOMLOCK' OR key='REGISTRAR')");
-          pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('" . $out[0] . "','SNOMMAC','" . $out[1] . "')");
-          pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('" . $out[0] . "','SNOMLOCK','" . boolyn($out[2]) . "')");
-          if ($out[3] != "") {
-            pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('" . $out[0] . "','REGISTRAR','" . $out[3] . "')");
-          }
-          if (($out[4] != "") && ($out[5] != "LINKSYS")) {
-            pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('" . $out[0] . "','VLAN','" . $out[4] . "')");
-          }                   
-          if ($out[5] != "") {
-            pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('" . $out[0] . "','PTYPE','" . $out[5] . "')");
-          }
+          pg_query("UPDATE features SET snommac='" . $out[1] . "',snomlock='" . boolyn($out[2] . "',registrar='" . $out[3] . "',vlan='" . $out[4] . "',ptype='" . $out[5] . "' WHERE exten='" . $out[0] . "'");
         }
         if (($out[6] == "") && ($out[7] == "") && ($out[8] == "") && ($out[1] != "")) {
           pg_query($db,"DELETE FROM astdb WHERE family='" . $out[0] . "' AND key ~ '^fkey[0-9]+'");
@@ -508,12 +491,11 @@ if (isset($csvup)) {
         if ((pg_num_rows($existq) > 0) || ($out[0] == "799")){
           $rcnt++;
           $out[1]=telnumload($out[1]);
-          $linetype=pg_query($db,"SELECT CASE WHEN (tdm.value > 0) THEN 'DAHDI/'||tdm.value ELSE
-                                           CASE WHEN (iax.value = '1') THEN 'IAX2/'||name ELSE 'SIP/'||name
+          $linetype=pg_query($db,"SELECT CASE WHEN (zapline > 0) THEN 'DAHDI/'||zapline ELSE
+                                           CASE WHEN (iaxline = '1') THEN 'IAX2/'||name ELSE 'SIP/'||name
                                            END
                                          END
-                                    FROM users LEFT OUTER JOIN astdb AS iax ON (family = name AND key='IAXLine')
-                                               left OUTER JOIN astdb AS tdm ON (tdm.family=name and tdm.key='ZAPLine')
+                                    FROM users LEFT OUTER JOIN features ON (exten = name)
                                     WHERE name='" . $out[1] . "'");
           if (pg_num_rows($linetype) > 0) {
             $ltype=pg_fetch_row($linetype,0);
@@ -687,7 +669,7 @@ if (isset($csvup)) {
     $agi=new AGI_AsteriskManager();
   }
   $agi->connect("127.0.0.1","admin","admin");
-  $curext=pg_query("SELECT name,ipaddr,ptype.value from users left outer join astdb as lkey on (substr(name,0,3)=lkey.key) LEFT OUTER JOIN astdb AS ptype ON (name=ptype.family AND ptype.key='PTYPE') WHERE (ptype.value='SNOM' OR ptype.value ~ '^IP_' OR ptype.value='POLYCOM') AND length(name) = 4 AND lkey.family = 'LocalPrefix' AND lkey.value=1");
+  $curext=pg_query("SELECT name,ipaddr,ptype from users left outer join astdb as lkey on (substr(name,0,3)=lkey.key) LEFT OUTER JOIN features ON (name=exten) WHERE (ptype='SNOM' OR ptype ~ '^IP_' OR ptype='POLYCOM') AND length(name) = 4 AND lkey.family = 'LocalPrefix' AND lkey.value=1");
   for($i=0;$i < pg_num_rows($curext);$i++) {
     $r = pg_fetch_array($curext,$i,PGSQL_NUM);
     if ($r[2] == "SNOM") {

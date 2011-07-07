@@ -138,7 +138,7 @@ function delete_allexten_x509() {
 function create_phone_x509($ptype) {
   global $db;
 
-  $users=pg_query($db, "SELECT name FROM users LEFT OUTER JOIN astdb ON (family = name AND key = 'PTYPE') WHERE value='" . $ptype . "'");
+  $users=pg_query($db, "SELECT name FROM users LEFT OUTER JOIN features ON (exten = name) WHERE ptype='" . $ptype . "'");
   for($x=0;$x < pg_num_rows($users);$x++) {
     $r=pg_fetch_array($users,$x);
     create_exten_x509($r[0]);

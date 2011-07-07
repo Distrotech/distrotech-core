@@ -64,7 +64,7 @@ if (!isset($_SESSION['auth'])) {
         print "<TR" . $bcol[$col % 2] . "><TD>";
         if ($_POST['print'] != "1") {
           print "<A HREF=javascript:openphone('http://" . $ip . "')>" . $ip . "</A></TD><TD>";
-          $macq=pg_query($db,"SELECT name,fullname FROM users LEFT OUTER JOIN astdb ON (family = name AND key='SNOMMAC') WHERE value=replace(upper('" . $mac . "'),':','')");
+          $macq=pg_query($db,"SELECT name,fullname FROM users LEFT OUTER JOIN features ON (exten=name) WHERE snommac = replace(upper('" . $mac . "'),':','')");
           if (pg_num_rows($macq) > 0) {
             $phonem=pg_fetch_array($macq,0);
             $mac="<A HREF=javascript:openextenedit('" . $phonem[0] . "')>" . $mac . " (" . $phonem[0] . " [" . $phonem[1] . "])</A>";

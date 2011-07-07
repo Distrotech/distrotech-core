@@ -31,12 +31,12 @@ function newpin($exten) {
   while (($pintry <= 10) && ($pincnt > 0)) {
     $randpin=rand(0,9999);
     $randpin=str_pad($randpin,4,"0",STR_PAD_LEFT);
-    $pincntq=pg_query($db,"SELECT count(id) FROM astdb WHERE key='RoamPass' AND value='" . $randpin . "'");
+    $pincntq=pg_query($db,"SELECT count(id) FROM features  WHERE roampass='" . $randpin . "'");
     list($pincnt)=pg_fetch_array($pincntq,0);
     $pintry++;
   }
   if ($pincnt == 0) {
-    pg_query($db,"UPDATE astdb SET value='" . $randpin . "' WHERE key='RoamPass' AND family='" . $exten . "'");
+    pg_query($db,"UPDATE features SET roampass='" . $randpin . "' WHERE exten='" . $exten . "'");
   }
   return $randpin;
 }
@@ -162,15 +162,6 @@ function makenumint($phonenumber){
     $phonenumber="27" . $phonenumber;
   }
   return $phonenumber;
-}
-
-function rtdbget($family,$key) {
-  $rtdbres=odbcquery("SELECT value FROM astdb WHERE family='" . $family . "' AND key='" . $key . "'");
-  if( !is_array($rtdbres)) {
-    return "";
-  } else {
-    return $rtdbres[0];
-  }
 }
 
 function make_gsm_call($number,$chanid,$timeout) {

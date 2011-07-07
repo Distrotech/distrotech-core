@@ -4,15 +4,13 @@
 <INPUT TYPE=HIDDEN NAME=ajax value=1>
 <%
 include_once "auth.inc";
-$extensq="SELECT name,fullname,ipaddr,astdb.value,useragent from users 
- left outer join astdb on (name = astdb.family and astdb.key='SNOMMAC')
- left outer join astdb as zap on (name = zap.family and zap.key='ZAPLine')
- left outer join astdb as fwd on (name = fwd.family and fwd.key='FWDU')
+$extensq="SELECT name,fullname,ipaddr,snommac,useragent from users 
+ left outer join features on (name = exten)
  left outer join astdb as lpre on (lpre.family = 'LocalPrefix' and lpre.key = substr(name,0,3))";
 if ($SUPER_USER != 1) {
   $extensq.=" LEFT OUTER JOIN astdb AS bgrp ON (bgrp.family=name AND bgrp.key='BGRP')";
 }
-$extensq.=" where (fwd.value = 0 OR fwd.value is null) AND (zap.value = 0 OR zap.value is null) AND (extract(epoch from now()) - 3600 > regseconds OR regseconds is null ) AND (not h323neighbor  OR h323neighbor is null) AND lpre.value='1'";
+$extensq.=" where (fwdu = 0 OR fwdu is null) AND (zapline = 0 OR zapline is null) AND (extract(epoch from now()) - 3600 > regseconds OR regseconds is null ) AND (not h323neighbor  OR h323neighbor is null) AND lpre.value='1'";
 if ($SUPER_USER != 1) {
   $extensq.=" AND " . $clogacl;
 }
@@ -43,6 +41,7 @@ for($tcnt=0;$tcnt<pg_num_rows($extens);$tcnt++) {
   $todel="del" . $r[0];
   if ($$todel == "on") {
     pg_query($db,"DELETE FROM users WHERE name='" . $r[0] . "'");
+    pg_query($db,"DELETE FROM features WHERE exten='" . $r[0] . "'");
     pg_query($db,"DELETE FROM astdb WHERE family='" . $r[0] . "'");
     pg_query($db,"DELETE FROM console WHERE mailbox='" . $r[0] . "'");
 

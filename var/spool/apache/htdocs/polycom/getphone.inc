@@ -6,16 +6,13 @@ $mac=ereg_replace(":","",$mac);
 $mac=strtoupper($mac);
 
 $pwlen=8;
-$getports="SELECT users.name,proxy.value,users.fullname,users.secret,users.nat,ptype.value,callgroup,
-                  dgroup.value,lndir.value,(name=secret OR length(secret) != " . $pwlen . " OR secret='' OR 
+$getports="SELECT users.name,registrar,users.fullname,users.secret,users.nat,ptype,callgroup,
+                  dgroup,polydirln,(name=secret OR length(secret) != " . $pwlen . " OR secret='' OR 
                    secret IS NULL OR secret !~ '[0-9]' OR secret !~ '[a-z]' OR secret !~ '[A-Z]'),
                   case when (encryption_taglen = '32') then encryption||',32bit' else encryption end
-             FROM astdb AS mac LEFT OUTER JOIN astdb AS proxy ON (proxy.family=mac.family AND proxy.key='REGISTRAR') 
-               LEFT OUTER JOIN astdb AS ptype ON (ptype.family=mac.family AND ptype.key='PTYPE')
-               LEFT OUTER JOIN users ON (name=mac.family)
-               LEFT OUTER JOIN astdb AS dgroup ON (name=dgroup.family AND dgroup.key='DGROUP')
-               LEFT OUTER JOIN astdb AS lndir ON (name=lndir.family AND lndir.key='POLYDIRLN')
-             WHERE mac.key='SNOMMAC' AND mac.value='" . $mac . "'";
+             FROM features 
+               LEFT OUTER JOIN users ON (name=exten)
+             WHERE snommac='" . $mac . "'";
 
 $uports=pg_query($db,$getports);
 

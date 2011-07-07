@@ -20,29 +20,25 @@
 
 include "auth.inc";
 
-$qgetdata=pg_query($db,"SELECT key,value FROM astdb WHERE family='" . $PHP_AUTH_USER . "'");
-$qgetudata=pg_query($db,"SELECT ipaddr FROM users WHERE name='" . $PHP_AUTH_USER . "'");
-list($curipaddr)=pg_fetch_array($qgetudata,0);
+$qgetdata=pg_query($db,"SELECT ipaddr,snommac FROM users LEFT OUTER JOIN features ON (name=exten) WHERE name='" . $PHP_AUTH_USER . "'");
+list($curipaddr,$snommac)=pg_fetch_array($qgetudata,0);
 
-$dnum=pg_num_rows($qgetdata);
-for($i=0;$i<$dnum;$i++){
-  $getdata=pg_fetch_array($qgetdata,$i);
-  $origdata[$getdata[0]]=$getdata[1];
-}
-
-if (($SNOMMAC != "") && (isset($lsysreg))) {
+if (($_POST['SNOMMAC'] != "") && (isset($lsysreg))) {
   print "<script language=\"JavaScript\" src=\"/java_popups.php\" type=\"text/javascript\"></script>\n";
   if ($LSYSNAT == "on") {
     $LSYSNAT="NAT";
   } else {
     $LSYSNAT="Bridge";
   }
-  pg_query($db,"UPDATE astdb SET value='" . strtoupper($SNOMMAC) . "' WHERE family='" . $exten . "' AND key='SNOMMAC'");
+  if ($_POST['SNOMMAC'] != $snommac ) {
+    pg_query($db,"UPDATE features SET snommac='" . strtoupper($_POST['SNOMMAC']) . "' WHERE exten='" . $exten . "'");
+    pg_query($db,"DELETE FROM astdb WHERE family='" . $snommac . "'");
+  }
   for($lval=0;$lval < count($lsysconf);$lval++) {
     $lsyskey=$lsysconf[$lval];
-    $ud=pg_query("UPDATE astdb SET value= '" . $$lsyskey . "' WHERE family='" . $SNOMMAC . "' AND key = '" . $lsyskey . "'");
+    $ud=pg_query("UPDATE astdb SET value= '" . $$lsyskey . "' WHERE family='" . $_POST['SNOMMAC'] . "' AND key = '" . $lsyskey . "'");
     if (pg_affected_rows($ud) <= 0) {
-      pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $SNOMMAC . "','" . $lsyskey . "','" . $$lsyskey . "')");
+      pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $_POST['SNOMMAC'] . "','" . $lsyskey . "','" . $$lsyskey . "')");
     }
   }
   if ($LSYSIPADDR != "") {%>
@@ -53,7 +49,11 @@ if (($SNOMMAC != "") && (isset($lsysreg))) {
   }
 }
 
-$lsysgetconf=pg_query($db,"SELECT astdb.key,astdb.value FROM  astdb LEFT OUTER JOIN astdb AS exten ON (astdb.family=exten.value AND exten.key='SNOMMAC' AND astdb.family != '' AND exten.family='" . $PHP_AUTH_USER . "') WHERE astdb.family=exten.value AND astdb.family='" . $origdata['SNOMMAC'] . "'");
+$lsysgetconf=pg_query($db,"SELECT astdb.key,astdb.value FROM  astdb 
+	LEFT OUTER JOIN features ON 
+		(exten='" . $PHP_AUTH_USER . "' AND snommac=family)
+	 WHERE family=snommac");
+
 for($lsyscnt=0;$lsyscnt < pg_num_rows($lsysgetconf);$lsyscnt++) {
   $getdata=pg_fetch_array($lsysgetconf,$lsyscnt);
   $lsysdata[$getdata[0]]=$getdata[1];
@@ -84,7 +84,7 @@ for($lval=0;$lval < count($lsysconf);$lval++) {
   <TH COLSPAN=2>Linksys/Audiocodes MP-202 Settings (Shared By All Ports)</TH></TR>
 <TR CLASS=list-color1>
   <TD ALIGN=LEFT onmouseover=myHint.show('ES24') ONMOUSEOUT=myHint.hide()><%print _("Phones MAC Address");%><BR></TD>
-  <TD><INPUT TYPE=TEXT NAME=SNOMMAC VALUE="<%print $origdata["SNOMMAC"];%>"></TD>
+  <TD><INPUT TYPE=TEXT NAME=SNOMMAC VALUE="<%print $snommac;%>"></TD>
 </TR>
 <TR  CLASS=list-color2>
   <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><%print _("Host Name");%></TD>

@@ -7,12 +7,12 @@ include "getphone.inc";
   <item_list>
 <%
 if ($mac != "") {
-  $dirq="SELECT fullname,name,CASE WHEN (name != mac.family AND callgroup = '" . $callgroup . "') THEN 1 ELSE 0 END 
-           FROM users JOIN astdb AS mac ON (mac.value = '" . $mac . "' AND mac.key='SNOMMAC')
+  $dirq="SELECT fullname,name,CASE WHEN (name != exten AND callgroup = '" . $callgroup . "') THEN 1 ELSE 0 END 
+           FROM users 
+             LEFT OUTER JOIN features ON (name=exten)
              LEFT OUTER JOIN astdb AS local ON (substr(name,1,2)=local.key AND local.family='LocalPrefix') 
-             LEFT OUTER JOIN astdb AS dgroup ON (dgroup.key='DGROUP' AND dgroup.family=name) 
            WHERE local.value='1' AND (ipaddr IS NULL OR ipaddr='' OR regseconds >= extract(epoch from now()) - 86400*2) AND 
-                 (dgroup.value = '" . $dirgroup . "' OR dgroup.value IS NULL OR dgroup.value='' OR '" . $dirgroup . "' = '')
+                 (dgroup = '" . $dirgroup . "' OR dgroup IS NULL OR dgroup='' OR '" . $dirgroup . "' = '')
            ORDER BY fullname";
 //  print $dirq . "\n";
 

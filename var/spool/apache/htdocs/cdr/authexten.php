@@ -3,7 +3,9 @@
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <%
 include_once "auth.inc";
-$extens=pg_query($db,"SELECT name,fullname,ipaddr,astdb.value from users left outer join astdb on (name = astdb.family and astdb.key='SNOMMAC') left outer join astdb as autoadd on (name = autoadd.family and autoadd.key='AUTOAUTH') left outer join astdb as lpre on (lpre.family = 'LocalPrefix' and lpre.key = substr(name,0,3)) where autoadd.value = 1 AND lpre.value='1' order by name");
+$extens=pg_query($db,"SELECT name,fullname,ipaddr,snommac from users left outer join features on (name = exten) 
+			left outer join astdb as lpre on (lpre.family = 'LocalPrefix' and lpre.key = substr(name,0,3))
+                         where autoauth = 1 AND lpre.value='1' order by name");
 
 if ($_POST['print'] != "1") {
   $colspan=5;
@@ -26,7 +28,7 @@ for($tcnt=0;$tcnt<pg_num_rows($extens);$tcnt++) {
   
   $toauth="auth" . $r[0];
   if ($$toauth == "on") {
-    pg_query($db,"UPDATE astdb SET value='0' WHERE family='" . $r[0] . "' AND key='AUTOAUTH'");
+    pg_query($db,"UPDATE features SET autoauth='0' WHERE exten='" . $r[0] . "'");
     continue;
   }
 

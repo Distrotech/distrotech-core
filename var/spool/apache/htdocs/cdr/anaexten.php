@@ -38,7 +38,7 @@ function getuphref($exten,$dbkey,$dbtype,$disp) {
 
 if (($dbfam != "") && ($dbkey != "")) {
   if (($dbkey != "qualify") && ($dbkey != "nat")){
-    pg_query($db,"UPDATE astdb SET value='" . strtolower($dbval) . "' WHERE family='" . $dbfam . "' AND key='" . $dbkey . "'");
+    pg_query($db,"UPDATE features SET " . $dbkey . "='" . strtolower($dbval) . "' WHERE exten='" . $dbfam . "'");
   } else {
     if ($dbval == 0) {
       if ($dbkey == "nat") {
@@ -137,7 +137,7 @@ alert('Error: Cannot Create A Extension Please Add Manualy.');
     unset($schan['VideoSupport']);
     unset($schan['ACL']);
     unset($schan['RealtimeDevice']);
-    $schan['Natsupport']=($schan['Natsupport'] == "no")?"0":"1";
+    $schan['Forcerport']=($schan['Forcerport'] == "no")?"0":"1";
     $chaninf[$extenno]=$schan;
     array_push($chansort,$extenno);
   } else if ($techname == "IAX") {
@@ -146,23 +146,16 @@ alert('Error: Cannot Create A Extension Please Add Manualy.');
 }
 
 
-$getastq="SELECT name,fullname,astdb.value,cfim.value,cfbu.value,cfna.value,tout.value,cwait.value,novmail.value,dnd.value FROM users
-            LEFT OUTER JOIN astdb ON (name = astdb.family and astdb.key='ZAPLine')
-            LEFT OUTER JOIN astdb AS novmail ON (novmail.family=name AND novmail.key='NOVMAIL')
-            LEFT OUTER JOIN astdb AS dnd ON (dnd.family=name AND dnd.key='CDND')
-            LEFT OUTER JOIN astdb AS tout ON (tout.family=name AND tout.key='TOUT')
-            LEFT OUTER JOIN astdb AS cfim ON (cfim.family=name AND cfim.key='CFIM')
-            LEFT OUTER JOIN astdb AS cfbu ON (cfbu.family=name AND cfbu.key='CFBU')
-            LEFT OUTER JOIN astdb AS cwait ON (cwait.family=name AND cwait.key='WAIT')
-            LEFT OUTER JOIN astdb AS cfna ON (cfna.family=name AND cfna.key='CFNA')";
+$getastq="SELECT name,fullname,zapline,cfim,cfbu,cfna,tout,wait,novmail,cdnd FROM users
+            LEFT OUTER JOIN features ON (name=exten)";
 
 if ($SUPER_USER != 1) {
   $getastq.=" LEFT OUTER JOIN astdb AS bgrp ON (bgrp.family=name AND bgrp.key='BGRP')";
 } 
 if ($techname == "Dahdi") {
-  $getastq.=" WHERE astdb.value is not null and astdb.value != '0'";
+  $getastq.=" WHERE zapline is not null and zapline != '0'";
 } else if ($techname == "SIP") {
-  $getastq.=" WHERE astdb.value is null or astdb.value = '0'";
+  $getastq.=" WHERE zapline is null or zapline = '0'";
 }
 if ($SUPER_USER != 1) {
   $getastq.=" AND " . $clogacl;
@@ -183,6 +176,7 @@ for($tcnt=0;$tcnt<pg_num_rows($extens);$tcnt++) {
   if ($$todel == "on") {
       pg_query($db,"DELETE FROM users WHERE name='" . $r[0] . "'");
       pg_query($db,"DELETE FROM astdb WHERE family='" . $r[0] . "'");
+      pg_query($db,"DELETE FROM features WHERE exten='" . $r[0] . "'");
       pg_query($db,"DELETE FROM console WHERE mailbox='" . $r[0] . "'");
       $delpre=pg_query($db,"SELECT name from users where name ~ '^" . substr($r[0],0,2) . "'");
       if (pg_num_rows($delpre) <= 0) {
@@ -260,7 +254,7 @@ for($ecnt=0;$ecnt < count($chansort);$ecnt++) {
   } else if ($techname == "SIP") {
     if ($_POST['print'] != "1") {
       print "<TD><A HREF=\"javascript:openphone('http://" . $r['IPaddress'] . "')\">" . $r['IPaddress'] . "</A>";
-      print "<TD>" . getuphref($r['Exten'],"nat",$r['Natsupport']?"1":"0",$r['Natsupport']?_("Yes"):_("No"));
+      print "<TD>" . getuphref($r['Exten'],"nat",$r['Forcerport']?"1":"0",$r['Forcerport']?_("Yes"):_("No"));
       print "<TD>" . $r['IPport'] . "</TD>";
       print "<TD>" . getuphref($r['Exten'],"qualify",($r['Status'] != "Unmonitored")?"1":"0",$r['Status']);
       if ($r['DND'] >= 0) {
@@ -269,7 +263,7 @@ for($ecnt=0;$ecnt < count($chansort);$ecnt++) {
         print "<TD>N/A</TD>";
       }
     } else {
-      print "<TD>" . $r['IPaddress'] . "</TD><TD>" . ($r['Natsupport']?_("Yes"):_("No")) . "</TD><TD>" . $r['IPport'] . "</TD><TD>" . $r['Status'] . "</TD><TD>" . ($r['DND']?_("Yes"):_("No")) . "</TD>";
+      print "<TD>" . $r['IPaddress'] . "</TD><TD>" . ($r['Forcerport']?_("Yes"):_("No")) . "</TD><TD>" . $r['IPport'] . "</TD><TD>" . $r['Status'] . "</TD><TD>" . ($r['DND']?_("Yes"):_("No")) . "</TD>";
     }
   }
 
