@@ -94,16 +94,11 @@ $langn=array(_("Spanish"),_("French"));
 $poscb=array("CDND","DRING","WAIT","RECORD","NOPRES","DFEAT","NOVOIP","CRMPOP","IAXLine","H323Line","Locked",
              "FAXMAIL","SNOMLOCK","POLYDIRLN","DDIPASS","DDIPASS");
 $negcb=array("NOVMAIL");
-$astdbarr=array("CDND","CFBU","CFIM","CFNA","BGRP","CFFAX","ALTC","OFFICE","WAIT","RECORD",
+$astdbarr=array("CDND","CFBU","CFIM","CFNA","CFFAX","ALTC","OFFICE","WAIT","RECORD",
                 "ALOCK","NOPRES","DFEAT","NOVOIP","CRMPOP","NOVMAIL","FAXMAIL","SNOMLOCK","POLYDIRLN","EFAXD",
                 "TOUT","DGROUP","ZAPLine","DDIPASS","ZAPProto","ZAPRXGain","ZAPTXGain","CLI","TRUNK","ACCESS",
                 "AUTHACCESS","IAXLine","H323Line","FWDU","Locked","SNOMMAC","VLAN","REGISTRAR","PTYPE","PURSE",
                 "DRING","SRING0","SRING1","SRING2","SRING3");
-
-/*
-do not move 
-BGRP
-*/
 
 if ((isset($pbxupdate)) && ($pbxupdate == "Save Changes")) {
   if ($_POST['CFIM'] == "") {
@@ -202,7 +197,10 @@ if ((isset($pbxupdate)) && ($pbxupdate == "Save Changes")) {
   for($icnt=0;$icnt < count($astdbarr);$icnt++) {
     pg_query($db, "UPDATE features SET " . $astdbarr[$icnt] . "='" . $_POST[$astdbarr[$icnt]] . "' WHERE exten='" . $_POST['exten'] . "'");
   }
-
+  $ud=pg_query($db, "UPDATE astdb SET value='" . $_POST['BGRP'] . "' WHERE key='BGRP' AND family='" . $_POST['exten'] . "'");
+  if (pg_affected_rows($ud) <= 0) {
+    pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('" . $_POST['exten'] . "','BGRP','" . $_POST[$astdbarr[$icnt]] . "')");
+  }
   if ($_POST['NEWPIN'] == "on") {
     $getpin=newrpin($_POST['exten']);
     print "<SCRIPT>\nalert('The New PIN Code Is\\n\\t" . $getpin . "');\n</SCRIPT>\n";
@@ -395,6 +393,9 @@ $origdata=pg_fetch_array($qgetdata,0,PGSQL_ASSOC);
 unset($origdata['id']);
 unset($origdata['exten']);
 
+$bgrpq=pg_query($db,"SELECT value FROM astdb WHERE key='BGRP' AND family='" . $_POST['exten'] . "'");
+list($origdata['bgrp'])=pg_fetch_array($bgrpq,0,PGSQL_NUM);
+
 $lsysgetconf=pg_query($db,"SELECT astdb.key,astdb.value FROM  astdb 
  LEFT OUTER JOIN astdb AS exten ON 
    (astdb.family=exten.value AND exten.key='SNOMMAC' AND astdb.family != '' AND exten.family='" . $_POST['exten'] . "') 
@@ -404,6 +405,8 @@ for($lsyscnt=0;$lsyscnt < pg_num_rows($lsysgetconf);$lsyscnt++) {
   $getdata=pg_fetch_array($lsysgetconf,$lsyscnt);
   $lsysdata[$getdata[0]]=$getdata[1]; 
 }
+
+
 
 $lsysconf=array("PROFILE","STUNSRV","LINKSYS","LSYSRXGAIN","LSYSTXGAIN","VLAN","NAT");
 $lsysdef["PROFILE"]=$SERVER_NAME;
