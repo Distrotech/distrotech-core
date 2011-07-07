@@ -227,7 +227,7 @@ if (isset($queue)) {
   $getagentq="SELECT penalty > 0 as active,CASE WHEN (users.uniqueid is not null) THEN users.fullname ELSE 'Unknown User' END as agent,
                      interface as channel,CASE WHEN (penalty is not null) THEN defpenalty ELSE '" . $dqpenalty. "' END as weight,
                      CASE WHEN (name is not null) THEN name ELSE interface END, ignorebusy,paused > 0 
-                   from queue_members left outer join features ON (zapline=substr(interface,5)) 
+                   from queue_members left outer join features ON (zapline=substr(interface,7)) 
                      left outer join users on (users.name=substring(interface from position('/' in interface)+1) OR exten=name)
                    where queue_name='" . $queue . "' ORDER BY defpenalty,name";
   $getagents=pg_query($getagentq);
