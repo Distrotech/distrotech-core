@@ -13274,7 +13274,7 @@ BDATE=`date +%Y-%m-%d`
 BFILE=/var/spool/backup/backup-\${BDATE}.tar
 
 if [ `"whoami"` == "root" ] || [ `"whoami"` == "admin" ];then
-  /usr/bin/pg_dump -U asterisk -h 127.0.0.1 -aDt users -t qfeatures -t features -t astdb -t queues -t queue_members -t queue_table -t dynspan -t zapspan -t zapchan -t zapgroup -t gsmchannels -t provider -t trunk -t officehours -t cc_callerid |/usr/bin/grep -vE "(^\$)|(^--)" |/usr/bin/gzip -c > /var/spool/backup/pbxdata-\${BDATE}.sql.gz
+  /usr/bin/pg_dump -U asterisk -h 127.0.0.1 -aDt users -t interbranch -t qfeatures -t features -t astdb -t queues -t queue_members -t queue_table -t dynspan -t zapspan -t zapchan -t zapgroup -t gsmchannels -t provider -t trunk -t officehours -t cc_callerid |/usr/bin/grep -vE "(^\$)|(^--)" |/usr/bin/gzip -c > /var/spool/backup/pbxdata-\${BDATE}.sql.gz
 fi;
 
 rm /var/spool/backup/pbxdata.sql.gz
@@ -13391,7 +13391,7 @@ if ( $voipbackup eq "true") {
   print BUS "echo $fcnt VOIP Configuration\n";
   print BUS "/bin/touch /tmp/asterisk.psql.gz\n/bin/chmod 600 /tmp/asterisk.psql.gz\n";
   print BUS <<__EOF__;
-pg_dump -U asterisk -h 127.0.0.1 -dat users -t qfeatures -t features -t astdb -t queue_members -t queue_tables -t officehours -t dynspan \\
+pg_dump -U asterisk -h 127.0.0.1 -dat users -t interbranch -t qfeatures -t features -t astdb -t queue_members -t queue_tables -t officehours -t dynspan \\
                                  -t zapchan -t zapspan -t zapgroup -t gsmchannels -t trunk -t localrates \\
                                  -t provider -t tariff -t tariffrate -t reseller |gzip -c |dd of=/tmp/asterisk.psql.gz
 

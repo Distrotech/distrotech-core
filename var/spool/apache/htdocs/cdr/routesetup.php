@@ -22,19 +22,14 @@ include_once "auth.inc";
 
 if (isset($pbxupdate)) {
   if (($newkey != "") && ($dhost != "")) {
-    pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('LocalRoute','$newkey','$dhost')");
-    if ($prefix != "") {
-      pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('LocalRewrite','$newkey','$prefix')");
-    } else {
-      pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('LocalRewrite','$newkey','$newkey')");
-    }
-    pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('LocalRouteProto','$newkey','$lineproto')");
+    pg_query($db,"INSERT INTO interbranch (prefix,dprefix,proto,address) VALUES ('" . $newkey . "','" . $prefix . "',
+                              '" . $lineproto . "','" . $dhost . "')");
   } else if ($key != "") {
-    pg_query($db,"DELETE FROM astdb WHERE (family='LocalRoute' AND key='" . $key . "') OR (family='LocalRewrite' AND key ='" . $key . "') OR (family='LocalRouteProto' AND key ='" . $key . "')");
+    pg_query($db,"DELETE FROM interbranch WHERE prefix='" . $key . "'");
   }
 }
 
-$qgetdata=pg_query($db,"SELECT dial.key,dial.key||' -> '||dial.value||' -> '||call.value||' ('||proto.value||')' FROM astdb AS dial LEFT OUTER JOIN astdb AS call ON (dial.key=call.key AND call.family='LocalRewrite') LEFT OUTER JOIN astdb AS proto ON (dial.key=proto.key AND proto.family='LocalRouteProto') WHERE dial.family='LocalRoute' order by dial.key");
+$qgetdata=pg_query($db,"SELECT prefix,prefix||' -> '||dprefix||' -> '||address||' ('||proto||')' FROM interbranch ORDER BY prefix");
 
 %>
 
