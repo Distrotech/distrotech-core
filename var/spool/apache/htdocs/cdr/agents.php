@@ -71,7 +71,7 @@ if (($queue == "799") || ($defqueue != $queue)) {
       $AAREC="0";
     }
 
-    pg_query($db,"UPDATE astdb SET value='" . $QAPENALTY . "' WHERE family='Q799' AND key='QAPENALTY'");
+    pg_query($db,"UPDATE astdb SET value='" . $AAPenalty . "' WHERE family='Setup' AND key='AAPenalty'");
     pg_query($db,"UPDATE astdb SET value='" . $AATimeout . "' WHERE family='Setup' AND key='AATimeout'");
     pg_query($db,"UPDATE astdb SET value='" . $AANext . "' WHERE family='Setup' AND key='AANext'");
     pg_query($db,"UPDATE astdb SET value='" . $AANOPROMPT . "' WHERE family='Setup' AND key='AANOPROMPT'");
@@ -93,7 +93,7 @@ if (($queue == "799") || ($defqueue != $queue)) {
     list($AAEMAIL)=pg_fetch_array($aavm,0);
   }
 
-  $qgetdata=pg_query($db,"SELECT key,value FROM astdb WHERE (family='Setup' AND key LIKE 'AA%') OR (family = 'Q799' AND key='QAPENALTY')");
+  $qgetdata=pg_query($db,"SELECT key,value FROM astdb WHERE family='Setup' AND key LIKE 'AA%'");
   $dnum=pg_num_rows($qgetdata);
   for($i=0;$i<$dnum;$i++){
     $getdata=pg_fetch_array($qgetdata,$i);
@@ -123,9 +123,9 @@ if (($queue == "799") || ($defqueue != $queue)) {
     $origdata["AADelay"]="2";
     pg_query("INSERT INTO astdb (family,key,value) VALUES ('Setup','AADelay','2')");
   }
-  if ($origdata["QAPENALTY"] == "") {
-    $origdata["QAPENALTY"]=$dqpenalty;
-    pg_query("INSERT INTO astdb (family,key,value) VALUES ('Q799','QAPENALTY','". $dqpenalty ."')");
+  if ($origdata["AAPenalty"] == "") {
+    $origdata["AAPenalty"]=$dqpenalty;
+    pg_query("INSERT INTO astdb (family,key,value) VALUES ('Setup','AAPenalty','". $dqpenalty ."')");
   }
 }
 %>
@@ -293,7 +293,7 @@ if (isset($queue)) {
       <TD COLSPAN=3 WIDTH=50%><INPUT TYPE=TEXT NAME=AAEMAIL VALUE="<%print $AAEMAIL;%>"></TD></TR>
     <TR <%print $bcolor[$rcol];$i++;$rcol=$i % 2;%>>
       <TD COLSPAN=3 WIDTH=50% onmouseover="myHint.show('QS9')" onmouseout=myHint.hide()><%print _("Default Agent Penalty");%></TD>
-      <TD COLSPAN=3 WIDTH=50%><INPUT TYPE=TEXT NAME=QAPENALTY VALUE="<%print $origdata["QAPENALTY"];%>"></TD></TR>
+      <TD COLSPAN=3 WIDTH=50%><INPUT TYPE=TEXT NAME=AAPenalty VALUE="<%print $origdata["AAPenalty"];%>"></TD></TR>
     <TR <%print $bcolor[$rcol];$i++;$rcol=$i % 2;%>>
       <TD COLSPAN=3 WIDTH=50% onmouseover="myHint.show('QS12')" onmouseout=myHint.hide()><%print _("IVR Delay Between Digits");%></TD>
       <TD COLSPAN=3 WIDTH=50%><INPUT TYPE=TEXT NAME=AADelay VALUE="<%print $origdata["AADelay"];%>"></TD></TR>

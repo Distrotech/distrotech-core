@@ -4,6 +4,7 @@ $vadmindef=array(
 	"AAMOH" => "0",
 	"AANOPROMPT" => "1",
 	"AANext" => "",
+	"AAPenalty" => "20",
 	"AAREC" => "0",
 	"AATimeout" => "30",
 	"ADVPIN" => "0",
