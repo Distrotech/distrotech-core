@@ -71,9 +71,9 @@ if (($queue == "799") || ($defqueue != $queue)) {
       $AAREC="0";
     }
 
+    pg_query($db,"UPDATE astdb SET value='" . $QAPENALTY . "' WHERE family='Q799' AND key='QAPENALTY'");
     pg_query($db,"UPDATE astdb SET value='" . $AATimeout . "' WHERE family='Setup' AND key='AATimeout'");
     pg_query($db,"UPDATE astdb SET value='" . $AANext . "' WHERE family='Setup' AND key='AANext'");
-    pg_query($db,"UPDATE astdb SET value='" . $QAPENALTY . "' WHERE family='Q799' AND key='QAPENALTY'");
     pg_query($db,"UPDATE astdb SET value='" . $AANOPROMPT . "' WHERE family='Setup' AND key='AANOPROMPT'");
     pg_query($db,"UPDATE astdb SET value='" . $AAMOH . "' WHERE family='Setup' AND key='AAMOH'");
     pg_query($db,"UPDATE astdb SET value='" . $AAREC . "' WHERE family='Setup' AND key='AAREC'");
@@ -145,7 +145,7 @@ if (($queue == "799") || ($defqueue != $queue)) {
 <%
 
 if (isset($queue)) {
-  $defpenalty=pg_query($db,"SELECT value FROM astdb WHERE family='Q" . $queue . "' AND key='QAPENALTY'");
+  $defpenalty=pg_query($db,"SELECT penalty FROM qfeatures WHERE queue='" . $queue . "'");
   if (pg_num_rows($defpenalty) > 0) {
     list($dqpenalty) = pg_fetch_array($defpenalty,0,PGSQL_NUM);
   }  

@@ -18,18 +18,19 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-$qtout=pg_query($db,"SELECT value FROM astdb WHERE family='Setup' AND key='QTimeout'");
-if (pg_num_rows($qtout) > 0) {
-  list($dqtimeout)=pg_fetch_array($qtout,0);
-} else {
-  $dqtimeout=0;
-}
+$qdef=pg_query($db,"SELECT key,value FROM astdb WHERE family='Setup' AND (key='QTimeout' OR key='QAPenalty'");
 
-$qapen=pg_query($db,"SELECT value FROM astdb WHERE family='Setup' AND key='QAPenalty'");
-if (pg_num_rows($qapen) > 0) {
-  list($dqapenalty)=pg_fetch_array($qapen,0);
-} else {
-  $dqapenalty=0;
+for ($dcnt=0;$dcnt < pg_num_rows($qdef);$dcnt++) {
+  $r=pg_fetch_array($qtout,0,PSQL_NUM);
+  $defval[$r[0]]=$r[1];
+}
+ 
+if (($defval['QTimeout'] == "") || ($defval['QTimeout'] <= 0)) {
+  $defval['QTimeout']=600;
+}
+  
+if (($defval['QAPenalty'] == "") || ($defval['QAPenalty'] <= 0)) {
+  $defval['QAPenalty']=20;
 }
 
 if (isset($pbxupdate)) {
@@ -52,9 +53,7 @@ if (isset($pbxupdate)) {
     $playmusiconhold="f";
   }
 
-  pg_query($db,"UPDATE astdb SET value='" . $QTIMEOUT . "' WHERE family='Q" . $queue . "' AND key='QTIMEOUT'");
-  pg_query($db,"UPDATE astdb SET value='" . $QAPENALTY . "' WHERE family='Q" . $queue . "' AND key='QAPENALTY'");
-
+  pg_query($db,"UPDATE qfeatures SET timeout='" . $QTIMEOUT . "',penalty='" . $QAPENALTY . "' WHERE queue='" . $queue . "'");
   pg_query($db,"UPDATE users SET fullname='$description',email='$email' WHERE mailbox='$queue'");
   pg_query($db,"UPDATE queue_table SET strategy='$strategy',timeout='$timeout',
                                        description='$description',wrapuptime='$wrapuptime',
@@ -77,7 +76,7 @@ if (isset($pbxupdate)) {
   }
 }
 
-$qgetdata=pg_query($db,"SELECT key,value FROM astdb WHERE family='Q" . $queue . "'");
+$qgetdata=pg_query($db,"SELECT timeout,penalty FROM qfeatures WHERE queue='" . $queue . "'");
 $qgetudata=pg_query($db,"SELECT email,password FROM users WHERE mailbox='" . $queue . "'");
 $qgetqdata=pg_query($db,"SELECT strategy,timeout,description,wrapuptime,
                                 memberdelay,retry,servicelevel,weight,maxlen,
@@ -108,19 +107,15 @@ $announce_holdtime=$qdata[12];
 $playmusiconhold=$qdata[13];
 
 
-$dnum=pg_num_rows($qgetdata);
-for($i=0;$i<$dnum;$i++){
-  $getdata=pg_fetch_array($qgetdata,$i);
-  $origdata[$getdata[0]]=$getdata[1]; 
+if (pg_num_rows($qgetdata) > 0) {
+  $origdata=pg_fetch_array($qgetdata,0,PGSQL_ASSOC);
 }
 
 if ($origdata["QTIMEOUT"] == "") {
   $origdata["QTIMEOUT"]=$dqtimeout;
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('Q" . $queue . "','QTIMEOUT','$dqtimeout')");
 }
 if ($origdata["QAPENALTY"] == "") {
   $origdata["QAPENALTY"]=$dqapenalty;
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('Q" . $queue . "','QAPENALTY','$dqapenalty')");
 }
 
 %>
@@ -163,13 +158,13 @@ if ($origdata["QAPENALTY"] == "") {
 <TR CLASS=list-color1>
   <TD>Queue Time Out</TD>
   <TD>
-     <INPUT TYPE=TEXT NAME=QTIMEOUT VALUE="<%if ($origdata["QTIMEOUT"] != "0") {print $origdata["QTIMEOUT"];}%>">
+     <INPUT TYPE=TEXT NAME=QTIMEOUT VALUE="<%if ($origdata["timeout"] != "0") {print $origdata[timeout"];}%>">
   </TD>
 </TR>
 <TR CLASS=list-color2>
   <TD>Queue Default Agent Penalty Factor</TD>
   <TD>
-     <INPUT TYPE=TEXT NAME=QAPENALTY VALUE="<%if ($origdata["QAPENALTY"] != "0") {print $origdata["QAPENALTY"];}%>">
+     <INPUT TYPE=TEXT NAME=QAPENALTY VALUE="<%if ($origdata["penalty"] != "0") {print $origdata["penalty"];}%>">
   </TD>
 </TR>
 <TR CLASS=list-color1>

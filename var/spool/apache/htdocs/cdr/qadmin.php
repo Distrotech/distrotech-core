@@ -18,26 +18,27 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-$qtout=pg_query($db,"SELECT value FROM astdb WHERE family='Setup' AND key='QTimeout'");
-if (pg_num_rows($qtout) > 0) {
-  list($dqtimeout)=pg_fetch_array($qtout,0);
-} else {
-  $dqtimeout=0;
+$qdef=pg_query($db,"SELECT key,value FROM astdb WHERE family='Setup' AND (key='QTimeout' OR key='QAPenalty'");
+
+for ($dcnt=0;$dcnt < pg_num_rows($qdef);$dcnt++) {
+  $r=pg_fetch_array($qtout,0,PSQL_NUM);
+  $defval[$r[0]]=$r[1];
 }
 
-$qapen=pg_query($db,"SELECT value FROM astdb WHERE family='Setup' AND key='QAPenalty'");
-if (pg_num_rows($qapen) > 0) {
-  list($dqapenalty)=pg_fetch_array($qapen,0);
-} else {
-  $dqapenalty=0;
+if (($defval['QTimeout'] == "") || ($defval['QTimeout'] <= 0)) {
+  $defval['QTimeout']=600;
+}
+
+if (($defval['QAPenalty'] == "") || ($defval['QAPenalty'] <= 0)) {
+  $defval['QAPenalty']=20;
 }
 
 if ((isset($pbxupdate)) && (isset($update))) {
-  if ($QTIMEOUT == "") {
-    $QTIMEOUT=$dqtimeout;
+  if ($_POST['qtimeout'] == "") {
+    $_POST['qtimeout']=$defval['QTimeout'];
   }
-  if ($QAPENALTY == "") {
-    $QAPENALTY=$dqapenalty;
+  if ($_POST['penalty'] == "") {
+    $_POST['penalty']=$defval['QAPenalty'];
   }
 
   if ($announce_holdtime == "on") {
@@ -46,47 +47,46 @@ if ((isset($pbxupdate)) && (isset($update))) {
     $announce_holdtime="no";
   }
 
-  if ($QDOPTS == "on") {
-    $QDOPTS="t";
+  if ($_POST['dopts'] == "on") {
+    $_POST['dopts']="t";
   } else {
-    $QDOPTS="tr";
+    $_POST['dopts']="tr";
   }
 
-  if ($QNOVMAIL == "on") {
-    $QNOVMAIL="1";
+  if ($_POST['novmail'] == "on") {
+    $_POST['novmail']="1";
   } else {
-    $QNOVMAIL="0";
+    $_POST['novmail']="0";
   }
 
-  if ($QRECORD == "on") {
-    $QRECORD="1";
+  if ($_POST['record'] == "on") {
+    $_POST['record']="1";
   } else {
-    $QRECORD="0";
+    $_POST['record']="0";
   }
 
-  if ($QOHONLY == "on") {
-    $QOHONLY="1";
+  if ($_POST['ohonly'] == "on") {
+    $_POST['ohonly']="1";
   } else {
-    $QOHONLY="0";
+    $_POST['ohonly']="0";
   }
 
-  if ($QVMFWD == "") {
-    $QVMFWD="NONE";
+  if ($_POST['vmfwd'] == "") {
+    $_POST['vmfwd']="NONE";
   }
 
   if (($newbgroup != "") && ($BGRP == "") && ($SUPER_USER == 1)) {
     $BGRP=$newbgroup;
   }
 
-  pg_query($db,"UPDATE astdb SET value='" . $QTIMEOUT . "' WHERE family='Q" . $queue . "' AND key='QTIMEOUT'");
-  pg_query($db,"UPDATE astdb SET value='" . $QAPENALTY . "' WHERE family='Q" . $queue . "' AND key='QAPENALTY'");
-  pg_query($db,"UPDATE astdb SET value='" . $QRDELAY . "' WHERE family='Q" . $queue . "' AND key='QRDELAY'");
-  pg_query($db,"UPDATE astdb SET value='" . $QDOPTS . "' WHERE family='Q" . $queue . "' AND key='QDOPTS'");
-  pg_query($db,"UPDATE astdb SET value='" . $QNOVMAIL . "' WHERE family='Q" . $queue . "' AND key='QNOVMAIL'");
-  pg_query($db,"UPDATE astdb SET value='" . $QRECORD . "' WHERE family='Q" . $queue . "' AND key='QRECORD'");
-  pg_query($db,"UPDATE astdb SET value='" . $QOHONLY . "' WHERE family='Q" . $queue . "' AND key='QOHONLY'");
-  pg_query($db,"UPDATE astdb SET value='" . $QVMFWD . "' WHERE family='Q" . $queue . "' AND key='QVMFWD'");
-  pg_query($db,"UPDATE astdb SET value='" . $BGRP . "' WHERE family='Q" . $queue . "' AND key='BGRP'");
+  pg_query($db,"UPDATE qfeatures SET penalty='" . $_POST['penalty'] . "',dopts='" . $_POST['dopts'] . "',novmail='" . $_POST['novmail'] . "',
+                                     ohonly='" . $_POST['ohonly'] . "',rdelay='" . $_POST['rdelay'] . "',record='" . $_POST['record'] . "',
+                                     timeout='" . $_POST['qtimeout'] . "',vmfwd='" . $_POST['vmfwd'] . "' 
+                                 WHERE queue='" . $queue . "'");
+  $ud=pg_query($db,"UPDATE astdb SET value='" . $BGRP . "' WHERE family='Q" . $queue . "' AND key='BGRP'");
+  if (pg_affected_rows($ud) <= 0) {
+    pg_query("INSERT INTO astdb (family,key,value) VALUES ('Q" . $queue . "','BGRP','')");
+  }
 
   pg_query($db,"UPDATE users SET fullname='$description',email='$email' WHERE mailbox='$queue'");
   pg_query($db,"UPDATE queue_table SET strategy='$strategy',timeout='$timeout',monitor_format='',
@@ -109,7 +109,6 @@ if ((isset($pbxupdate)) && (isset($update))) {
   }
 }
 
-$qgetdata=pg_query($db,"SELECT key,value FROM astdb WHERE family='Q" . $queue . "'");
 $qgetudata=pg_query($db,"SELECT email,password FROM users WHERE mailbox='" . $queue . "'");
 $qgetqdata=pg_query($db,"SELECT strategy,timeout,description,wrapuptime,
                                 memberdelay,retry,servicelevel,weight,maxlen,
@@ -139,51 +138,23 @@ $announce_frequency=$qdata[11];
 $announce_holdtime=$qdata[12];
 
 
-$dnum=pg_num_rows($qgetdata);
-for($i=0;$i<$dnum;$i++){
-  $getdata=pg_fetch_array($qgetdata,$i);
-  $origdata[$getdata[0]]=$getdata[1]; 
+$qgetdata=pg_query($db,"SELECT * FROM qfeatures WHERE queue='" . $queue . "'");
+if (pg_num_rows($qgetdata) > 0) {
+  $origdata=pg_fetch_array($qgetdata,0,PGSQL_ASSOC);
 }
 
-if ($origdata["QTIMEOUT"] == "") {
-  $origdata["QTIMEOUT"]=$dqtimeout;
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('Q" . $queue . "','QTIMEOUT','$dqtimeout')");
+$bgrpq=pg_query($db,"SELECT value FROM astdb WHERE key='BGRP' AND family='Q" . $queue . "'");
+list($origdata['BGRP'])=pg_fetch_array($bgrpq,0,PGSQL_NUM);
+
+if ($origdata["timeout"] == "") {
+  $origdata["timeout"]=$defval['QTimeout'];
 }
-if ($origdata["QAPENALTY"] == "") {
-  $origdata["QAPENALTY"]=$dqapenalty;
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('Q" . $queue . "','QAPENALTY','$dqapenalty')");
-}
-if ($origdata["QRDELAY"] == "") {
-  $origdata["QRDELAY"]="4";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('Q" . $queue . "','QRDELAY','4')");
-}
-if ($origdata["QDOPTS"] == "") {
-  $origdata["QDOPTS"]="t";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('Q" . $queue . "','QDOPTS','t')");
-}
-if ($origdata["QNOVMAIL"] == "") {
-  $origdata["QNOVMAIL"]="0";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('Q" . $queue . "','QNOVMAIL','0')");
-}
-if ($origdata["QRECORD"] == "") {
-  $origdata["QRECORD"]="1";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('Q" . $queue . "','QRECORD','1')");
-}
-if ($origdata["QOHONLY"] == "") {
-  $origdata["QOHONLY"]="0";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('Q" . $queue . "','QOHONLY','0')");
+if ($origdata["penalty"] == "") {
+  $origdata["penalty"]=$defval['QAPenalty'];
 }
 
-if ($origdata["BGRP"] == "") {
-  $origdata["BGRP"]="";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('Q" . $queue . "','BGRP','')");
-}
-
-if ($origdata["QVMFWD"] == "") {
-  $origdata["QVMFWD"]="";
-  pg_query("INSERT INTO astdb (family,key,value) VALUES ('Q" . $queue . "','QVMFWD','NONE')");
-} else if ($origdata["QVMFWD"] == "NONE") {
-  $origdata["QVMFWD"]="";
+if ($origdata["vmfwd"] == "NONE") {
+  $origdata["vmfwd"]="";
 }
 
 %>
@@ -226,13 +197,13 @@ if ($origdata["QVMFWD"] == "") {
 <TR CLASS=list-color1>
   <TD onmouseover="myHint.show('QS8')" onmouseout="myHint.hide()"><%print _("Queue Time Out");%></TD>
   <TD>
-     <INPUT TYPE=TEXT NAME=QTIMEOUT VALUE="<%if ($origdata["QTIMEOUT"] != "0") {print $origdata["QTIMEOUT"];}%>">
+     <INPUT TYPE=TEXT NAME=qtimeout VALUE="<%if ($origdata["timeout"] != "0") {print $origdata["timeout"];}%>">
   </TD>
 </TR>
 <TR CLASS=list-color2>
   <TD onmouseover="myHint.show('QS9')" onmouseout="myHint.hide()"><%print _("Queue Default Agent Penalty Factor");%></TD>
   <TD>
-     <INPUT TYPE=TEXT NAME=QAPENALTY VALUE="<%if ($origdata["QAPENALTY"] != "0") {print $origdata["QAPENALTY"];}%>">
+     <INPUT TYPE=TEXT NAME=penalty VALUE="<%if ($origdata["penalty"] != "0") {print $origdata["penalty"];}%>">
   </TD>
 </TR>
 <TR CLASS=list-color1>
@@ -268,7 +239,7 @@ if ($origdata["QVMFWD"] == "") {
 <TR CLASS=list-color2>
   <TD onmouseover="myHint.show('QS17')" onmouseout="myHint.hide()"><%print _("Ring Delay Before Answering");%></TD>
   <TD>
-     <INPUT TYPE=TEXT NAME=QRDELAY VALUE="<%print $origdata["QRDELAY"];%>">
+     <INPUT TYPE=TEXT NAME=rdelay VALUE="<%print $origdata["rdelay"];%>">
   </TD>
 </TR>
 <TR CLASS=list-color1>
@@ -308,7 +279,7 @@ if ($origdata["QVMFWD"] == "") {
 </TR>
 <TR CLASS=list-color2>
   <TD onmouseover="myHint.show('QS20')" onmouseout="myHint.hide()"><%print _("Voicemail/Call Forward On Timeout/No Agent");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=QVMFWD VALUE="<%print $origdata["QVMFWD"];%>"></TD>
+  <TD><INPUT TYPE=TEXT NAME=vmfwd VALUE="<%print $origdata["vmfwd"];%>"></TD>
 </TR>
 <TR CLASS=list-color1>
   <TD onmouseover="myHint.show('QS20')" onmouseout="myHint.hide()"><%print _("Voicemail Password");%> </TD>
@@ -320,7 +291,7 @@ if ($origdata["QVMFWD"] == "") {
 </TR>
 <TR CLASS=list-color1>
   <TD onmouseover="myHint.show('QS18')" onmouseout="myHint.hide()"><%print _("Record Queue");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=QRECORD<%if ($origdata["QRECORD"] == "1" ) {print " CHECKED";}%>></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=record<%if ($origdata["record"] == "1" ) {print " CHECKED";}%>></TD>
 </TR>
 <TR CLASS=list-color2>
   <TD onmouseover="myHint.show('QS18')" onmouseout="myHint.hide()"><%print _("Announce Expected Hold Time");%></TD>
@@ -328,15 +299,15 @@ if ($origdata["QVMFWD"] == "") {
 </TR>
 <TR CLASS=list-color1>
   <TD onmouseover="myHint.show('QS19')" onmouseout="myHint.hide()"><%print _("Play Music On Hold (Alternative Is Ringing)");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=QDOPTS<%if ($origdata["QDOPTS"] == "t" ) {print " CHECKED";}%>></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=dopts<%if ($origdata["dopts"] == "t" ) {print " CHECKED";}%>></TD>
 </TR>
 <TR CLASS=list-color2>
   <TD onmouseover="myHint.show('QS19')" onmouseout="myHint.hide()"><%print _("Disable Voicemail");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=QNOVMAIL<%if ($origdata["QNOVMAIL"] == "1" ) {print " CHECKED";}%>></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=novmail<%if ($origdata["novmail"] == "1" ) {print " CHECKED";}%>></TD>
 </TR>
 <TR CLASS=list-color1>
   <TD onmouseover="myHint.show('QS19')" onmouseout="myHint.hide()"><%print _("Office Hours Only");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=QOHONLY<%if ($origdata["QOHONLY"] == "1" ) {print " CHECKED";}%>></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=ohonly<%if ($origdata["ohonly"] == "1" ) {print " CHECKED";}%>></TD>
 </TR>
 <INPUT TYPE=HIDDEN NAME=update VALUE=seen>
 <TR CLASS=list-color2>
