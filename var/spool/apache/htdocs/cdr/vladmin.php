@@ -272,7 +272,9 @@ if ((isset($pbxupdate)) && ($pbxupdate == "Save Changes")) {
   for($ucnt=0;$ucnt < count($userarr);$ucnt++) {
     $dbq.=$userarr[$ucnt] . "='" . $_POST[$userarr[$ucnt]] . "',";
   }
-  pg_query($db,"UPDATE users SET " . $dbq . $pwcng . "allow='" . $codecs . "' WHERE name='" . $_POST['exten'] . "'");
+  $userup="UPDATE users SET " . $dbq . $pwcng . "allow='" . $codecs . "' WHERE name='" . $_POST['exten'] . "'";
+//  print $userup . "\n";
+  pg_query($db,$userup);
 
   if (! isset($agi)) {
     require_once("/var/lib/asterisk/agi-bin/phpagi/phpagi-asmanager.php");
@@ -579,10 +581,10 @@ if ($usertype == 1) {
 %>
 <TR CLASS=list-color1>
   <TD onmouseover=myHint.show('ES10') ONMOUSEOUT=myHint.hide() ALIGN=LEFT><%print _("Caller Group (0-63)");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=cgroup VALUE="<%print $cgroup;%>"></TD></TR>
+  <TD><INPUT TYPE=TEXT NAME=callgroup VALUE="<%print $cgroup;%>"></TD></TR>
 <TR CLASS=list-color2>
   <TD ALIGN=LEFT onmouseover=myHint.show('ES11') ONMOUSEOUT=myHint.hide()><%print _("Pickup Group(s)");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=pgroup VALUE="<%print $pgroup;%>"></TD></TR>
+  <TD><INPUT TYPE=TEXT NAME=pickupgroup VALUE="<%print $pgroup;%>"></TD></TR>
 <%
     $cnt=0;
   } else {

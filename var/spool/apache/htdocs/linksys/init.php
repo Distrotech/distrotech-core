@@ -11,15 +11,13 @@ $mac=ereg_replace(":","",$mac);
 
 $mac=strtoupper($mac);
 
-$getports="SELECT users.name,proxy.value,users.fullname,users.secret,users.nat,
+$getports="SELECT users.name,registrar,users.fullname,users.secret,users.nat,
                   substr(users.allow,1,position(';' in users.allow)-1),
                   (name=secret OR length(secret) != " . $pwlen . " OR secret='' OR secret IS NULL OR 
                    secret !~ '[0-9]' OR secret !~ '[a-z]' OR secret !~ '[A-Z]')
-                 FROM astdb AS mac 
-                   LEFT OUTER JOIN astdb AS proxy ON (proxy.family=mac.family AND proxy.key='REGISTRAR') 
-                   LEFT OUTER JOIN users ON (name=mac.family) 
-                 WHERE mac.key='SNOMMAC' AND mac.value='" . $mac . "' AND mac.value != '' AND
-                       mac.value IS NOT NULL ORDER BY users.name";
+                 FROM features
+                   LEFT OUTER JOIN users ON (name=exten) 
+                 WHERE snommac ='" . $mac . "' ORDER BY users.name";
 //print $getports;
 /*
  * if i dont have one or more ports create one except for SPA 8000 perhaps ??
@@ -107,7 +105,15 @@ if ((pg_num_rows($uports) <= 0) && ($mac != "") && ($autoadd[$spaver] == "1")) {
   }
 }
 
-$lsysconf="SELECT stun.value,pserv.value,descrip.value,rxgain.value,txgain.value,vlanid.value,nat.value FROM astdb AS stun LEFT OUTER JOIN astdb AS descrip ON (descrip.family=stun.family AND descrip.key='LINKSYS') LEFT OUTER JOIN astdb AS pserv ON (pserv.family=stun.family AND pserv.key='PROFILE') LEFT OUTER JOIN astdb AS vlanid ON (vlanid.family=stun.family AND vlanid.key='VLAN') LEFT OUTER JOIN astdb AS rxgain ON (rxgain.family=stun.family AND rxgain.key='LSYSRXGAIN') LEFT OUTER JOIN astdb AS txgain ON (txgain.family=stun.family AND txgain.key='LSYSTXGAIN') LEFT OUTER JOIN astdb AS nat ON (nat.family=stun.family AND nat.key='NAT') WHERE stun.key='STUNSRV' AND stun.family='" . $mac . "'";
+$lsysconf="SELECT stun.value,pserv.value,descrip.value,rxgain.value,txgain.value,vlanid.value,nat.value 
+    FROM astdb AS stun 
+    LEFT OUTER JOIN astdb AS descrip ON (descrip.family=stun.family AND descrip.key='LINKSYS')
+    LEFT OUTER JOIN astdb AS pserv ON (pserv.family=stun.family AND pserv.key='PROFILE') 
+    LEFT OUTER JOIN astdb AS vlanid ON (vlanid.family=stun.family AND vlanid.key='VLAN') 
+    LEFT OUTER JOIN astdb AS rxgain ON (rxgain.family=stun.family AND rxgain.key='LSYSRXGAIN') 
+    LEFT OUTER JOIN astdb AS txgain ON (txgain.family=stun.family AND txgain.key='LSYSTXGAIN') 
+    LEFT OUTER JOIN astdb AS nat ON (nat.family=stun.family AND nat.key='NAT') 
+      WHERE stun.key='STUNSRV' AND stun.family='" . $mac . "'";
 $lsyscnf=pg_query($db,$lsysconf);
 $confnum=pg_num_rows($lsyscnf);
 if ($confnum > 0) {
