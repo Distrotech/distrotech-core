@@ -105,15 +105,7 @@ if ((pg_num_rows($uports) <= 0) && ($mac != "") && ($autoadd[$spaver] == "1")) {
   }
 }
 
-$lsysconf="SELECT stun.value,pserv.value,descrip.value,rxgain.value,txgain.value,vlanid.value,nat.value 
-    FROM astdb AS stun 
-    LEFT OUTER JOIN astdb AS descrip ON (descrip.family=stun.family AND descrip.key='LINKSYS')
-    LEFT OUTER JOIN astdb AS pserv ON (pserv.family=stun.family AND pserv.key='PROFILE') 
-    LEFT OUTER JOIN astdb AS vlanid ON (vlanid.family=stun.family AND vlanid.key='VLAN') 
-    LEFT OUTER JOIN astdb AS rxgain ON (rxgain.family=stun.family AND rxgain.key='LSYSRXGAIN') 
-    LEFT OUTER JOIN astdb AS txgain ON (txgain.family=stun.family AND txgain.key='LSYSTXGAIN') 
-    LEFT OUTER JOIN astdb AS nat ON (nat.family=stun.family AND nat.key='NAT') 
-      WHERE stun.key='STUNSRV' AND stun.family='" . $mac . "'";
+$lsysconf="SELECT stunsrv,profile,hostname,rxgain,txgain,vlan,nat FROM atatable WHERE mac='" . $mac . "'";
 $lsyscnf=pg_query($db,$lsysconf);
 $confnum=pg_num_rows($lsyscnf);
 if ($confnum > 0) {
@@ -369,20 +361,15 @@ if ($lcnt >= $maxline) {%>
 }
 
 if (($confnum <= 0) && ($mac != "") && ($autoadd[$spaver] == "1")) {
-  pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('" . $mac . "','PROFILE','" . $pserver . "')");
-  pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('" . $mac . "','LSYSRXGAIN','" . $rxgain . "')");
-  pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('" . $mac . "','LSYSTXGAIN','" . $txgain . "')");
-  pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('" . $mac . "','NAT','" . $nat . "')");
-  pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('" . $mac . "','LINKSYS','" . $hostname . "')");
-
   if (!is_array($autovars)) {
     getdefvars();
   }
   $vlanid=$autovars['AutoVLAN'];
   $stunsrv=$autovars['AutoSTUN'];
 
-  pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('" . $mac . "','STUNSRV','" . $stunsrv . "')");
-  pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('" . $mac . "','VLAN','" . $vlanid . "')");
+  pg_query($db,"INSERT INTO atatable (mac,profile,rxgain,txgain,nat,hostname,stunsrv,vlan)
+                  VALUES ('" . $mac . "','" . $pserver . "','" . $rxgain . "','" . $txgain . "',
+                          '" . $nat . "','" . $hostname . "','" . $stunsrv . "','" . $vlanid . "')");
 }
 if ($stunsrv != "") {%>
 <STUN_Enable>yes
