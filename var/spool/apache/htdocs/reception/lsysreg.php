@@ -20,27 +20,34 @@
 
 include "auth.inc";
 
-$qgetdata=pg_query($db,"SELECT ipaddr,snommac FROM users LEFT OUTER JOIN features ON (name=exten) WHERE name='" . $PHP_AUTH_USER . "'");
-list($curipaddr,$snommac)=pg_fetch_array($qgetudata,0);
+$qgetdata=pg_query($db,"SELECT ipaddr,snommac,atatable.id FROM users
+  LEFT OUTER JOIN features ON (name=exten) LEFT OUTER JOIN atatable ON (mac=snommac) WHERE name='" . $PHP_AUTH_USER . "'");
+list($curipaddr,$snommac,$ataid)=pg_fetch_array($qgetdata,0,PGSQL_NUM);
 
-if (($_POST['SNOMMAC'] != "") && (isset($lsysreg))) {
-  print "<script language=\"JavaScript\" src=\"/java_popups.php\" type=\"text/javascript\"></script>\n";
-  if ($LSYSNAT == "on") {
-    $LSYSNAT="NAT";
+$lsysarr=array("profile","stunsrv","hostname","rxgain","txgain","vlan","nat","mac");
+
+if (($_POST['mac'] != "") && (isset($lsysreg))) {
+  if ($_POST['nat'] == "on") {
+    $_POST['nat']="NAT";
   } else {
-    $LSYSNAT="Bridge";
+    $_POST['nat']="Bridge";
   }
-  if ($_POST['SNOMMAC'] != $snommac ) {
-    pg_query($db,"UPDATE features SET snommac='" . strtoupper($_POST['SNOMMAC']) . "' WHERE exten='" . $exten . "'");
-    pg_query($db,"DELETE FROM astdb WHERE family='" . $snommac . "'");
+
+  $_POST['mac']=strtoupper($_POST['mac']);
+  if ($_POST['mac'] != $snommac ) {
+    pg_query($db,"UPDATE features SET snommac='" . $_POST['mac'] . "' WHERE exten='" . $exten . "'");
   }
-  for($lval=0;$lval < count($lsysconf);$lval++) {
-    $lsyskey=$lsysconf[$lval];
-    $ud=pg_query("UPDATE astdb SET value= '" . $$lsyskey . "' WHERE family='" . $_POST['SNOMMAC'] . "' AND key = '" . $lsyskey . "'");
-    if (pg_affected_rows($ud) <= 0) {
-      pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $_POST['SNOMMAC'] . "','" . $lsyskey . "','" . $$lsyskey . "')");
-    }
+  if ($ataid == "") {
+    pg_query($db,"INSERT INTO atatable (mac) VALUES ('" . $_POST['mac'] . "')");
+    $getid=pg_query($db,"SELECT id FROM atatable WHERE mac='" . $_POST['mac'] . "'");
+    list($ataid)=pg_fetch_array($getid,0,PGSQL_NUM);
   }
+  $upq="";
+  for($lval=0;$lval < count($lsysarr);$lval++) {
+    $upq.=$lsysarr[$lval] . "= '" . $_POST[$lsysarr[$lval]] . "',";
+  }
+  $upq=substr($upq,0,-1);
+  pg_query($db, "UPDATE atatable SET " . $upq . " WHERE id='" . $ataid . "'");
   if ($LSYSIPADDR != "") {%>
     <SCRIPT>
       atapopupwin('<%print $LSYSIPADDR;%>','<%print $LSYSPROFILE;%>');
@@ -49,64 +56,57 @@ if (($_POST['SNOMMAC'] != "") && (isset($lsysreg))) {
   }
 }
 
-$lsysgetconf=pg_query($db,"SELECT astdb.key,astdb.value FROM  astdb 
-	LEFT OUTER JOIN features ON 
-		(exten='" . $PHP_AUTH_USER . "' AND snommac=family)
-	 WHERE family=snommac");
+$lsysgetconfq="SELECT profile,atatable.nat,rxgain,txgain,atatable.hostname,stunsrv,atatable.vlan
+    FROM users
+       LEFT OUTER JOIN features ON (name=exten)
+       LEFT OUTER JOIN atatable ON (snommac=mac)
+    WHERE atatable IS NOT NULL AND ptype='LINKSYS' AND name='" . $PHP_AUTH_USER . "'";
+$lsysgetconf=pg_query($db, $lsysgetconfq);
 
-for($lsyscnt=0;$lsyscnt < pg_num_rows($lsysgetconf);$lsyscnt++) {
-  $getdata=pg_fetch_array($lsysgetconf,$lsyscnt);
-  $lsysdata[$getdata[0]]=$getdata[1];
-}
-
-$lsysconf=array("PROFILE","STUNSRV","LINKSYS","LSYSRXGAIN","LSYSTXGAIN","VLAN","NAT");
-$lsysdef["PROFILE"]=$SERVER_NAME;
-$lsysdef["STUNSERV"]="";
-$lsysdef["LINKSYS"]="exten-" . $exten;
-$lsysdef["LSYSRXGAIN"]="-3";
-$lsysdef["LSYSTXGAIN"]="-3";
-$lsysdef["VLAN"]="1";
-$lsysdef["NAT"]="Bridge";
-
-for($lval=0;$lval < count($lsysconf);$lval++) {
-  if (! isset($lsysdata[$lsysconf[$lval]])) {
-    $lsysdata[$lsysconf[$lval]]=$lsysdef[$lsysconf[$lval]];
-  }
+if (pg_num_rows($lsysgetconf) > 0) {
+  $lsysdata=pg_fetch_array($lsysgetconf,0,PGSQL_ASSOC);
+} else {
+  $lsysdata["profile"]=$SERVER_NAME;
+  $lsysdata["hostname"]="exten-" . $exten;
+  $lsysdata["rxgain"]="-3";
+  $lsysdata["txgain"]="-3";
+  $lsysdata["vlan"]="1";
+  $lsysdata["nat"]="Bridge";
 }
 
 %>
 <CENTER>
 <link rel="stylesheet" type="text/css" href="/style.php?style=<%print $style;%>">
-<FORM METHOD=POST>
+<FORM METHOD=POST NAME=lsysreg onsubmit="ajaxsubmit(this.name);return false">
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
 <TR CLASS=list-color2>
 <TR CLASS=list-color2>
   <TH COLSPAN=2>Linksys/Audiocodes MP-202 Settings (Shared By All Ports)</TH></TR>
 <TR CLASS=list-color1>
   <TD ALIGN=LEFT onmouseover=myHint.show('ES24') ONMOUSEOUT=myHint.hide()><%print _("Phones MAC Address");%><BR></TD>
-  <TD><INPUT TYPE=TEXT NAME=SNOMMAC VALUE="<%print $snommac;%>"></TD>
+  <TD><INPUT TYPE=TEXT NAME=mac VALUE="<%print $snommac;%>"></TD>
 </TR>
 <TR  CLASS=list-color2>
   <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><%print _("Host Name");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=LSYSLINKSYS VALUE="<%print $lsysdata["LINKSYS"];%>"></TD>
+  <TD><INPUT TYPE=TEXT NAME=hostname VALUE="<%print $lsysdata["hostname"];%>"></TD>
 </TR>
 <TR  CLASS=list-color1>
   <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><%print _("Settings Server");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=LSYSPROFILE VALUE="<%print $lsysdata["PROFILE"];%>"></TD>
+  <TD><INPUT TYPE=TEXT NAME=profile VALUE="<%print $lsysdata["profile"];%>"></TD>
 </TR>
 <TR  CLASS=list-color2>
   <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><%print _("Stun Server");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=LSYSSTUNSRV VALUE="<%print $lsysdata["STUNSRV"];%>"></TD>
+  <TD><INPUT TYPE=TEXT NAME=stunsrv VALUE="<%print $lsysdata["stunsrv"];%>"></TD>
 </TR>
 <TR  CLASS=list-color1>
   <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><%print _("VLAN ID (Handsets)") . "<BR>" . _("Set It On The Menu And Power Cycle The Device Before Sending The Config");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=LSYSVLAN VALUE="<%print $lsysdata["VLAN"];%>"></TD>
+  <TD><INPUT TYPE=TEXT NAME=vlan VALUE="<%print $lsysdata["vlan"];%>"></TD>
 </TR>
 <TR  CLASS=list-color2>
   <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><%print _("RX/TX Gain (ATA's)");%></TD>
   <TD>
-    <INPUT TYPE=TEXT NAME=LSYSLSYSRXGAIN SIZE=3 VALUE="<%print $lsysdata["LSYSRXGAIN"];%>">/
-    <INPUT TYPE=TEXT NAME=LSYSLSYSTXGAIN SIZE=3 VALUE="<%print $lsysdata["LSYSTXGAIN"];%>">
+    <INPUT TYPE=TEXT NAME=rxgain SIZE=3 VALUE="<%print $lsysdata["rxgain"];%>">/
+    <INPUT TYPE=TEXT NAME=txgain SIZE=3 VALUE="<%print $lsysdata["txgain"];%>">
   </TD>
 </TR>
 </TR>
@@ -116,7 +116,7 @@ for($lval=0;$lval < count($lsysconf);$lval++) {
 </TR>
 <TR CLASS=list-color2>
   <TD onmouseover=myHint.show('ES8') ONMOUSEOUT=myHint.hide()><%print _("Enable NAT/DHCP On Lan Port");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=LSYSNAT<%if ($lsysdata["NAT"] == "NAT") {print " checked";}%>></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=nat<%if ($lsysdata["nat"] == "NAT") {print " checked";}%>></TD>
 </TR>
 <TR CLASS=list-color1>
   <TD ALIGN=MIDDLE COLSPAN=2><INPUT TYPE=SUBMIT NAME=lsysreg VALUE="<%print _("Save");%>"></TD>
