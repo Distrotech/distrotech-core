@@ -21,8 +21,8 @@
 include_once "auth.inc";
 
 if (isset($pbxupdate)) {
-  if (($newkey != "") && ($dhost != "")) {
-    pg_query($db,"INSERT INTO interbranch (prefix,dprefix,proto,address) VALUES ('" . $newkey . "','" . $prefix . "',
+  if (($dprefix != "") && (($dhost != "") || ($lineproto == "PEER"))) {
+    pg_query($db,"INSERT INTO interbranch (dprefix,prefix,proto,address) VALUES ('" . $dprefix . "','" . $prefix . "',
                               '" . $lineproto . "','" . $dhost . "')");
   } else if ($key != "") {
     pg_query($db,"DELETE FROM interbranch WHERE prefix='" . $key . "'");
@@ -56,11 +56,11 @@ for($i=0;$i<$dnum;$i++){
 <TR CLASS=list-color2>
 <TD onmouseover="myHint.show('IB1')" onmouseout="myHint.hide()"><%print _("Dialed Prefix");%></TD>
 <TD>
-<INPUT TYPE=TEXT NAME=newkey>
+<INPUT TYPE=TEXT NAME=dprefix>
 </TD>
 </TR>
 <TR CLASS=list-color1>
-<TD onmouseover="myHint.show('IB2')" onmouseout="myHint.hide()"><%print _("Hostname To Call (IAX/SIP)/Trunk Prefix (H323)");%></TD>
+<TD onmouseover="myHint.show('IB2')" onmouseout="myHint.hide()"><%print _("Hostname To Call (IAX/SIP)/Trunk Prefix (H323)/Peer");%></TD>
 <TD>
 <INPUT TYPE=TEXT NAME=dhost></TD>
 </TR>
@@ -75,6 +75,7 @@ for($i=0;$i<$dnum;$i++){
     <OPTION VALUE=IAX2><%print _("Inter Asterisk eXchange");%>
     <OPTION VALUE=SIP><%print _("Session Initiation Protocol");%>
     <OPTION VALUE=OH323><%print _("H.323");%>
+    <OPTION VALUE=PEER><%print _("Peer");%>
   </SELECT></TD>
 </TR>
 <TR CLASS=list-color2>
