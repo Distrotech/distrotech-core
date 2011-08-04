@@ -4,7 +4,7 @@ include "../cdr/autoadd.inc";
 
 $mac=strtoupper($mac);
 
-$getphoneq="SELECT name,secret,fullname,registrar,snomlock,nat,dtmfmode,vlan,cdnd from users 
+$getphoneq="SELECT name,secret,fullname,registrar,snomlock,nat,vlan,cdnd from users 
               LEFT OUTER JOIN features ON (exten=name) WHERE snommac='" . $mac . "' ORDER BY name";
 
 $getphone=pg_query($db,$getphoneq);
@@ -12,7 +12,7 @@ $num=pg_num_rows($getphone);
 
 if ($num < 4) {
   for($newe=$num+1;$newe <= 4;$newe++) {
-    createexten($mac,"SNOM","","","");
+    createexten($mac,"SNOM_M9","","","");
   }
   $getphone=pg_query($db,$getphoneq);
   $num=pg_num_rows($getphone);
@@ -25,7 +25,7 @@ xml version="1.0" encoding="utf-8"?>
   <phone-settings>
 <%
   for ($cnt=0;$cnt<$num;$cnt++) {
-    list($exten,$pass,$name,$domain,$usermode,$nat,$dtmfmode,$vlantag,$dndsetting)=pg_fetch_array($getphone,$cnt);
+    list($exten,$pass,$name,$domain,$usermode,$nat,$vlantag,$dndsetting)=pg_fetch_array($getphone,$cnt);
     if ($cnt == 0) {
       if ($vlantag > 1) {
         $vlanprio=5;
@@ -62,6 +62,8 @@ xml version="1.0" encoding="utf-8"?>
   <user_name perm="RW" idx="<%print $cnt2;%>"><%print $exten;%></user_name>
   <user_pass perm="RW" idx="<%print $cnt2;%>"><%print $pass;%></user_pass>
   <user_realname perm="RW" idx="<%print $cnt2;%>"><%print $name;%></user_realname>
+  <user_mailbox perm="RW" idx="<%print $cnt2;%>"><%print $exten;%></user_mailbox>
+  <user_sip_info perm="RW" idx="<%print $cnt2;%>">1</user_sip_info>
 <%
   }
 %>
