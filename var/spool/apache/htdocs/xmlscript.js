@@ -7,15 +7,20 @@ function addpara(xmldom) {
   id = nodes.length+1;
   para.setAttribute("id",id);
   texte=xmldom.createElement("text");
-  text=xmldom.createTextNode(document.scriptform.newtext.value);
+  if (document.scriptform.newtext.value != "") {
+    text=xmldom.createTextNode(document.scriptform.newtext.value);
+  } else {
+    text=xmldom.createTextNode("Not Set");
+  }
   texte.appendChild(text);
   para.appendChild(texte);
   input=xmldom.createElement("input");
   input.setAttribute("type",document.scriptform.inputtype.value);
   input.setAttribute("name","xml_"+randomID(7)+id);
   desc=document.scriptform.inputdesc.value;
-  if (desc !=  "")
+  if (desc !=  "") {
     input.setAttribute("description", desc);
+  }
   para.appendChild(input);
 
   root.appendChild(para);
@@ -339,19 +344,21 @@ function loadhtml(divid, domobj, edit) {
 	for (i=0;i < x.length;i++) {
 		if (x[i].nodeType == 1) {
 			id=parseInt(x[i].getAttribute("id"));
-			htmlout="\n<div id=\""+id+"\"><p>\n";
+			htmlout="<div id=\""+id+"\">";
 
 			text = x[i].getElementsByTagName("text")[0];
 			if (text.childNodes.length > 0) {
-          			htmlout+="<PRE";
+          			htmlout+="<div";
 				if (edit) {
 					htmlout+=" style=\"cursor: pointer\" onclick=\"xmlpopup("+id+")\"";
 				}
-				htmlout+=">"+text.childNodes[0].nodeValue+"</PRE>";
+				htmlout+=">"+text.childNodes[0].nodeValue+"</div>";
+			} else if (edit) {
+          			htmlout+="<div style=\"cursor: pointer\" onclick=\"xmlpopup("+id+")\">Not Set</div>";
 			}
 			input = x[i].getElementsByTagName("input")[0];
 			if (input == null) {
-				htmlout+="</div>\n";
+				htmlout+="</div>";
 				idarr.push(id);
 				htmlarr.push(htmlout);
 				continue;
@@ -370,9 +377,9 @@ function loadhtml(divid, domobj, edit) {
 					if (defval != null)
 						if (defval == "t")
 							htmlout+=" CHECKED";
-					htmlout+="></P>\n";
+					htmlout+=">";
 					break;
-				case "select":htmlout+="</P>\n<SELECT NAME=\"SCRIPT_"+name+"\">\n";
+				case "select":htmlout+="<SELECT NAME=\"SCRIPT_"+name+"\">";
 					option = x[i].getElementsByTagName("option");
 					for (j=0;j < option.length;j++) {
 						if (option[j].childNodes.length > 0) {
@@ -381,28 +388,27 @@ function loadhtml(divid, domobj, edit) {
 							if (defval != null)
 								if (defval == opt)
 									htmlout+=" SELECTED";
-							htmlout+=">"+opt+"</OPTION>\n";
+							htmlout+=">"+opt+"</OPTION>";
 						}
 					}
-					htmlout+="</SELECT>\n";
+					htmlout+="</SELECT>";
 					break;
 				case "radio":option = x[i].getElementsByTagName("option");
-					htmlout+="</P>\n";
 					for (j=0;j < option.length;j++) {
 						opt = option[j].childNodes[0].nodeValue;
 						htmlout+="<INPUT TYPE=RADIO NAME=\"SCRIPT_"+name+"\" VALUE=\""+opt+"\"";
 							if (defval != null)
 								if (defval == opt)
 									htmlout+=" CHECKED";
-						htmlout+=">"+opt+"</OPTION>\n";
+						htmlout+=">"+opt+"</OPTION>";
 					}
 					break;
-				case "input":htmlout+="</P>\n<INPUT TYPE=INPUT NAME=\"SCRIPT_"+name+"\"";
+				case "input":htmlout+="<INPUT TYPE=INPUT NAME=\"SCRIPT_"+name+"\"";
 					if (defval != null)
 						htmlout+=" VALUE=\""+defval+"\"";
-					htmlout+=">\n";
+					htmlout+=">";
 					break;
-				case "text":htmlout+="</P>\n<TEXTAREA NAME=\"SCRIPT_"+name+"\"";
+				case "text":htmlout+="<TEXTAREA NAME=\"SCRIPT_"+name+"\"";
 					cols = input.getAttribute("cols");
 					if (cols != null)
 						htmlout+=" COLS=\""+cols+"\"";
@@ -419,7 +425,7 @@ function loadhtml(divid, domobj, edit) {
 					htmlout+="</TEXTAREA>";
 
 			}
-			htmlout+="</div>\n";
+			htmlout+="</div><P>";
 			idarr.push(id);
 			htmlarr.push(htmlout);
 	      	}
@@ -429,5 +435,5 @@ function loadhtml(divid, domobj, edit) {
 		id=idarr[i]-1;
 		htmlout+=htmlarr[id];
 	}
-	scriptdiv.innerHTML=htmlout;
+	scriptdiv.innerHTML=htmlout.replace(/\n/g, "<br>");
 }

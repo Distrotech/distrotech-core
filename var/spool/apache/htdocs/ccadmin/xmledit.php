@@ -21,8 +21,8 @@
     </TH>
   </TR>
   <TR CLASS=list-color1>
-    <TD COLSPAN=2>
-      <div id="script" class=ccscript></div>
+    <TD COLSPAN=2 WIDTH=100%>
+      <div id="script" class=ccscript style="white-space: normal;"></div>
     </TD>
   </TR>
   <TR CLASS=list-color2>

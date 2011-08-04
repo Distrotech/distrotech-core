@@ -98,7 +98,7 @@ if ((!isset($_POST['id'])) && (!isset($_POST['listid'])) && (!isset($_POST['updb
       </TD>
     </TR><%
 } else {
-    $fieldnq="SELECT substr(table_name,1,position('_' IN table_name)-1),column_name,fname,id from information_schema.columns left outer join field_names ON (tablename=table_name AND column_name=field) where table_catalog='asterisk' and (table_name='contactdata_" . $data_tb . "' OR table_name='inputdata_" . $data_tb . "') AND column_name != 'osticket' AND column_name != 'leadid' AND column_name != 'id' and column_name != 'contid' AND fname IS NOT NULL ORDER BY table_name,column_name";
+    $fieldnq="SELECT substr(table_name,1,position('_' IN table_name)-1),column_name,fname,id from information_schema.columns left outer join field_names ON (tablename=table_name AND column_name=field) where table_catalog='asterisk' and (table_name='contactdata_" . $data_tb . "' OR table_name='inputdata_" . $data_tb . "') AND column_name != 'osticket' AND column_name != 'leadid' AND column_name != 'id' and column_name != 'contid' AND fname IS NOT NULL ORDER BY table_name,fname,column_name";
     $testdbtbl=pg_query($db,$fieldnq);%>
     <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
       <TH COLSPAN=3 CLASS=heading-body>
