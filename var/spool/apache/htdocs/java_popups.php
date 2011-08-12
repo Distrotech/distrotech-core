@@ -84,10 +84,10 @@ function opensogo() {
   popupwin('SOGo','mailframe');
 }
 function opencshop() {
-  popupwin('cshop','cshopframe');
+  popupwin('cshop?style=<%print $_SESSION['style'];%>','cshopframe');
 }
 function openccadmin() {
-  popupwin('ccadmin','cshopframe');
+  popupwin('ccadmin?style=<%print $_SESSION['style'];%>','cshopframe');
 }
 function openbb() {
   popupwin('phpBB2','bbframe');
@@ -104,7 +104,7 @@ function openvoipconf() {
 }
 function openlsysconf() {
   exten=prompt("Enter Extension To Register","");
-  popup('<%print $_SESSION['server'];%>reception/lsysreg.php?style=<%print $_SESSION['style'];%>&exten='+exten,250,700);
+  popup('<%print $_SESSION['server'];%>reception/lsysreg.php?style=<%print $_SESSION['style'];%>&exten='+exten,350,700);
 }
 
 function opengsm(grouter,gchannel) {
@@ -427,7 +427,7 @@ function openvradconf() {
 }
 function openccagent() {
   tmpact=document.loadpage.action;
-  document.loadpage.action='/';
+  document.loadpage.action='/?style=<%print $_SESSION['style']%>';
   secpop('ccagent','menubar=no,toolbar=no,scrolling=yes,resizable=no,top=0,left=0,width=800,height=700','ccagent/agent.php','');
   document.loadpage.action=tmpact;
 }

@@ -69,8 +69,9 @@ if (($_POST['nomenu'] == 1) && (isset($_POST['disppage']))) {
 }
 
 $mastvar=array('disppage','showmenu','classi','style','utype' );
-for($mvcnt=0;$mvcnt<count($mastvar);$mvcnt++) {
-  if ((isset($_GET[$mastvar[$mvcnt]])) && (!isset($_POST[$mastvar[$mvcnt]]))) {
+for($mvcnt=0;$mvcnt < count($mastvar);$mvcnt++) {
+  if ((isset($_GET[$mastvar[$mvcnt]])) && 
+      ((!isset($_POST[$mastvar[$mvcnt]])) || ($_POST[$mastvar[$mvcnt]] == ""))) {
     $_POST[$mastvar[$mvcnt]]=$_GET[$mastvar[$mvcnt]];
     $_SESSION[$mastvar[$mvcnt]]=$_POST[$mastvar[$mvcnt]];
   } else if (isset($_POST[$mastvar[$mvcnt]])) {
