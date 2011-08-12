@@ -74,9 +74,11 @@ function valicsv($filename, $data_tb, $offset) {
         } else if (is_int((int)$data[$c])) {
           $rowinfo[$c]["int"]++;
           $rowinfo[$c]["float"]++;
-	  if ($data[$c] == "0") || ($data[$c] == "1")) {
+/*
+	  if (($data[$c] == "0") || ($data[$c] == "1")) {
             $rowinfo[$c]["bool"]++;
           }
+*/
           $rowinfo[$c]["max"] = ($data[$c] > $rowinfo[$c]["max"]) ? $data[$c] : $rowinfo[$c]["max"];
           $rowinfo[$c]["min"] = ($data[$c] < $rowinfo[$c]["min"]) ? $data[$c] : $rowinfo[$c]["min"];
         } else if (is_bool(filter_var($data[$c], FILTER_VALIDATE_BOOLEAN))) {
@@ -93,8 +95,10 @@ function valicsv($filename, $data_tb, $offset) {
           $rowinfo[$c]["time"]++;
         } else if (strtotime($data[$c])) {
           $rowinfo[$c]["date"]++;
+/*
         } else if (is_bool(filter_var($data[$c], FILTER_VALIDATE_BOOLEAN))) {
           $rowinfo[$c]["bool"]++;
+*/
         } else {
           $rowinfo[$c]["text"]++;
           $len = strlen($data[$c]);

@@ -30,6 +30,8 @@ if ((isset($_POST['id'])) && ($_POST['id'] != "")) {
   print "<FORM NAME=ccleadf METHOD=POST onsubmit=\"ajaxsubmit(this.name);return false\">\n";
 }
 
+include "/var/spool/apache/htdocs/ccadmin/csvimport.inc";
+
 %>
 <CENTER>
 <TABLE border=0 width=90% cellspacing=0 cellpadding=0>
@@ -150,32 +152,34 @@ if ((!isset($_POST['uplead'])) && (!isset($_POST['listid'])) && (!isset($_POST['
 } else {
   $tmpcsv=tempnam("/tmp","lead");
   $data_tb=strtolower("inputdata_" . $_SESSION['campid'] . "_" . $_SESSION['listid']);
-  $testdbtbl=pg_query($db,"SELECT column_name,data_type,character_maximum_length from information_schema.columns where table_catalog='asterisk' and table_name='" . $data_tb . "' AND (column_name != 'leadid' AND column_name != 'osticket' AND column_name != 'id')");
-  if (pg_num_rows($testdbtbl) > 0) {
-    for($dtrcnt=0;$dtrcnt < pg_num_rows($testdbtbl);$dtrcnt++) {
-      list($trown,$trowt,$trows)=pg_fetch_array($testdbtbl,$dtrcnt);
-      $arrtype[$dtrcnt]=$trowt;
-      $arrname[$dtrcnt]=$trown;
-      $arrsize[$dtrcnt]=$trows;
-    }
-  }
 
   $numeric=array('smallint','integer','bigint','numeric','real','double precision');
   for($numcnt=0;$numcnt<count($numeric);$numcnt++) {
    $isnum[$numeric[$numcnt]]=true;
   }
 
-  $csvlead=array();
   if (move_uploaded_file($_FILES['leads']['tmp_name'],$tmpcsv)) {%>
     <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>><TH CLASS=heading-body><%
     print _("Adding Leads To") . " " . _("Campaign") . " " . $_SESSION['campname'] . " [" . _("List") . " " . $_SESSION['listname'] . "]";
     print "</TH></TR>";
-    $ratefd=file($tmpcsv);
-    while(list($lnum,$ldata)=each($ratefd)) {%>
+
+    valicsv($tmpcsv, $data_tb, 4);
+
+    $testdbtbl=pg_query($db,"SELECT column_name,data_type,character_maximum_length from information_schema.columns where table_catalog='asterisk' and table_name='" . $data_tb . "' AND (column_name != 'leadid' AND column_name != 'osticket' AND column_name != 'id')");
+    if (pg_num_rows($testdbtbl) > 0) {
+      for($dtrcnt=0;$dtrcnt < pg_num_rows($testdbtbl);$dtrcnt++) {
+        list($trown,$trowt,$trows)=pg_fetch_array($testdbtbl,$dtrcnt);
+        $arrtype[$dtrcnt]=$trowt;
+        $arrname[$dtrcnt]=$trown;
+        $arrsize[$dtrcnt]=$trows;
+      }
+    }
+
+    $csvfd = fopen($tmpcsv, "r");
+    $head = fgetcsv($csvfd, 0, ",");
+
+    while (($csvlead = fgetcsv($csvfd, 0, ",")) !== FALSE) {%>
       <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>><TD>Adding <%
-      $ldata=rtrim($ldata);
-      unset($csvlead);
-      $csvlead=csv_explode($ldata);
       $newlead=array(array_shift($csvlead),array_shift($csvlead),array_shift($csvlead),array_shift($csvlead));
 
       for($nlcnt=0;$nlcnt < count($newlead);$nlcnt++) {
@@ -262,6 +266,7 @@ if ((!isset($_POST['uplead'])) && (!isset($_POST['listid'])) && (!isset($_POST['
       list($leadid)=pg_fetch_array($ldata,0);
       if (($leadid > 0) && ($qvals != "")){
         pg_query("INSERT INTO " .  $data_tb . " (leadid," . $qfields . ") VALUES (" . $leadid . "," . $qvals . ")");
+        print "INSERT INTO " .  $data_tb . " (leadid," . $qfields . ") VALUES (" . $leadid . "," . $qvals . ");<P>";
       }
 %>
       </TD></TR><%
@@ -274,27 +279,3 @@ if ((!isset($_POST['uplead'])) && (!isset($_POST['listid'])) && (!isset($_POST['
 </TABLE>
 </TABLE>
 </FORM>
-
-<%
-function csv_explode($str, $delim = ',', $qual = "\"") {
-  $len = strlen($str);
-  $inside = false;
-  $word = '';
-  for ($i = 0; $i < $len; ++$i) {
-    if ($str[$i]==$delim && !$inside) {
-      $out[] = $word;
-      $word = '';
-    } else if ($inside && $str[$i]==$qual && ($i<$len && $str[$i+1]==$qual)) {
-      $word .= $qual;
-      ++$i;
-    } else if ($str[$i] == $qual) {
-      $inside = !$inside;
-    } else {
-      $word .= $str[$i];
-    }
-  }
-  $out[] = $word;
-
-  return $out;
-}
-%>
