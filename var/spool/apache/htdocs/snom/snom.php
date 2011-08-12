@@ -41,7 +41,7 @@ $getphoneq="SELECT name,secret,fullname,registrar,snomlock,nat,dtmfmode,vlan,cdn
                    (name=secret OR length(secret) != " . $pwlen . " OR secret='' OR secret IS NULL OR
                     secret !~ '[0-9]' OR secret !~ '[a-z]' OR secret !~ '[A-Z]'),
 		   case when (encryption_taglen = '32') then encryption||',32bit' else encryption end,
-                   transport
+                   transport,dispname
               FROM users 
                 LEFT OUTER JOIN features ON (name=exten)
               WHERE snommac='" . $mac . "' LIMIT 1";
@@ -53,7 +53,7 @@ if (pg_num_rows($getphone) == 0) {
   }
 }
 
-list($exten,$pass,$name,$domain,$usermode,$nat,$dtmfmode,$vlantag,$dndsetting,$pwchange,$encrypt,$transport)=pg_fetch_array($getphone,0);
+list($exten,$pass,$name,$domain,$usermode,$nat,$dtmfmode,$vlantag,$dndsetting,$pwchange,$encrypt,$transport,$dispname)=pg_fetch_array($getphone,0);
 
 if ($pwchange == "t") {
   if (! isset($agi)) {

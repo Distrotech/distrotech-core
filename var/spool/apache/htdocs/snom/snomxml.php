@@ -183,7 +183,11 @@ if ($domain != "") {
   if ($mac != "") {
     if ($exten != "") {
       print "    <phone_name perm=\"R\">exten-" . $exten . "</phone_name>\n";
-      print "    <user_idle_text idx=\"1\" perm=\"R\">" . $exten . "</user_idle_text>\n"; 
+      if ($dispname == '0') {
+      	print "    <user_idle_text idx=\"1\" perm=\"R\">" . $exten . "</user_idle_text>\n";
+      } else {
+      	print "    <user_idle_text idx=\"1\" perm=\"R\">" . $name . "</user_idle_text>\n";
+      }
       print "    <user_symmetrical_rtp idx=\"1\" perm=\"R\">on</user_symmetrical_rtp>\n";
       if ($encrypt != "no") {
         print "    <user_srtp idx=\"1\" perm=\"R\">on</user_srtp>\n";
