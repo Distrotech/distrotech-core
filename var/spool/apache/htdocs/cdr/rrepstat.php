@@ -101,14 +101,14 @@
   $rcol=0;
 
   $acdstatq="SELECT date_part('year',calldate),date_part('month',calldate),date_part('day',calldate),count(uniqueid) as total,
-               count(CASE WHEN (dstchannel ~ '^SIP/parent') THEN uniqueid ELSE NULL END) AS voip,
-               sum(CASE WHEN (dstchannel ~ '^SIP/parent') THEN billsec ELSE 0 END) AS voipsec,
-               avg(CASE WHEN (dstchannel ~ '^SIP/parent') THEN billsec ELSE NULL END) AS voipavg,
-               sum(CASE WHEN (dstchannel ~ '^SIP/parent') THEN cost ELSE 0 END) AS voipcost,
-               count(CASE WHEN (dstchannel !~ '^SIP/parent') THEN uniqueid ELSE NULL END) AS tdm,
-               sum(CASE WHEN (dstchannel !~ '^SIP/parent') THEN billsec ELSE 0 END) AS tdmsec,
-               avg(CASE WHEN (dstchannel !~ '^SIP/parent') THEN billsec ELSE NULL END) AS tdmavg,
-               sum (CASE WHEN (dstchannel !~ '^SIP/parent') THEN cost ELSE 0 END) AS tdmcost 
+               count(CASE WHEN (dstchannel ~ '(^SIP/parent)|(^IAX2/parent)') THEN uniqueid ELSE NULL END) AS voip,
+               sum(CASE WHEN (dstchannel ~ '(^SIP/parent)|(^IAX2/parent)') THEN billsec ELSE 0 END) AS voipsec,
+               avg(CASE WHEN (dstchannel ~ '(^SIP/parent)|(^IAX2/parent)') THEN billsec ELSE NULL END) AS voipavg,
+               sum(CASE WHEN (dstchannel ~ '(^SIP/parent)|(^IAX2/parent)') THEN cost ELSE 0 END) AS voipcost,
+               count(CASE WHEN (dstchannel !~ '(^SIP/parent)|(^IAX2/parent)') THEN uniqueid ELSE NULL END) AS tdm,
+               sum(CASE WHEN (dstchannel !~ '(^SIP/parent)|(^IAX2/parent)') THEN billsec ELSE 0 END) AS tdmsec,
+               avg(CASE WHEN (dstchannel !~ '(^SIP/parent)|(^IAX2/parent)') THEN billsec ELSE NULL END) AS tdmavg,
+               sum (CASE WHEN (dstchannel !~ '(^SIP/parent)|(^IAX2/parent)') THEN cost ELSE 0 END) AS tdmcost 
              FROM cdr LEFT OUTER JOIN trunkcost USING (uniqueid)";
   if ($TMS_USER == 1) {
     $acdstatq.=" LEFT OUTER JOIN astdb AS bgrp ON (accountcode=bgrp.family AND bgrp.key='BGRP')";
