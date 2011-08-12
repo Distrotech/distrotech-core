@@ -92,7 +92,7 @@ $langs=array("es","fr");
 $langn=array(_("Spanish"),_("French"));
 
 $poscb=array("CDND","DRING","WAIT","RECORD","NOPRES","DFEAT","NOVOIP","CRMPOP","IAXLine","H323Line","Locked",
-             "FAXMAIL","SNOMLOCK","POLYDIRLN","DDIPASS","DDIPASS");
+             "FAXMAIL","SNOMLOCK","POLYDIRLN","DDIPASS");
 $negcb=array("NOVMAIL");
 $featarr=array("CDND","CFBU","CFIM","CFNA","CFFAX","ALTC","OFFICE","WAIT","RECORD",
                 "ALOCK","NOPRES","DFEAT","NOVOIP","CRMPOP","NOVMAIL","FAXMAIL","SNOMLOCK","POLYDIRLN","EFAXD",
