@@ -92,10 +92,10 @@ $langs=array("es","fr");
 $langn=array(_("Spanish"),_("French"));
 
 $poscb=array("CDND","DRING","WAIT","RECORD","NOPRES","DFEAT","NOVOIP","CRMPOP","IAXLine","H323Line","Locked",
-             "FAXMAIL","SNOMLOCK","POLYDIRLN","DDIPASS");
+             "FAXMAIL","DISPNAME","SNOMLOCK","POLYDIRLN","DDIPASS");
 $negcb=array("NOVMAIL");
 $featarr=array("CDND","CFBU","CFIM","CFNA","CFFAX","ALTC","OFFICE","WAIT","RECORD",
-                "ALOCK","NOPRES","DFEAT","NOVOIP","CRMPOP","NOVMAIL","FAXMAIL","SNOMLOCK","POLYDIRLN","EFAXD",
+                "ALOCK","NOPRES","DFEAT","NOVOIP","CRMPOP","NOVMAIL","FAXMAIL","DISPNAME","SNOMLOCK","POLYDIRLN","EFAXD",
                 "TOUT","DGROUP","ZAPLine","DDIPASS","ZAPProto","ZAPRXGain","ZAPTXGain","CLI","TRUNK","ACCESS",
                 "AUTHACCESS","IAXLine","H323Line","FWDU","Locked","SNOMMAC","VLAN","REGISTRAR","PTYPE","PURSE",
                 "DRING","SRING0","SRING1","SRING2","SRING3");
@@ -869,7 +869,7 @@ if ($SUPER_USER == 1) {
       <OPTION VALUE=IP_600<%if ($origdata["ptype"] == "IP_600") {print " SELECTED";}%>>Polycom 600
       <OPTION VALUE=IP_601<%if ($origdata["ptype"] == "IP_601") {print " SELECTED";}%>>Polycom 601/650
       <OPTION VALUE=IP_4000<%if ($origdata["ptype"] == "IP_4000") {print " SELECTED";}%>>Polycom 4000
-      <OPTION VALUE=CISCO<%if ($origdata["ptype"] == "YEALINK") {print " SELECTED";}%>>Yealink
+      <OPTION VALUE=YEALINK<%if ($origdata["ptype"] == "YEALINK") {print " SELECTED";}%>>Yealink
       <OPTION VALUE=CISCO<%if ($origdata["ptype"] == "CISCO") {print " SELECTED";}%>>Cisco 79XX
       <OPTION VALUE=OTHER<%if ($origdata["ptype"] == "OTHER") {print " SELECTED";}%>>Other
     </SELECT>
@@ -882,56 +882,60 @@ if ($SUPER_USER == 1) {
   <TD><INPUT TYPE=TEXT NAME=VLAN VALUE="<%print $origdata["vlan"];%>"></TD>
 </TR>
 <TR CLASS=list-color1>
+  <TD onmouseover=myHint.show('ES26') ONMOUSEOUT=myHint.hide()><%print _("Display Name, Not Extension (Snom's Only)");%></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=DISPNAME <%if ($origdata["dispname"] == "1") {print "CHECKED";}%>></TD>
+</TR>
+<TR CLASS=list-color2>
   <TD onmouseover=myHint.show('ES26') ONMOUSEOUT=myHint.hide()><%print _("Lock Phone Settings (Snom's Only)");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=SNOMLOCK <%if ($origdata["snomlock"] == "1") {print "CHECKED";}%>></TD>
 </TR>
-<TR  CLASS=list-color2>
+<TR  CLASS=list-color1>
   <TD onmouseover=myHint.show('ES27') ONMOUSEOUT=myHint.hide()><%print _("Configure Keypad Function Keys ");%></TD>
   <TD><INPUT TYPE=BUTTON VALUE="1-12" TARGET=_blank ONCLICK=snomkeywin("<%print urlencode($_POST['exten']);%>","kp")>
       <INPUT TYPE=BUTTON VALUE="13-54" TARGET=_blank ONCLICK=snomkeywin("<%print urlencode($_POST['exten']);%>","xp")>
       <INPUT TYPE=BUTTON VALUE="55-96" TARGET=_blank ONCLICK=snomkeywin("<%print urlencode($_POST['exten']);%>","xp2")>
       <INPUT TYPE=BUTTON VALUE="97-138" TARGET=_blank ONCLICK=snomkeywin("<%print urlencode($_POST['exten']);%>","xp3")></TD>
 </TR>
-<TR CLASS=list-color1>
-  <TH COLSPAN=2>Polycom Settings</TH></TR>
 <TR CLASS=list-color2>
+  <TH COLSPAN=2>Polycom Settings</TH></TR>
+<TR CLASS=list-color1>
   <TD onmouseover=myHint.show('ES26') ONMOUSEOUT=myHint.hide()><%print _("Search Directory By Last Name");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=POLYDIRLN <%if ($origdata["polydirln"] == "1") {print "CHECKED";}%>></TD>
 </TR>
-<TR CLASS=list-color1>
+<TR CLASS=list-color2>
   <TH COLSPAN=2>Linksys/Audiocodes MP-202 Settings (Shared By All Ports)</TH></TR>
-<TR  CLASS=list-color2>
+<TR  CLASS=list-color1>
   <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><%print _("Host Name");%></TD>
   <TD><INPUT TYPE=TEXT NAME=Lhostname VALUE="<%print $lsysdata["hostname"];%>"></TD>
 </TR>
-<TR  CLASS=list-color1>
+<TR  CLASS=list-color2>
   <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><%print _("Settings Server");%></TD>
   <TD><INPUT TYPE=TEXT NAME=Lprofile VALUE="<%print $lsysdata["profile"];%>"></TD>
 </TR>
-<TR  CLASS=list-color2>
+<TR  CLASS=list-color1>
   <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><%print _("Stun Server");%></TD>
   <TD><INPUT TYPE=TEXT NAME=Lstunsrv VALUE="<%print $lsysdata["stunsrv"];%>"></TD>
 </TR>
-<TR  CLASS=list-color1>
+<TR  CLASS=list-color2>
   <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><%print _("VLAN ID (Handsets)") . "<BR>" . _("Set It On The Menu And Power Cycle The Device Before Sending The Config");%></TD>
   <TD><INPUT TYPE=TEXT NAME=Lvlan VALUE="<%print $lsysdata["vlan"];%>"></TD>
 </TR>
-<TR  CLASS=list-color2>
+<TR  CLASS=list-color1>
   <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><%print _("RX/TX Gain (ATA's)");%></TD>
   <TD>
     <INPUT TYPE=TEXT NAME=Lrxgain SIZE=3 VALUE="<%print $lsysdata["rxgain"];%>">/
     <INPUT TYPE=TEXT NAME=Ltxgain SIZE=3 VALUE="<%print $lsysdata["txgain"];%>">
   </TD>
 </TR>
-<TR  CLASS=list-color1>
+<TR  CLASS=list-color2>
   <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><%print _("Current IP Address.") . "<BR>" . _("This Must Be Set And Reachable From Your Browser To Initialize The Phone Correctly.");%></TD>
   <TD><INPUT TYPE=TEXT NAME=LSYSIPADDR VALUE="<%print $curipaddr;%>"></TD>
 </TR>
-<TR CLASS=list-color2>
+<TR CLASS=list-color1>
   <TD onmouseover=myHint.show('ES8') ONMOUSEOUT=myHint.hide()><%print _("Enable NAT/DHCP On Lan Port");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=Lnat<%if ($lsysdata["nat"] == "NAT") {print " checked";}%>></TD>
 </TR>
-<TR CLASS=list-color1>
+<TR CLASS=list-color2>
   <TD onmouseover=myHint.show('ES8') ONMOUSEOUT=myHint.hide()><%print _("Send Settings To The Phone When Extension Is Saved");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=LSYSPUSH></TD>
 </TR>
@@ -944,6 +948,7 @@ if ($SUPER_USER == 1) {
   <INPUT TYPE=HIDDEN NAME=REGISTRAR VALUE="<%print $origdata["registrar"];%>">
   <INPUT TYPE=HIDDEN NAME=PTYPE VALUE="<%print $origdata["ptype"];%>">
   <INPUT TYPE=HIDDEN NAME=VLAN VALUE="<%print $origdata["vlan"];%>">
+  <INPUT TYPE=HIDDEN NAME=DISPNAME VALUE="<%if ($origdata["dispname"] == "1") {print "on";}%>">
   <INPUT TYPE=HIDDEN NAME=SNOMLOCK VALUE="<%if ($origdata["snomlock"] == "1") {print "on";}%>">
   <INPUT TYPE=HIDDEN NAME=POLYDIRLN VALUE="<%if ($origdata["polydirln"] == "1") {print "on";}%>">
   <INPUT TYPE=HIDDEN NAME=Lhostname VALUE="<%print $lsysdata["hostname"];%>">
