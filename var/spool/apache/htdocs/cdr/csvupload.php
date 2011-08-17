@@ -275,10 +275,6 @@ if (isset($csvup)) {
 
           pg_query("UPDATE users SET secret='" .  $out[5] . "',password='" . $out[6] . "',fullname='" . trim($out[1]) . "',email='" . trim($out[2]) . "'," .
                                     "callgroup='" . $out[19] . "',pickupgroup='" . $out[20] . "' WHERE name='" . $exten . "'");
-
-          for($dbq=0;$dbq < count($astdbk);$dbq++) {
-            pg_query("UPDATE features SET $astdbk[$dbq]='" . $out[$astdbm[$astdbk[$dbq]]] . "' WHERE exten='" . $exten . "'");
-          }
         } else {
           print "<TR" . $bcolor[$rcnt % 2] . "><TD>Inserting " . $out[0] . " [" . $out[1];
           if ($out[2] != "") {
@@ -290,9 +286,9 @@ if (isset($csvup)) {
                                        trim($out[1]) . "','" . trim($out[2]) . "','" . $out[19] . "','" . $out[20] . "')");
           pg_query("INSERT INTO features (exten) VALUES ('" . $exten . "')");
 
-          for($dbq=0;$dbq < count($astdbk);$dbq++) {
-            pg_query("UPDATE features SET $astdbk[$dbq]='" . $out[$astdbm[$astdbk[$dbq]]] . "' WHERE exten='" . $exten . "'");
-          }
+        }
+        for($dbq=0;$dbq < count($astdbk);$dbq++) {
+          pg_query("UPDATE features SET $astdbk[$dbq]='" . $out[$astdbm[$astdbk[$dbq]]] . "' WHERE exten='" . $exten . "'");
         }
       } else if ($filetype == "elist") {
         $rcnt++;
@@ -372,7 +368,7 @@ if (isset($csvup)) {
         if ($out[1] != "") {
           $rcnt++;
           print "<TR" . $bcolor[$rcnt % 2] . "><TD>Adding " . $out[0] . " (" . $name[0] . " - " . $out[1] . ")</TD></TR>\n";
-          pg_query("UPDATE features SET snommac='" . $out[1] . "',snomlock='" . boolyn($out[2] . "',registrar='" . $out[3] . "',vlan='" . $out[4] . "',ptype='" . $out[5] . "' WHERE exten='" . $out[0] . "'");
+          pg_query("UPDATE features SET snommac='" . $out[1] . "',snomlock='" . boolyn($out[2]) . "',registrar='" . $out[3] . "',vlan='" . $out[4] . "',ptype='" . $out[5] . "' WHERE exten='" . $out[0] . "'");
         }
         if (($out[6] == "") && ($out[7] == "") && ($out[8] == "") && ($out[1] != "")) {
           pg_query($db,"DELETE FROM astdb WHERE family='" . $out[0] . "' AND key ~ '^fkey[0-9]+'");
