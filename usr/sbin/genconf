@@ -351,6 +351,10 @@ while(<CF>) {
         $sproxy=join("\|",@words);
         if (index(@words[3],"parent") eq "0") {
           $vparent++;
+        } elsif (@words[3] == "tdm") {
+          $tdmdial="SIP/tdm";
+        } elsif (index(@words[3],"tdm") eq "0") {
+          $tdmgw++;
         }
         push(@sipproxys,$sproxy);    
       } elsif (@words[0] eq "FWD") {
@@ -425,6 +429,13 @@ while(<CF>) {
         shift(@words);
         $iproxy=join("\|",@words);
         push(@iaxproxys,$iproxy);    
+        if (index(@words[3],"parent") eq "0") {
+          $vparent++;
+        } elsif (@words[3] == "tdm") {
+          $tdmdial="IAX2/tdm";
+        } elsif (index(@words[3],"tdm") eq "0") {
+          $tdmgw++;
+        }
       }
     }
   } elsif (@words[0] eq "DNS" ) {
@@ -10484,6 +10495,7 @@ sub printcrontab() {
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","rm /var/spool/apache/htdocs/pdf/*");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","2","*","/usr/bin/backup");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","2","1","/usr/bin/pbx_reports");
+    printf CT ("%-5s %-6s 1 * %-8s %s > /dev/null 2>&1\n","0","2","*","/usr/bin/pbx_reports -");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","30","1","*","/usr/sbin/cfrestore");
 #    printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","*/30","*","*","kill -1 `cat /var/run/gnugk.pid`");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","*/5","*","*","/usr/sbin/asterisk -rx \"odbc connect Asterisk\"");
@@ -13729,8 +13741,13 @@ print AM<<__EOB__;
 autoload=yes
 
 ;Make sure the db bits are loaded.
+preload => res_config.so
 preload => res_odbc.so
 preload => res_config_odbc.so
+preload => chan_local.so
+preload => chan_sip.so
+preload => chan_iax.so
+preload => chan_dahdi.so
 
 ;Fax Changes
 noload => app_faxdetect.so
@@ -14126,6 +14143,8 @@ PARENTNUM=$parentnumber
 HOSTNAME=$dnsconf{'Hostname'}
 PARENTDIAL=$parentdial
 PARENTCNT=$vparent
+TDMGWDIAL=$tdmdial
+TDMGWCNT=$tdmgw
 AGISERVER=$sqlmvoipserv
 GOSSIPTEL=$gossipnum
 FRESHNUM=$freshtelnum
@@ -15304,11 +15323,11 @@ sub printgnugkh323() {
     $fqdn=$dnsconf{'Domain'}
   }
 
-  if ($sysconf{'Internal'} ne $sysconf{'External'}) {
+#  if ($sysconf{'Internal'} ne $sysconf{'External'}) {
     $gkrouted=0;
-  } else {
-    $gkrouted=1;
-  }
+#  } else {
+#    $gkrouted=1;
+#  }
 
   $getid=$dbh->prepare("select h323gkid,ipaddr,h323neighbor,fullname from users where name = '" . $h323gwid . "'");
   $getid->execute;
