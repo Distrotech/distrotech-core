@@ -94,11 +94,13 @@ $langn=array(_("Spanish"),_("French"));
 $poscb=array("CDND","DRING","WAIT","RECORD","NOPRES","DFEAT","NOVOIP","CRMPOP","IAXLine","H323Line","Locked",
              "FAXMAIL","DISPNAME","SNOMLOCK","POLYDIRLN","DDIPASS");
 $negcb=array("NOVMAIL");
+$yesnocb=array("faxgateway","faxdetect");
+
 $featarr=array("CDND","CFBU","CFIM","CFNA","CFFAX","ALTC","OFFICE","WAIT","RECORD",
                 "ALOCK","NOPRES","DFEAT","NOVOIP","CRMPOP","NOVMAIL","FAXMAIL","DISPNAME","SNOMLOCK","POLYDIRLN","EFAXD",
                 "TOUT","DGROUP","ZAPLine","DDIPASS","ZAPProto","ZAPRXGain","ZAPTXGain","CLI","TRUNK","ACCESS",
                 "AUTHACCESS","IAXLine","H323Line","FWDU","Locked","SNOMMAC","VLAN","REGISTRAR","PTYPE","PURSE",
-                "DRING","SRING0","SRING1","SRING2","SRING3");
+                "DRING","SRING0","SRING1","SRING2","SRING3","faxgateway");
 $lsysarr=array("profile","stunsrv","hostname","rxgain","txgain","vlan","nat");
 
 if ((isset($pbxupdate)) && ($pbxupdate == "Save Changes")) {
@@ -140,6 +142,16 @@ if ((isset($pbxupdate)) && ($pbxupdate == "Save Changes")) {
     } else {
       $_POST[$poscb[$cbcnt]] = "0";
       $$poscb[$cbcnt] = "0";
+    }
+  }
+
+  for ($cbcnt=0;$cbcnt < count($yesnocb);$cbcnt++) {
+    if ($_POST[$yesnocb[$cbcnt]] == "on") {
+      $_POST[$yesnocb[$cbcnt]] = "yes";
+      $$yesnocb[$cbcnt] = "yes";
+    } else {
+      $_POST[$yesnocb[$cbcnt]] = "no";
+      $$yesnocb[$cbcnt] = "no";
     }
   }
 
@@ -265,7 +277,7 @@ if ((isset($pbxupdate)) && ($pbxupdate == "Save Changes")) {
   $userarr=array("nat","dtmfmode","fullname","email","canreinvite","qualify","activated",
                  "language","callgroup","pickupgroup","insecure","h323prefix","simuse",
                  "tariff","h323gkid","h323permit","h323neighbor","t38pt_udptl","encryption",
-                 "encryption_taglen");
+                 "encryption_taglen","faxdetect");
 
   $dbq="";
   for($ucnt=0;$ucnt < count($userarr);$ucnt++) {
@@ -300,7 +312,7 @@ $qconsdata=pg_query($db,"SELECT context,count FROM console WHERE mailbox = '" . 
 $qgetudata=pg_query($db,"SELECT nat,dtmfmode,fullname,email,canreinvite,qualify,password,allow,callgroup,pickupgroup,
                                 insecure,h323permit,h323gkid,h323prefix,h323neighbor,ipaddr,language,secret,usertype,
                                 activated,simuse,tariff,t38pt_udptl,
-                                case when (encryption_taglen = '32') then encryption||',32bit' else encryption end
+                                case when (encryption_taglen = '32') then encryption||',32bit' else encryption end,faxdetect
                               FROM users WHERE name='" . $_POST['exten'] . "'");
 
 
@@ -353,6 +365,7 @@ $simuse=$udata[20];
 $tariff=$udata[21];
 $t38pt_udptl=$udata[22];
 $encryption=$udata[23];
+$faxdetect=$udata[24];
 
 $conscont=$consdata[0];
 $conscount=$consdata[1];
@@ -842,6 +855,10 @@ if ($SUPER_USER == 1) {
   <TD ALIGN=LEFT onmouseover=myHint.show('ES8') ONMOUSEOUT=myHint.hide()><%print _("Distinctive Ring Support (Some Phones)");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=DRING <%if ($origdata["dring"] == "1") {print "CHECKED";}%>></TD>
 </TR>
+<TR CLASS=list-color<%print ($cnt % 2) + 1;$cnt++;%>>
+  <TD ALIGN=LEFT onmouseover=myHint.show('ES8') ONMOUSEOUT=myHint.hide()><%print _("Enable Fax Gateway");%></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=faxgateway <%if ($origdata["faxgateway"] == "yes") {print "CHECKED";}%>></TD>
+</TR>
 </TABLE>
 </DIV>
 <%
@@ -1128,6 +1145,10 @@ if ($SUPER_USER == 1) {
 <TR CLASS=list-color1>
   <TD onmouseover=myHint.show('ES39') ONMOUSEOUT=myHint.hide()><%print _("Allow T.38 Support");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=t38pt_udptl <%if ($t38pt_udptl != "no") {print "CHECKED";}%>></TD>
+</TR>
+<TR CLASS=list-color2>
+  <TD onmouseover=myHint.show('ES39') ONMOUSEOUT=myHint.hide()><%print _("Enable Fax Detect");%></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=faxdetect <%if ($faxdetect != "no") {print "CHECKED";}%>></TD>
 </TR>
 </TABLE>
 </DIV>
