@@ -1,10 +1,13 @@
 #!/usr/bin/php -d safe_mode=no
 <%
 
+
 function do_report($repname, $username, $additional) {
-  global $ob_file,$rcnt,$qlev,$discrip,$acdls,$qfilt,$db,$edata,$stats;
+  global $ob_file,$rcnt,$qlev,$discrip,$acdls,$qfilt,$db,$edata,$stats,$argv;
+
 
   $filename=tempnam("/tmp", $username);
+
 
   $pid=pcntl_fork();
   if ($pid == 0) {  
@@ -19,14 +22,36 @@ function do_report($repname, $username, $additional) {
 
     date_default_timezone_set("Africa/Johannesburg");
     $curtime=time();
-    $repdate=array(getdate($curtime-(86400*7)), getdate($curtime));
 
-    $weeklyrep['dom']=$repdate[0]['mday'];
-    $weeklyrep['date']=$repdate[0]['mon'] . "/" . $repdate[0]['year'];
-    $weeklyrep['dom2']=$repdate[1]['mday'];
-    $weeklyrep['date2']=$repdate[1]['mon'] . "/" . $repdate[1]['year'];
-    $weeklyrep['sortby']="cost";
-    $weeklyrep['sortdown']="on";
+    if (!isset($argv[1])) {
+      $repdate=array(getdate($curtime-(86400*7)), getdate($curtime));
+    } else {
+      $repdate=array(getdate($curtime), getdate($curtime));
+      if ($argv[1] == "-") {
+        $monthrep=$repdate[0]['mon'] - 1;
+      } else {
+        $monthrep=$argv[1];
+      }
+      if ($monthrep > $repdate[0]['mon']) {
+        $repdate[0]['year']=$repdate[0]['year']--;
+        $repdate[1]['year']=$repdate[0]['year'];
+      }
+      $repdate[0]['mday']=1;
+      $repdate[1]['mday']=1;
+      $repdate[0]['mon']=$monthrep;
+      if ($argv[1] == 12) {
+        $repdate[1]['mon']=1;
+      } else {
+        $repdate[1]['mon']=$repdate[0]['mon']+1;
+      }
+    }
+
+    $callrep['dom']=$repdate[0]['mday'];
+    $callrep['date']=$repdate[0]['mon'] . "/" . $repdate[0]['year'];
+    $callrep['dom2']=$repdate[1]['mday'];
+    $callrep['date2']=$repdate[1]['mon'] . "/" . $repdate[1]['year'];
+    $callrep['sortby']="cost";
+    $callrep['sortdown']="on";
 
     $grouprep['trunk']="G";
     $grouprep['dom']=$repdate[0]['mday'];
@@ -83,7 +108,7 @@ function do_report($repname, $username, $additional) {
     $addinf['acdrep']="fqueue";
 
     $report['queueslrep']="cdr/qslstat.php";
-    $report['weeklyrep']="cdr/allrep.php";
+    $report['callrep']="cdr/allrep.php";
     $report['usagerep']="cdr/qagntstat.php";
     $report['grouprep']="cdr/dextenr.php";
     $report['acdrep']="cdr/acdstat.php";
@@ -226,7 +251,7 @@ $uinf=getuserinf();
 foreach($uinf['users'] as $key => $value) {
   $files=array();
   $acd=array();
-  array_push($files, do_report("weeklyrep", $key, ""));
+  array_push($files, do_report("callrep", $key, ""));
   array_push($files, do_report("usagerep", $key, ""));
   for($cnt=0;$cnt < count($value);$cnt++) {
     array_push($files, do_report("grouprep", $key, $value[$cnt]));
