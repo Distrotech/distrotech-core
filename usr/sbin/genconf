@@ -14444,7 +14444,7 @@ sub printmisdn() {
     $iconts=@row[5];
     $fconts=@row[6];
 
-    if ((@row[2] eq "1")  && (@row[0] > "1")) {
+    if (@row[2] eq "1") {
       $method="round_robin";
     } else {
       $method="standard";
@@ -14528,7 +14528,7 @@ __EOF__
       }
     }
     if ((@row[6] ne "") && (@row[6] ne "0")) {
-      print IC "\n[fwd]\n";
+      print IC "\n[misdnfwd]\n";
       print IC "ports=" . $fconts . "\n";
       print IC "context=ddi\n";
       if (@row[1] eq "1") {
