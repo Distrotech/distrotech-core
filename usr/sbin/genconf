@@ -14528,9 +14528,9 @@ __EOF__
       }
     }
     if ((@row[6] ne "") && (@row[6] ne "0")) {
-      print IC "\n[misdnfwd]\n";
+      print IC "\n[fwd]\n";
       print IC "ports=" . $fconts . "\n";
-      print IC "context=ddi\n";
+      print IC "context=misdnfwd\n";
       if (@row[1] eq "1") {
         print IC "immediate=yes\n";
       }
