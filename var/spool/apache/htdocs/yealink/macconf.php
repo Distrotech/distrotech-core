@@ -116,7 +116,7 @@ Username = <%print $exten . "\n";%>
 Password = <%print $pass . "\n";%>
 Transport = <%print $trans . "\n";%>
 srtp_encryption = <%print $encrypt . "\n";%>
-SIPServerHost = <%print $domain . "\n";%>
+SIPServerHost = <%print $SERVER_NAME . "\n";%>
 SIPServerPort = <%print ($trans == "2") ? "5061\n" : "5060\n"%>
 UseOutboundProxy = 0
 SubsribeRegister = 1
