@@ -1112,6 +1112,10 @@ if [ -e zones/domain.dyn ] && [ -e /var/named/domain.dyn.orig ];then
   fi;
 fi;
 
+if [ ! -d /tftpboot ];then
+  mkdir 1777 /tftpboot
+fi;
+
 for tfile in `ls  tftptmpl`;do
   if [ -e /tftpboot/$tfile ];then 
     TFTPDIFF=`diff tftptmpl/$tfile /tftpboot/$tfile`
@@ -1120,6 +1124,7 @@ for tfile in `ls  tftptmpl`;do
   fi;
   if [ "$TFTPDIFF" ];then
     cp tftptmpl/$tfile /tftpboot/
+    chmod 644 /tftpboot/$tfile
   fi;
 done
 
