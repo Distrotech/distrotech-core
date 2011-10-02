@@ -242,6 +242,7 @@ if [ -e /etc/.install ];then
 
   #Load CD/DVD Drives
   /sbin/modprobe sr_mod
+  /sbin/modprobe autofs4
 
   #Load Mouse Needed For Boom
   /sbin/modprobe psmouse
