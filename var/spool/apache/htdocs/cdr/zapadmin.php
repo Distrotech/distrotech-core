@@ -40,7 +40,6 @@ $yesno['restrictcid']=1;
 
 $descrip['signalling']=_("Trunk Line Type");
 $descrip['jitterbuffers']=_("No. Of Jitter Buffers To Use (20ms)");
-$descrip['faxdetect']=_("Detect Fax Calls");
 $descrip['echocancel']=_("Enable Echo Cancelation");
 $descrip['echotraining']=_("Echo Training Time (ms)");
 $descrip['echocancelwhenbridged']=_("Use Echo Cancelation On Bridged Calls");
@@ -78,7 +77,7 @@ if ((isset($pbxupdate)) && ($update == "seen")) {
   if ($resetinterval == 0) {
      $resetinterval="never";
   }
-  pg_query("UPDATE zapgroup SET signalling='" . $signalling . "',jitterbuffers='" . $jitterbuffers . "',faxdetect='" . $faxdetect . "',
+  pg_query("UPDATE zapgroup SET signalling='" . $signalling . "',jitterbuffers='" . $jitterbuffers . "',
                                 echocancel='" . $echocancel . "',echotraining='" . $echotraining . "',echocancelwhenbridged='" . $echocancelwhenbridged . "',
                                 toneduration='" . $toneduration . "',relaxdtmf='" . $relaxdtmf . "',dtmfduplicatedelay='" . $dtmfduplicatedelay . "',
                                 busydetect='" . $busydetect . "',busycount='" . $busycount . "',busypattern='" . $busypattern . "',
@@ -90,7 +89,6 @@ if ((isset($pbxupdate)) && ($update == "seen")) {
                                 priindication='" . $priindication . "',usecallingpres='" . $usecallingpres . "',restrictcid='" . $restrictcid . "'
                             WHERE zaptrunk='" . $zaptrunk . "'");
   unset($signalling);
-  unset($faxdetect);
   unset($cidsignalling);
   unset($cidsignalling);
   unset($cidstart);
@@ -106,11 +104,6 @@ $signalling['fxs_gs']=_("Ground Start");
 $signalling['pri_cpe']=_("PRI (CPE)");
 $signalling['pri_net']=_("PRI (NET)");
 $signalling['mfcr2']=_("MFC/R2");
-
-$faxdetect['no']=_("None");
-$faxdetect['incoming']=_("Incoming");
-$faxdetect['outgoing']=_("Outgoing");
-$faxdetect['both']=_("Both");
 
 $cidsignalling['bell']=_("Bell 202");
 $cidsignalling['v23']=_("v.23");
@@ -131,7 +124,7 @@ $priindication['inband']=_("In Band");
 $priindication['outofband']=_("Out Of Band");
 
 
-$qgetzdata=pg_query($db,"SELECT signalling,jitterbuffers,faxdetect,echocancel,echotraining,echocancelwhenbridged,toneduration,relaxdtmf,
+$qgetzdata=pg_query($db,"SELECT signalling,jitterbuffers,echocancel,echotraining,echocancelwhenbridged,toneduration,relaxdtmf,
                                 dtmfduplicatedelay,busydetect,busycount,busypattern,callprogress,progzone,ringtimeout,usecallerid,cidsignalling,
                                 cidstart,sendcalleridafter,answeronpolarityswitch,polarityonanswerdelay,hanguponpolarityswitch,switchtype,
                                 overlapdial,resetinterval,priindication,usecallingpres,restrictcid

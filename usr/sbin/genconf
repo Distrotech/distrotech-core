@@ -13961,7 +13961,7 @@ tcpbindaddr=$localip
 transport=udp,tcp,tls
 t38pt_udptl=yes,redundancy
 callcounter=yes
-faxdetect=yes
+faxdetect=no
 t38pt_rtp=yes
 t38pt_tcp=no
 rtptimeout=60
@@ -14503,7 +14503,7 @@ jitterbuffer_upper_threshold=0
 max_incoming=-1
 max_outgoing=-1
 faxdetect_context=ddi
-faxdetect=incoming
+faxdetect=no
 faxdetect_timeout=60
 msns=*
 __EOF__
@@ -14641,7 +14641,7 @@ sub printzapata() {
               if ($pgrp{$span->proto} eq "") {
                 $pgrp{$span->proto}=1;
               }
-              $dbh->do("INSERT INTO zapgroup (zaptrunk,signalling,faxdetect,busydetect,switchtype) VALUES (" . $pgrp{$span->proto} . ",'pri_cpe','no','no','" . $pristype . "')");
+              $dbh->do("INSERT INTO zapgroup (zaptrunk,signalling,busydetect,switchtype) VALUES (" . $pgrp{$span->proto} . ",'pri_cpe','no','" . $pristype . "')");
             }
           }
           if ($pgrp{$span->proto} > 0) {
@@ -14747,7 +14747,7 @@ sub printzapata() {
           if (@dagrp < 4) {
             $agrp=@dagrp[0];
           }
-          $dbh->do("INSERT INTO zapgroup (zaptrunk,faxdetect) VALUES (" . $agrp . ",'no')");
+          $dbh->do("INSERT INTO zapgroup (zaptrunk) VALUES (" . $agrp . ")");
         }
       }
       $achan=join(",",@fxo);
@@ -14908,6 +14908,7 @@ __EOB__
   while(@row=$getzap->fetchrow_array) {
     print ZC ";Digium Trunk Group @row[0]\n";
     print ZC "group=@row[0]\n";
+    print ZC "faxdetect=no\n";
     for($rcnt=1;$rcnt<=$#row;$rcnt++) {
       $name=$getzap->{NAME}[$rcnt];
       if ($name eq "overlapdial") {
@@ -14917,7 +14918,9 @@ __EOB__
           print ZC "immediate=yes\n";
         }
       }
-      print ZC $name . "=" . $row[$rcnt] . "\n";
+      if ($name ne "faxdetect") {
+        print ZC $name . "=" . $row[$rcnt] . "\n";
+      }
     }
     $zapchansq="SELECT rxgain,txgain,channel FROM zapchan WHERE zaptrunk ='" . @row[0] . "'";
     $getzapc=$dbh->prepare($zapchansq);
@@ -15228,7 +15231,7 @@ allow=gsm
 allow=ulaw
 allow=alaw
 t38support=yes
-faxdetect=yes
+faxdetect=no
 dtmfmode=rfc2833
 gatekeeper=$localip
 h323id=$h323gwid
