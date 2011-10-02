@@ -1,0 +1,771 @@
+LoadModule actions_module		modules/mod_actions.so
+LoadModule alias_module			modules/mod_alias.so
+LoadModule asis_module			modules/mod_asis.so
+LoadModule auth_basic_module		modules/mod_auth_basic.so
+LoadModule auth_digest_module		modules/mod_auth_digest.so
+LoadModule authn_anon_module		modules/mod_authn_anon.so
+LoadModule authn_dbm_module		modules/mod_authn_dbm.so
+LoadModule authn_file_module		modules/mod_authn_file.so
+LoadModule authnz_ldap_module		modules/mod_authnz_ldap.so
+LoadModule authz_groupfile_module	modules/mod_authz_groupfile.so
+LoadModule authz_host_module		modules/mod_authz_host.so
+LoadModule authz_owner_module		modules/mod_authz_owner.so
+LoadModule authz_user_module		modules/mod_authz_user.so
+LoadModule autoindex_module		modules/mod_autoindex.so
+LoadModule cache_module			modules/mod_cache.so
+LoadModule cern_meta_module		modules/mod_cern_meta.so
+LoadModule cgi_module			modules/mod_cgi.so
+LoadModule dbd_module			modules/mod_dbd.so
+LoadModule dir_module			modules/mod_dir.so
+LoadModule disk_cache_module		modules/mod_disk_cache.so
+LoadModule env_module			modules/mod_env.so
+LoadModule expires_module		modules/mod_expires.so
+LoadModule file_cache_module		modules/mod_file_cache.so
+LoadModule headers_module		modules/mod_headers.so
+LoadModule include_module		modules/mod_include.so
+LoadModule info_module			modules/mod_info.so
+LoadModule ldap_module			modules/mod_ldap.so
+LoadModule log_config_module		modules/mod_log_config.so
+LoadModule log_forensic_module		modules/mod_log_forensic.so
+LoadModule mem_cache_module		modules/mod_mem_cache.so
+LoadModule mime_magic_module		modules/mod_mime_magic.so
+LoadModule mime_module			modules/mod_mime.so
+LoadModule negotiation_module		modules/mod_negotiation.so
+LoadModule perl_module			modules/mod_perl.so
+LoadModule php5_module			modules/libphp5.so
+LoadModule proxy_module			modules/mod_proxy.so
+LoadModule proxy_ajp_module		modules/mod_proxy_ajp.so
+LoadModule proxy_balancer_module	modules/mod_proxy_balancer.so
+LoadModule proxy_connect_module		modules/mod_proxy_connect.so
+LoadModule proxy_ftp_module		modules/mod_proxy_ftp.so
+LoadModule proxy_http_module		modules/mod_proxy_http.so
+LoadModule python_module		modules/mod_python.so
+LoadModule rewrite_module		modules/mod_rewrite.so
+LoadModule ruby_module			modules/mod_ruby.so
+LoadModule setenvif_module		modules/mod_setenvif.so
+LoadModule speling_module		modules/mod_speling.so
+LoadModule ssl_module			modules/mod_ssl.so
+LoadModule status_module		modules/mod_status.so
+LoadModule suexec_module		modules/mod_suexec.so
+LoadModule userdir_module		modules/mod_userdir.so
+LoadModule usertrack_module		modules/mod_usertrack.so
+LoadModule vhost_alias_module		modules/mod_vhost_alias.so
+LoadModule dav_module                   modules/mod_dav.so
+LoadModule dav_svn_module               modules/mod_dav_svn.so
+LoadModule authz_svn_module             modules/mod_authz_svn.so
+
+AccessFileName .htaccess
+AddCharset Big5         .Big5    .big5
+AddCharset CP866        .cp866
+AddCharset ISO-2022-JP .jis
+AddCharset ISO-2022-KR .iso-kr
+AddCharset ISO-8859-2 .iso-pl
+AddCharset ISO-8859-5   .iso-ru
+AddCharset ISO-8859-8 .iso8859-8
+AddCharset KOI8-R       .koi8-r
+AddCharset UCS-2        .ucs2
+AddCharset UCS-4        .ucs4
+AddCharset UTF-8        .utf8
+AddCharset WINDOWS-1251 .cp-1251
+AddDescription "GZIP compressed document" .gz
+AddDescription "GZIP compressed tar archive" .tgz
+AddDescription "tar archive" .tar
+AddEncoding x-compress Z
+AddEncoding x-gzip gz tgz
+AddIcon /icons/a.gif .ps .ai .eps
+AddIcon /icons/back.gif ..
+AddIcon /icons/binary.gif .bin .exe
+AddIcon /icons/binhex.gif .hqx
+AddIcon /icons/blank.gif ^^BLANKICON^^
+AddIcon /icons/bomb.gif core
+AddIcon /icons/c.gif .c
+AddIcon /icons/compressed.gif .Z .z .tgz .gz .zip
+AddIcon /icons/dvi.gif .dvi
+AddIcon /icons/f.gif .for
+AddIcon /icons/folder.gif ^^DIRECTORY^^
+AddIcon /icons/hand.right.gif README
+AddIcon /icons/layout.gif .html .shtml .htm .pdf
+AddIcon /icons/p.gif .pl .py
+AddIcon /icons/script.gif .conf .sh .shar .csh .ksh .tcl
+AddIcon /icons/tar.gif .tar
+AddIcon /icons/tex.gif .tex
+AddIcon /icons/text.gif .txt
+AddIcon /icons/uuencoded.gif .uu
+AddIcon /icons/world2.gif .wrl .wrl.gz .vrml .vrm .iv
+AddIconByEncoding (CMP,/icons/compressed.gif) x-compress x-gzip
+AddIconByType (IMG,/icons/image2.gif) image/*
+AddIconByType (SND,/icons/sound2.gif) audio/*
+AddIconByType (TXT,/icons/text.gif) text/*
+AddIconByType (VID,/icons/movie.gif) video/*
+AddLanguage ca .ca
+AddLanguage cz .cz
+AddLanguage da .dk
+AddLanguage de .de
+AddLanguage el .el
+AddLanguage en .en
+AddLanguage es .es
+AddLanguage et .ee
+AddLanguage fr .fr
+AddLanguage he .he
+AddLanguage it .it
+AddLanguage ja .ja
+AddLanguage kr .kr
+AddLanguage ltz .lu
+AddLanguage nl .nl
+AddLanguage nn .nn
+AddLanguage no .no
+AddLanguage pl .po
+AddLanguage pt .pt
+AddLanguage pt-br .pt-br
+AddLanguage ru .ru
+AddLanguage sv .se
+AddLanguage tw .tw
+AddLanguage zh-tw .tw
+AddType application/x-httpd-php .php
+AddType application/x-httpd-php .php3
+AddType application/x-httpd-php-source .phps 
+AddType application/x-ns-proxy-autoconfig .pac
+AddType application/x-pkcs7-crl    .crl
+AddType application/x-pkcs7-crl    .p7b
+AddType application/x-ssh-key .ppk
+AddType application/x-tar .tgz
+AddType application/x-x509-ca-cert .crt
+AddType application/x-x509-ca-cert .pem
+BrowserMatch "JDK/1\.0" force-response-1.0
+BrowserMatch "Java/1\.0" force-response-1.0
+BrowserMatch "MSIE 4\.0b2;" nokeepalive downgrade-1.0 force-response-1.0
+BrowserMatch "Mozilla/2" nokeepalive
+BrowserMatch "RealPlayer 4\.0" force-response-1.0
+CheckSpelling On
+CustomLog /var/log/access_log combined
+DefaultIcon /icons/unknown.gif
+DefaultType text/html
+DirectoryIndex index.php index.html index.htm home.html home.htm default.asp default.html default.htm index.php3 postinfo.html
+DocumentRoot "/var/spool/apache/htdocs"
+ErrorLog /var/log/error_log
+ExtendedStatus On
+ForceLanguagePriority Prefer Fallback
+Group www
+Group www
+HeaderName HEADER
+HostnameLookups Off
+IndexIgnore .??* *~ *# HEADER* README* RCS CVS *,v *,t usage cgi-bin _private images .htaccess */.??* */HEADER* */README* */_vti _vti* postinfo.html
+IndexOptions FancyIndexing
+KeepAlive On
+KeepAliveTimeout 20
+LDAPCacheTTL 300
+LDAPOpCacheTTL 300
+LDAPTrustedMode SSL
+LDAPVerifyServerCert off
+LanguagePriority en da nl et fr de el it ja kr no pl pt pt-br ru ltz ca es sv tw
+Listen 192.168.1.4:80
+Listen 443
+Listen 666
+LogFormat "%V %h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
+LogFormat "%V %h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %{SSL_PROTOCOL}x %{SSL_CIPHER}x" sslcombined
+LogFormat "%V %h %l %u %t \"%r\" %>s %b" common
+LogFormat "%{Referer}i -> %U" referer
+LogFormat "%{User-agent}i" agent
+LogLevel notice
+MIMEMagicFile /opt/apache2/conf/magic
+ServerLimit 512
+MaxClients 512
+MaxKeepAliveRequests 0
+MaxRequestsPerChild 0
+MaxSpareServers 10
+MinSpareServers 5
+PerlModule ModPerl::RegistryPrefork
+PerlModule ModPerl::PerlRun
+PerlModule ModPerl::Registry
+PidFile /var/run/httpd.pid
+ProxyRequests Off
+#SetEnv proxy-nokeepalive 1
+#ProxyPreserveHost On
+ProxyPassInterpolateEnv On
+AllowCONNECT 443 666
+ReadmeName README
+RubyRequire apache/ruby-run
+RubyRequire apache/erb-run
+ScoreBoardFile /var/run/httpd.scoreboard
+ServerName LOCAL_SERVER_NAME
+ServerSignature On
+SSLMutex  file:/var/run/ssl_mutex
+SSLPassPhraseDialog  builtin
+SSLRandomSeed startup builtin
+SSLRandomSeed connect builtin
+SSLSessionCache         dbm:/var/run/ssl_scache
+StartServers 5
+#SuexecUserGroup nobody nogroup
+Timeout 300
+TypesConfig /opt/apache2/conf/mime.types
+UseCanonicalName Off
+UserDir public_html
+User www
+User www
+
+<Files ~ "^\.ht">
+    Order allow,deny
+    Deny from all
+    Satisfy All
+</Files>
+
+<Files *.html>
+  ForceType text/html
+</Files>
+
+<Files ~ "\.(inc|sql)$">
+    Order allow,deny
+    Deny from all
+    Satisfy All
+</Files>
+
+<Directory />
+  Options None
+  AllowOverride None
+</Directory>
+
+<Directory "/var/spool/apache/htdocs">
+  Options Indexes MultiViews FollowSymLinks
+  AllowOverride AuthConfig Limit Indexes
+  php_admin_value safe_mode Off
+  php_flag display_errors Off
+  CheckSpelling On
+  Order allow,deny
+  Allow from all
+  <Limit GET POST>
+    order deny,allow
+    deny from all
+    allow from all
+  </Limit>
+  <Limit PUT DELETE>
+    order deny,allow
+    deny from all
+  </Limit>
+  <Files ~ "\.erb">
+    SetHandler ruby-object
+    RubyHandler Apache::ERbRun.instance
+  </Files>
+</Directory>
+
+<DirectoryMatch "^/var/spool/apache/htdocs/(cshop|ccadmin|ticket)">
+  php_admin_value register_globals Off
+</DirectoryMatch>
+
+<Files "/var/spool/apache/htdocs/ns/status/*">
+  ForceType text/plain
+</Files>
+
+<Directory "/var/spool/apache/htdocs/crm">
+  AllowOverride All
+</Directory>
+
+<Directory "/var/spool/apache/htdocs/polycom">
+  Script PUT /polycom/polyput.php
+  <Limit PUT DELETE>
+    order deny,allow
+    deny from all
+    allow from all
+  </Limit>
+</Directory>
+
+<DirectoryMatch "^/var/spool/apache/htdocs/(polycom/logs|ticket/setup|areski|soap|ssl|logs|cgi-bin/admin|ns)/">
+  require ldap-group cn=Admin Access,ou=Admin
+</DirectoryMatch>
+
+#<DirectoryMatch "^/var/spool/apache/htdocs/(ccadmin)/">
+#  require ldap-group cn=Call Centre Admin,ou=Admin
+#</DirectoryMatch>
+
+<DirectoryMatch "^/var/spool/apache/htdocs/(auth|rrdgraph|mrtg|cgi-bin/auth)">
+  require valid-user
+</DirectoryMatch>
+
+<DirectoryMatch "(^/var/spool/samba/share)|(^/usr/share/nagios)|(^/var/spool/apache/htdocs/(polycom/logs|ticket/setup|areski|soap|ssl|logs|auth|rrdgraph|mrtg|cgi-bin/admin|ns))">
+  AllowOverride none
+  AuthType Basic
+  AuthBasicProvider ldap
+  AuthLDAPUrl ldaps://127.0.0.1
+  AuthLDAPBindDN uid=admin,ou=users
+  AuthLDAPBindPassword admin
+  AuthzLDAPAuthoritative on
+  AuthName "User Login"
+</DirectoryMatch>
+
+<Directory "/var/spool/apache/htdocs/_vti_bin">
+  Options Indexes MultiViews
+  AllowOverride AuthConfig Limit Indexes Options
+  php_admin_value safe_mode Off
+  php_flag display_errors Off
+  Order allow,deny
+  Allow from all
+</Directory>
+
+<Directory "/var/spool/apache/htdocs/horde/config">
+  Options None
+  AllowOverride None
+</Directory>
+
+<Directory "/var/spool/apache/htdocs/horde/*/config">
+  Options None
+  AllowOverride None
+</Directory>
+
+<Directory "/var/spool/samba/share">
+  Options Indexes MultiViews
+  AllowOverride none
+  require valid-user
+  Order allow,deny
+  Allow from all
+  CheckSpelling On
+  php_admin_value engine Off
+</Directory>
+
+<DirectoryMatch "^(/var/home/././[^\/]+/[^\/]+)|(/var/web/././[^\/]+/[^\/]+)">
+  Options Indexes MultiViews FollowSymLinks
+  AllowOverride AuthConfig Limit Indexes Options
+  Order allow,deny
+  Allow from all
+  CheckSpelling On
+  php_admin_value register_globals Off
+  php_flag display_errors Off
+</DirectoryMatch>
+
+<DirectoryMatch "^(/var/spool/apache/cgi-bin)|(/usr/share/nagios/cgi-bin)|(/var/home/././[^\/]+/[^\/]+/cgi-bin)|(/var/web/././[^\/]+/[^\/]+/cgi-bin)">
+  Options +ExecCGI -Indexes -MultiViews
+  SetHandler cgi-script
+</DirectoryMatch>
+
+<DirectoryMatch "^(/var/home/././[^\/]+/_vti_bin)|(/var/web/././[^\/]+/_vti_bin)">
+  ForceType text/html
+</DirectoryMatch>
+
+<Directory "/opt/apache2/icons">
+  Options Indexes MultiViews FollowSymLinks
+  AllowOverride None
+  Order allow,deny
+  Allow from all
+</Directory>
+
+<Directory "/opt/apache2/manual">
+  Options Indexes MultiViews
+  AllowOverride None
+  <Files *.html>
+    SetHandler type-map
+  </Files>
+  <Files *.html.tr.utf8>
+    ForceType text/html
+  </Files>
+  SetEnvIf Request_URI ^/manual/(de|en|es|fr|ja|ko|pt-br|ru|tr)/ prefer-language=$1
+  RedirectMatch 301 ^/manual(?:/(de|en|es|fr|ja|ko|pt-br|ru|tr)){2,}(/.*)?$ /manual/$1$2
+  Order allow,deny
+  Allow from all
+</Directory>
+
+<LocationMatch "^/(server-status|server-info|perl-status|cgi-perl|server-balance|svn)">
+  AuthType Basic
+  AuthBasicProvider ldap
+  AuthLDAPUrl ldaps://127.0.0.1
+  AuthLDAPBindDN uid=admin,ou=users
+  AuthLDAPBindPassword admin
+  AuthzLDAPAuthoritative on
+  AuthName "User Login"
+</LocationMatch>
+
+<LocationMatch "^/cgi-bin/.*\.py">
+  AddHandler mod_python .py
+  PythonHandler mod_python.publisher
+  PythonDebug Off
+</LocationMatch>
+
+<LocationMatch "^/(cgi-perl|cgi-bin/.*\.pl)">
+  SetHandler perl-script
+  PerlResponseHandler ModPerl::PerlRun
+  PerlOptions +ParseHeaders +GlobalRequest
+</LocationMatch>
+
+<Directory /var/spool/apache/htdocs/viewsvn>
+  AllowOverride FileInfo Options
+  AddHandler mod_python .py
+  PythonHandler handler
+  PythonDebug Off
+</Directory>
+
+<Location /svn>
+  DAV svn
+  SVNPath /var/spool/svn
+  SVNIndexXSLT "/xslt/svnindex.xsl"
+  AuthzSVNAccessFile /var/spool/svn/access
+  <Limit GET OPTIONS PROPFIND REPORT>
+    Require valid-user
+    Satisfy Any
+    order deny,allow
+    deny from all
+    allow from env=HTTPS_OFF
+  </Limit>
+  <LimitExcept GET OPTIONS PROPFIND REPORT>
+    Require valid-user
+    Satisfy All
+    order deny,allow
+    deny from all
+    allow from env=HTTPS_ON
+  </LimitExcept>
+</Location>
+
+<Location /cgi-perl/admin>
+  require ldap-group cn=Admin Access,ou=Admin
+</Location>
+
+<Location /cgi-perl/auth>
+  require valid-user
+</Location>
+
+<LocationMatch "^/(cgi-bin/.*\.rbx|cgi-bin/.*\.rb)">
+  AddHandler ruby-object .rbx
+  AddHandler ruby-object .rb
+  SetHandler ruby-object
+  RubyHandler Apache::RubyRun.instance
+</LocationMatch>
+
+<Location /perl>
+  SetHandler perl-script
+  PerlResponseHandler ModPerl::Registry
+  Order allow,deny
+  Allow from all
+</Location>
+
+<Location /server-balance>
+  SetHandler balancer-manager
+  Order deny,allow
+  Deny from all
+  Allow from all
+  require ldap-group cn=Admin Access,ou=Admin
+</Location> 
+
+<Location /server-status>
+  SetHandler server-status
+  Order deny,allow
+  Deny from all
+  Allow from all
+  require ldap-group cn=Admin Access,ou=Admin
+</Location>
+
+<Location /server-info>
+  SetHandler server-info
+  Order deny,allow
+  Deny from all
+  Allow from all
+  require ldap-group cn=Admin Access,ou=Admin
+</Location>
+
+<Location /perl-status>
+  SetHandler modperl
+  PerlResponseHandler Apache2::Status
+  PerlOptions -ParseHeaders -GlobalRequest
+  Order deny,allow
+  Deny from all
+  Allow from all
+  require ldap-group cn=Admin Access,ou=Admin
+</Location>
+
+RewriteEngine On
+RewriteLog /var/log/rewrite.log
+RewriteLogLevel 0
+RewriteMap  lowercase  int:tolower
+RewriteMap  vhost dbm=gdbm:/etc/apache/vhosts2
+
+#Web Proxy Auto Detect
+RewriteCond %{HTTP_HOST}   ^([^.]*).*$
+RewriteCond %{REQUEST_URI} ^/wpad.da$ [OR]
+RewriteCond %{REQUEST_URI} ^/wpad.dat$ [OR]
+RewriteCond %{REQUEST_URI} ^/proxy.pa$ [OR]
+RewriteCond %{REQUEST_URI} ^/proxy.pac$ [OR]
+RewriteCond %1             ^wpad$
+RewriteRule /(.*)$ /var/spool/apache/htdocs/proxy.pac [L]
+
+#Virtual Hosting Rewrite
+RewriteCond %{REQUEST_URI} !^/cgi-bin
+RewriteCond %{REQUEST_URI} !^/(icons)|(horde)|([SOGsog]{4})
+RewriteCond ${lowercase:%{HTTP_HOST}} ^([^:]*).*$
+RewriteCond ${vhost:%1|NULL} -d
+RewriteRule ^/(.*)$ ${vhost:%1}/$1 [L]
+
+#Virtual Hosting CGI-BIN Rewrite Need to put this in owners userdir script folder
+RewriteCond %{REQUEST_URI} ^/cgi-bin
+RewriteCond ${lowercase:%{HTTP_HOST}} ^([^:]*).*$
+RewriteCond ${vhost:%1|NULL} -d
+RewriteRule ^/(.*)$ ${vhost:%1}/$1 [L,T=application/x-httpd-cgi]
+
+#Virtual Hosting Override
+RewriteCond %{REQUEST_URI} ^/(icons)|(horde)|([SOGsog]{4})
+RewriteCond ${lowercase:%{HTTP_HOST}} ^([^:]*).*$
+RewriteCond ${vhost:%1|NULL}/%{REQUEST_URI} -d [OR]
+RewriteCond ${vhost:%1|NULL}/%{REQUEST_URI} -f [OR]
+RewriteCond ${vhost:%1|NULL}/%{REQUEST_URI} -l
+RewriteRule ^/(.*)$ ${vhost:%1}/$1 [L]
+
+#Nagios
+RewriteRule ^/nagios$ /nagios/ [R,L]
+RewriteRule ^/nagios/cgi-bin/(.*)$ /usr/share/nagios/cgi-bin/$1 [L,T=application/x-httpd-cgi]
+RewriteRule ^/nagios/(.*)$ /usr/share/nagios/$1 [L]
+
+#Icons And Manual
+RewriteRule ^/((icons)|(manual))$ /$1/ [R,L]
+RewriteRule ^/icons/(.*)$ /opt/apache2/icons/$1 [L]
+RewriteRule ^/manual(?:/(?:de|en|es|fr|ja|ko|pt-br|ru|tr))?(/.*)?$	/opt/apache2/manual$1 [L]
+
+#SOGo Magic
+RewriteCond %{REQUEST_URI} !^/SOGo
+RewriteCond %{REQUEST_URI} ^/[SOGsog]{4}
+RewriteRule ^/[SOGsog]{4}(.*) /SOGo$1 [R]
+
+RewriteRule ^/SOGo.woa/WebServerResources/(.*)$ /usr/GNUstep/Local/Library/SOGo/WebServerResources/$1 [L]
+RewriteRule ^/SOGo/so/ControlPanel/Products/(.*)/Resources/(.*) /usr/GNUstep/System/Library/SOGo/$1.SOGo/Resources/$2 [L]
+
+#Support For Phones
+RewriteRule ^/snom([MP0-9]+)-([0-9A-Fa-f]+).htm /snom/snom.php?phone=$1&mac=$2 [L,T=application/x-httpd-php]
+RewriteRule ^/m3/settings/([0-9A-Fa-f]+).cfg /snom/snomm3.php?mac=$1 [L,T=application/x-httpd-php]
+RewriteRule ^/m9/([0-9A-Fa-f]+).cfg /snom/snomm9.php?mac=$1 [L,T=application/x-httpd-php]
+RewriteRule snom-m9-([0-9A-Fa-f]+).xml /snom/snomm9.php?mac=$1 [L,T=application/x-httpd-php]
+RewriteRule ^/images/snom-([0-9]+)-([xk]p).png /snom/template.php?exten=$1&type=$2 [L,T=application/x-httpd-php]
+RewriteRule ^/images/snom-([0-9]+)-([xk]p[1-9]).png /snom/template.php?exten=$1&type=$2 [L,T=application/x-httpd-php]
+RewriteRule ^/mp202-([0-9A-Fa-f_]+).conf /linksys/mp202.php?&mac=$1 [L,T=application/x-httpd-php]
+RewriteRule ^/init-([0-9A-Fa-f:]+).cfg /linksys/init.php?&mac=$1 [L,T=application/x-httpd-php]
+RewriteRule ^/init.cfg /linksys/init.php [L,T=application/x-httpd-php]
+RewriteRule ^/([0-9A-Fa-f]{12})-phone.cfg /polycom/config.php?mac=$1 [L,T=application/x-httpd-php]
+RewriteRule ^/([0-9A-Fa-f]{12})-(.*).log /polycom/$1-$2.log [R,L]
+RewriteRule ^/bootrom.ld /polycom/bootrom.ld [R,L]
+RewriteRule ^/SoundPointIPWelcome.wav /polycom/SoundPointIPWelcome.wav [R,L]
+RewriteRule ^/polycom/([0-9A-Fa-f]{12})-phone.cfg /polycom/config.php?mac=$1 [L,T=application/x-httpd-php]
+RewriteRule ^/polycom/([0-9A-Fa-f]{12})-directory.xml /polycom/directory.php?mac=$1 [L,T=application/x-httpd-php]
+RewriteRule ^/SoundPointIPLocalization(.*) /polycom/SoundPointIPLocalization$1 [R,L]
+RewriteCond %{HTTP_USER_AGENT}  ^yealink
+RewriteRule ^/([0-9A-Fa-f]{12}).cfg /yealink/macconf.php?mac=$1 [L,T=application/x-httpd-php]
+RewriteCond %{HTTP_USER_AGENT}  ^yealink
+RewriteRule ^/y00000000000([0-9]).cfg /yealink/generic.php?version=$1 [L,T=application/x-httpd-php]
+
+RewriteRule ^/([0-9A-Fa-f]{12}).cfg /polycom/masterconf.php?mac=$1 [L,T=application/x-httpd-php]
+
+#CSV Download Magic
+RewriteRule ^/auth/gettariff.csv$ /var/spool/apache/htdocs/cshop/index.php [L,T=application/x-httpd-php]
+RewriteRule ^/auth/csallrep.csv$ /var/spool/apache/htdocs/cshop/index.php [L,T=application/x-httpd-php]
+RewriteRule ^/auth/cdr-([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{4})([0-9]{2})([0-9]{2}).csv$ /var/spool/apache/htdocs/auth/getcdr.php?start=$1-$2-$3&end=$4-$5-$6 [L,T=application/x-httpd-php]
+RewriteRule ^/auth/(.*).csv(.*)$ /var/spool/apache/htdocs/auth/index.php$3 [L,T=application/x-httpd-php]
+RewriteRule ^/auth/(.*).csv /var/spool/apache/htdocs/auth/index.php [L,T=application/x-httpd-php]
+RewriteRule ^/csv/(.*).csv$ /var/spool/apache/htdocs/cdr/csvdownload.php?filetype=$1 [L,T=application/x-httpd-php]
+RewriteRule ^/reception/(.*).csv$ /var/spool/apache/htdocs/reception/$1.php [L,T=application/x-httpd-php]
+
+#CDR CSV
+RewriteRule ^/cshop/([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{4})([0-9]{2})([0-9]{2}).zip$ /var/spool/apache/htdocs/cshop/tozip.php?start=$1-$2-$3&end=$4-$5-$6 [L,T=application/x-httpd-php]
+
+
+#Voice Logging Magic
+RewriteRule ^/cdr/logdload/(.*)/(.*)/(.*)$ /var/spool/apache/htdocs/auth/getlog.php?logfile=$1/$2/$3&type=1 [L,T=application/x-httpd-php]
+
+#Rewite a styled page this may not be usefull any more
+RewriteCond %{REQUEST_URI} ^/([^\/]+)/$
+RewriteCond /var/spool/apache/htdocs/%1/style.css -f
+RewriteRule ^/([^\/]+)/ $1/index.php?style=$1 [R,L]
+
+#X.509 Public Certificate
+RewriteCond %{REQUEST_URI} ^/X509/(.*)$
+RewriteCond %{REQUEST_URI} !^/X509/(.*).p7b$
+RewriteCond /var/spool/apache/htdocs/X509/%1 -f
+RewriteRule ^/X509/(.*)$ /var/spool/apache/htdocs/ssl/signed.php?cname=$1 [L,T=application/x-httpd-php]
+
+#X.509 CA Certificates
+RewriteCond %{REQUEST_URI} ^/X509CA/(.*)$
+RewriteCond %{REQUEST_URI} !^/X509CA/(.*).p7b$
+RewriteCond /var/spool/apache/htdocs/X509CA/%1 -f
+RewriteRule ^/X509CA/(.*) /var/spool/apache/htdocs/ssl/signed.php?cname=$1 [L,T=application/x-httpd-php]
+
+RewriteRule ^/ssl/server.req$ /var/spool/apache/htdocs/ssl/req.php [L,T=application/x-httpd-php]
+RewriteRule ^/ssl/ca.req$ /var/spool/apache/htdocs/ssl/careq.php [L,T=application/x-httpd-php]
+RewriteRule ^/cert/ca.pem$ /var/spool/apache/htdocs/loadca.php [L,T=application/x-httpd-php]
+RewriteRule ^/cert/crl.pem$ /var/spool/apache/htdocs/loadcrl.php [L,T=application/x-httpd-php]
+RewriteRule ^/cert/renew(.*)$ /var/spool/apache/htdocs/ldap/cert2ldap.php$1 [L,T=application/x-httpd-php]
+RewriteRule ^/cert/(.*).key$ /var/spool/apache/htdocs/auth/cert.php?euser=$1&info=userPKCS12&keyt=1 [L,T=application/x-httpd-php]
+RewriteRule ^/cert/(.*).p12$ /var/spool/apache/htdocs/auth/cert.php?euser=$1&info=userPKCS12&keyt=12 [L,T=application/x-httpd-php]
+RewriteRule ^/cert/(.*).crt$ /var/spool/apache/htdocs/ldap/cert.php?euser=$1&info=userCertificate [L,T=application/x-httpd-php]
+RewriteRule ^/cert/(.*).ssh$ /var/spool/apache/htdocs/ldap/cert.php?euser=$1&info=userCertificate&pkey=ssh [T=application/x-httpd-php]
+RewriteRule ^/cert/(.*).p7b$ /var/spool/apache/htdocs/ldap/cert.php?euser=$1&info=userSMIMECertificate  [L,T=application/x-httpd-php]
+RewriteRule ^/cert/(.*).pub$ /var/spool/apache/htdocs/ldap/cert.php?euser=$1&info=userCertificate&pkey=pub [L,T=application/x-httpd-php]
+RewriteRule ^/openvpn/(.*).zip$ /var/spool/apache/htdocs/auth/openvpn.php?euser=$1 [L,T=application/x-httpd-php]
+RewriteRule ^/photo/([a-zA-Z0-9\.-]+).jpg(.*) /var/spool/apache/htdocs/ldap/photo.php?euser=$1$2 [L,T=application/x-httpd-php]
+RewriteRule ^/photo/([a-zA-Z0-9\.-]+)_([0-9]+).jpg(.*) /var/spool/apache/htdocs/ldap/photo.php?euser=$1&pcount=$2$3 [L,T=application/x-httpd-php]
+RewriteRule ^/photo/([a-zA-Z0-9\.-]+)_album.html(.*) /var/spool/apache/htdocs/ldap/album.php?euser=$1$2 [L,T=application/x-httpd-php]
+
+#Rewrite for /<USERNAME> For non special hosts only Web Folders
+RewriteCond ${lowercase:%{HTTP_HOST}}   ^([^.]*).*$
+RewriteCond %1             !^(callshop)|(voip)|(horde)|(mail)|(ticket)|(crm)|(forum)
+RewriteCond %{REQUEST_URI} ^/(.)(.)([^\/]+)
+RewriteCond /var/spool/apache/htdocs/%1%2%3 !-d
+RewriteCond /var/web/%1/%2/%1%2%3/public_html -d
+RewriteRule ^/[^\/]+(.*) /var/web/%1/%2/%1%2%3/public_html$1 [L]
+
+#Rewrite for /<USERNAME> For non special hosts only
+RewriteCond ${lowercase:%{HTTP_HOST}}   ^([^.]*).*$
+RewriteCond %1             !^(callshop)|(voip)|(horde)|(mail)|(ticket)|(crm)|(forum)
+RewriteCond %{REQUEST_URI} ^/(.)(.)([^\/]+)
+RewriteCond /var/spool/apache/htdocs/%1%2%3 !-d
+RewriteCond /var/home/%1/%2/%1%2%3/public_html -d
+RewriteRule ^/[^\/]+(.*) /var/home/%1/%2/%1%2%3/public_html$1 [L]
+
+#Myself
+RewriteCond ${lowercase:%{HTTP_HOST}} ^LOCAL_SERVER_NAME
+RewriteCond %{REQUEST_URI} !^/(cgi-bin)|(cgi-perl)|(perl)|(share)|(SOGo)|(\*docroot\*)|(viewsvn)|(svn)|(~)
+RewriteRule ^/(.*)$ /var/spool/apache/htdocs/$1 [L]
+
+#Myself CGI
+RewriteCond ${lowercase:%{HTTP_HOST}} ^LOCAL_SERVER_NAME
+RewriteCond %{REQUEST_URI} ^/(cgi-bin)|(cgi-perl)|(perl)
+RewriteRule ^/([^\/]*)/(.*) /var/spool/apache/cgi-bin/$2 [L,T=application/x-httpd-cgi]
+
+#Myself Share Folder SSL
+RewriteCond ${lowercase:%{HTTP_HOST}} ^LOCAL_SERVER_NAME
+RewriteCond %{REQUEST_URI} ^/share
+RewriteCond ${lowercase:%{HTTPS}} ^on$
+RewriteRule ^/(.*) /var/spool/samba/$1 [L]
+
+#Myself Share Folder NO SSL
+RewriteCond ${lowercase:%{HTTP_HOST}} ^LOCAL_SERVER_NAME(:666$)|($)
+RewriteCond %{REQUEST_URI} ^/share
+RewriteRule ^/(.*) https://%{HTTP_HOST}:666/$1 [R,L]
+
+#VOIP billing engine must be https://
+RewriteCond %{HTTP_HOST}   ^([^.]*).*$
+RewriteCond %1             ^(callshop)|(voip)$
+RewriteCond ${lowercase:%{HTTPS}}	^off$
+RewriteRule ^/(.*)$ https://%{HTTP_HOST}:666/$1 [R,L]
+
+#VOIP billing engine rewrite
+RewriteCond %{HTTP_HOST}   ^([^.]*).*$
+RewriteCond %1             ^(callshop)|(voip)$
+RewriteCond %{REQUEST_URI} !^/(cshop)|(gdimg)|(images)|(hints_cfg.php)|(config)|(autocomplete.js)|(ajax.js)|(reception)|(vboxcss.php)|(style.php)|(hints.js)|(java_popups.php)|(menu_items.php)|(menu_tpl.js)|(menu.js)|(netsentry.php)
+RewriteRule ^/(.*) /var/spool/apache/htdocs/cshop/$1 [L,T=application/x-httpd-php]
+
+#VOIP billing engine rewrite /auth
+RewriteCond %{HTTP_HOST}   ^([^.]*).*$
+RewriteCond %1             ^(callshop)|(voip)$
+RewriteCond %{REQUEST_URI} ^/auth
+RewriteRule ^/auth/(.*) /var/spool/apache/htdocs/cshop/$1 [L,T=application/x-httpd-php]
+
+#(horde)|(mail)|(webmail).* Horde Webmail
+RewriteCond ${lowercase:%{HTTP_HOST}}   ^([^.]*).*$
+RewriteCond %{REQUEST_URI} !^/horde
+RewriteCond %1             (^horde$)|(^mail$)|(^webmail$)
+RewriteRule ^/(.*)$ /var/spool/apache/htdocs/horde/$1 [L]
+
+#OS Ticket ticket.
+RewriteCond ${lowercase:%{HTTP_HOST}}   ^([^.]*).*$
+RewriteCond %{REQUEST_URI} !^/ticket
+RewriteCond %1             ^ticket$
+RewriteRule ^/(.*)$ /var/spool/apache/htdocs/ticket/$1 [L]
+ 
+#Sugar CRM crm.
+RewriteCond ${lowercase:%{HTTP_HOST}}   ^([^.]*).*$
+RewriteCond %{REQUEST_URI} !^/crm
+RewriteCond %1             ^crm$
+RewriteRule ^/(.*)$ /var/spool/apache/htdocs/crm/$1 [L]
+
+#PHP BB forum.
+RewriteCond ${lowercase:%{HTTP_HOST}}   ^([^.]*).*$
+RewriteCond %{REQUEST_URI} !^/phpBB2
+RewriteCond %1             ^forum$
+RewriteRule ^/(.*)$ /var/spool/apache/htdocs/phpBB2/$1 [L]
+
+#Rewrite for <USERNAME>.* Web
+RewriteCond %{REQUEST_URI} !^/~
+RewriteCond %{HTTP_HOST}   ^(.)(.)([^\.]+)\.
+RewriteCond /var/spool/apache/htdocs/%1%2%3 !-d
+RewriteCond /var/web/%1/%2/%1%2%3/public_html -d
+RewriteRule ^/(.*) /var/web/%1/%2/%1%2%3/public_html/$1 [L]
+
+#Rewrite for <USERNAME>.*
+RewriteCond %{REQUEST_URI} !^/~
+RewriteCond %{HTTP_HOST}   ^(.)(.)([^\.]+)\.
+RewriteCond /var/spool/apache/htdocs/%1%2%3 !-d
+RewriteCond /var/home/%1/%2/%1%2%3/public_html -d
+RewriteRule ^/(.*) /var/home/%1/%2/%1%2%3/public_html/$1 [L]
+
+#Default Fall Through
+#Rewrite for /<USERNAME> WEB
+RewriteCond %{REQUEST_URI} ^/(.)(.)([^\/]+)
+RewriteCond /var/spool/apache/htdocs/%1%2%3 !-d
+RewriteCond /var/web/%1/%2/%1%2%3/public_html -d
+RewriteRule ^/[^\/]+(.*) /var/web/%1/%2/%1%2%3/public_html$1 [L]
+
+#Default Fall Through
+#Rewrite for /<USERNAME>
+RewriteCond %{REQUEST_URI} ^/(.)(.)([^\/]+)
+RewriteCond /var/spool/apache/htdocs/%1%2%3 !-d
+RewriteCond /var/home/%1/%2/%1%2%3/public_html -d
+RewriteRule ^/[^\/]+(.*) /var/home/%1/%2/%1%2%3/public_html$1 [L]
+
+#Default Fall Through
+#Rewrite for /~<USERNAME> WEB
+RewriteCond %{REQUEST_URI} ^/~(.)(.)([^\/]+)
+RewriteCond /var/spool/apache/htdocs/%1%2%3 !-d
+RewriteCond /var/web/%1/%2/%1%2%3/public_html -d
+RewriteRule ^/[^\/]+(.*) /var/web/%1/%2/%1%2%3/public_html$1 [L]
+
+#Default Fall Through
+#Rewrite for /~<USERNAME>
+RewriteCond %{REQUEST_URI} ^/~(.)(.)([^\/]+)
+RewriteCond /var/spool/apache/htdocs/%1%2%3 !-d
+RewriteCond /var/home/%1/%2/%1%2%3/public_html -d
+RewriteRule ^/[^\/]+(.*) /var/home/%1/%2/%1%2%3/public_html$1 [L]
+
+#All Default CGI
+RewriteCond %{REQUEST_URI} ^/(cgi-bin)|(cgi-perl)|(perl)
+RewriteRule ^/([^\/]*)/(.*) /var/spool/apache/cgi-bin/$2 [L,T=application/x-httpd-cgi]
+
+RewriteCond %{REQUEST_URI} ^/viewsvn$
+RewriteRule ^/([^\/]*) /$1/ [R]
+
+RewriteCond %{REQUEST_URI} ^/viewsvn/$
+RewriteRule ^/([^\/]*) /var/spool/apache/htdocs/viewsvn/viewvc.py/viewsvn/ [L]
+
+RewriteCond %{REQUEST_URI} ^/viewsvn\/viewsvn/
+RewriteRule ^/([^\/]*)/([^\/]*)/(.*) /viewsvn/$3 [R]
+
+RewriteCond %{REQUEST_URI} ^/viewsvn/
+RewriteRule ^/([^\/]*)/(.*) /var/spool/apache/htdocs/viewsvn/viewvc.py/viewsvn/$2 [L]
+
+RewriteCond %{REQUEST_URI} ^/\*docroot\*/
+RewriteRule ^/([^\/]*)/(.*) /var/spool/apache/viewvc/templates/docroot/$2 [L]
+
+#Im Not A User Or CGI
+RewriteCond %{REQUEST_URI} !^/~
+RewriteCond %{REQUEST_URI} !^/SOGo
+RewriteRule ^/(.*)$ /var/spool/apache/htdocs/$1 [L]
+
+<VirtualHost _default_:80>
+  UserDir public_html
+  RewriteEngine On
+  RewriteOptions Inherit
+  SetEnvIf User-Agent ".*" HTTPS_OFF
+</VirtualHost>
+
+<VirtualHost _default_:443 _default_:666>
+  UserDir public_html
+  SSLSessionCacheTimeout 300
+  SSLEngine on
+  SSLCipherSuite ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP:+eNULL
+  SSLCertificateFile /etc/openssl/server.signed.pem
+  SSLCertificateKeyFile /etc/openssl/serverkey.pem
+  SSLCACertificateFile /etc/ipsec.d/cacerts/cacert.pem
+  <Files ~ "\.(cgi|shtml|phtml|php3?)$">
+    SSLOptions +StdEnvVars
+  </Files>
+  <Directory "/var/spool/apache/cgi-bin">
+    SSLOptions +StdEnvVars 
+  </Directory>
+  RewriteEngine On
+  RewriteOptions Inherit
+  SetEnvIf User-Agent ".*MSIE.*" nokeepalive ssl-unclean-shutdown downgrade-1.0 force-response-1.0
+  CustomLog /var/log/ssl_request_log sslcombined
+  SetEnvIf User-Agent ".*" HTTPS_ON
+</VirtualHost>
+
+Include conf/httpd.conf.sogo
+
