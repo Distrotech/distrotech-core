@@ -259,6 +259,10 @@ for ($lcnt=1;$lcnt <= $maxline;$lcnt++) {
 	</FAX_T38_Redundancy_<%print $lcnt;%>_>
 <FAX_Process_NSE_<%print $lcnt;%>_>no
 	</FAX_Process_NSE_<%print $lcnt;%>_>
+<FAX_CNG_Detect_Enable_<%print $lcnt;%>_>yes
+	</FAX_CNG_Detect_Enable_<%print $lcnt;%>_>
+<FAX_CED_Detect_Enable_<%print $lcnt;%>_>yes
+	</FAX_CED_Detect_Enable_<%print $lcnt;%>_>
 <%
 }
 $numreg=pg_num_rows($uports);
