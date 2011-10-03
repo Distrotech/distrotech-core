@@ -25,12 +25,12 @@ if (! $db) {
 if (isset($_POST['setddi'])) {
   $isclid=pg_query($db,"SELECT callerid FROM cc_callerid WHERE callerid='" . $_POST['newddinum'] . "'");
   if (pg_num_rows($isclid) > 0) {
-    print_r($_POST);
+//    print_r($_POST);
     pg_query($db,"UPDATE cc_callerid SET userid='" . $_POST['userid'] . "' WHERE callerid='" . $_POST['newddinum'] . "'");
   } else if ($_SESSION['resellerid'] == 0) {
     pg_query($db,"INSERT INTO cc_callerid (callerid,userid,ddifwd,reseller) VALUES ('" . $_POST['newddinum'] . "','" . $_POST['userid'] . "','" . $_POST['newddifwd'] . "','0')");
   } else {
-    print_r($_POST);
+//    print_r($_POST);
   }
 }
 
