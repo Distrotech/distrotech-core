@@ -16,7 +16,7 @@ RTIMEOUT=60
 RERR=0;
 DEFSERV="rsync.distrotech.co.za";
 DEFVER="10.10.1";
-DEFKERN="2.6.35.7-x86"
+DEFKERN="3.0.4-x86"
 NOKERN=0;
 
 if [ -e /etc/netsentry-version ];then
@@ -35,6 +35,7 @@ if [ -e /etc/netsentry-version ];then
     fi;
   fi
   LKERNEL=$KERNEL
+  DEFKERN=$KERNEL
 
   if [ "$VERSION" == "" ];then
     LVERSION="${DEFVER}"
@@ -186,7 +187,7 @@ fi;
 
 if [ -d /var/spool/vbox ];then
   if [ ! -e /var/spool/vbox/sentry.img ];then
-    dd if=/dev/zero of=/var/spool/vbox/sentry.img count=1024 bs=1M
+    dd if=/dev/zero of=/var/spool/vbox/sentry.img count=1536 bs=1M
     mke2fs -F -O none -O filetype,sparse_super -I 128 /var/spool/vbox/sentry.img
   fi;
 
@@ -370,7 +371,9 @@ if [ -d /var/spool/vbox ];then
            var/spool/apache/htdocs/auth var/spool/apache/htdocs/snom var/spool/apache/htdocs/polyxml
 
   tar --use-compress-program=bzip2 -cvf install/install.tbz bin boot/memtest.bin boot/grub boot/boot_base.tgz etc home initrd lib/evms lib/cpp lib/*so* man mnt root sbin share tmp usr var > install/filelist
-  rsync $ROPTS --timeout=$RTIMEOUT /var/spool/rsync/programs/var/spool/update /mnt/dev/install/
+  if [ -d /var/spool/rsync/programs/var/spool/update ];then
+    rsync $ROPTS --timeout=$RTIMEOUT /var/spool/rsync/programs/var/spool/update /mnt/dev/install/
+  fi;
 
   cd
   if [ ! -e /mnt/dev/install/kernel.tar.bz2 ];then
