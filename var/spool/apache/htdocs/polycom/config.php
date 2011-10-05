@@ -1,6 +1,14 @@
 <%
 include "getphone.inc";
 
+/* transport
+UDPOnly
+TCPpreferred
+DNSnaptr
+TLS
+TCPOnly
+*/
+
 if ($proxy == "") {
   $proxy=$SERVER_NAME;
 }
