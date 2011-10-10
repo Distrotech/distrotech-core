@@ -141,6 +141,8 @@ $announce_holdtime=$qdata[12];
 $qgetdata=pg_query($db,"SELECT * FROM qfeatures WHERE queue='" . $queue . "'");
 if (pg_num_rows($qgetdata) > 0) {
   $origdata=pg_fetch_array($qgetdata,0,PGSQL_ASSOC);
+} else {
+  pg_query($db,"INSERT INTO qfeatures (queue) VALUES ('" . $queue . "')");
 }
 
 $bgrpq=pg_query($db,"SELECT value FROM astdb WHERE key='BGRP' AND family='Q" . $queue . "'");
