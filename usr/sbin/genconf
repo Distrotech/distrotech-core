@@ -15866,6 +15866,7 @@ sub printsogo() {
     };
     sogod$sogover = {
 	OCSFolderInfoURL = "postgresql://exchange:$exchangepass\@$sqlserver:5432/exchange/sogo_folder_info";
+	OCSSessionsFolderURL = "postgresql://exchange:$exchangepass\@$sqlserver:5432/exchange/sogo_sessions_folder";
 	SOGoAppointmentSendEMailNotifications = YES;
 	SOGoDraftsFolderName = Drafts;
 	SOGoIMAPAclConformsToIMAPExt = YES;
