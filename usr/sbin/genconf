@@ -17,7 +17,6 @@
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-
 $x509cmd{'Country'}="C";
 $x509cmd{'State'}="ST";
 $x509cmd{'City'}="L";
@@ -6695,6 +6694,10 @@ _EOB_
   print FW "/sbin/iptables -A LOOPIN -j ACCEPT -i lo -p sctp\n";
   print FW "/sbin/iptables -A LOOPOUT -j ACCEPT -o lo -p sctp\n\n";
 
+  print FW "#Allow mISDN\n";
+  print FW "/sbin/iptables -A LOOPIN -j ACCEPT -i lo -p 34\n";
+  print FW "/sbin/iptables -A LOOPOUT -j ACCEPT -o lo -p 34\n\n";
+
   foreach $iface (@ints) {
     if (((index($iface,"gtun") < 0) && ($iface ne $sysconf{'External'}) && ($iface ne $mdmconf{'ComPort'})) || ($sysconf{'External'} eq $sysconf{'Internal'}) || ($sysconf{'Internal'} eq $mdmconf{'ComPort'})){
       @idata=split(/\|/,$interface{$iface});
@@ -11918,6 +11921,24 @@ sub getnw() {
   return $nwaddr;
 }
 
+sub enumrange() {
+  local($ports)=@_;
+  @portdb=split(/,/,$ports);
+  @outarr=();
+
+  foreach $port (@portdb) {
+    if (index($port, "-") ne -1) {
+      ($start,$end) = split(/-/,$port);
+      for($cnt=$start;$cnt <= $end;$cnt++) {
+        push(@outarr,$cnt);
+      }
+    } else {
+      push(@outarr,$port);
+    }
+  }
+  return @outarr;
+}
+
 sub getbc() {
   local($maskbits,$ipaddr)=@_;
   local($bcaddr);
@@ -14431,6 +14452,18 @@ sub printmisdn() {
   @row=$getisdnport->fetchrow_array;
   if (@row[0] >= 0) {
     open(IC,">misdn.conf");
+    open(LC,">lcr.conf");
+    open(RC,">lroute.conf");
+
+    if (@row[1] eq "1") {
+      $exten = " exten=s";
+    } else {
+      $exten = "";
+    }
+    print RC<<__EOF__;
+[main]
+		: remote application=asterisk context=ddi$exten
+__EOF__
 
     if (length(@row[0]) == 1) {
       for($cnt=1;$cnt<=@row[0];$cnt++) {
@@ -14446,8 +14479,10 @@ sub printmisdn() {
 
     if (@row[2] eq "1") {
       $method="round_robin";
+      $lcmethod="hunt roundrobin\n";
     } else {
       $method="standard";
+      $lcmethod="hunt linear\n";
     }
     if (@row[3] eq "") {
       @row[3]=2;
@@ -14507,7 +14542,16 @@ faxdetect=no
 faxdetect_timeout=60
 msns=*
 __EOF__
+
     if ($conts ne "") {
+      @lports=&enumrange($conts);
+      print LC "[g:out]\n";
+      foreach $lport (@lports) {
+        $lport--;
+        print LC "portnum " . $lport . "\n";
+      }
+      print LC $lcmethod;
+      print LC "filter gain @row[4] @row[3]\n\n";
       print IC<<__EOF__;
 
 [out]
@@ -14520,6 +14564,15 @@ __EOF__
     }
 
     if ((@row[5] ne "") && (@row[5] ne "0")) {
+      @lports=&enumrange(@row[5]);
+      print LC "[g:in]\n";
+      foreach $lport (@lports) {
+        $lport--;
+        print LC "portnum " . $lport . "\n";
+      }
+      print LC $lcmethod;
+      print LC "filter gain @row[4] @row[3]\n\n";
+
       print IC "\n[in]\n";
       print IC "ports=" . $iconts . "\n";
       print IC "context=ddi\n";
@@ -14528,6 +14581,15 @@ __EOF__
       }
     }
     if ((@row[6] ne "") && (@row[6] ne "0")) {
+      @lports=&enumrange(@row[6]);
+      print LC "[g:fwd]\n";
+      foreach $lport (@lports) {
+        $lport--;
+        print LC "portnum " . $lport . "\n";
+      }
+      print LC "nt\n";
+      print LC $lcmethod;
+      print LC "filter gain @row[4] @row[3]\n\n";
       print IC "\n[fwd]\n";
       print IC "ports=" . $fconts . "\n";
       print IC "context=misdnfwd\n";
@@ -14540,6 +14602,14 @@ __EOF__
     $getigrps->execute;
     while(@grow=$getigrps->fetchrow_array) {
       if ((@grow[1] ne "") && (@grow[1] ne "0")) {
+        @lports=&enumrange(@grow[1]);
+        print LC "[g:@grow[0]]\n";
+        foreach $lport (@lports) {
+          $lport--;
+          print LC "portnum " . $lport . "\n";
+        }
+        print LC $lcmethod;
+        print LC "filter gain @row[4] @row[3]\n\n";
         print IC "\n[" . @grow[0] . "]\n";
         print IC "ports=" . @grow[1] . "\n";
         print IC "context=ddi\n";
@@ -14549,6 +14619,8 @@ __EOF__
       }
     }
     close(IC);
+    close(LC);
+    close(RC);
   }
 }
 

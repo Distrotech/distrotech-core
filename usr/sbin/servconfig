@@ -1491,6 +1491,22 @@ if [ -e misdn.conf ] && [ -e /etc/asterisk/misdn.conf ];then
   fi;
 fi;
 
+if [ -e lcr.conf ] && [ -e /etc/lcr/interface.conf ];then 
+  ASTLCR=`diff lcr.conf /etc/lcr/interface.conf`
+ else
+  if [ -e lcr.conf ];then 
+    ASTLCR="NO FILE";
+  fi;
+fi;
+
+if [ -e lroute.conf ] && [ -e /etc/lcr/routing.conf ];then 
+  ASTLCRROUTE=`diff lroute.conf /etc/lcr/routing.conf`
+ else
+  if [ -e lroute.conf ];then 
+    ASTLCRROUTE="NO FILE";
+  fi;
+fi;
+
 
 if [ "$ASTCLI" ] && [ ! -e networksentry-lite ];then
   cp -p providers.conf /etc/asterisk
@@ -1588,8 +1604,26 @@ if [ "$ASTMISDN" ] && [ ! -e networksentry-lite ];then
   cp -p misdn.conf /etc/asterisk
   chmod 640 /etc/asterisk/misdn.conf
   chown root.root /etc/asterisk/misdn.conf
-  if [ -e /dev/mISDN ];then
+  if [ -e /dev/mISDN ] && [ ! -d /etc/lcr ];then
     /usr/sbin/asterisk -rx "misdn reload" > /dev/null 2>&1
+  fi;
+fi;
+
+if [ "$ASTLCR" ] && [ ! -e networksentry-lite ];then
+  cp -p lcr.conf /etc/lcr/interface.conf
+  chmod 640 /etc/lcr/interface.conf
+  chown root.root /etc/lcr/interface.conf
+  if [ -d /etc/lcr ] && [ -x /usr/bin/lcradmin ];then
+    /usr/bin/lcradmin interface > /dev/null 2>&1
+  fi;
+fi;
+
+if [ "$ASTLCRROUTE" ] && [ ! -e networksentry-lite ];then
+  cp -p lroute.conf /etc/lcr/routing.conf
+  chmod 640 /etc/lcr/routing.conf
+  chown root.root /etc/lcr/routing.conf
+  if [ -d /etc/lcr ] && [ -x /usr/bin/lcradmin ];then
+    /usr/bin/lcradmin route > /dev/null 2>&1
   fi;
 fi;
 

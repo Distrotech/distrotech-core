@@ -304,6 +304,11 @@ if [ -e /etc/.install ];then
   #Link FD
   ln -s /proc/self/fd /dev
 
+  #Setup LCR
+  if [ -e /dev/mISDNtimer ] && [ -x /usr/sbin/lcr ];then
+    /usr/sbin/lcr fork > /dev/null 2>&1
+  fi;
+
   #Configure And Load Zap Channels
   if [ -e /etc/wanpipe/wanrouter.rc ];then
     /usr/sbin/wanrouter start > /dev/null 2>&1

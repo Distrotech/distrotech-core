@@ -439,10 +439,14 @@ if (($tmsauth > 0) || ($authtype > 0) || ($clogauth > 0) || ($voipauth > 0 )){
 if (($authtype > 0) || ($voipauth > 0 )){
   if ($authtype > 0) {
     $vstatus[_("GSM Channel Status")]=openpage("vstatus","cdr/gsmreport.php");
-    $vstatus[_("ISDN Status")]=openpage("vstatus","cdr/getisdn.php");
+    if (!is_dir("/etc/lcr")) {
+      $vstatus[_("ISDN Status")]=openpage("vstatus","cdr/getisdn.php");
+    }
   }
   if ($authtype > 0) {
-    $vstatus[_("BRI Error Log")]=openpage("vstatus","auth/isdnlog.php");
+    if (!is_dir("/etc/lcr")) {
+      $vstatus[_("BRI Error Log")]=openpage("vstatus","auth/isdnlog.php");
+    }
     $vstatus[_("PRI Error Log")]=openpage("vstatus","auth/zaplog.php");
   }
   $vstatus[_("SIP Extensions")]="javascript:openexten(\'SIP\')";
