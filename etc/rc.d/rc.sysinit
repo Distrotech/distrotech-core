@@ -306,7 +306,7 @@ if [ -e /etc/.install ];then
 
   #Setup LCR
   if [ -e /dev/mISDNtimer ] && [ -x /usr/sbin/lcr ];then
-    /usr/sbin/lcr fork > /dev/null 2>&1
+    /sbin/modprobe mISDN_dsp_oslec
   fi;
 
   #Configure And Load Zap Channels

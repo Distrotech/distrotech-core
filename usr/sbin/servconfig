@@ -264,6 +264,13 @@ if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstco
     fi;
   fi;
 
+  if [ -x /usr/sbin/lcr ];then
+    LCRPID=`pidof lcr`;
+    if [ ! "$LCRPID" ];then
+      /usr/sbin/lcr fork > /dev/null 2>&1
+    fi;
+  fi
+
   ZPID=`pidof zebra`
   RPID=`pidof ripd`
   BPID=`pidof bgpd`
