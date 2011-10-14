@@ -14551,6 +14551,7 @@ __EOF__
         print LC "portnum " . $lport . "\n";
       }
       print LC $lcmethod;
+      print LC "layer1hold yes\nlayer2hold no\n";
       print LC "filter gain @row[4] @row[3]\n\n";
       print IC<<__EOF__;
 
@@ -14571,6 +14572,7 @@ __EOF__
         print LC "portnum " . $lport . "\n";
       }
       print LC $lcmethod;
+      print LC "layer1hold yes\nlayer2hold no\n";
       print LC "filter gain @row[4] @row[3]\n\n";
 
       print IC "\n[in]\n";
@@ -14589,6 +14591,7 @@ __EOF__
       }
       print LC "nt\n";
       print LC $lcmethod;
+      print LC "layer1hold yes\nlayer2hold no\n";
       print LC "filter gain @row[4] @row[3]\n\n";
       print IC "\n[fwd]\n";
       print IC "ports=" . $fconts . "\n";
@@ -14609,6 +14612,7 @@ __EOF__
           print LC "portnum " . $lport . "\n";
         }
         print LC $lcmethod;
+        print LC "layer1hold yes\nlayer2hold no\n";
         print LC "filter gain @row[4] @row[3]\n\n";
         print IC "\n[" . @grow[0] . "]\n";
         print IC "ports=" . @grow[1] . "\n";
