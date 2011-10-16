@@ -317,9 +317,7 @@ if [ -e /etc/.install ];then
     fi;
   fi;
   if [ -e /lib/modules/${LKERNEL}/dahdi ];then
-    /sbin/modprobe dahdi_dummy >/dev/null 2>&1
-   else
-    /sbin/modprobe ztdummy >/dev/null 2>&1
+    /sbin/modprobe wctdm > /dev/null 2>&1
   fi;
 
   #Housekeeping Delete Orphaned Files

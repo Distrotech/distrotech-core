@@ -263,7 +263,12 @@ fi;
 
 #rm /usr/lib/asterisk/modules-1.4/chan_zap* > /dev/null 2>&1
 if [ ! -d /var/spool/rsync/programs ] && [ -e /etc/netsentry-version ];then
-  for rdatain in "vbox /"  "share /var/spool/samba/share/" "programs /" "manuals /var/spool/apache/htdocs/" "asterisk /" "astsound /var/lib/asterisk/sounds" "avirus /var/spool/avirus";do 
+  if [ -e /etc/asterisk/version.10 ];then
+    ast_repo="asterisk-10";
+   else
+    ast_repo="asterisk";
+  fi;
+  for rdatain in "vbox /"  "share /var/spool/samba/share/" "programs /" "manuals /var/spool/apache/htdocs/" "${ast_repo} /" "avirus /var/spool/avirus";do 
     echo $rdatain
     rsync $RROPTS --timeout=$RTIMEOUT 127.0.0.1::$rdatain
     if [ $? != 0 ];then
@@ -273,7 +278,11 @@ if [ ! -d /var/spool/rsync/programs ] && [ -e /etc/netsentry-version ];then
   done;
 
   #Sync Asterisk Modules
-  rsync $RROPTS --delete --timeout=$RTIMEOUT 127.0.0.1::asterisk/usr/lib/asterisk/modules-1.8 /
+  if [ -e /etc/asterisk/version.10 ];then
+    rsync $RROPTS --delete --exclude=chan_lcr.so --timeout=$RTIMEOUT 127.0.0.1::asterisk-10/usr/lib/asterisk/modules-10 /
+   else
+    rsync $RROPTS --delete --exclude=chan_lcr.so --timeout=$RTIMEOUT 127.0.0.1::asterisk/usr/lib/asterisk/modules-1.8 /
+  fi;
   if [ $? != 0 ];then
     RERR=255;
   fi;
