@@ -13834,10 +13834,16 @@ if ( -e "/usr/lib/asterisk/modules-1.8/codec_g729.so") {
 }
 
 if ( ! -e "/dev/mISDN" )  {
-#|| (-e "/usr/lib/asterisk/modules-1.8/chan_lcr.so")) {
   print AM<<__EOB__;
-;Disable mISDN Module Bellow
+;Disable mISDN V1 Module Bellow
 noload => chan_misdn.so
+__EOB__
+}
+
+if ( ! -e "/dev/mISDNtimer" )  {
+  print AM<<__EOB__;
+;Disable mISDN V2 Module Bellow
+noload => chan_lcr.so
 __EOB__
 }
 
