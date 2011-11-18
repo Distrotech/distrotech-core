@@ -86,6 +86,8 @@ $dnsconf{'Refresh'}="3600";
 $dnsconf{'Retry'}="1800";
 $dnsconf{'Expire'}="604800";
 $dnsconf{'DefaultTTL'}="3600";
+$dnsconf{'DynamicTTL'}="180";
+$dnsconf{'DynamicCNAME'}="true";
 
 $tuncnt=0;
 $tblcnt=0;
@@ -485,7 +487,9 @@ while(<CF>) {
     } elsif (@words[0] eq "Expire") {
       $dnsconf{'Expire'}=@words[1];
     } elsif (@words[0] eq "DefaultTTL") {
-      $dnsconf{'DefaultTTL'}=@words[1];
+      $dnsconf{'Expire'}=@words[1];
+    } elsif (@words[0] eq "DynamicTTL") {
+      $dnsconf{'DynamicTTL'}=@words[1];
     } elsif (@words[0] eq "DynServ") {
       $dnsconf{'DynServ'}=@words[1];
     } elsif (@words[0] eq "SmartKey") {
@@ -506,6 +510,8 @@ while(<CF>) {
       $dnsconf{'ExtServ'}=@words[1];
     } elsif (@words[0] eq "IntFirst") {
       $dnsconf{'IntFirst'}=@words[1];
+    } elsif (@words[0] eq "DynamicCNAME") {
+      $dnsconf{'DynamicCNAME'}=@words[1];
     } elsif (@words[0] eq "Host") {
       shift @words;
       $hdata=join("\|",@words);
@@ -8394,7 +8400,7 @@ print FWP<<__EOB__;
 
   if [ \"\$4\" != \"hotplug\" ];then
     if [ "\$REV_DNS" != "\$EXT_IP_ADDR" ];then
-      ADD_DNS="update add $dnsconf{'Hostname'}.$dnsconf{'DynZone'}. 180 A \$EXT_IP_ADDR"
+      ADD_DNS="update add $dnsconf{'Hostname'}.$dnsconf{'DynZone'}. $dnsconf{'DynamicTTL'} A \$EXT_IP_ADDR"
       cp /etc/mail/sendmail.cf.orig /etc/mail/sendmail.cf
       EMAIL_PID=`/bin/pidof sendmail`
       if [ "\$EMAIL_PID" ];then
@@ -8403,7 +8409,13 @@ print FWP<<__EOB__;
           /etc/rc.d/rc.mail sendmail
       fi;
      else
-      ADD_DNS="update add $dnsconf{'Hostname'}.$dnsconf{'DynZone'}. 180 CNAME \$FWD_DNS"
+__EOB__
+    if ($dnsconf{DynamicCNAME} eq "true") {
+      print FWP "      ADD_DNS=\"update add " . $dnsconf{'Hostname'} . "." . $dnsconf{'DynZone'} . ". " . $dnsconf{'DynamicTTL'} . " CNAME \$FWD_DNS\"\n";
+    } else {
+      print FWP "      ADD_DNS=\"update add " . $dnsconf{'Hostname'} . "." . $dnsconf{'DynZone'} . ". " . $dnsconf{'DynamicTTL'} . " A \$EXT_IP_ADDR\"\n";
+    }
+print FWP<<__EOB__;
       sed -e "s/^Dj.*/Dj\$EMAIL_SERV/" /etc/mail/sendmail.cf.orig > /etc/mail/sendmail.cf
       EMAIL_PID=`/bin/pidof sendmail`
       if [ "\$EMAIL_PID" ];then
