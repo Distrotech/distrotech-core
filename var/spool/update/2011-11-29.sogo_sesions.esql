@@ -1,0 +1,3 @@
+ALTER TABLE ONLY sogo_sessions_folder
+    ADD CONSTRAINT sogo_sessions_folder_key PRIMARY KEY (c_id);
+

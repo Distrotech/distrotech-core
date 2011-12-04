@@ -1,4 +1,5 @@
 #!/bin/bash
+
 if [ "${USER}" != "dump-capability" ] && [ ${USER} != "" ];then
   ACL_GROUPS=`groups $USER |cut -d: -f2 |cut -c2- |tr ' ' ','`
   if [ "${ACL_GROUPS}" == "" ];then 
@@ -30,4 +31,10 @@ if [ "${USER}" != "dump-capability" ] && [ ${USER} != "" ];then
     /usr/sbin/fixbox ${USER}
   fi;
 fi;
-exec /usr/libexec/dovecot/imap "$@"
+
+export ACL_GROUPS
+export USERDB_KEYS="$USERDB_KEYS acl_groups"
+
+#echo ${USER} : ${IP} : ${ACL_GROUPS} : ${USERDB_KEYS} >> /tmp/logins
+
+exec "$@"

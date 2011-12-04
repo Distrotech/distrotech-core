@@ -3607,7 +3607,7 @@ __EOB__
     print RM "  fi\n";
     print RM "fi\n\n";
 
-    print RM "if [ /etc/dovecot.conf -nt /var/run/dovecot/master.pid ];then\n";
+    print RM "if [ /etc/dovecot/dovecot.conf -nt /var/run/dovecot/master.pid ];then\n";
     print RM "  (killall dovecot;\n";
     print RM "  sleep 3;\n";
     print RM "  killall -9 dovecot) > /dev/null 2>&1\n";
@@ -3618,20 +3618,23 @@ __EOB__
     print RM "    rm /var/run/dovecot/master.pid\n";
     print RM "  fi;\n\n";
     print RM "  /usr/sbin/dovecot-wrap\n";
-    print RM " else if  [ \"\$1\" != \"sendmail\" ] && [ /etc/dovecot-example.conf -nt /etc/dovecot.conf ];then\n";
+    print RM " else if  [ \"\$1\" != \"sendmail\" ] && [ /etc/dovecot-example.conf -nt /etc/dovecot/dovecot.conf ];then\n";
     print RM "    kill `cat /var/run/dovecot/master.pid`;\n";
-    print RM "    touch /etc/dovecot.conf;\n";
+    print RM "    touch /etc/dovecot/dovecot.conf;\n";
     print RM "    /usr/sbin/dovecot-wrap\n";
     print RM "  fi\n";
     print RM "fi;\n\n";
 
-    print RM "if [ ! -e /etc/dovecot-sogo.conf ] || [ /etc/dovecot.conf -nt /etc/dovecot-sogo.conf ];then\n";
+    print RM "if [ ! -e /etc/dovecot-sogo.conf ] || [ /etc/dovecot/dovecot.conf -nt /etc/dovecot-sogo.conf ];then\n";
     print RM "  sed -e \"s/^[ \\t]*ssl_listen.*\$/#/\" \\\n";
     print RM "      -e \"s/^\\([ \\t]*listen = \\).*/\\1127.0.0.1:286/\" \\\n";
+    print RM "      -e \"s/^\\([ \\t]*address = \\).*/\\1127.0.0.1/\" \\\n";
+    print RM "      -e \"s/^\\([ \\t]*port = \\)143/\\1286/\" \\\n";
+    print RM "      -e \"s/^\\([ \\t]*port = \\)993/\\11986/\" \\\n";
     print RM "      -e \"s/^\\([ \\t]*args = session=yes cache_key=\\\%u\\).*/\\1 sogo-\%Ls/\" \\\n";
     print RM "      -e \"s/^\\(protocols = imap\\).*\$/\\1/\" \\\n";
     print RM "      -e \"s/^\\(.*path = \\/var\\/run\\/dovecot\\)\\/auth-master\$/\\1-sogo\\/auth-master/\" \\\n";
-    print RM "      -e \"s/^\\(base_dir.*\\)/\\1-sogo/\" /etc/dovecot.conf |grep -vE \"^#\" > /etc/dovecot-sogo.conf\n";
+    print RM "      -e \"s/^\\(base_dir.*\\)/\\1-sogo/\" /etc/dovecot/dovecot.conf |grep -vE \"^#\" > /etc/dovecot/dovecot-sogo.conf\n";
     print RM "  (killall dovecot-sogo;\n";
     print RM "  sleep 3;\n";
     print RM "  killall -9 dovecot-sogo) > /dev/null 2>&1\n";
@@ -8133,8 +8136,6 @@ _EOB_
     } elsif ((@rdata[5] eq "NAT") && (@rdata[9] ne "Modem")) {
       print FWP "  #NAT @rdata[6] $rname $fwsource{@rdata[7]}:@rdata[2] --> @rdata[1]:@rdata[3]\n";
       if (($proto eq " -p tcp") || ($proto eq " -p udp")) {
-#        print FWP "  /sbin/iptables -A LOCALIN -j $rpolicy$statein -i @rdata[9] -s $fwsource{@rdata[7]} --sport @rdata[2] -d @rdata[1] --dport @rdata[3]\n";
-#        print FWP "  /sbin/iptables -A LOCALOUT -j $rpolicy$stateout -o @rdata[9] -d $fwsource{@rdata[7]} --dport @rdata[2] -s @rdata[1] --sport @rdata[3]\n";
         if (@rdata[11] eq "Out") {
           print FWP "  /sbin/iptables -A LOCALFWD -j $rpolicy$statein $rout-i @rdata[9] -s $fwsource{@rdata[7]} --sport @rdata[2] -d @rdata[1] --dport @rdata[3]\n";
         } else {
@@ -8150,8 +8151,6 @@ _EOB_
         }
         print FWP "\n";
       } else {
-#        print FWP "  /sbin/iptables -A LOCALIN -j $rpolicy$statein -i @rdata[9] -s $fwsource{@rdata[7]} -d @rdata[1]\n";
-#        print FWP "  /sbin/iptables -A LOCALOUT -j $rpolicy$stateout -o @rdata[9] -d $fwsource{@rdata[7]} -s @rdata[1]\n";
         if (@rdata[11] eq "Out") {
           print FWP "  /sbin/iptables -A LOCALFWD -j $rpolicy$statein $rout-i @rdata[9] -s $fwsource{@rdata[7]} -d @rdata[1]\n";
         } else {
@@ -10650,12 +10649,14 @@ controls {
 
 __EOB__
   foreach $tsigz (@tsigkeys) {
-    print DNS<<__EOB__;
+    if ($tsigz ne $dnsconf{'Domain'}) {
+      print DNS<<__EOB__;
 key $tsigz {
         algorithm hmac-md5;
         secret $tsig{$tsigz};
 };
 __EOB__
+    }
   }
   if ($dnsconf{'DynKey'} ne "") {
     open(KEY,">zones/nsupdate.key");
@@ -11199,7 +11200,7 @@ foreach $intslave (@islaves) {
   foreach $txs (@txsite) {
     $txout .="                        $txs;\n";
   }
-  if ($txout != "") {
+  if (($txout != "") && ($intslave ne $dnsconf{'Domain'})) {
     print DNS<<__EOB__;
        zone "$intslave" {
               type slave;
@@ -11219,7 +11220,8 @@ __EOB__
 
 foreach $intslave (@ihosted) {
   push(@idnszones,$intslave);
-  print DNS<<__EOB__;
+  if ($intslave ne $dnsconf{'Domain'}) {
+    print DNS<<__EOB__;
        zone "$intslave" {
               type master;
               notify yes;
@@ -11232,10 +11234,11 @@ foreach $intslave (@ihosted) {
                      key $dnsconf{'Domain'};
               };
 __EOB__
-  print DNS<<__EOB__;
+    print DNS<<__EOB__;
               check-names ignore;
        };
 __EOB__
+  }
 }
 
 #chop $othermatch;
@@ -11418,6 +11421,12 @@ __EOB__
     }
 
   foreach $hdom (@hosted) {
+    $hdfile=$hdom;
+    $hdkey="\n                        key $hdom;";
+    if ($hdom eq $dnsconf{'Domain'}) {
+      $hdfile="domain.ext";
+      $hdkey="";
+    }
     $txout="";
     @txsite=split(/,/,$allowtx{$hdom});
     shift @txsite;
@@ -11429,7 +11438,7 @@ __EOB__
        zone "$hdom" {
               type master;
               notify yes;
-              file "$hdom";
+              file "$hdfile";
               also-notify {
                      127.0.0.1;
               };
@@ -11442,8 +11451,7 @@ __EOB__
     push(@idnszones,$hdom);
   print DNS<<__EOB__;
               allow-update {
-                        key $hdom;
-                        key $dnsconf{'Domain'};
+                        key $dnsconf{'Domain'};$hdkey
               };
               check-names ignore;
 __EOB__
@@ -11456,6 +11464,10 @@ __EOB__
   }
 
   foreach $hdom (@slaves) {
+    $hdfile=$hdom;
+    if ($hdom eq $dnsconf{'Domain'}) {
+      $hdfile="domain.ext";
+    }
     $txout="";
     @txsite=split(/,/,$allowtx{$hdom});
     shift @txsite;
@@ -11467,7 +11479,7 @@ __EOB__
       print DNS<<__EOB__;
        zone "$hdom" {
               type slave;
-              file "$hdom";
+              file "$hdfile";
               allow-notify {
                         any;
               };
@@ -12889,7 +12901,7 @@ __EOB__
       chop $options;
       printf AFMC ("%-15s%-75s%s\n",@nfsdat[1],"-fstype=smb$options",":@nfsdat[2]");
     } else {
-      printf AFMC ("%-15s%-75s%s\n",@nfsdat[1],"-fstype=nfs,hard,intr","@nfsdat[2]");
+      printf AFMC ("%-15s%-75s%s\n",@nfsdat[1],"-fstype=nfs,vers=3,acl,hard,intr","@nfsdat[2]");
     }
     print UPEX @nfsdat[3] . "\n";
     if (@nfsdat[3] ne "-") {
