@@ -4,7 +4,7 @@
 # Set the values for some environment variables:
 export TERMINFO=/usr/share/terminfo
 export MINICOM="-c on"
-export MANPATH=/man:/usr/man/preformat:/usr/man:/usr/X11R6/man:/usr/share/man
+export MANPATH=/share/man:/man:/usr/share/man:/usr/man/preformat:/usr/man:/usr/X11R6/man
 #export HOSTNAME="`cat /etc/HOSTNAME`"
 export LESSOPEN="|lesspipe.sh %s"
 export LESS="-M"
