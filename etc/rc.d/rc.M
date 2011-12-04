@@ -51,6 +51,10 @@ if [ -e /etc/.install ];then
   portmap
 
   #Start RPC
+  chown 99 /var/lib/nfs
+  chown -R 99 /var/lib/nfs/sm
+  chown -R 99 /var/lib/nfs/sm.bak
+  /usr/sbin/rpc.idmapd
   /usr/sbin/rpc.statd -p 32765 -o 32766
   /usr/sbin/rpc.mountd -p 32767
   /usr/sbin/rpc.nfsd -p 2049 8
@@ -255,6 +259,11 @@ if [ -e /etc/.install ];then
   fi;
   /usr/sbin/conntrack -F
   /usr/sbin/conntrack -F expectation
+
+  #Start Linux Call Router
+#  if [ -x /usr/sbin/lcr ];then
+#    /usr/sbin/lcr fork > /dev/null 2>&1
+#  fi;
 
   #Enable Advanced Routing
   if [ ! -e /etc/zebra/Quagga.conf ];then

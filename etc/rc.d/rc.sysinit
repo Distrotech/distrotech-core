@@ -417,6 +417,15 @@ EOF
   if [ ! -d /var/lib/nfs/v4recovery ];then
     mkdir /var/lib/nfs/v4recovery
   fi;
+  if [ ! -d /var/lib/nfs/rpc_pipefs ];then
+    mkdir /var/lib/nfs/rpc_pipefs
+  fi;
+  if [ ! -d /var/lib/nfs/rpc_pipefs/nfs ];then
+    mount -t rpc_pipefs none /var/lib/nfs/rpc_pipefs
+  fi;
+  if [ ! -e /proc/fs/nfsd/exports ];then
+    mount -t nfsd none /proc/fs/nfsd
+  fi;
 
   #PostGRE SQL Server
   if [ -e /var/spool/cubit/postmaster.pid ];then
