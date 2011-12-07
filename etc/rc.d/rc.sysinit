@@ -269,6 +269,7 @@ if [ -e /etc/.install ];then
 
   #Mount ext3 as ext4
   if [ "`grep -w ext3 /etc/fstab`" ];then
+    awk '$3 == "ext3" && $2 != "/" {printf "tune2fs -O extents,uninit_bg,dir_index %s;fsck.ext4 -yfD %s\n",$1,$1}' /etc/fstab |sh
     sed -e "s/ext3\(.*\)/ext4\1/" /etc/fstab > /tmp/fstab.ext4
     cp /tmp/fstab.ext4 /etc/fstab
     rm /tmp/fstab.ext4
