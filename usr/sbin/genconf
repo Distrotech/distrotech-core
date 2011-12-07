@@ -1952,7 +1952,6 @@ chown root.root /root/.pgpass
 
 if [ -e "/etc/samba/smb.conf" ];then
   /usr/bin/smbpasswd -w "$ldapserv{'Password'}" > /dev/null 2>&1
-  /usr/bin/net idmap secret '*' "$ldapserv{'Password'}" > /dev/null 2>&1
   /usr/sbin/add_domain $smboption{'ServName'} $smboption{'Domain'} >/dev/null 2>&1
   (cat<<EOF
 $ldapserv{'Password'}
@@ -9954,16 +9953,8 @@ if (! -d "/etc/samba") {
   }
   chop $vsuf;
 
-
   print SMB "        ldap suffix = " . $vsuf . "\n";
-
-  print SMB "        idmap config * : backend      = ldap\n";
-  print SMB "        idmap config * : range        = 524288-589824\n";
-  print SMB "        idmap config * : ldap_url     = ldaps://" . $ldapserv{'Server'} . "\n";
-  print SMB "        idmap config * : ldap_base_dn = " . $vsuf . "\n";
-  print SMB "        idmap config * : ldap_user_dn = " . $ldapserv{'Login'} . "\n";
-
-#  print SMB "        ldap idmap suffix = ou=Idmap\n";
+  print SMB "        ldap idmap suffix = ou=Idmap\n";
   print SMB "        ldap user suffix = ou=Users\n";
   print SMB "        ldap group suffix = ou=Groups\n";
   print SMB "        ldap machine suffix = ou=Trusts\n";
@@ -9988,9 +9979,9 @@ if (! -d "/etc/samba") {
   print SMB "        template primary group = users\n";
   print SMB "        template shell = /usr/sbin/smrsh\n";
   print SMB "        ldapsam:trusted = yes\n";
-#  print SMB "        idmap uid = 524288-589824\n";
-#  print SMB "        idmap gid = 524288-589824\n";
-#  print SMB "        idmap backend = ldap:$ldapserv{'ReplicateSMB'}\n";
+  print SMB "        idmap uid = 524288-589824\n";
+  print SMB "        idmap gid = 524288-589824\n";
+  print SMB "        idmap backend = ldap:$ldapserv{'ReplicateSMB'}\n";
 
     print SMB "        ldap passwd sync = Yes\n";
     print SMB "        passdb backend = ldapsam:$ldapserv{'ReplicateSMB'}\n";
@@ -15989,7 +15980,6 @@ sub printsogo() {
 	SOGoIMAPAclUsernamesAreQuoted = YES;
 	SOGoIMAPServer = $imapserv;
 	SOGoLDAPQueryLimit = 20;
-	SOGoLDAPQueryTimeout = 20;
 	SOGoLanguage = English;
 	SOGoLoginModule = Mail;
 	SOGoMailDomain = $dnsconf{'Domain'};
