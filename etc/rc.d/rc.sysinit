@@ -85,7 +85,7 @@ if [ ! -d /dev/loop ];then
 fi;
 
 if [ -e /etc/.install ];then
-  mount -f -t ext3 /dev/loop0 / > /dev/null 2>&1
+  mount -f -t ext4 /dev/loop0 / > /dev/null 2>&1
   mount -f -t ext3 /dev/ram5 /etc > /dev/null 2>&1
 
   dd if=/dev/zero of=/dev/ram1 bs=1024 count=4096 > /dev/null 2>&1
@@ -259,10 +259,21 @@ if [ -e /etc/.install ];then
   fi;
 
   #Run File System Check On All Devices
-  /usr/bin/awk '$1 != "/dev/loop0" && $3 == "ext3" {printf "/sbin/e2fsck -C 0 -p %s\nERR=$?\nif [ $ERR -gt 1 ] && [ $ERR -lt 8 ];then\n  /sbin/e2fsck -C 0 -Dfy %s\n  /sbin/reboot\nfi\n\n",$1,$1,$1 }' /etc/fstab |/bin/bash 2>/dev/null
+  /usr/bin/awk '$1 != "/dev/loop0" && ($3 == "ext3" || $3 == "ext4") {printf "/sbin/e2fsck -C 0 -p %s\nERR=$?\nif [ $ERR -gt 1 ] && [ $ERR -lt 8 ];then\n  /sbin/e2fsck -C 0 -Dfy %s\n  /sbin/reboot\nfi\n\n",$1,$1,$1 }' /etc/fstab |/bin/bash 2>/dev/null
 
-  #Remount Root Device Read Write Deleteing Old mtab
+  #Run a ext4 convert and scan on /
+  awk '$3 == "ext3" && $2 == "/" {printf "tune2fs -O extents,uninit_bg,dir_index %s;fsck.ext4 -yfD %s\n",$1,$1}' /etc/fstab |sh
+
+  #Remount Root Device Read Write
   mount -n -o remount,rw /
+
+  #Mount ext3 as ext4
+  if [ "`grep -w ext3 /etc/fstab`" ];then
+    sed -e "s/ext3\(.*\)/ext4\1/" /etc/fstab > /tmp/fstab.ext4
+    cp /tmp/fstab.ext4 /etc/fstab
+    rm /tmp/fstab.ext4
+  fi
+
   rm /etc/mtab
   touch /etc/mtab
   /usr/sbin/vgmknodes --refresh
@@ -283,7 +294,7 @@ if [ -e /etc/.install ];then
    chmod 1777 /tmp)>/dev/null 2>&1
 
   #Mount All Mount Points
-  mount -at ext3 > /dev/null 2>&1
+  mount -at ext4,ext3 > /dev/null 2>&1
 
   #Startup Syslog
   if [ -e /var/run/syslog.pid ];then

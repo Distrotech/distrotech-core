@@ -1498,6 +1498,10 @@ if [ -e misdn.conf ] && [ -e /etc/asterisk/misdn.conf ];then
   fi;
 fi;
 
+if [ ! -d /etc/lcr ];then
+  mkdir /etc/lcr
+fi;
+
 if [ -e lcr.conf ] && [ -e /etc/lcr/interface.conf ];then 
   ASTLCR=`diff lcr.conf /etc/lcr/interface.conf`
  else
