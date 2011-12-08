@@ -1952,7 +1952,6 @@ chown root.root /root/.pgpass
 
 if [ -e "/etc/samba/smb.conf" ];then
   /usr/bin/smbpasswd -w "$ldapserv{'Password'}" > /dev/null 2>&1
-  /usr/bin/net idmap secret '*' "$ldapserv{'Password'}" > /dev/null 2>&1
   /usr/sbin/add_domain $smboption{'ServName'} $smboption{'Domain'} >/dev/null 2>&1
   (cat<<EOF
 $ldapserv{'Password'}
@@ -9954,16 +9953,8 @@ if (! -d "/etc/samba") {
   }
   chop $vsuf;
 
-
   print SMB "        ldap suffix = " . $vsuf . "\n";
-
-  print SMB "        idmap config * : backend      = ldap\n";
-  print SMB "        idmap config * : range        = 524288-589824\n";
-  print SMB "        idmap config * : ldap_url     = ldaps://" . $ldapserv{'Server'} . "\n";
-  print SMB "        idmap config * : ldap_base_dn = " . $vsuf . "\n";
-  print SMB "        idmap config * : ldap_user_dn = " . $ldapserv{'Login'} . "\n";
-
-#  print SMB "        ldap idmap suffix = ou=Idmap\n";
+  print SMB "        ldap idmap suffix = ou=Idmap\n";
   print SMB "        ldap user suffix = ou=Users\n";
   print SMB "        ldap group suffix = ou=Groups\n";
   print SMB "        ldap machine suffix = ou=Trusts\n";
@@ -9988,9 +9979,9 @@ if (! -d "/etc/samba") {
   print SMB "        template primary group = users\n";
   print SMB "        template shell = /usr/sbin/smrsh\n";
   print SMB "        ldapsam:trusted = yes\n";
-#  print SMB "        idmap uid = 524288-589824\n";
-#  print SMB "        idmap gid = 524288-589824\n";
-#  print SMB "        idmap backend = ldap:$ldapserv{'ReplicateSMB'}\n";
+  print SMB "        idmap uid = 524288-589824\n";
+  print SMB "        idmap gid = 524288-589824\n";
+  print SMB "        idmap backend = ldap:$ldapserv{'ReplicateSMB'}\n";
 
     print SMB "        ldap passwd sync = Yes\n";
     print SMB "        passdb backend = ldapsam:$ldapserv{'ReplicateSMB'}\n";
@@ -10658,12 +10649,14 @@ controls {
 
 __EOB__
   foreach $tsigz (@tsigkeys) {
-    print DNS<<__EOB__;
+    if ($tsigz ne $dnsconf{'Domain'}) {
+      print DNS<<__EOB__;
 key $tsigz {
         algorithm hmac-md5;
         secret $tsig{$tsigz};
 };
 __EOB__
+    }
   }
   if ($dnsconf{'DynKey'} ne "") {
     open(KEY,">zones/nsupdate.key");
@@ -11207,7 +11200,7 @@ foreach $intslave (@islaves) {
   foreach $txs (@txsite) {
     $txout .="                        $txs;\n";
   }
-  if ($txout != "") {
+  if (($txout != "") && ($intslave ne $dnsconf{'Domain'})) {
     print DNS<<__EOB__;
        zone "$intslave" {
               type slave;
@@ -11227,7 +11220,8 @@ __EOB__
 
 foreach $intslave (@ihosted) {
   push(@idnszones,$intslave);
-  print DNS<<__EOB__;
+  if ($intslave ne $dnsconf{'Domain'}) {
+    print DNS<<__EOB__;
        zone "$intslave" {
               type master;
               notify yes;
@@ -11240,10 +11234,11 @@ foreach $intslave (@ihosted) {
                      key $dnsconf{'Domain'};
               };
 __EOB__
-  print DNS<<__EOB__;
+    print DNS<<__EOB__;
               check-names ignore;
        };
 __EOB__
+  }
 }
 
 #chop $othermatch;
@@ -11426,6 +11421,12 @@ __EOB__
     }
 
   foreach $hdom (@hosted) {
+    $hdfile=$hdom;
+    $hdkey="\n                        key $hdom;";
+    if ($hdom eq $dnsconf{'Domain'}) {
+      $hdfile="domain.ext";
+      $hdkey="";
+    }
     $txout="";
     @txsite=split(/,/,$allowtx{$hdom});
     shift @txsite;
@@ -11437,7 +11438,7 @@ __EOB__
        zone "$hdom" {
               type master;
               notify yes;
-              file "$hdom";
+              file "$hdfile";
               also-notify {
                      127.0.0.1;
               };
@@ -11450,8 +11451,7 @@ __EOB__
     push(@idnszones,$hdom);
   print DNS<<__EOB__;
               allow-update {
-                        key $hdom;
-                        key $dnsconf{'Domain'};
+                        key $dnsconf{'Domain'};$hdkey
               };
               check-names ignore;
 __EOB__
@@ -11464,6 +11464,10 @@ __EOB__
   }
 
   foreach $hdom (@slaves) {
+    $hdfile=$hdom;
+    if ($hdom eq $dnsconf{'Domain'}) {
+      $hdfile="domain.ext";
+    }
     $txout="";
     @txsite=split(/,/,$allowtx{$hdom});
     shift @txsite;
@@ -11475,7 +11479,7 @@ __EOB__
       print DNS<<__EOB__;
        zone "$hdom" {
               type slave;
-              file "$hdom";
+              file "$hdfile";
               allow-notify {
                         any;
               };
@@ -12897,7 +12901,7 @@ __EOB__
       chop $options;
       printf AFMC ("%-15s%-75s%s\n",@nfsdat[1],"-fstype=smb$options",":@nfsdat[2]");
     } else {
-      printf AFMC ("%-15s%-75s%s\n",@nfsdat[1],"-fstype=nfs,vers=3,acl,lock,rsize=1048576,wsize=1048576,hard,intr","@nfsdat[2]");
+      printf AFMC ("%-15s%-75s%s\n",@nfsdat[1],"-fstype=nfs,vers=3,acl,hard,intr","@nfsdat[2]");
     }
     print UPEX @nfsdat[3] . "\n";
     if (@nfsdat[3] ne "-") {
@@ -15922,17 +15926,12 @@ sub printsogo() {
     @sogodb=split(/\|/,$sogoconf);
 
 
-    @keys=("host","user","password","base","filter","sqlserver","sfilter","sbase");
+    @keys=("host","user","password","base","filter","sqlserver");
     for ($kcnt=0;$kcnt < @keys;$kcnt++) {
       $sogo{@keys[$kcnt]}=@sogodb[$kcnt];
     }
 
-    if ($sogo{'sbase'} ne "") {
-      $sogo{'sbase'}.=",";
-    }
-
-    @hosts = split(/ /,$sogo{'host'});
-    ($host,$port)=split(/:/,@hosts[0]);
+    ($host,$port)=split(/:/,$sogo{'host'});
 
     $ldap = Net::LDAP->new($host,port=>$port,version => "3",timeout => "10") or return;
     $ldap->bind($sogo{'user'},password => $sogo{'password'}) or return;
@@ -15980,8 +15979,7 @@ sub printsogo() {
 	SOGoIMAPAclStyle = rfc4314;
 	SOGoIMAPAclUsernamesAreQuoted = YES;
 	SOGoIMAPServer = $imapserv;
-	SOGoLDAPQueryLimit = 10;
-	SOGoLDAPQueryTimeout = 20;
+	SOGoLDAPQueryLimit = 20;
 	SOGoLanguage = English;
 	SOGoLoginModule = Mail;
 	SOGoMailDomain = $dnsconf{'Domain'};
@@ -16010,9 +16008,10 @@ __EOF__
 		bindPassword = $ldapserv{'Password'};
 		canAuthenticate = YES;
 		displayName = "Corporate Directory";
-		hostname = 127.0.0.1:636;
+		hostname = 127.0.0.1;
 		id = public;
 		isAddressBook = YES;
+		port = 389;
 	    }
 __EOF__
   } else {
@@ -16021,17 +16020,17 @@ __EOF__
                 CNFieldName = cn;
                 IDFieldName = cn;
                 UIDFieldName = sAMAccountName;
-                baseDN = "$sogo{'sbase'}$sogo{'base'}";
+                baseDN = "$sogo{'base'}";
                 bindDN = "$dn";
                 bindFields = sAMAccountName;
                 bindPassword = $sogo{'password'};
-                searchFields = "($sogo{'sfilter'})";
-                filter = "$sogo{'filter'}";
+		filter = "$sogo{'filter'}";
                 canAuthenticate = YES;
                 displayName = "Global Address Book";
-                hostname = $sogo{'host'};
+                hostname = $host;
                 id = public;
                 isAddressBook = YES;
+                port = $port;
             }
 _EOF_
      }
@@ -16041,7 +16040,7 @@ print SGW<<__EOF__;
 	WOMessageUseUTF8 = YES;
 	WOParsersUseUTF8 = YES;
 	WOUseRelativeURLs = YES;
-	WOWorkersCount = $sogoprefrk;
+	WOWorkersCount = $sogoprefrk
     };
 __EOF__
   print SGW "}";
