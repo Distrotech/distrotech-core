@@ -51,13 +51,15 @@ if [ -e /etc/.install ];then
   portmap
 
   #Start RPC
+  echo 262144 > /proc/sys/net/core/rmem_default
+  echo 262144 > /proc/sys/net/core/rmem_max
   chown 99 /var/lib/nfs
   chown -R 99 /var/lib/nfs/sm
   chown -R 99 /var/lib/nfs/sm.bak
   /usr/sbin/rpc.idmapd
   /usr/sbin/rpc.statd -p 32765 -o 32766
   /usr/sbin/rpc.mountd -p 32767
-  /usr/sbin/rpc.nfsd -p 2049 8
+  /usr/sbin/rpc.nfsd -p 2049 32
 
   #Mount Remote File Blocks
   if [ -x /etc/rc.d/rc.mount ];then

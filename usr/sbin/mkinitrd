@@ -35,7 +35,8 @@ fi;
 
 dd if=/dev/zero of=/tmp/initrd bs=1M count=16  > /dev/null 2>&1
 mke2fs -Fi 1024 /tmp/initrd >/dev/null 2>&1
-mount /tmp/initrd /mnt/initrd -o loop=/dev/loop6
+losetup /dev/loop6 /tmp/initrd
+mount /dev/loop6 /mnt/initrd
 
 mkdir /mnt/initrd/bin
 mkdir /mnt/initrd/dev
@@ -245,7 +246,7 @@ fi;
 
 umount /proc
 
-mount --ro -t ext3 ${ROOTDEV} /sysroot
+mount --ro -t ext4 ${ROOTDEV} /sysroot
 mount -t ramfs none /sysroot/dev
 mkdir /sysroot/dev/udevdb
 mkdir /sysroot/dev/pts
@@ -326,6 +327,8 @@ cp /usr/bin/modprobe.static modprobe
 	
 cp /lib/modules/${SMP_KERNEL}/kernel/fs/jbd/jbd.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
+cp /lib/modules/${SMP_KERNEL}/kernel/fs/jbd2/jbd2.ko.gz \
+   /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
 
 cp /lib/modules/${SMP_KERNEL}/kernel/drivers/block/loop.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/block
@@ -391,6 +394,12 @@ cp -r /lib/modules/${SMP_KERNEL}/kernel/lib/lzo/* \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/lib
 
 cp /lib/modules/${SMP_KERNEL}/kernel/fs/ext3/ext3.ko.gz \
+   /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
+
+cp -r /lib/modules/${SMP_KERNEL}/kernel/lib/crc16.ko.gz \
+   /mnt/initrd/lib/modules/${SMP_KERNEL}/lib
+
+cp /lib/modules/${SMP_KERNEL}/kernel/fs/ext4/ext4.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
 
 cp /lib/modules/${SMP_KERNEL}/kernel/fs/nfs/nfs.ko.gz \
@@ -464,6 +473,8 @@ depmod -a -F /boot/System.map-${INSTALL_KERNEL} -b /mnt/initrd ${INSTALL_KERNEL}
 cd /root
 
 umount /mnt/initrd
+losetup -d /dev/loop6
+
 e2fsck -y /tmp/initrd  > /dev/null 2>&1
 if [ "$1" == "test" ];then
   (dd if=/tmp/initrd bs=1k |gzip -c9 |dd bs=1k of=/boot/initrd-test-$KERNEL) > /dev/null 2>&1
