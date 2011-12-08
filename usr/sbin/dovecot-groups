@@ -35,6 +35,4 @@ fi;
 export ACL_GROUPS
 export USERDB_KEYS="$USERDB_KEYS acl_groups"
 
-#echo ${USER} : ${IP} : ${ACL_GROUPS} : ${USERDB_KEYS} >> /tmp/logins
-
 exec "$@"
