@@ -73,6 +73,7 @@ if [ -h "$RTPT" ] && [ "$1" != "NEWBOOT" ];then
      ls -l $RTPT |awk '{print "mknod -m 600 /mnt/initrd/etc/rootdev b "$5" "$6}' |sh
    fi;
 fi;
+rsync -tp --devices /mnt/initrd/etc/rootdev /etc/rootdev
 
 if [ ! -e /mnt/initrd/etc/rootdev ];then
   ls -l /mnt/initrd/etc
