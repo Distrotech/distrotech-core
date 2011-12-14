@@ -16010,7 +16010,7 @@ __EOF__
 		bindPassword = $ldapserv{'Password'};
 		canAuthenticate = YES;
 		displayName = "Corporate Directory";
-		hostname = 127.0.0.1:636;
+		hostname = 127.0.0.1:389;
 		id = public;
 		isAddressBook = YES;
 	    }
