@@ -1762,6 +1762,7 @@ if [ -e networksentry-full ] && [ ! -e /etc/.firstboot ];then
       /usr/sbin/winbindd > /dev/null 2>&1 &
       /usr/sbin/smbd -D > /dev/null 2>&1 &
       /etc/rc.d/rc.mail
+      touch /opt/apache2/conf/httpd.conf
       AST_RESTART=1
     else
       /bin/sh sqlpasswd > /dev/null 2>&1
