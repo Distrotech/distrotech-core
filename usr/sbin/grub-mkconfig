@@ -52,7 +52,7 @@ Generate a grub config file
   -o, --output=FILE       output generated config to FILE [default=stdout]
   -h, --help              print this message and exit
   -v, --version           print the version information and exit
-
+  -r, --root=PATH         filesystem root
 Report bugs to <bug-grub@gnu.org>.
 EOF
 }
@@ -85,6 +85,11 @@ do
 	grub_cfg=`argument $option "$@"`; shift;;
     --output=*)
 	grub_cfg=`echo "$option" | sed 's/--output=//'`
+	;;
+    -r | --root)
+	fs_root=`argument $option "$@"`; shift;;
+    --root=*)
+	fs_root=`echo "$option" | sed 's/--root=//'`
 	;;
     -*)
 	echo "Unrecognized option \`$option'" 1>&2
@@ -141,11 +146,11 @@ if test -e ${GRUB_PREFIX}/device.map ; then : ; else
 fi
 
 # Device containing our userland.  Typically used for root= parameter.
-GRUB_DEVICE="`${grub_probe} --target=device /`"
+GRUB_DEVICE="`${grub_probe} --target=device ${fs_root}/`"
 GRUB_DEVICE_UUID="`${grub_probe} --device ${GRUB_DEVICE} --target=fs_uuid 2> /dev/null`" || true
 
 # Device containing our /boot partition.  Usually the same as GRUB_DEVICE.
-GRUB_DEVICE_BOOT="`${grub_probe} --target=device /boot`"
+GRUB_DEVICE_BOOT="`${grub_probe} --target=device ${fs_root}/boot`"
 GRUB_DEVICE_BOOT_UUID="`${grub_probe} --device ${GRUB_DEVICE_BOOT} --target=fs_uuid 2> /dev/null`" || true
 
 # Filesystem for the device containing our userland.  Used for stuff like
@@ -286,7 +291,7 @@ for i in ${grub_mkconfig_dir}/* ; do
       if grub_file_is_not_garbage "$i" && test -x "$i" ; then
         echo
         echo "### BEGIN $i ###"
-        "$i"
+        "$i" ${fs_root}
         echo "### END $i ###"
       fi
     ;;
