@@ -62,7 +62,7 @@ set_background_image(){
 }
 
 # Next search for pictures the user put into /boot/grub/ and use the first one.
-background=/boot/grub/background.jpg
+background=${1}/boot/grub/background.jpg
 if test -e "${background}" ;then
 	set_background_image "${background}"
 	exit 0

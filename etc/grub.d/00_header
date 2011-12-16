@@ -126,7 +126,7 @@ fi
 
 if [ "x$gfxterm" = x1 ]; then
     # Make the font accessible
-    prepare_grub_to_access_device `${grub_probe} --target=device "${GRUB_FONT_PATH}"`
+    prepare_grub_to_access_device `${grub_probe} --target=device "${1}${GRUB_FONT_PATH}"`
 
     cat << EOF
 if loadfont `make_system_path_relative_to_its_root "${GRUB_FONT_PATH}"` ; then
@@ -163,7 +163,7 @@ if [ "x$gfxterm" = x1 ]; then
     if [ "x$GRUB_THEME" != x ] && [ -f "$GRUB_THEME" ] \
 	&& is_path_readable_by_grub "$GRUB_THEME"; then
 	echo "Found theme: $GRUB_THEME" >&2
-	prepare_grub_to_access_device `${grub_probe} --target=device "$GRUB_THEME"`
+	prepare_grub_to_access_device `${grub_probe} --target=device "${1}$GRUB_THEME"`
 	cat << EOF
 insmod gfxmenu
 EOF
@@ -203,7 +203,7 @@ EOF
 	    *.jpg|*.jpeg)  reader=jpeg ;;
 	    *)             echo "Unsupported image format" >&2; exit 1 ;;
 	esac
-	prepare_grub_to_access_device `${grub_probe} --target=device "$GRUB_BACKGROUND"`
+	prepare_grub_to_access_device `${grub_probe} --target=device "${1}$GRUB_BACKGROUND"`
 	cat << EOF
 insmod $reader
 background_image -m stretch `make_system_path_relative_to_its_root "$GRUB_BACKGROUND"`
@@ -213,7 +213,7 @@ fi
 
 # Gettext variables and module
 if [ "x${LANG}" != "xC" ] && [ -d "${locale_dir}" ] ; then
-    prepare_grub_to_access_device $(${grub_probe} --target=device ${locale_dir})
+    prepare_grub_to_access_device $(${grub_probe} --target=device ${1}${locale_dir})
   cat << EOF
 set locale_dir=(\$root)$(make_system_path_relative_to_its_root ${locale_dir})
 set lang=${grub_lang}

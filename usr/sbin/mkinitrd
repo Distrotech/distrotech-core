@@ -222,7 +222,8 @@ _EOF_
     echo "/sbin/sleep ${USBSLEEP}" >>/mnt/initrd/linuxrc
   fi;
 
-#if [ "`/sbin/dmraid -c -sa -i | grep -iv "No RAID"`" ];then
+#/sbin/dmraid -c -sa -i > /dev/null 2>&1
+#if [ $? == 0 ];then
 #  echo "/sbin/dmraid -ay -i" >> /mnt/initrd/linuxrc
 #fi;
 
@@ -341,8 +342,10 @@ fi;
 
 cp /lib/modules/${SMP_KERNEL}/kernel/drivers/md/dm-mod.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/block
-cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/md/dm-mod.ko.gz \
-   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/block
+if [ -e /lib/modules/${INSTALL_KERNEL}/kernel/drivers/md/dm-mod.ko.gz ];then
+  cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/md/dm-mod.ko.gz \
+     /mnt/initrd/lib/modules/${INSTALL_KERNEL}/block
+fi;
 
 if [ /lib/modules/${SMP_KERNEL}/kernel/drivers/md/dm-log.ko.gz ];then
   cp /lib/modules/${SMP_KERNEL}/kernel/drivers/md/dm-log.ko.gz \
@@ -404,6 +407,8 @@ cp /lib/modules/${SMP_KERNEL}/kernel/fs/ext4/ext4.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
 
 cp /lib/modules/${SMP_KERNEL}/kernel/fs/nfs/nfs.ko.gz \
+   /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
+cp /lib/modules/${SMP_KERNEL}/kernel/fs/fscache/fscache.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
 #cp /lib/modules/${INSTALL_KERNEL}/kernel/fs/nfs/nfs.ko.gz \
 #   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/fs
