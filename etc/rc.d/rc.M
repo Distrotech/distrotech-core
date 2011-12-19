@@ -42,7 +42,6 @@ fi;
 if [ -e /etc/.install ];then
   /sbin/agetty 38400 tty9 linux &
   /bin/bash > /dev/tty2 2>&1 < /dev/tty2 &
-  /sbin/modprobe dm-mod
   /install/sysconfig
   clear
   init 6

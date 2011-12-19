@@ -31,10 +31,10 @@ if [ ! -d /sys/block ];then
   mount -t sysfs none /sys
 fi;
 
-if [ -e /etc/.install ];then
-  modprobe dm-mod
+#if [ -e /etc/.install ];then
+#  modprobe dm-mod
 #  dmraid -ay -i > /dev/null 2>&1
-fi;
+#fi;
 
 #Bring Up Loopback Device
 /sbin/ip addr add 127.0.0.1/8 dev lo
@@ -65,7 +65,10 @@ if [ -e /etc/HOSTNAME ];then
 fi;
 
 #Setup Disk Mapper
-/sbin/dmsetup mknodes
+(mount -t ramfs none /var/lock/lvm
+/usr/sbin/vgchange -a y --sysinit
+/usr/sbin/vgscan --mknodes
+umount /var/lock/lvm) >/dev/null 2>&1
 
 #if [ "`/sbin/dmraid -c -sa -i | grep -iv "No RAID"`" ];then
 #  ln -s mapper/`/sbin/dmraid -c -sa -i` /dev/mda
@@ -85,7 +88,7 @@ if [ ! -d /dev/loop ];then
 fi;
 
 if [ -e /etc/.install ];then
-  mount -f -t ext4 /dev/loop0 / > /dev/null 2>&1
+  mount -f -t ext4 /dev/flash/install / > /dev/null 2>&1
   mount -f -t ext3 /dev/ram5 /etc > /dev/null 2>&1
 
   dd if=/dev/zero of=/dev/ram1 bs=1024 count=4096 > /dev/null 2>&1
@@ -277,7 +280,6 @@ if [ -e /etc/.install ];then
 
   rm /etc/mtab
   touch /etc/mtab
-  /usr/sbin/vgmknodes --refresh
   mount / -f
 
   #Set DMA/32bit On IDE Drives
@@ -296,6 +298,8 @@ if [ -e /etc/.install ];then
 
   #Mount All Mount Points
   mount -at ext4,ext3 > /dev/null 2>&1
+
+  /usr/sbin/vgchange -a y --poll y --monitor y
 
   #Startup Syslog
   if [ -e /var/run/syslog.pid ];then
