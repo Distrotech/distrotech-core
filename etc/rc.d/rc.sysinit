@@ -91,17 +91,9 @@ if [ -e /etc/.install ];then
   mount -f -t ext4 /dev/flash/install / > /dev/null 2>&1
   mount -f -t ext3 /dev/ram5 /etc > /dev/null 2>&1
 
-  dd if=/dev/zero of=/dev/ram1 bs=1024 count=4096 > /dev/null 2>&1
-  dd if=/dev/zero of=/dev/ram2 bs=1024 count=256 > /dev/null 2>&1
-  dd if=/dev/zero of=/dev/ram3 bs=1024 count=4096 > /dev/null 2>&1
-
-  mke2fs -i 2048 /dev/ram1 4096 >/dev/null 2>&1
-  mke2fs -i 1024 /dev/ram2 256 > /dev/null 2>&1
-  mke2fs -i 1024 /dev/ram3 4096 > /dev/null 2>&1
-
-  mount /dev/ram1 /var > /dev/null 2>&1
-  mount /dev/ram2 /root > /dev/null 2>&1
-  mount /dev/ram3 /tmp > /dev/null 2>&1
+  mount -t ramfs none /var > /dev/null 2>&1
+  mount -t ramfs none /root > /dev/null 2>&1
+  mount -t tmpfs none /tmp > /dev/null 2>&1
 
   mount -t proc none /proc > /dev/null 2>&1
   mount -t devpts none /dev/pts > /dev/null 2>&1
@@ -202,7 +194,7 @@ if [ -e /etc/.install ];then
 
   #Fire Up Device Discovery And Initilise Devices
   /sbin/udevtrigger
-  /sbin/udevsettle
+  /sbin/udevsettle --timeout=30
 
   while [ "`ps ax |grep /sbin/hotplug |grep -v grep`" ] && [ "$time_out" != "XXXXXXXXXX" ];do
     time_out=X$time_out
@@ -592,7 +584,7 @@ EOF
 
   #Fire Up Device Discovery And Initilise Devices
   /sbin/udevtrigger
-  /sbin/udevsettle
+  /sbin/udevsettle --timeout=30
 
   while [ "`ps ax |grep /sbin/hotplug |grep -v grep`" ] && [ "$time_out" != "XXXXXXXXX" ];do
     time_out=X$time_out
