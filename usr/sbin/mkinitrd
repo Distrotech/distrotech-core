@@ -334,6 +334,8 @@ cp /lib/modules/${SMP_KERNEL}/kernel/fs/jbd2/jbd2.ko.gz \
 
 cp /lib/modules/${SMP_KERNEL}/kernel/drivers/block/loop.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/block
+cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/block/loop.ko.gz \
+   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/block
 
 if [ -e /lib/modules/${SMP_KERNEL}/kernel/drivers/acpi/dock.ko.gz ];then
   cp /lib/modules/${SMP_KERNEL}/kernel/drivers/acpi/dock.ko.gz \
@@ -342,10 +344,8 @@ fi;
 
 cp /lib/modules/${SMP_KERNEL}/kernel/drivers/md/dm-mod.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/block
-if [ -e /lib/modules/${INSTALL_KERNEL}/kernel/drivers/md/dm-mod.ko.gz ];then
-  cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/md/dm-mod.ko.gz \
-     /mnt/initrd/lib/modules/${INSTALL_KERNEL}/block
-fi;
+cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/md/dm-mod.ko.gz \
+   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/block
 
 if [ /lib/modules/${SMP_KERNEL}/kernel/drivers/md/dm-log.ko.gz ];then
   cp /lib/modules/${SMP_KERNEL}/kernel/drivers/md/dm-log.ko.gz \
@@ -399,12 +399,16 @@ cp -r /lib/modules/${SMP_KERNEL}/kernel/lib/lzo/* \
 
 cp /lib/modules/${SMP_KERNEL}/kernel/fs/ext3/ext3.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
+cp /lib/modules/${INSTALL_KERNEL}/kernel/fs/ext3/ext3.ko.gz \
+   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/fs
 
 cp -r /lib/modules/${SMP_KERNEL}/kernel/lib/crc16.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/lib
 
 cp /lib/modules/${SMP_KERNEL}/kernel/fs/ext4/ext4.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
+cp /lib/modules/${INSTALL_KERNEL}/kernel/fs/ext4/ext4.ko.gz \
+   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/fs
 
 cp /lib/modules/${SMP_KERNEL}/kernel/fs/nfs/nfs.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
@@ -464,6 +468,8 @@ rm /mnt/initrd/lib/modules/${SMP_KERNEL}/usb/hwa-hc.ko.gz
 
 cp /lib/modules/${SMP_KERNEL}/kernel/drivers/usb/storage/* \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/usb
+cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/usb/storage/* \
+   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/usb
 
 cp /lib/modules/${SMP_KERNEL}/kernel/drivers/usb/misc/ftdi-elan.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/usb
