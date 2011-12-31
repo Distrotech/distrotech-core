@@ -19,8 +19,8 @@ if [ "$SN_ADDR" ];then
   SN_ADDR[1]=24;
 fi;
 
-if [ -e /install/default.conf.full ];then
-  config_file=/install/default.conf.full
+if [ -e /install/default.conf ];then
+  config_file=/install/default.conf
  else
   config_file=/etc/firewall.conf
 fi;
