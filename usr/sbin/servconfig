@@ -53,7 +53,7 @@ if [ ! "`lsmod |grep -E "^dummy"`" ] && [ -x /usr/sbin/noroute ];then
   /usr/sbin/noroute
 fi;
 
-if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstconfig ];then
+if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /etc/.firstboot ] && [ ! -e /tmp/.firstconfig ];then
   if [ ! "`pidof dhcpd`" ];then
     /usr/sbin/dhcpd > /dev/null 2>&1
   fi;
@@ -950,7 +950,7 @@ if [ -e openvpn.conf ] && [ -e /etc/openvpn/openvpn.conf ];then
   fi;
 fi;
 
-if [ "$OVPNDIFF" ] && [ ! -e networksentry-lite ];then
+if [ "$OVPNDIFF" ] && [ ! -e /etc/.firstboot ] && [ ! -e networksentry-lite ];then
  if [ ! -d /etc/openvpn ];then
     mkdir /etc/openvpn
  fi; 
@@ -1340,7 +1340,7 @@ if [ -e smb.conf ] && [ -e /etc/samba/smb.conf ];then
   fi;
 fi;
 
-if [ "$SMFDIFF" ] && [ ! -e networksentry-lite ];then
+if [ "$SMFDIFF" ] && [ ! -e /etc/.firstboot ] && [ ! -e networksentry-lite ];then
   cp -p smb.conf /etc/samba/
   chmod 644 /etc/samba/smb.conf
   chown root.root /etc/samba/smb.conf
@@ -2260,7 +2260,7 @@ if [ -e t38modem_start ] && [ -e /usr/libexec/t38modem_start ];then
   fi;
 fi;
 
-if [ ! -e networksentry-lite ];then
+if [ ! -e /etc/.firstboot ] && [ ! -e networksentry-lite ];then
   if [ "$FTCONF" ] || [ "$FGCONF" ] || [ "$FSCONF" ] || [ "$T38CONF" ];then
     cp faxtty /var/spool/hylafax/etc/faxtty
     cp faxconfig /var/spool/hylafax/etc/config
