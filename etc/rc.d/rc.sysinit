@@ -99,12 +99,6 @@ if [ -e /etc/.install ];then
   mount -t devpts none /dev/pts > /dev/null 2>&1
   mount -t tmpfs none /dev/shm > /dev/null 2>&1
 
-  #Scan And Load ATA Modules
-  for scard in `ls /lib/modules/${LKERNEL}/kernel/drivers/ata/  |grep -vE "(^lib)|(^ahci_platform)|(^pata_legacy)|(^pata_winbond)|(^pata_qdi)|(^ata_generic)" |cut -d. -f1`;do
-     modprobe $scard
-  done;
-  modprobe ata_generic
-
   for vardir in log run lock tmp lib spool home state named empty logs net-snmp db;do
     mkdir /var/$vardir
   done;
@@ -136,7 +130,6 @@ if [ -e /etc/.install ];then
 
   chmod 755 /var/spool/hylafax
   chown fax.fax /var/spool/hylafax
-  tar -C /var/spool/hylafax -xzf /install/faxspool.tgz
   
   mkdir /var/spool/mailscanner/incoming
   mkdir /var/spool/mailscanner/quarantine
@@ -146,15 +139,11 @@ if [ -e /etc/.install ];then
   mkdir /var/state/dhcp/
   mkdir /var/state/saslauthd/
 
-  tar -C / -xzf /install/htdocs.tgz
   if [ ! -d /var/spool/apache/htdocs/ns/config ];then
-    mkdir /var/spool/apache/htdocs/ns/config
+    mkdir -p /var/spool/apache/htdocs/ns/config
     mkdir /var/spool/apache/htdocs/ns/config/sslconf
     mkdir /var/spool/apache/htdocs/ns/config/zones
   fi;
-  mkdir /var/spool/apache/htdocs/userguides
-  tar -C /var/spool/apache/htdocs/userguides -xzf /install/userguide.tgz
-  ln -s /install/jre.exe /var/spool/apache/htdocs/
 
   chmod 750 /var/log/squid
   chmod 750 /var/spool/mailscanner/*
@@ -181,8 +170,6 @@ if [ -e /etc/.install ];then
   ln -s /install/icons/* /var/spool/apache/icons/
 
   cp /etc/root.cache /var/named
-  cp /install/.profile_install /root/.profile
-  chmod 750 /root/.profile
   echo "clear" > /root/.bash_logout
 
   #Load Network Modules
@@ -203,6 +190,27 @@ if [ -e /etc/.install ];then
 
   mount -a
   /sbin/hdparm -c1 -d1 /dev/hd? > /dev/null 2>&1
+
+  #Create The Default Config File
+  if [ -e /install/default.conf.sysvars ];then
+    if [ ! -e /etc/iftab ];then
+      touch /etc/iftab
+    fi;
+    cifname=0;
+    for nifname in A B C D;do
+      (/sbin/ip link set dev eth${cifname} down
+      /sbin/ifrename -i eth${cifname} -n eth${nifname}
+      /sbin/ip link set dev eth${nifname} up) > /dev/null 2>&1
+      let cifname++;
+    done;
+
+    /usr/sbin/sysreconf /install/default.conf.sysvars
+    cp /tmp/netsentry.conf /var/spool/apache/htdocs/ns/config
+    ssh-keygen -t rsa1 -f /etc/ssh_host_key -N "" > /dev/null 2>&1
+    ssh-keygen -t dsa -f /etc/ssh_host_dsa_key -N "" > /dev/null 2>&1
+    ssh-keygen -t rsa -f /etc/ssh_host_rsa_key -N "" > /dev/null 2>&1
+    /usr/sbin/sshd > /dev/null 2>&1
+  fi;
 
   /usr/sbin/syslogd &
   /usr/sbin/klogd -c 1 &
@@ -237,13 +245,16 @@ if [ -e /etc/.install ];then
 
   #Load CD/DVD Drives
   /sbin/modprobe sr_mod
-  /sbin/modprobe autofs4
+  /sbin/modprobe autofs4 > /dev/null 2>&1
 
   #Load Mouse Needed For Boom
-  /sbin/modprobe psmouse
+  /sbin/modprobe psmouse > /dev/null 2>&1
 
   #Turn Swap On
-  /sbin/swapon -a > /dev/null 2>&1
+  for disk in `ls /dev/[hs]d[a-z]`;do
+    (fdisk -l ${disk} 2>/dev/null|grep swap  |awk '{printf "swapon %s\n",$1}' |sh 
+    gdisk -l ${disk} 2>/dev/null |awk -v disk=${disk} '$7 == "swap" {printf "swapon %s%s\n",disk,$1}' |sh) > /dev/null 2>&1
+  done
 
   #load the vesa fb if no other fb is loaded 
   if [ ! -e /dev/fb1 ];then
@@ -257,18 +268,18 @@ if [ -e /etc/.install ];then
   /usr/bin/awk '$1 != "/dev/loop0" && ($3 == "ext3" || $3 == "ext4") {printf "/sbin/e2fsck -C 0 -p %s\nERR=$?\nif [ $ERR -gt 1 ] && [ $ERR -lt 8 ];then\n  /sbin/e2fsck -C 0 -Dfy %s\n  /sbin/reboot\nfi\n\n",$1,$1,$1 }' /etc/fstab |/bin/bash 2>/dev/null
 
   #Run a ext4 convert and scan on /
-  awk '$3 == "ext3" && $2 == "/" {printf "tune2fs -O extents,uninit_bg,dir_index %s;fsck.ext4 -C 0 -yfD %s\n",$1,$1}' /etc/fstab |sh
+#  awk '$3 == "ext3" && $2 == "/" {printf "tune2fs -O extents,uninit_bg,dir_index %s;fsck.ext4 -C 0 -yfD %s\n",$1,$1}' /etc/fstab |sh
 
   #Remount Root Device Read Write
   mount -n -o remount,rw /
 
   #Mount ext3 as ext4
-  if [ "`grep -w ext3 /etc/fstab`" ];then
-    awk '$3 == "ext3" && $2 != "/" {printf "tune2fs -O extents,uninit_bg,dir_index %s;fsck.ext4 -C 0 -yfD %s\n",$1,$1}' /etc/fstab |sh
-    sed -e "s/ext3\(.*\)/ext4\1/" /etc/fstab > /tmp/fstab.ext4
-    cp /tmp/fstab.ext4 /etc/fstab
-    rm /tmp/fstab.ext4
-  fi
+#  if [ "`grep -w ext3 /etc/fstab`" ];then
+#    awk '$3 == "ext3" && $2 != "/" {printf "tune2fs -O extents,uninit_bg,dir_index %s;fsck.ext4 -C 0 -yfD %s\n",$1,$1}' /etc/fstab |sh
+#    sed -e "s/ext3\(.*\)/ext4\1/" /etc/fstab > /tmp/fstab.ext4
+#    cp /tmp/fstab.ext4 /etc/fstab
+#    rm /tmp/fstab.ext4
+#  fi
 
   rm /etc/mtab
   touch /etc/mtab
@@ -291,7 +302,7 @@ if [ -e /etc/.install ];then
   #Mount All Mount Points
   mount -at ext4,ext3 > /dev/null 2>&1
 
-  /usr/sbin/vgchange -a y --poll y --monitor y
+  /usr/sbin/vgchange -a y --poll y --monitor y > /dev/null 2>&1
 
   #Startup Syslog
   if [ -e /var/run/syslog.pid ];then
@@ -302,11 +313,13 @@ if [ -e /etc/.install ];then
 
   #Fire up web FUSE
   if [ -x /usr/bin/bindfs ];then
-    modprobe fuse
     if [ ! -d /var/web ];then
       mkdir /var/web
     fi;
-    /usr/bin/bindfs --create-for-regex="././([^/]+)" --create-with-perms=660,770 /var/home /var/web
+    modprobe fuse > /dev/null 2>&1
+    if [ $? == 0 ];then
+      /usr/bin/bindfs --create-for-regex="././([^/]+)" --create-with-perms=660,770 /var/home /var/web
+    fi;
   fi;
 
   #Link FD
@@ -429,10 +442,10 @@ EOF
     mkdir /var/lib/nfs/rpc_pipefs
   fi;
   if [ ! -d /var/lib/nfs/rpc_pipefs/nfs ];then
-    mount -t rpc_pipefs none /var/lib/nfs/rpc_pipefs
+    mount -t rpc_pipefs none /var/lib/nfs/rpc_pipefs > /dev/null 2>&1
   fi;
   if [ ! -e /proc/fs/nfsd/exports ];then
-    mount -t nfsd none /proc/fs/nfsd
+    mount -t nfsd none /proc/fs/nfsd > /dev/null 2>&1
   fi;
 
   #PostGRE SQL Server
@@ -461,7 +474,7 @@ EOF
       rm /var/run/nscd/socket
     fi;
   fi;
-  rm /var/db/nscd/*
+  rm /var/db/nscd/* > /dev/null 2>&1
 
   #Create Proftp Run Directory
   if [ ! -d /var/run/proftpd ];then
@@ -534,7 +547,7 @@ EOF
 
   #Load Balancing Route Tables
   if [ ! -e /etc/.install ] && [ -x /sbin/ip ];then
-    /sbin/ip rule add iif lo table Ipsec prio 10
+    (/sbin/ip rule add iif lo table Ipsec prio 10
     /sbin/ip rule add table 80 prio 11
     /sbin/ip rule add table Static prio 12
     /sbin/ip rule add table VPN prio 13
@@ -571,11 +584,11 @@ EOF
     /sbin/ip rule add fwmark 27 table eth_9 prio 119
     /sbin/ip rule add table 90 prio 120
     /sbin/ip rule add table 150 prio 130 
-    /sbin/ip rule add table 95 prio 140
+    /sbin/ip rule add table 95 prio 140) > /dev/null 2>&1
   fi;
 
   #Load Network Modules
-  /etc/rc.d/rc.firewall startup
+  /etc/rc.d/rc.firewall startup > /dev/null 2>&1
   for ADAPTER in `lspci -nm |awk -F\" -v LPATH=/lib/modules/${LKERNEL} '$2 == "Class 0200" {printf "grep -E \"%s.*%s\" %s/modules.pcimap\n",$4,$6,LPATH}' |sh |awk '{print $1}' |sort |uniq`;do 
     if [ ! -d /sys/module/${ADAPTER} ];then
       /sbin/modprobe $ADAPTER > /dev/null 2>&1
@@ -616,6 +629,10 @@ EOF
       lsmod |grep -E "^${atalib} " |awk '$3 == 0 {printf "rmmod %s\n",$1}' |sh
     fi;
   done;
+fi;
+
+if [ -d /initrd/isofs/boot ] && [ -d /media ];then
+  mount --move /initrd/isofs /media > /dev/null 2>&1
 fi;
 
 #Unmount And Cleanup Initial Ram Disk
@@ -671,7 +688,9 @@ fi;
 
 if [ ! -e /etc/.install ];then
   #Turn On Syn Flood Protection
-  echo 1 >/proc/sys/net/ipv4/tcp_syncookies
+  if [ -e /proc/sys/net/ipv4/tcp_syncookies ];then
+    echo 1 >/proc/sys/net/ipv4/tcp_syncookies
+  fi;
 
   #Turn Off Explicit Congestion Notification (for broken firewalls)
   echo 0 >/proc/sys/net/ipv4/tcp_ecn
