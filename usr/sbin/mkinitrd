@@ -295,7 +295,7 @@ cp /sbin/udevstart /mnt/initrd/sbin/
 cp /bin/sleep.static /mnt/initrd/sbin/sleep
 cp /sbin/mount.static /mnt/initrd/sbin/mount
 cp /usr/sbin/portmap.static /mnt/initrd/sbin/portmap
-
+cp /etc/modprobe.* /mnt/initrd/etc/
 cp -r /etc/udev /mnt/initrd/etc/
 grep -v "NAME=\"flash" /etc/udev/rules.d/50-udev.rules > /mnt/initrd/etc/udev/rules.d/50-udev.rules
 
@@ -331,6 +331,11 @@ cp /lib/modules/${SMP_KERNEL}/kernel/fs/jbd/jbd.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
 cp /lib/modules/${SMP_KERNEL}/kernel/fs/jbd2/jbd2.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
+
+cp /lib/modules/${INSTALL_KERNEL}/kernel/fs/jbd/jbd.ko.gz \
+   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/fs
+cp /lib/modules/${INSTALL_KERNEL}/kernel/fs/jbd2/jbd2.ko.gz \
+   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/fs
 
 cp /lib/modules/${SMP_KERNEL}/kernel/drivers/block/loop.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/block
@@ -414,25 +419,28 @@ cp /lib/modules/${SMP_KERNEL}/kernel/fs/nfs/nfs.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
 cp /lib/modules/${SMP_KERNEL}/kernel/fs/fscache/fscache.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
-#cp /lib/modules/${INSTALL_KERNEL}/kernel/fs/nfs/nfs.ko.gz \
-#   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/fs
+cp /lib/modules/${INSTALL_KERNEL}/kernel/fs/nfs/nfs.ko.gz \
+   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/fs
 
 cp /lib/modules/${SMP_KERNEL}/kernel/fs/lockd/lockd.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
-#cp /lib/modules/${INSTALL_KERNEL}/kernel/fs/lockd/lockd.ko.gz \
-#   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/fs
+cp /lib/modules/${INSTALL_KERNEL}/kernel/fs/lockd/lockd.ko.gz \
+   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/fs
 
 cp /lib/modules/${SMP_KERNEL}/kernel/fs/nfs_common/nfs_acl.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
-#cp /lib/modules/${INSTALL_KERNEL}/kernel/fs/nfs_common/nfs_acl.ko.gz \
-#   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/fs
+cp /lib/modules/${INSTALL_KERNEL}/kernel/fs/nfs_common/nfs_acl.ko.gz \
+   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/fs
 
 cp /lib/modules/${SMP_KERNEL}/kernel/net/sunrpc/auth_gss/auth_rpcgss.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/net
+cp /lib/modules/${INSTALL_KERNEL}/kernel/net/sunrpc/auth_gss/auth_rpcgss.ko.gz \
+   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/net
+
 cp /lib/modules/${SMP_KERNEL}/kernel/net/sunrpc/sunrpc.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/net
-#cp /lib/modules/${INSTALL_KERNEL}/kernel/net/sunrpc/sunrpc.ko.gz \
-#   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/net
+cp /lib/modules/${INSTALL_KERNEL}/kernel/net/sunrpc/sunrpc.ko.gz \
+   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/net
 
 if [ -e /lib/modules/${SMP_KERNEL}/kernel/lib/crc-t10dif.ko.gz ];then
   cp /lib/modules/${SMP_KERNEL}/kernel/lib/crc-t10dif.ko.gz \
@@ -447,22 +455,33 @@ fi;
 if [ -e /lib/modules/${SMP_KERNEL}/kernel/drivers/ssb/ssb.ko.gz ];then
   cp /lib/modules/${SMP_KERNEL}/kernel/drivers/ssb/ssb.ko.gz \
      /mnt/initrd/lib/modules/${SMP_KERNEL}/usb
+  cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/ssb/ssb.ko.gz \
+     /mnt/initrd/lib/modules/${INSTALL_KERNEL}/usb
   cp /lib/modules/${SMP_KERNEL}/kernel/drivers/mmc/core/mmc_core.ko.gz \
      /mnt/initrd/lib/modules/${SMP_KERNEL}/usb
 fi;
 
 cp /lib/modules/${SMP_KERNEL}/kernel/drivers/pcmcia/pcmcia.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/usb
+cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/pcmcia/pcmcia.ko.gz \
+   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/usb > /dev/null 2>&1
 cp /lib/modules/${SMP_KERNEL}/kernel/drivers/pcmcia/pcmcia_core.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/usb
+cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/pcmcia/pcmcia_core.ko.gz \
+   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/usb > /dev/null 2>&1
+
 if [ -e /lib/modules/${SMP_KERNEL}/kernel/drivers/base/firmware_class.ko.gz ];then
   cp /lib/modules/${SMP_KERNEL}/kernel/drivers/base/firmware_class.ko.gz \
      /mnt/initrd/lib/modules/${SMP_KERNEL}/usb
 fi;
+
+cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/base/firmware_class.ko.gz \
+   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/usb
+
 cp /lib/modules/${SMP_KERNEL}/kernel/drivers/usb/host/* \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/usb > /dev/null 2>&1
-#cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/usb/host/* \
-#   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/usb
+cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/usb/host/* \
+   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/usb > /dev/null 2>&1
 
 rm /mnt/initrd/lib/modules/${SMP_KERNEL}/usb/hwa-hc.ko.gz
 
