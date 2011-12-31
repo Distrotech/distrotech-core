@@ -35,11 +35,4 @@ if [ $? != 0 ];then
   fi;
 fi
 
-if [ -e /etc/.install ];then
-  (modprobe pata_legacy
-  modprobe ata_generic 
-  dmsetup mknodes
-  vgchange -a y) > /dev/null 2>&1
-fi;
-
 reset -Q
