@@ -88,12 +88,12 @@ $mesg = $ldap->search(base=>"ou=Users",filter =>"(&(uid=*)(olduid=*)(objectClass
    if ( ! -d "/var/home/" . substr($newuid,0,1) ){
      mkdir("/var/home/" . substr($newuid,0,1));
      chown(0,0,"/var/home/" . substr($newuid,0,1));
-     chmod(0755,"/var/home/" . substr($newuid,0,1));
+     chmod(0770,"/var/home/" . substr($newuid,0,1));
    }
    if ( ! -d "/var/home/" . substr($newuid,0,1) . "/" . substr($newuid,1,1) ){
      mkdir("/var/home/" . substr($newuid,0,1) . "/" . substr($newuid,1,1));
      chown(0,0,"/var/home/" . substr($newuid,0,1) . "/" . substr($newuid,1,1));
-     chmod(0755,"/var/home/" . substr($newuid,0,1) . "/" . substr($newuid,1,1));
+     chmod(0770,"/var/home/" . substr($newuid,0,1) . "/" . substr($newuid,1,1));
    }
    if (( -d $oldhome ) &&  ( ! -d $hdir)) {
      system("mv $oldhome $hdir");
@@ -174,14 +174,17 @@ while($entry = $mesg->shift_entry) {
        chown(0,0,"/var/spool/mail/" . substr($uid,0,1) . "/" . substr($uid,1,1));
        chmod(01777,"/var/spool/mail/" . substr($uid,0,1) . "/" . substr($uid,1,1));
      }
-     mkdir($nhash);
-     chown($uidnum,"12",$nhash);
-     chmod(0700,$nhash);
+     @mdir=("","new","cur","tmp");
+     foreach $ndir (@mdir) {
+       mkdir($nhash . "/" . $ndir);
+       chown($uidnum,"12",$nhash . "/" . $ndir);
+       chmod(0770,$nhash . "/" . $ndir);
+     }
    } elsif ( ! -d $nhash ) {
      system("mv $nhash $nhash.mbox");
      mkdir($nhash);
      chown($uidnum,"12",$nhash);
-     chmod(0700,$nhash);
+     chmod(0770,$nhash);
      system("/usr/sbin/mb2md -s $nhash.mbox -d $nhash");
      system("chown -R $uidnum.12 $nhash");
    }
