@@ -163,6 +163,7 @@ if ($ds) {
         }
         $euser=$uid;
         $_SESSION['classi']=$uid;
+        $_SESSION['disppage']="ldap/userinfo.php";
         $newacc="yes";
         include "userinfo.php";
         return;
