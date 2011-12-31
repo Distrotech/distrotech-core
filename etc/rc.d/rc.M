@@ -40,8 +40,9 @@ if [ -x /etc/rc.d/rc.network ];then
 fi;
 
 if [ -e /etc/.install ];then
-  /sbin/agetty 38400 tty9 linux &
-  /bin/bash > /dev/tty2 2>&1 < /dev/tty2 &
+  /usr/bin/setsid /sbin/agetty 38400 tty8 linux &
+  /usr/bin/setsid /sbin/agetty 38400 tty9 linux &
+  /usr/bin/setsid /sbin/agetty -nl /bin/bash 38400 tty2 linux &
   /install/sysconfig
   clear
   init 6
@@ -138,6 +139,18 @@ if [ -e /etc/.install ];then
   /usr/bin/RunCache > /dev/null 2>&1&
 #  /usr/sbin/frox > /dev/null 2>&1 &
 
+  #Run PGSQL And Start AGI Agent
+  if [ ! -e /etc/.networksentry-lite ];then
+    chmod 700 /etc/rc.d/rc.exchange
+    /etc/rc.d/rc.exchange > /dev/null 2>&1
+    if [ -x /usr/sbin/asterisk ];then
+      /var/lib/asterisk/agi-bin/phpagi-fast.php > /dev/null 2>&1
+    fi;
+    if [ ! -e /tmp/op_buttons.cfg.new ] || [ ! -e /tmp/op_style.cfg.new ];then
+      /etc/asterisk/pannel/genbut.pl > /dev/null 2>&1 
+    fi
+  fi;
+
   #Start Email
   if [ -x /etc/rc.d/rc.mail ];then
     if [ ! -d /var/spool/mqueue.in ];then
@@ -166,18 +179,6 @@ if [ -e /etc/.install ];then
     /usr/sbin/smbd -D &
   fi;
 
-  #Run PGSQL And Start AGI Agent
-  if [ ! -e /etc/.networksentry-lite ];then
-    chmod 700 /etc/rc.d/rc.exchange
-    /etc/rc.d/rc.exchange > /dev/null 2>&1
-    if [ -x /usr/sbin/asterisk ];then
-      /var/lib/asterisk/agi-bin/phpagi-fast.php > /dev/null 2>&1
-    fi;
-    if [ ! -e /tmp/op_buttons.cfg.new ] || [ ! -e /tmp/op_style.cfg.new ];then
-      /etc/asterisk/pannel/genbut.pl > /dev/null 2>&1 
-    fi
-  fi;
-
   #Set Echo Coefficients
   if [ -d /proc/zaptel ];then
     if [  "`cat /proc/zaptel/* |grep FXSKS`" ];then
@@ -190,7 +191,7 @@ if [ -e /etc/.install ];then
     fi;
   fi;
   if [ -d /proc/dahdi ];then
-    if [  "`cat /proc/dahdi/* |grep FXSKS`" ];then
+    if [  "`cat /proc/dahdi/* 2>/dev/null |grep FXSKS`" ];then
       if [ -e /etc/fxotune.conf ];then
         /usr/sbin/fxotune -s > /dev/null 2>&1
        else
@@ -200,16 +201,6 @@ if [ -e /etc/.install ];then
     fi;
   fi;
 
-  if [ -e /etc/.firstboot ];then
-    if [ -e /usr/sbin/sqlpasswd ];then
-      rm /usr/sbin/sqlpasswd
-    fi;
-    /usr/sbin/setmacl >/dev/null 2>&1
-    rm /etc/.firstboot
-    killall slapd safe_slapd nscd >/dev/null 2>&1
-    /etc/rc.d/rc.ldap
-    touch /etc/.needsreconf
-  fi;
   (/usr/sbin/cfrestore;
   /usr/sbin/genconf;
   if [ -x /etc/rc.d/rc.ppp ];then
