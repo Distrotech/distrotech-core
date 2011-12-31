@@ -73,15 +73,40 @@ if [ $? != 0 ];then
   if [ ! -d /mnt/update ];then
     mkdir -p /mnt/update
   fi;
-  mount -L UPGRADE /mnt/update > /dev/null 2>&1
+  vgchange -a y > /dev/null >&1
+  mount -L UPGRADE /mnt/update -o ro> /dev/null 2>&1
   if [ $? != 0 ];then
-    echo "Needs local Upgrade Disk - No Upgrade Partition"
-    exit 255;
+    if [ -e /dev/cdrom ];then
+       mount /dev/cdrom /mnt/cdrom -o ro > /dev/null 2>&1
+       if [ $? == 0 ];then
+         if [ -e /mnt/cdrom/flash.hdd ];then
+           LOOP=`losetup -f`
+           losetup ${LOOP} /mnt/cdrom/flash.hdd
+           vgchange -a y > /dev/null >&1
+           mount -L UPGRADE /mnt/update -o ro
+           if [ $? != 0 ];then
+             umount /mnt/cdrom
+             echo "Needs local Upgrade Disk - No Upgrade Partition"
+             exit 255;
+           fi;
+          else
+           umount /mnt/cdrom
+           echo "Needs local Upgrade Disk - No Upgrade Partition"
+           exit 255;
+          fi;
+        else
+         echo "Needs local Upgrade Disk - No Upgrade Partition"
+         exit 255;
+       fi;
+     else
+      echo "Needs local Upgrade Disk - No Upgrade Partition"
+      exit 255;
+    fi;
   fi;
   if [ ! -d /mnt/update/mnt/dev ];then
     mkdir -p /mnt/update/mnt/dev
   fi;
-  mount -L INSTALL /mnt/update/mnt/dev > /dev/null 2>&1
+  mount -L INSTALL /mnt/update/mnt/dev -o ro> /dev/null 2>&1
   if [ $? != 0 ];then
     umount /mnt/update
     echo "Needs local Upgrade Disk - No Install Partition"
@@ -225,14 +250,14 @@ if [ -d /var/spool/vbox ];then
 
   if [ ! -d /var/spool/rsync/programs ];then
     if [ ! -d /mnt/dev/install ];then
-      rsync $RROPTS --timeout=$RTIMEOUT 127.0.0.1::install/install/filelist /mnt/dev/
-      if [ -e /mnt/dev/install/filelist ];then
-        grep -vE "(^sys)|(^dev)|(^proc)|(/$)" /mnt/dev/install/filelist > /tmp/filelist
+      rsync $RROPTS --timeout=$RTIMEOUT 127.0.0.1::install/install/core/filelist /mnt/dev/
+      if [ -e /mnt/dev/install/core/filelist ];then
+        grep -vE "(^sys)|(^dev)|(^proc)|(/$)" /mnt/dev/install/core/filelist > /tmp/filelist
         cd /
-        tar --use-compress-program=bzip2 -T /tmp/filelist  -cf /mnt/dev/install/install.tbz
+        tar --use-compress-program=bzip2 -T /tmp/filelist  -cf /mnt/dev/install/core/install.tbz
         cd
-        rm /tmp/filelist     
-        tar -C /mnt/dev --use-compress-program=bunzip2 -xf /mnt/dev/install/install.tbz
+        rm /tmp/filelist
+        tar -C /mnt/dev --use-compress-program=bunzip2 -xf /mnt/dev/install/core/install.tbz
         rsync $RROPTS -c --timeout=$RTIMEOUT --exclude /install --exclude /boot --exclude /lib/modules 127.0.0.1::install /mnt/dev      
       fi;
     fi;
@@ -244,7 +269,9 @@ if [ -d /var/spool/vbox ];then
         rsync $ROPTS /lib/modules/${INSTALL_KERNEL}/* /mnt/dev/lib/modules/${INSTALL_KERNEL}/
       fi;
     fi;
-    rsync $RROPTS --exclude /proc --exclude /sys --exclude /dev --exclude /lost+found --exclude /install/kernel.tar.bz2 --exclude /install/install.tbz --delete 127.0.0.1::install /mnt/dev
+
+    rsync $RROPTS --exclude /proc --exclude /sys --exclude /dev --exclude /lost+found --exclude=/install/avirus \
+                  --exclude=/boot/initrd-install* --exclude=/install/core --exclude=/mnt/update --delete 127.0.0.1::install /mnt/dev
     if [ ! -d /var/spool/rsync/kernuser ];then
       mkdir -p /var/spool/rsync/kernuser
     fi;
@@ -252,7 +279,7 @@ if [ -d /var/spool/vbox ];then
 
     for rdatain in "install/ /mnt/dev/" "iso/ /var/spool/vbox/";do
       echo $rdatain
-      rsync ${RROPTS} --timeout=$RTIMEOUT 127.0.0.1::$rdatain
+      rsync ${RROPTS} --exclude=/install/core/* --exclude=/mnt/update --timeout=$RTIMEOUT 127.0.0.1::$rdatain
       if [ $? != 0 ];then
         RERR=255;
       fi;
@@ -327,67 +354,15 @@ fi;
 
 
 if [ -d /var/spool/vbox ];then
-  cd /mnt/dev
+  chroot /mnt/dev /install/mkinsttar
+  chroot /mnt/dev /install/mkbootimg
 
-  dd if=/dev/zero of=/mnt/dev/install/install-etc bs=1k count=4096
-  mke2fs -Fi 1024 /mnt/dev/install/install-etc 4096  > /dev/null 2>&1
-  rm -rf /mnt/dev/install/mnt
-  mkdir /mnt/dev/install/mnt
-  mount /mnt/dev/install/install-etc /mnt/dev/install/mnt -o loop
-  cp /mnt/dev/install/10-udev.rules /mnt/dev/etc/udev/rules.d
-  cp -Rp /mnt/dev/etc/* /mnt/dev/install/mnt/
-  sed -e "s/^PasswordAuthentication/PasswordAuthentication yes/" /mnt/dev/etc/sshd_config > /mnt/dev/install/mnt/sshd_config
-  cp /mnt/dev/install/nsswitch.conf /mnt/dev/install/mnt/
-  echo "smbadm::139:" >> /mnt/dev/install/mnt/group
-  touch /mnt/dev/install/mnt/.networksentry-lite
-  rm /mnt/dev/install/mnt/mtab*
-  if [ -e /mnt/dev/install/mnt/HOSTNAME ];then
-    rm /mnt/dev/install/mnt/HOSTNAME
-  fi;
-  touch /mnt/dev/install/mnt/mtab
-  if [ -e /mnt/dev/install/mnt/openssl/ca.conf ];then
-    rm /mnt/dev/install/mnt/openssl/ca.conf
-  fi;
-  touch /mnt/dev/install/mnt/.install
-
-  if [ -e /mnt/etc/HOSTNAME ];then
-    rm /mnt/etc/HOSTNAME
-  fi;
-
-  sed -e "s/^.*agetty.*//" /mnt/dev/etc/inittab > /mnt/dev/install/mnt/inittab
-  sed -e "s/^#skip-innodb$/skip-innodb/" /mnt/dev/etc/my.cnf > /mnt/dev/install/mnt/my.cnf
-  sed -e "s/\(suggested-size.*\)20011/\1211/" /etc/nscd.conf > /mnt/dev/install/mnt/nscd.conf
-
-  echo "*.*                                       /dev/tty5" > /mnt/dev/install/mnt/syslog.conf
-  echo "telnet          stream  tcp     nowait  root    /usr/sbin/in.telnetd" > /mnt/dev/install/mnt/inetd.conf
-
-  sed -e "s/^\(PasswordAuthentication\) no/\1 yes/" /etc/sshd_config > /mnt/dev/install/mnt/sshd_config
-
-  touch /mnt/dev/install/mnt/fstab
-  mkdir -p /mnt/dev/install/mnt/etc/udev/rules.d
-
-  umount /mnt/dev/install/mnt
-  rm -rf /mnt/dev/install/mnt
-  mkdir /mnt/dev/install/mnt
-
-  gzip /mnt/dev/install/install-etc
-  mv /mnt/dev/install/install-etc.gz /mnt/dev/install/etc.gz
-
-  tar -czf install/htdocs.tgz var/spool/apache/htdocs/*.* var/spool/apache/htdocs/ldap \
-           var/spool/apache/htdocs/images var/spool/apache/htdocs/ns/status \
-           var/spool/apache/htdocs/ns/*.* var/spool/apache/htdocs/ssl \
-           var/spool/apache/cgi-bin var/spool/apache/htdocs/logs var/spool/apache/htdocs/radius \
-           var/spool/apache/htdocs/auth var/spool/apache/htdocs/snom var/spool/apache/htdocs/polyxml
-
-  tar --use-compress-program=bzip2 -cvf install/install.tbz bin boot/memtest.bin boot/grub boot/boot_base.tgz etc home initrd lib/evms lib/cpp lib/*so* man mnt root sbin share tmp usr var > install/filelist
-  if [ -d /var/spool/rsync/programs/var/spool/update ];then
-    rsync $ROPTS --timeout=$RTIMEOUT /var/spool/rsync/programs/var/spool/update /mnt/dev/install/
-  fi;
-
-  cd
-  if [ ! -e /mnt/dev/install/kernel.tar.bz2 ];then
+  if [ ! -e /mnt/dev/install/core/kernel.tar.bz2 ];then
     /mnt/dev/install/tarkernel
   fi;
+
+  (rsync -avP /var/spool/avirus/*.* /mnt/dev/install/avirus/
+  rsync -avP /var/spool/rsync/programs/var/spool/update /mnt/dev/install/ ) > /dev/null 2>&1
 
   umount /mnt/dev/proc
   umount /mnt/dev/dev
@@ -417,7 +392,7 @@ if [ -d /var/spool/vbox ];then
   if [ "${CHKCMD}" ];then
     $CHKCMD
     if [ $? == 0 ];then
-      mount -L INSTALL /mnt/floppy
+      mount -L INSTALL /mnt/floppy -o ro
       rsync ${ROPTS} --exclude /dev --exclude /proc --exclude /sys /mnt/dev/* /mnt/floppy/
       rsync ${ROPTS} /var/spool/samba/share/openoffice /mnt/floppy/install
       if [ ! -d /mnt/floppy/proc ];then
@@ -475,6 +450,11 @@ if [ $RSYNCK == 1 ];then
   done
   umount /mnt/update/mnt/dev
   umount /mnt/update
+  if [ "${LOOP}" ];then
+    vgchange  -a n flash > /dev/null 2>&1
+    losetup -d ${LOOP}
+    umount /mnt/cdrom
+  fi;
 fi;
 
 #while [ "`pidof slapd`" ] && [ "$RUN5" != "XXXXX" ];do
@@ -501,13 +481,12 @@ fi;
 if [ ${RERR} == 0 ];then
   if [ -d /var/boot ];then
     BOOTDIR=/var/boot
-   else
+   else   
     BOOTDIR=/boot
   fi;
 
   if [ ! -e ${BOOTDIR}/grub/core.img ] || [ /usr/lib/grub/i386-pc/ -nt ${BOOTDIR}/grub/core.img ];then
-    (grub-install --force --no-floppy --recheck --boot-directory=${BOOTDIR} "(hd0)"
-     mkinitrd) > /dev/null 2>&1
+    mkgrub
   fi
 fi;
 
