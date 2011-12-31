@@ -1521,6 +1521,13 @@ __EOF__
 }
   print DFT <<__EOF__;
 
+if [ ! -h /etc/clamd.conf ];then
+  if [ -e /etc/clamd.conf ];then
+    rm -rf /etc/clamd.conf
+  fi;
+  ln -s /etc/clamav.conf /etc/clamd.conf
+fi;
+
 /usr/sbin/clamd
 __EOF__
   close(DFT);
@@ -3587,27 +3594,6 @@ __EOB__
     print RM "  touch /etc/dovecot.passwd\n";
     print RM "fi\n\n";
 
-    print RM "if [ ! -d /var/lib/dovecot/shared ];then\n";
-    print RM "  mkdir -p /var/lib/dovecot/shared;\n";
-    print RM "  chmod 777 /var/lib/dovecot/shared;\n";
-    print RM "fi\n\n";
-
-    print RM "if [ ! -e /var/lib/dovecot/shared/mailboxes.db ];then\n";
-    print RM "  touch /var/lib/dovecot/shared/mailboxes.db;\n";
-    print RM "  chown smmsp.mail /var/lib/dovecot/shared/mailboxes.db;\n";
-    print RM "  chmod 660 /var/lib/dovecot/shared/mailboxes.db;\n";
-    print RM "  setfacl -m g:users:rX /var/lib/dovecot\n";
-    print RM "  setfacl -m g:users:rw /var/lib/dovecot/shared/mailboxes.db\n";
-    print RM "  if [ \"\$?\" != 0 ];then\n";
-    print RM "    sed -e \"s/ext3\\([\\t ]*\\)defaults\\([\\t ]\\)\\(.*\\)/ext3\\1defaults,acl\\2\\3/\" /etc/fstab > /tmp/fstab.acl\n";
-    print RM "    if [ \"`diff -u /tmp/fstab.acl /etc/fstab`\" ];then\n";
-    print RM "      grep -E \"ext3.*defaults,acl\" /tmp/fstab.acl |awk '{printf \"mount %s -o remount,acl\\n\",\$2}' |sh\n";
-    print RM "      cp /tmp/fstab.acl /etc/fstab\n";
-    print RM "      /usr/sbin/setmacl >/dev/null 2>&1\n";
-    print RM "    fi;\n";
-    print RM "  fi\n";
-    print RM "fi\n\n";
-
     print RM "if [ /etc/dovecot/dovecot.conf -nt /var/run/dovecot/master.pid ];then\n";
     print RM "  (killall dovecot;\n";
     print RM "  sleep 3;\n";
@@ -3619,14 +3605,14 @@ __EOB__
     print RM "    rm /var/run/dovecot/master.pid\n";
     print RM "  fi;\n\n";
     print RM "  /usr/sbin/dovecot-wrap\n";
-    print RM " else if  [ \"\$1\" != \"sendmail\" ] && [ /etc/dovecot-example.conf -nt /etc/dovecot/dovecot.conf ];then\n";
-    print RM "    kill `cat /var/run/dovecot/master.pid`;\n";
-    print RM "    touch /etc/dovecot/dovecot.conf;\n";
-    print RM "    /usr/sbin/dovecot-wrap\n";
-    print RM "  fi\n";
+#    print RM " else if  [ \"\$1\" != \"sendmail\" ] && [ /etc/dovecot-example.conf -nt /etc/dovecot/dovecot.conf ];then\n";
+#    print RM "    kill `cat /var/run/dovecot/master.pid`;\n";
+#    print RM "    touch /etc/dovecot/dovecot.conf;\n";
+#    print RM "    /usr/sbin/dovecot-wrap\n";
+#    print RM "  fi\n";
     print RM "fi;\n\n";
 
-    print RM "if [ ! -e /etc/dovecot-sogo.conf ] || [ /etc/dovecot/dovecot.conf -nt /etc/dovecot-sogo.conf ];then\n";
+    print RM "if [ ! -e /etc/dovecot/dovecot-sogo.conf ] || [ /etc/dovecot/dovecot.conf -nt /etc/dovecot/dovecot-sogo.conf ];then\n";
     print RM "  sed -e \"s/^[ \\t]*ssl_listen.*\$/#/\" \\\n";
     print RM "      -e \"s/^\\([ \\t]*listen = \\).*/\\1127.0.0.1:286/\" \\\n";
     print RM "      -e \"s/^\\([ \\t]*address = \\).*/\\1127.0.0.1/\" \\\n";
@@ -3641,7 +3627,7 @@ __EOB__
     print RM "  killall -9 dovecot-sogo) > /dev/null 2>&1\n";
     print RM "fi\n\n";
 
-    print RM "if [ -e /etc/dovecot-sogo.conf ] && [ ! \"`/bin/pidof dovecot-sogo`\" ] && [ \"\$1\" != \"sendmail\" ];then\n";
+    print RM "if [ -e /etc/dovecot/dovecot-sogo.conf ] && [ ! \"`/bin/pidof dovecot-sogo`\" ] && [ \"\$1\" != \"sendmail\" ];then\n";
     print RM "  if [ -e /var/run/dovecot-sogo/master.pid ];then\n";
     print RM "    rm /var/run/dovecot-sogo/master.pid\n";
     print RM "  fi;\n\n";
@@ -15961,7 +15947,7 @@ sub printsogo() {
     $sogover="-0.9";
   }
   $imapserv="127.0.0.1";
-  if ( -e "/etc/dovecot-sogo.conf") {
+  if ( -e "/etc/dovecot/dovecot-sogo.conf") {
     $imapserv.=":286";
   }
   $sqlserver=($sogo{'sqlserver'} ne "")?$sogo{'sqlserver'}:"127.0.0.1";
