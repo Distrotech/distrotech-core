@@ -182,6 +182,11 @@ __EOF__
     touch /var/spool/pgsql/asterisk.db
   fi;
 
+  if [ -e /etc/sogo.sql ];then
+    cat /etc/sogo.sql |psql -U pgsql -d exchange -f - template1 > /dev/null 2>&1
+    touch /var/spool/pgsql/exchange.db
+  fi;
+
   Create_HBA
   su pgsql -c "/usr/bin/pg_ctl -D $PGDATA reload" > /dev/null 2>&1
   sleep 2
