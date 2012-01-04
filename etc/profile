@@ -50,8 +50,8 @@ if [ "$SHELL" = "/bin/pdksh" -o "$SHELL" = "/bin/ksh" ]; then
  PS1="! $ "
 elif [ "$SHELL" = "/bin/zsh" ]; then
  PS1="%m:%~%# "
-elif [ "$SHELL" = "/bin/ash" ]; then
- PS1="$ "
+elif [ -e /etc/.install ]; then
+ PS1='\w\$ '
 else
  PS1='`hostname -f`:\w\$ '
 fi
