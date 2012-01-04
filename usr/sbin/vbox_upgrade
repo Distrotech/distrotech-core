@@ -1,75 +1,36 @@
 #!/bin/bash
 
-#(/usr/sbin/genconf
-#/usr/sbin/servconfig
-#/usr/sbin/sqlpasswd)> /dev/null 2>&1
+if [ ! -e /etc/netsentry-version ];then
+  echo "This script must be run on a valid server"
+  exit 255
+fi;
 
+DIST="/mnt/dev"
 
+#Touch some files that should not be updated just in case
 touch /etc/autofs.conf /etc/dhcpd.conf /etc/freshclam.conf /etc/hosts /etc/mgetty.config /etc/popper.conf /etc/rsyncd.conf 
 touch /etc/asterisk/agents.conf /etc/asterisk/iax.conf /etc/ppp/diald.scr /etc/ppp/ip-down /etc/ppp/options 
 touch /etc/ppp/secret /etc/racoon/racoon.conf /etc/radiusclient/port-id-map /etc/radiusclient/radiusclient.conf 
 touch /etc/radiusclient/servers /etc/rc.d/rc.mount /etc/rc.d/rc.tunnels /etc/squid/filter.cnf /etc/squid/filter.conf
 
+#Rsync options
 ROPTS="-avOuHKSzP --exclude-from=/var/spool/apache/htdocs/ns/config/exclude.nfs"
 RROPTS="-R ${ROPTS}"
 RTIMEOUT=60
+
 RERR=0;
-DEFSERV="rsync.distrotech.co.za";
 DEFVER="10.10.1";
-DEFKERN="3.0.4-x86"
 NOKERN=0;
+RSYNCK=0;
 
-if [ -e /etc/netsentry-version ];then
-  eval `cat /etc/netsentry-version`
-  if [ "$1" == "" ] || [ -d /var/spool/rsync/programs ];then
-    NOKERN=1;
-    KERNEL=`uname -r |awk -F- '$2 == "i386" || $2 == "x86" {print $1"-"$2}'`
-    if [ "$KERNEL" == "" ];then
-      KERNEL=`uname -r |awk -F- '$3 == "i386"  || $3 == "x86" {print $1"-"$2"-"$3}'`  
-    fi;
-   else
-    KERNEL=$1
-    SMP_KERNEL="$KERNEL-smp";
-    if [ -d /var/spool/rsync/kernuser ];then
-      rsync $ROPTS --timeout=$RTIMEOUT 127.0.0.1::kernuser/kernel-${SMP_KERNEL} /var/spool/rsync/kernuser/
-    fi;
-  fi
-  LKERNEL=$KERNEL
-  DEFKERN=$KERNEL
-
-  if [ "$VERSION" == "" ];then
-    LVERSION="${DEFVER}"
-   else
-    LVERSION=$VERSION
-  fi;
-
-  if [ "$RSERV" == "" ];then
-    LSERV="${DEFSERV}";
-   else
-    LSERV=$RSERV;
-  fi;
-
-  if [ ! "$CDDEV" ];then
-    CDDEV="0,0,0";
-  fi;
-
-  if [ ! "$CDSPEED" ];then
-    CDSPEED="8";
-  fi;
-
-  if [ ! "$KERNOPTS" ];then
-    if [ "`uname -r |grep nosmp`" ] || [ -e "/etc/.bootnosmp" ];then
-      KERNOPTS="nosmp"
-    fi;
-  fi;
+if [ ! -d /var/spool/rsync/programs ];then
+  /usr/sbin/socktest  127.0.0.1 873 > /dev/null 2>&1 
+  RES=$?
  else
-  if [ ! -d /var/spool/vbox ];then
-    mkdir -p /var/spool/vbox
-  fi;
+  RES=0;
 fi;
 
-/usr/sbin/socktest  127.0.0.1 873 > /dev/null 2>&1 
-if [ $? != 0 ];then
+if [ ${RES} != 0 ];then
   if [ ! -d /mnt/update ];then
     mkdir -p /mnt/update
   fi;
@@ -91,45 +52,67 @@ if [ $? != 0 ];then
            fi;
           else
            umount /mnt/cdrom
-           echo "Needs local Upgrade Disk - No Upgrade Partition"
+           echo "Update media not found"
            exit 255;
           fi;
         else
-         echo "Needs local Upgrade Disk - No Upgrade Partition"
+         echo "Update media not found"
          exit 255;
        fi;
      else
-      echo "Needs local Upgrade Disk - No Upgrade Partition"
+      echo "Update media not found"
       exit 255;
     fi;
   fi;
-  if [ ! -d /mnt/update/mnt/dev ];then
-    mkdir -p /mnt/update/mnt/dev
+  if [ ! -d /mnt/update${DIST} ];then
+    mkdir -p /mnt/update${DIST}
   fi;
-  mount -L INSTALL /mnt/update/mnt/dev -o ro> /dev/null 2>&1
+  mount -L INSTALL /mnt/update${DIST} -o ro> /dev/null 2>&1
   if [ $? != 0 ];then
     umount /mnt/update
     echo "Needs local Upgrade Disk - No Install Partition"
     exit 255;
   fi;
-  /usr/bin/rsync --daemon --config /mnt/update/mnt/dev/etc/rsyncd-update.conf > /dev/null 2>&1
+  /usr/bin/rsync --daemon --config /mnt/update${DIST}/etc/rsyncd-update.conf > /dev/null 2>&1
   /usr/sbin/socktest  127.0.0.1 873 > /dev/null 2>&1 
   if [ $? != 0 ];then
-    umount /mnt/update/mnt/dev
+    umount /mnt/update${DIST}
     umount /mnt/update
     echo "Needs local Upgrade Disk - Service Failure"
     exit 255;
   fi;
   RSYNCK=1;
- else
-  RSYNCK=0;
 fi;
 
-if [ "$1" != "" ] && [ ! -d /var/spool/rsync/programs ] && [ -e /etc/netsentry-version ];then
+eval `cat /etc/netsentry-version`
+if [ "$1" == "" ] || [ -d /var/spool/rsync/programs ];then
+  NOKERN=1;
+  KERNEL=`uname -r |awk -F- '$2 == "i386" || $2 == "x86" {print $1"-"$2}'`
+  if [ "$KERNEL" == "" ];then
+    KERNEL=`uname -r |awk -F- '$3 == "i386"  || $3 == "x86" {print $1"-"$2"-"$3}'`  
+  fi;
+ else
+  KERNEL=$1
+fi
+
+if [ "$VERSION" == "" ];then
+  LVERSION="${DEFVER}"
+ else
+  LVERSION=$VERSION
+fi;
+
+if [ ! "$KERNOPTS" ];then
+  if [ "`uname -r |grep nosmp`" ] || [ -e "/etc/.bootnosmp" ];then
+    KERNOPTS="nosmp"
+  fi;
+fi;
+
+#Update netsentry-version
+if [ "$1" != "" ] && [ ! -d /var/spool/rsync/programs ];then
   (cat <<__EOF__
 BRAND="$BRAND";
 VERSION="$LVERSION";
-KERNEL="$LKERNEL";
+KERNEL="$KERNEL";
 SMP_KERNEL="\$KERNEL-smp";
 INSTALL_KERNEL="\$KERNEL-install";
 IP_ADDR="$IP_ADDR";
@@ -137,22 +120,14 @@ SN_ADDR="$SN_ADDR";
 HN_ADDR="$HN_ADDR";
 DOM_ADDR="$DOM_ADDR";
 BT="\$BRAND V\$VERSION Linux V\$KERNEL Install";
-CDDEV="$CDDEV";
-CDSPEED="$CDSPEED";
 KERNOPTS="$KERNOPTS";
 EXTRA_DEV="$EXTRA_DEV";
-RSERV="$LSERV";
 USBSLEEP="$USBSLEEP";
 __EOF__
 ) > /etc/netsentry-version
   touch /var/spool/apache/htdocs/ns/config/exclude.nfs
- else
-  LSERV=${DEFSERV}
-  LKERNEL=${DEFKERN}
 fi;
 
-RSERV="$LSERV";
-KERNEL="$LKERNEL";
 SMP_KERNEL="$KERNEL-smp";
 INSTALL_KERNEL="$KERNEL-install";
 
@@ -165,136 +140,87 @@ KERNEX="--include=/$INSTALL_KERNEL/** \
         --exclude=/* \
         --exclude=*"
 
+#Im not a "master" server so need a sync
+if [ ! -d /var/spool/rsync/programs ];then
+  #Old upgrade postgre to ver 8
+#  if [ ! "`psql -V |head -1|grep "8.2.3"`" ];then
+#    /usr/bin/pg_dumpall -U pgsql -h 127.0.0.1 -c |gzip -c > /var/tmp/pgsql.sql
+#    if [ $? != 0 ];then
+#      echo "Upgrade Not Done !!!!"
+#      exit -1
+#    fi;
+#    /usr/bin/pg_dumpall -U postgres -p 5433 -h 127.0.0.1 -c |gzip -c > /var/tmp/cubit.sql
+#    if [ $? != 0 ];then
+#      echo "Upgrade Not Done !!!!"
+#      exit -1
+#    fi;
+#    if [ -s /var/tmp/pgsql.sql ] && [ -s /var/tmp/cubit.sql ];then
+#      /usr/bin/killall -9 crond > /dev/null 2>&1
+#      /usr/bin/killall -9 asterisk > /dev/null 2>&1
+#      /bin/su pgsql -c "pg_ctl -D /var/spool/pgsql -m immediate stop" > /dev/null 2>&1
+#      /bin/su postgres -c "pg_ctl -D /var/spool/cubit -m immediate stop" > /dev/null 2>&1
+#      /usr/bin/killall -9 postmaster > /dev/null 2>&1
+#      /usr/bin/rsync $RROPTS --timeout=$RTIMEOUT 127.0.0.1::postgresql /
+#      if [ $? != 0 ];then
+#        echo "Upgrade Not Done !!!!"
+#        exit -1
+#      fi;
+#      /bin/rm -rf /var/spool/pgsql
+#      /bin/rm -rf /var/spool/cubit
+#      /etc/rc.d/rc.exchange > /dev/null 2>&1
+#      /usr/bin/zcat /var/tmp/pgsql.sql |psql -U pgsql -h 127.0.0.1 -f - asterisk > /dev/null 2>&1
+#      /etc/rc.d/rc.cubit > /dev/null 2>&1
+#      /usr/bin/sleep 5
+#      /usr/bin/zcat /var/tmp/cubit.sql |psql -U postgres -h 127.0.0.1 -p 5433 -f - template1 > /dev/null 2>&1
+#      /usr/sbin/crond >> /var/log/cron 2>&1
+#      sed -e "s/#listen_addresses.*/listen_addresses = '*'/" -e "s/#ssl.*/ssl= on/" "/var/spool/pgsql/postgresql.conf" > /tmp/pg.cnf
+#      cp /tmp/pg.cnf "/var/spool/pgsql/postgresql.conf"
+#      rm /tmp/pg.cnf
+#     else
+#      echo "Upgrade Not Done !!!!"
+#    fi;
+#  fi;
 
-if [ ! "`psql -V |head -1|grep "8.2.3"`" ] && [ ! -d /var/spool/rsync/programs ] && [ -e /etc/netsentry-version ];then
-  /usr/bin/pg_dumpall -U pgsql -h 127.0.0.1 -c |gzip -c > /var/tmp/pgsql.sql
-  if [ $? != 0 ];then
-    echo "Upgrade Not Done !!!!"
-    exit -1
-  fi;
-  /usr/bin/pg_dumpall -U postgres -p 5433 -h 127.0.0.1 -c |gzip -c > /var/tmp/cubit.sql
-  if [ $? != 0 ];then
-    echo "Upgrade Not Done !!!!"
-    exit -1
-  fi;
-
-  if [ -s /var/tmp/pgsql.sql ] && [ -s /var/tmp/cubit.sql ];then
-    /usr/bin/killall -9 crond > /dev/null 2>&1
-    /usr/bin/killall -9 asterisk > /dev/null 2>&1
-    /bin/su pgsql -c "pg_ctl -D /var/spool/pgsql -m immediate stop" > /dev/null 2>&1
-    /bin/su postgres -c "pg_ctl -D /var/spool/cubit -m immediate stop" > /dev/null 2>&1
-    /usr/bin/killall -9 postmaster > /dev/null 2>&1
-
-    /usr/bin/rsync $RROPTS --timeout=$RTIMEOUT 127.0.0.1::postgresql /
-    if [ $? != 0 ];then
-      echo "Upgrade Not Done !!!!"
-      exit -1
-    fi;
-
-    /bin/rm -rf /var/spool/pgsql
-    /bin/rm -rf /var/spool/cubit
-
-    /etc/rc.d/rc.exchange > /dev/null 2>&1
-    /usr/bin/zcat /var/tmp/pgsql.sql |psql -U pgsql -h 127.0.0.1 -f - asterisk > /dev/null 2>&1
-    /etc/rc.d/rc.cubit > /dev/null 2>&1
-    /usr/bin/sleep 5
-    /usr/bin/zcat /var/tmp/cubit.sql |psql -U postgres -h 127.0.0.1 -p 5433 -f - template1 > /dev/null 2>&1
-    /usr/sbin/crond >> /var/log/cron 2>&1
-
-    sed -e "s/#listen_addresses.*/listen_addresses = '*'/" -e "s/#ssl.*/ssl= on/" "/var/spool/pgsql/postgresql.conf" > /tmp/pg.cnf
-    cp /tmp/pg.cnf "/var/spool/pgsql/postgresql.conf"
-    rm /tmp/pg.cnf
-
-   else
-    echo "Upgrade Not Done !!!!"
-  fi;
-fi;
-
-if [ -d /var/spool/vbox ];then
-  if [ ! -e /var/spool/vbox/sentry.img ];then
-    dd if=/dev/zero of=/var/spool/vbox/sentry.img count=1536 bs=1M
-    mke2fs -F -O none -O filetype,sparse_super -I 128 /var/spool/vbox/sentry.img
-  fi;
-
-  if [ ! -d /mnt/dev ];then
-    mkdir /mnt/dev/
-  fi;
-
-  if [ ! -e /mnt/dev/lost+found ];then
-    mount /var/spool/vbox/sentry.img /mnt/dev -o loop
-  fi;
-
-  if [ ! -d /mnt/dev/dev ];then
-    mkdir /mnt/dev/dev 
-  fi;
-
-  if [ ! -d /mnt/dev/sys ];then
-    mkdir /mnt/dev/sys
-  fi;
-
-  if [ ! -d /mnt/dev/proc ];then
-    mkdir /mnt/dev/proc
-  fi;
-
-  if [ ! -d /mnt/dev/dev/udevdb ];then
-    mount --bind /dev /mnt/dev/dev
-  fi;
-
-  if [ ! -e /mnt/dev/proc/1 ];then
-    mount -t proc none /mnt/dev/proc
-  fi;
-
-  if [ ! -d /mnt/dev/sys/module ];then
-    mount -t sysfs none /mnt/dev/sys
-  fi;
-
-  if [ ! -d /var/spool/rsync/programs ];then
-    if [ ! -d /mnt/dev/install ];then
-      rsync $RROPTS --timeout=$RTIMEOUT 127.0.0.1::install/install/core/filelist /mnt/dev/
-      if [ -e /mnt/dev/install/core/filelist ];then
-        grep -vE "(^sys)|(^dev)|(^proc)|(/$)" /mnt/dev/install/core/filelist > /tmp/filelist
+  if [ -d /var/spool/vbox ];then
+    if [ ! -d ${DIST}/install ];then
+      rsync $RROPTS --timeout=$RTIMEOUT 127.0.0.1::install/install/core/filelist ${DIST}/
+      if [ -e ${DIST}/install/core/filelist ];then
+        grep -vE "(^sys)|(^dev)|(^proc)|(/$)" ${DIST}/install/core/filelist > /tmp/filelist
         cd /
-        tar --use-compress-program=bzip2 -T /tmp/filelist  -cf /mnt/dev/install/core/install.tbz
+        tar --use-compress-program=bzip2 -T /tmp/filelist  -cf ${DIST}/install/core/install.tbz
         cd
         rm /tmp/filelist
-        tar -C /mnt/dev --use-compress-program=bunzip2 -xf /mnt/dev/install/core/install.tbz
-        rsync $RROPTS -c --timeout=$RTIMEOUT --exclude /install --exclude /boot --exclude /lib/modules 127.0.0.1::install /mnt/dev      
+        tar -C ${DIST} --use-compress-program=bunzip2 -xf ${DIST}/install/core/install.tbz
+        rsync $RROPTS -c --timeout=$RTIMEOUT --exclude /install --exclude /boot --exclude /lib/modules 127.0.0.1::install ${DIST}
       fi;
     fi;
     if [ -d /lib/modules/${INSTALL_KERNEL} ];then
-      if [ ! -d /mnt/dev/lib/modules/${INSTALL_KERNEL} ];then 
-        mkdir /mnt/dev/lib/modules/${INSTALL_KERNEL}
+      if [ ! -d ${DIST}/lib/modules ];then
+        mkdir -p ${DIST}/lib/modules
       fi;
-      if [ -e /etc/netsentry/version ];then
-        rsync $ROPTS /lib/modules/${INSTALL_KERNEL}/* /mnt/dev/lib/modules/${INSTALL_KERNEL}/
-      fi;
+      rsync $ROPTS /lib/modules/${INSTALL_KERNEL} ${DIST}/lib/modules/
     fi;
-
-    rsync $RROPTS --exclude /proc --exclude /sys --exclude /dev --exclude /lost+found --exclude=/install/avirus \
-                  --exclude=/boot/initrd-install* --exclude=/install/core --exclude=/mnt/update --delete 127.0.0.1::install /mnt/dev
     if [ ! -d /var/spool/rsync/kernuser ];then
       mkdir -p /var/spool/rsync/kernuser
     fi;
     rsync $ROPTS --timeout=$RTIMEOUT 127.0.0.1::kernuser/kernel-${SMP_KERNEL} /var/spool/rsync/kernuser/
 
-    for rdatain in "install/ /mnt/dev/" "iso/ /var/spool/vbox/";do
+    for rdatain in "install/ ${DIST}/" "iso/ /var/spool/vbox/";do
       echo $rdatain
-      rsync ${RROPTS} --exclude=/install/core/* --exclude=/mnt/update --timeout=$RTIMEOUT 127.0.0.1::$rdatain
+      rsync ${RROPTS} --timeout=$RTIMEOUT 127.0.0.1::$rdatain
       if [ $? != 0 ];then
         RERR=255;
       fi;
       echo;echo
     done;
   fi;
-fi;
 
-#rm /usr/lib/asterisk/modules-1.4/chan_zap* > /dev/null 2>&1
-if [ ! -d /var/spool/rsync/programs ] && [ -e /etc/netsentry-version ];then
   if [ -e /etc/asterisk/version.10 ];then
     ast_repo="asterisk-10";
    else
     ast_repo="asterisk";
   fi;
+
   for rdatain in "vbox /"  "share /var/spool/samba/share/" "programs /" "manuals /var/spool/apache/htdocs/" "${ast_repo} /" "avirus /var/spool/avirus";do 
     echo $rdatain
     rsync $RROPTS --timeout=$RTIMEOUT 127.0.0.1::$rdatain
@@ -313,142 +239,38 @@ if [ ! -d /var/spool/rsync/programs ] && [ -e /etc/netsentry-version ];then
   if [ $? != 0 ];then
     RERR=255;
   fi;
-fi;
 
-#ZAP_VER=`cat /sys/module/zaptel/version `
-#ZAP_MOD="/usr/lib/asterisk/modules-1.4/chan_zap-$ZAP_VER.so"
-#ls $ZAP_MOD > /dev/null 2>&1
-#if [ $? = 0 ];then
-#  cp $ZAP_MOD /usr/lib/asterisk/modules-1.4/chan_zap.so
-#fi
-#rm /usr/lib/asterisk/modules-1.4/chan_zap-* > /dev/null 2>&1
-
-if [ -e /etc/netsentry-version ];then
-  ldconfig
-  /usr/sbin/genconf
-  #/usr/sbin/servconfig
-  #/usr/sbin/asterisk -rx "reload"
-fi;
-
-if [ "$NOKERN" != "1" ] && [ ! -d /var/spool/rsync/programs ] && [ -e /etc/netsentry-version ];then
-  KERR=0;
-  for rdatain in "kernel /boot/" "kernmod /lib/modules/";do
-    echo $rdatain
-    rsync -c $RROPTS $KERNEX --timeout=$RTIMEOUT 127.0.0.1::$rdatain
-    if [ $? != 0 ];then
-      KERR=1;
-    fi;
-    echo;echo
-  done;
-  echo kernuser/kernel-${SMP_KERNEL} /
-  rsync -c $ROPTS --timeout=$RTIMEOUT 127.0.0.1::kernuser/kernel-${SMP_KERNEL}*/* /
-  rsync -c $ROPTS 127.0.0.1::kernmod/${SMP_KERNEL} /lib/modules/
-  rsync -c $ROPTS 127.0.0.1::kernmod/${INSTALL_KERNEL} /lib/modules/
-  if [ $? == 0 ] &&  [ $KERR == 0 ];then
-    echo;echo
-    /usr/sbin/mkinitrd
-   else
-    RERR=255;
-  fi;
-fi;
-
-
-if [ -d /var/spool/vbox ];then
-  chroot /mnt/dev /install/mkinsttar
-  chroot /mnt/dev /install/mkbootimg
-
-  if [ ! -e /mnt/dev/install/core/kernel.tar.bz2 ];then
-    /mnt/dev/install/tarkernel
-  fi;
-
-  (rsync -avP /var/spool/avirus/*.* /mnt/dev/install/avirus/
-  rsync -avP /var/spool/rsync/programs/var/spool/update /mnt/dev/install/ ) > /dev/null 2>&1
-
-  umount /mnt/dev/proc
-  umount /mnt/dev/dev
-  umount /mnt/dev/sys
-  umount /mnt/dev
-
-  e2fsck -Dfy /var/spool/vbox/sentry.img
-#  if [ ! -e /mnt/dev/etc/.cdrom ];then
-#    mkisofs -quiet -r -J -b boot/boot.img -c boot/boot.cat -o /var/spool/vbox.iso /var/spool/vbox
-#    cdrecord dev=${CDDEV} speed=${CDSPEED} -v /var/spool/vbox.iso
-#  fi;
-
-  if [ ! -e /mnt/dev/lost+found ];then
-    mount /var/spool/vbox/sentry.img /mnt/dev -o loop
-  fi;
-  if [ ! -d /mnt/dev/udevdb ];then
-    mount --bind /dev /mnt/dev/dev
-  fi;
-  if [ ! -e /mnt/dev/proc/1 ];then
-    mount -t proc none /mnt/dev/proc
-  fi;
-  if [ ! -d /mnt/dev/sys/module ];then
-    mount -t sysfs none /mnt/dev/sys
-  fi;
-
-  CHKCMD=`mount -vfL INSTALL /mnt/floppy |grep mount |awk '{printf "e2fsck -fy %s\n",$3}'`
-  if [ "${CHKCMD}" ];then
-    $CHKCMD
-    if [ $? == 0 ];then
-      mount -L INSTALL /mnt/floppy -o ro
-      rsync ${ROPTS} --exclude /dev --exclude /proc --exclude /sys /mnt/dev/* /mnt/floppy/
-      rsync ${ROPTS} /var/spool/samba/share/openoffice /mnt/floppy/install
-      if [ ! -d /mnt/floppy/proc ];then
-        mkdir /mnt/floppy/proc
+  #Update kernel
+  if [ "$NOKERN" != "1" ];then
+    KERR=0;
+    for rdatain in "kernel /boot/" "kernmod /lib/modules/";do
+      echo $rdatain
+      rsync -c $RROPTS $KERNEX --timeout=$RTIMEOUT 127.0.0.1::$rdatain
+      if [ $? != 0 ];then
+        KERR=1;
       fi;
-      if [ ! -d /mnt/floppy/dev ];then
-        mkdir /mnt/floppy/dev
+      echo;echo
+    done;
+    for rdatain in "kernuser/kernel-${SMP_KERNEL}*/* /" "kernmod/${SMP_KERNEL} /lib/modules/" "kernmod/${INSTALL_KERNEL} /lib/modules/";do
+      echo $rdatain
+      rsync -c $ROPTS --timeout=$RTIMEOUT 127.0.0.1::$rdatain
+      if [ $? != 0 ];then
+        KERR=1;
       fi;
-      if [ ! -d /mnt/floppy/sys ];then
-        mkdir /mnt/floppy/sys
-      fi;
-      umount /mnt/floppy
+    done;
+
+    if [ $KERR != 0 ];then
+      RERR=$KERR;
     fi;
   fi;
 fi;
 
-if [ -e /etc/netsentry-version ];then
-  chmod 1777 /var/run
-  /usr/bin/rebuild-info
-fi;
-
-#pear channel-update pear.php.net;pear upgrade-all
-
-if [ -d /var/spool/update ] && [ -e /etc/netsentry-version ] && [ ${RERR} == 0 ];then
-  for I in /var/spool/update/*.sql ; do
-    if test $I -nt /etc/asterisk/astschema.psql.gz ;then
-      cat $I |psql -U asterisk -h 127.0.0.1
-    fi
-  done;
-  touch /etc/asterisk/astschema.psql.gz
-
-  for I in /var/spool/update/*.esql ; do
-    if test $I -nt /var/spool/pgsql/exchange.db ;then
-      cat $I |psql -U exchange -h 127.0.0.1
-    fi
-  done;
-  touch /var/spool/pgsql/exchange.db
-
-  if [ /var/spool/update/remote.keys -nt /root/.ssh/authorized_keys ] || [ ! -e /root/.ssh/authorized_keys ] || [ ! -s /root/.ssh/authorized_keys ];then
-    (/usr/bin/ldapmodify -U admin -Y PLAIN -w "`cat /etc/mail/ldap`" -cf /var/spool/update/remote.keys
-    /usr/bin/gensshauth > /root/.ssh/authorized_keys.tmp
-    if [ ! -d /root/.ssh ];then
-      mkdir /root/.ssh
-      chmod 700 /root/.ssh
-    fi;
-    if [ -s /root/.ssh/authorized_keys.tmp ];then
-      cp /root/.ssh/authorized_keys.tmp /root/.ssh/authorized_keys
-    fi) > /dev/null 2>&1
-  fi;
-fi;
-
+#Remove local media
 if [ $RSYNCK == 1 ];then
   while [ `pidof rsync` ];do
     killall rsync
   done
-  umount /mnt/update/mnt/dev
+  umount /mnt/update${DIST}
   umount /mnt/update
   if [ "${LOOP}" ];then
     vgchange  -a n flash > /dev/null 2>&1
@@ -457,36 +279,81 @@ if [ $RSYNCK == 1 ];then
   fi;
 fi;
 
-#while [ "`pidof slapd`" ] && [ "$RUN5" != "XXXXX" ];do
-#  sleep 2
-#  killall slapd
-#  RUN5=${RUN5}X
-#done;
-#slapindex -b "" -vvvvv
+if [ -d /var/spool/vbox ];then
+  for MPATH in / /dev /proc /sys;do
+    if [ ! -d ${DIST}${MPATH} ];then
+      mkdir ${DIST}${MPATH}
+    fi;
+  done;
 
-#if [ ! -e /var/run/sogo_20000.pid ];then
-#  RUN5=""
-#  while [ "`pidof sogod`" ] && [ "$RUN5" != "XXXXX" ];do
-#    sleep 2
-#    killall -9 sogod
-#    RUN5=${RUN5}X
-#  done;
-#  if [ -x /usr/sbin/safe_sogo ];then
-#    /usr/sbin/safe_sogo
-#  fi;
-#fi;
-
-/usr/sbin/asterisk -rx "dialplan reload"
-
-if [ ${RERR} == 0 ];then
-  if [ -d /var/boot ];then
-    BOOTDIR=/var/boot
-   else   
-    BOOTDIR=/boot
+  if [ ! -d ${DIST}/dev/udevdb ];then
+    mount --bind /dev ${DIST}/dev
   fi;
 
-  if [ ! -e ${BOOTDIR}/grub/core.img ] || [ /usr/lib/grub/i386-pc/ -nt ${BOOTDIR}/grub/core.img ];then
-    mkgrub
+  if [ ! -e ${DIST}/proc/1 ];then
+    mount -t proc none ${DIST}/proc
+  fi;
+
+  if [ ! -d ${DIST}/sys/module ];then
+    mount -t sysfs none ${DIST}/sys
+  fi;
+
+  chroot ${DIST} /install/mkinsttar
+  chroot ${DIST} /install/mkbootimg
+
+  if [ ! -e ${DIST}/install/core/kernel.tar.bz2 ];then
+    ${DIST}/install/tarkernel
+  fi;
+
+  (rsync -avP /var/spool/avirus/*.* ${DIST}/install/avirus/
+  rsync -avP /var/spool/rsync/programs/var/spool/update ${DIST}/install/ ) > /dev/null 2>&1
+fi;
+
+#Final processing on no error
+if [ ${RERR} == 0 ];then
+  ldconfig
+  /usr/sbin/genconf
+
+  chmod 1777 /var/run
+  /usr/bin/rebuild-info
+  /usr/sbin/asterisk -rx "dialplan reload"
+
+#  pear channel-update pear.php.net;pear upgrade-all
+
+  #Run any SQL / LDAP scripts on no error
+  if [ -d /var/spool/update ];then
+    for I in /var/spool/update/*.sql ; do
+      if test $I -nt /etc/asterisk/astschema.psql.gz ;then
+        cat $I |psql -U asterisk -h 127.0.0.1
+      fi
+    done;
+    touch /etc/asterisk/astschema.psql.gz
+
+    for I in /var/spool/update/*.esql ; do
+      if test $I -nt /var/spool/pgsql/exchange.db ;then
+        cat $I |psql -U exchange -h 127.0.0.1
+      fi
+    done;
+    touch /var/spool/pgsql/exchange.db
+
+    if [ /var/spool/update/remote.keys -nt /root/.ssh/authorized_keys ] || [ ! -e /root/.ssh/authorized_keys ] || [ ! -s /root/.ssh/authorized_keys ];then
+      (/usr/bin/ldapmodify -U admin -Y PLAIN -w "`cat /etc/mail/ldap`" -cf /var/spool/update/remote.keys
+      /usr/bin/gensshauth > /root/.ssh/authorized_keys.tmp
+      if [ ! -d /root/.ssh ];then
+        mkdir /root/.ssh
+        chmod 700 /root/.ssh
+      fi;
+      if [ -s /root/.ssh/authorized_keys.tmp ];then
+        cp /root/.ssh/authorized_keys.tmp /root/.ssh/authorized_keys
+      fi) > /dev/null 2>&1
+    fi;
+  fi;
+
+  #Reinstall Grub/Update initrd if needed
+  if [ ! -e /boot/grub/core.img ] || [ /usr/lib/grub/i386-pc/ -nt /boot/grub/core.img ];then
+    /usr/sbin/mkgrub
+   elif [ $NOKERN != 1 ] && [ $KERR == 0 ];then
+    /usr/sbin/mkinitrd
   fi
 fi;
 
