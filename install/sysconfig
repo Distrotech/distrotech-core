@@ -1,0 +1,1201 @@
+#!/bin/bash
+
+if [ -e /install/netsentry-version ];then
+  eval `cat /install/netsentry-version`
+ else
+  eval `cat /etc/netsentry-version`
+fi
+
+if [ -e "/tmp/fstab.new" ];then
+  rm /tmp/fstab.new
+fi;
+
+if [ -e /mnt/dev/etc/.install ];then
+  cat /proc/mounts |grep "/mnt" |awk '{print $2" "$1}' |sort -r |awk '{print "umount "$1}' |sh
+  awk '$2 == "partition" {print "swapoff "$1}' /proc/swaps |sh
+fi;
+
+MDDSK=`ls /dev/md[a-z] 2>/dev/null`
+if [ "$MDDSK" ];then
+  DSKS=$MDDSK
+fi;
+for hdd in `ls /dev/[hs]d[a-z] 2>/dev/null`;do
+  if [ ! "`pvdisplay -c 2>/dev/null |grep -E "${hdd}[0-9]:flash:"`" ];then
+    DSKS="$DSKS $hdd"
+  fi;
+done
+
+DISK="";
+DCNT=1;
+
+Main_Menu()
+  {
+    if [ "$IP_CHOICE" ];then
+      /usr/bin/dialog --backtitle "$BT" --clear --title "Main Menu" --menu\
+          "Read Documentation For More Information."\
+           9 70 2\
+           "I" "Install Software"\
+           "V" "View Config Files/Active System" 2> /tmp/menu.tmp.$$
+     else
+      /usr/bin/dialog --backtitle "$BT" --clear --title "Main Menu" --menu\
+          "Read Documentation For More Information."\
+           12 70 6\
+           "1" "Fdisk/Format Drive(s)"\
+           "2" "Configure Mounts"\
+           "3" "Configure Server Name And Address"\
+           "4" "Configure Server Date And Time"\
+           "I" "Install Software"\
+           "V" "View Config Files/Active System" 2> /tmp/menu.tmp.$$
+    fi;  
+    RESULT=$?;
+    MEN_CHOICE=`cat /tmp/menu.tmp.$$`;
+    rm /tmp/menu.tmp.$$;
+  }
+
+Install_System()
+  {
+    MNTRT=`grep "/mnt " /proc/mounts`;
+    if [ "$MNTRT" == "" ];then
+      /usr/bin/dialog --backtitle "$BT" --title "Cannot Install"\
+        --msgbox "No Root Partition Mounted" 5 35
+     else
+
+     CLEAN_INSTALL=1;
+     if [ -e /mnt/etc/netsentry-version ];then
+        eval `cat /mnt/etc/netsentry-version`
+        eval `cat /install/netsentry-version`
+(cat << _EOF_
+BRAND="$BRAND";
+VERSION="$VERSION";
+KERNEL="$KERNEL";
+SMP_KERNEL="\$KERNEL-smp";
+INSTALL_KERNEL="\$KERNEL-install";
+IP_ADDR="$IP_ADDR";
+SN_ADDR="$SN_ADDR";
+HN_ADDR="$HN_ADDR";
+DOM_ADDR="$DOM_ADDR";
+BT="\$BRAND V\$VERSION Linux V\$KERNEL Install";
+USBSLEEP="\$USBSLEEP\";
+_EOF_
+)>/mnt/etc/netsentry-version
+
+        if [ -e /mnt/etc/shadow ];then
+          cp /mnt/etc/shadow /etc
+        fi;
+
+        /usr/bin/dialog  --backtitle "$BT" --title "Backup Existing Data"\
+           --yesno "Delete Before Installing (Data will not be deleted) ?" 6 35
+        CLEAN_INSTALL=$?
+        if [ ! -d /mnt/backup/asterisk ];then
+          mkdir -p /mnt/backup/asterisk
+        fi;
+      fi;
+
+      if [ -e /mnt/home ];then 
+        rm /mnt/home
+      fi;
+
+      if [ -e /mnt/var/spool/apache/htdocs/ns/config/netsentry.conf ];then
+        cp /mnt/var/spool/apache/htdocs/ns/config/netsentry.conf /mnt/backup
+      fi;
+
+      if [ $CLEAN_INSTALL == 0 ];then
+        ls /mnt |awk '($1 != "backup") && ($1 != "etc") && ($1 != "var") && ($1 != "root") && ($1 != "proc") && ($1 != "dev") && ($1 != "lost+found") {printf "rm -rf /mnt/%s\n",$1}' | sh
+        ls /mnt/var |awk '($1 != "log") && ($1 != "lib") && ($1 != "spool") && ($1 != "home") && ($1 != "named") {printf "rm -rf /mnt/var/%s\n",$1}' |sh
+        ls /mnt/var/lib |awk '($1 != "asterisk") {printf "rm -rf /mnt/var/lib/%s\n",$1}' |sh
+        rm -rf /mnt/var/spool/squid
+        rm -rf /mnt/var/spool/approxy
+        rm -rf /mnt/var/spool/intercheck
+      fi;
+
+      if [ -d /mnt/etc/openssl ];then
+        mv /mnt/etc/openssl /mnt/backup
+      fi;
+      if [ -d /mnt/etc/sslcerts ];then
+        mv /mnt/etc/sslcerts /mnt/backup
+      fi;
+      if [ -d /mnt/var/spool/avirus ];then
+        mv /mnt/var/spool/avirus /mnt/backup
+      fi;
+      if [ -d /mnt/etc/ipsec.d ];then
+        mv /mnt/etc/ipsec.d /mnt/backup
+      fi;
+      if [ -e /mnt/etc/secrets.tdb ] && [ ! -e /mnt/etc/samba/private/secrets.tdb ];then
+        if [ ! -d /mnt/backup/samba ];then
+          mkdir /mnt/backup/samba
+        fi;
+        mv /mnt/etc/secrets.tdb /mnt/backup/samba
+      fi;
+      if [ -d /mnt/etc/samba/private ];then
+        if [ ! -d /mnt/backup/samba ];then
+          mkdir /mnt/backup/samba
+        fi;
+        mv /mnt/etc/samba/private/* /mnt/backup/samba
+      fi;
+      if [ -e /mnt/etc/dhcpd.leases ];then
+        mv /mnt/etc/dhcpd.leases /mnt/backup
+      fi;
+      if [ -e /mnt/etc/squid.conf.local ];then
+        mv /mnt/etc/squid.conf.local /mnt/backup
+      fi;
+      if [ -e /mnt/etc/odbc.ini ];then
+        mv /mnt/etc/odbc.ini /mnt/backup
+      fi;
+      if [ -e /mnt/etc/rsyncd.conf ];then
+        mv /mnt/etc/rsyncd.conf /mnt/backup
+      fi;
+      if [ -e /mnt/etc/webmap.local ];then
+        mv /mnt/etc/webmap.local /mnt/backup
+      fi;
+      if [ -e /mnt/etc/crontab.local ];then
+        mv /mnt/etc/crontab.local /mnt/backup
+      fi;
+      if [ -e /mnt/root/localdns ];then
+        mv /mnt/root/localdns /mnt/backup
+      fi;
+      if [ -e /mnt/etc/modprobe.local ];then
+        mv /mnt/etc/modprobe.local /mnt/backup
+      fi;
+      if [ -e /mnt/etc/asound.state ];then
+        mv /mnt/etc/asound.state /mnt/backup
+      fi;
+      if [ -e /mnt/etc/clamav.conf.local ];then
+       mv /mnt/etc/clamav.conf.local /mnt/backup
+      fi;
+      if [ -e /mnt/etc/apache/srm.conf ];then
+        mv /mnt/etc/apache/srm.conf /mnt/backup
+      fi;
+      if [ -e /mnt/etc/mrtg.conf.local ];then
+        mv /mnt/etc/mrtg.conf.local /mnt/backup
+      fi;
+      if [ -e /mnt/etc/asterisk/pgsql.access ];then
+        mv /mnt/etc/asterisk/pgsql.access /mnt/backup
+      fi;
+      if [ -e /mnt/etc/netsentry-version ];then
+        mv /mnt/etc/netsentry-version /mnt/backup
+      fi;
+      if [ -e /mnt/etc/dhcpd.leases~ ];then
+        mv /mnt/etc/dhcpd.leases~ /mnt/backup
+      fi;
+      if [ -e /mnt/etc/x509cert.der ];then
+        mv /mnt/etc/x509cert.der /mnt/backup
+      fi;
+      if [ -e /mnt/etc/zaptel.conf ];then
+        mv /mnt/etc/zaptel.conf /mnt/backup
+      fi;
+      if [ -e /mnt/etc/shadow ];then
+        mv /mnt/etc/shadow /mnt/backup
+      fi;
+      if [ -e /mnt/etc/rc.d/rc.mangle ];then
+        mv /mnt/etc/rc.d/rc.mangle /mnt/backup
+      fi;
+      if [ -e /mnt/etc/rc.d/rc.quota ];then
+        mv /mnt/etc/rc.d/rc.quota /mnt/backup
+      fi;
+      if [ -e /mnt/etc/rc.d/rc.tos ];then
+        mv /mnt/etc/rc.d/rc.tos /mnt/backup
+      fi;
+      if [ -e /mnt/etc/rc.d/rc.serial ];then
+        mv /mnt/etc/rc.d/rc.serial /mnt/backup
+      fi;
+      if [ -e /mnt/etc/mail/statistics ];then
+        mv /mnt/etc/mail/statistics /mnt/backup
+      fi;
+      mv /mnt/etc/ssh_host_* /mnt/backup > /dev/null 2>&1
+ 
+      if [ -e /mnt/var/lib/asterisk/astdb ];then
+        mv /mnt/var/lib/asterisk/astdb /mnt/backup
+      fi;
+
+      if [ -e /mnt/var/lib/asterisk/sounds/custom ];then
+        mv /mnt/var/lib/asterisk/sounds/custom /mnt/backup/asterisk/sounds
+      fi;
+
+      if [ -d /mnt/var/spool/asterisk/voicemail/intext ];then
+        mv /mnt/var/spool/asterisk/voicemail/intext /mnt/backup/asterisk/voicemail
+      fi;
+
+      for astfile in capi.conf zapata.conf ivrmenu.conf local.conf iaxtel.conf res_odbc.conf.local;do
+        if [ -e /mnt/etc/asterisk/$astfile ];then
+          cp /mnt/etc/asterisk/$astfile /mnt/backup/asterisk
+        fi;
+      done;
+
+      rm -rf /mnt/etc
+
+      for modcmd in lsmod rmmod depmod insmod ;do
+       rm /mnt/bin/$modcmd > /dev/null 2>&1
+       rm /mnt/sbin/$modcmd > /dev/null 2>&1
+       rm /mnt/usr/bin/$modcmd > /dev/null 2>&1
+       rm /mnt/usr/sbin/$modcmd > /dev/null 2>&1
+      done
+
+      /usr/bin/dialog --backtitle "$BT" --title "Perl Scripting"\
+        --infobox "Installing Perl Scripting" 7 35
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/perl.tbz > /dev/null 2>&1
+
+      tar -C /mnt --use-compress-program=bunzip2 -xvf /install/core/install.tbz |\
+        /install/instguage `grep -c "" /install/core/filelist` |\
+        dialog --backtitle "$BT" --title "Installing"\
+          --guage "Percentage Files Transfered"\
+          6 35 0
+
+      /usr/bin/dialog --backtitle "$BT" --title "Installing Kernel"\
+        --infobox "Installing Linux Kernel" 7 35
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/core/kernel.tar.bz2 > /dev/null 2>&1
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/iptables.tar.bz2 > /dev/null 2>&1
+      rsync -a /lib/modules/* /mnt/lib/modules/ > /dev/null 2>&1
+      rsync -a /boot/memtest.bin /boot/ > /dev/null 2>&1
+      cp /boot/vmlinuz-install /mnt/boot/vmlinuz-${INSTALL_KERNEL}
+      cp /boot/System.map-install /mnt/boot/System.map-${INSTALL_KERNEL}
+
+      rsync -a /install/update /mnt/var/spool/ > /dev/null 2>&1
+
+
+      if [ -e /etc/netsentry-version ];then
+        cp /etc/netsentry-version /mnt/etc
+       else
+        cp /install/netsentry-version /mnt/etc
+      fi;
+      
+      if [ ! -d /mnt/dev ];then
+        mkdir /mnt/dev
+      fi;
+      if [ ! -d /mnt/dev/udevdb ];then
+        mount -t ramfs none /mnt/dev
+        mkdir /mnt/dev/udevdb
+      fi;
+      if [ ! -d /mnt/dev/pts ];then
+        mkdir /mnt/dev/pts
+        mount -t devpts none /mnt/dev/pts
+      fi;
+      if [ ! -d /mnt/proc ];then
+        mkdir /mnt/proc
+      fi;
+      if [ ! -d /mnt/proc/sys ];then
+        mount -t proc none /mnt/proc
+      fi;
+      if [ ! -d /mnt/sys ];then
+        mkdir /mnt/sys
+      fi;
+      if [ ! -d /mnt/sys/bus ];then
+        mount -t sysfs none /mnt/sys
+      fi;
+#      if [ ! -d /mnt/selinux ];then
+#        mkdir /mnt/selinux
+#      fi;
+ 
+      cp -R /install/avirus/* /mnt/var/spool/avirus > /dev/null 2>&1
+      chown -R clamav.clamav /mnt/var/spool/avirus > /dev/null 2>&1
+
+      /usr/bin/dialog --backtitle "$BT" --title "Locale Info"\
+        --infobox "Multilingual Support" 7 35
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/locale.tbz > /dev/null 2>&1
+
+      /usr/bin/dialog --backtitle "$BT" --title "DNS Server's"\
+        --infobox "Installing ISC Bind DNS Server" 7 35
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/bind.tbz > /dev/null 2>&1
+
+      /usr/bin/dialog --backtitle "$BT" --title "LDAP/Mail Server's"\
+        --infobox "Installing Open LDAP ,Mail And SSL Server" 7 35
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/ldapmail.tbz > /dev/null 2>&1
+
+      /usr/bin/dialog --backtitle "$BT" --title "Radius Server's"\
+        --infobox "Installing Free Radius Server" 7 35
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/freeradius.tbz > /dev/null 2>&1
+
+      /usr/bin/dialog --backtitle "$BT" --title "Samba / KRB"\
+        --infobox "Installing KRB And Samba V3 File Server" 7 35
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/samba-krb.tbz > /dev/null 2>&1
+
+      /usr/bin/dialog --backtitle "$BT" --title "Asterisk"\
+        --infobox "Installing Asterisk PBX Software" 7 35
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/asterisk.tar.bz2 > /dev/null 2>&1
+      if [ -e /install/wanpipe.tar.bz2 ];then
+        tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/wanpipe.tar.bz2 > /dev/null 2>&1
+      fi;
+
+#      /usr/bin/dialog --backtitle "$BT" --title "Cubit Accounting"\
+#        --infobox "Installing Cubit Accounting Software" 7 35
+#      tar -C /mnt --use-compress-program=bunzip2 -xf /install/cubit.tar.bz2 > /dev/null 2>&1
+
+      /usr/bin/dialog --backtitle "$BT" --title "Frontpage"\
+        --infobox "Installing Frotpage Extentions" 7 35
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/fp-v5.0.tbz > /dev/null 2>&1
+
+      rm /mnt/etc/.cdrom
+
+      /usr/bin/dialog --backtitle "$BT" --title "Python Scripting"\
+        --infobox "Installing Python Scripting" 7 35
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/python.tbz > /dev/null 2>&1
+
+      /usr/bin/dialog --backtitle "$BT" --title "GNU TLS"\
+        --infobox "Installing GNU Transport Layer Security" 7 35
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/gnutls.tar.bz2 > /dev/null 2>&1
+
+      /usr/bin/dialog --backtitle "$BT" --title "Open VPN"\
+        --infobox "Installing Open VPN Server" 7 35
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/openvpn.tbz > /dev/null 2>&1
+
+      /usr/bin/dialog --backtitle "$BT" --title "FTP Server"\
+        --infobox "Installing Proftp" 7 35
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/proftp.tbz > /dev/null 2>&1
+
+      Gen_Fstab;
+      if [ "`grep /dev/md /etc/fstab`" == "" ];then
+        cp /etc/fstab /mnt/etc/
+       else
+        grep -v "/dev/sd" /etc/fstab > /mnt/etc/fstab
+      fi;
+
+      /usr/bin/dialog --backtitle "$BT" --title "Ghostscript"\
+        --infobox "Installing Ghostscript" 7 35
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/ghostscript-8.54.tar.bz2 > /dev/null 2>&1
+
+      /usr/bin/dialog --backtitle "$BT" --title "Hylafax"\
+        --infobox "Installing Hylafax Fax Server" 7 35
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/hylafax.tar.bz2 > /dev/null 2>&1
+
+      if [ ! -d /mnt/var/spool/apache/htdocs/mysqlmanual ];then
+        mkdir /mnt/var/spool/apache/htdocs/mysqlmanual
+        chown www.www /mnt/var/spool/apache/htdocs/mysqlmanual
+      fi;
+
+
+      /usr/bin/dialog --backtitle "$BT" --title "PostGRE SQL Server"\
+        --infobox "Installing PostGRE SQL Server" 7 35
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/postgre.tar.bz2 > /dev/null 2>&1
+      mkdir /mnt/var/spool/apache/htdocs/postgresql
+      tar -C /mnt/var/spool/apache/htdocs/postgresql -xzf  /install/pkgs/postgres.tar.gz > /dev/null 2>&1
+
+      /usr/bin/dialog --backtitle "$BT" --title "ODBC And TDS Driver"\
+        --infobox "Installing ODBC Driver" 7 35
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/odbc.tar.bz2 > /dev/null 2>&1
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/freetds.tar.bz2 > /dev/null 2>&1
+
+      /usr/bin/dialog --backtitle "$BT" --title "Web/Proxy Server"\
+        --infobox "Installing Web Server,Pages,MySQL,Proxy Server And Manuals" 7 35
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/apache2.tbz > /dev/null 2>&1
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/svn.tbz > /dev/null 2>&1
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/squid.tbz > /dev/null 2>&1
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/sogo.tbz > /dev/null 2>&1
+      tar -C /mnt -xzf /install/pkgs/horde.tgz > /dev/null 2>&1
+      if [ ! -d /mnt/var/spool/apache/htdocs/phpmanual ];then
+        mkdir /mnt/var/spool/apache/htdocs/phpmanual
+        chown www.www /mnt/var/spool/apache/htdocs/phpmanual
+      fi;
+      tar -C /mnt/var/spool/apache/htdocs/phpmanual --use-compress-program=bunzip2 -xf /install/pkgs/php_manual_en.tar.bz2 > /dev/null 2>&1
+      tar -C /mnt/var/spool/apache/htdocs/mysqlmanual -xzf /install/pkgs/mysql-manual.tgz > /dev/null 2>&1
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/dbadmin.tbz > /dev/null 2>&1
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/mysql.tbz > /dev/null 2>&1
+
+      chmod 750 /mnt/var/spool/apache/htdocs/userguides/script/genimg.sh
+#      chroot /mnt /var/spool/apache/htdocs/userguides/script/genimg.sh
+
+      /usr/bin/dialog --backtitle "$BT" --title "Polycom Phone Firmware"\
+        --infobox "Installing Polycom Phone Firmware" 7 35
+      tar -C /mnt/var/spool/apache/htdocs/polycom --use-compress-program=bunzip2 -xf /install/pkgs/polyfirm.tbz > /dev/null 2>&1
+      chown -R root /mnt/var/spool/apache/htdocs/polycom
+      chmod 770 /mnt/var/spool/apache/htdocs/polycom/logs
+
+      /usr/bin/dialog --backtitle "$BT" --title "Snom Phone Firmware"\
+        --infobox "Installing Snom Phone Firmware" 7 35
+      tar -C /mnt/var/spool/apache/htdocs/snom --use-compress-program=bunzip2 -xf /install/pkgs/snomfirm.tbz > /dev/null 2>&1
+
+
+      /usr/bin/dialog --backtitle "$BT" --title "Doom Version 1"\
+        --infobox "3D Graphic Game Doom" 7 35
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/games.tbz > /dev/null 2>&1
+
+      /usr/bin/dialog --backtitle "$BT" --title "Creating Mail Hash Directories"\
+        --infobox "Creating Mail Hash Directories" 5 45
+      for root1 in a b c d e f g h i j k l m n o p q r s t u v w x y z 1 2 3 4 5 6 7 8 9 0;do 
+        mkdir -p /mnt/var/spool/mail/$root1;
+        chmod 755 /mnt/var/spool/mail/$root1;
+         for root2 in a b c d e f g h i j k l m n o p q r s t u v w x y z 1 2 3 4 5 6 7 8 9 0;do 
+          mkdir -p /mnt/var/spool/mail/$root1/$root2;
+          chmod 755 /mnt/var/spool/mail/$root1/$root2;
+        done;
+      done
+
+      /usr/bin/dialog --backtitle "$BT" --title "Creating User Hash Directories"\
+        --infobox "Creating User Hash Directories" 5 45
+      for root1 in a b c d e f g h i j k l m n o p q r s t u v w x y z 1 2 3 4 5 6 7 8 9 0;do 
+        mkdir -p /mnt/var/home/$root1;
+        chmod 755 /mnt/var/home/$root1;
+         for root2 in a b c d e f g h i j k l m n o p q r s t u v w x y z 1 2 3 4 5 6 7 8 9 0;do 
+          mkdir -p /mnt/var/home/$root1/$root2;
+          chmod 755 /mnt/var/home/$root1/$root2;
+        done;
+      done
+
+      if [ ! -d /var/spool/apache/htdocs/ns/config ];then
+        mkdir -p /var/spool/apache/htdocs/ns/config
+        mkdir /var/spool/apache/htdocs/ns/config/sslconf
+        mkdir /var/spool/apache/htdocs/ns/config/zones
+      fi;
+
+#      cp -Rp /install/icons /mnt/var/spool/apache/
+
+      /usr/bin/dialog --backtitle "$BT" --title "Sugar CRM"\
+        --infobox "Installing Sugar CRM" 7 35
+      tar -C /mnt/var/spool/apache/htdocs --use-compress-program=bunzip2 -xf /install/pkgs/sugarcrm.tar.bz2
+
+#      if [ -e /install/sogo.tar.bz2 ];then
+#        /usr/bin/dialog --backtitle "$BT" --title "SOGO Groupware"\
+#          --infobox "Installing Groupware System" 7 35
+#        tar -C /mnt/ --use-compress-program=bunzip2 -xf /install/sogo.tar.bz2
+#      fi;
+
+      /usr/bin/dialog --backtitle "$BT" --title "Routing Protocols"\
+        --infobox "Installing Routing Protocols" 7 35
+      tar -C /mnt/ -xzf /install/pkgs/quagga.tgz
+
+      /usr/bin/dialog --backtitle "$BT" --title "Client Software"\
+        --infobox "Installing Client Software" 7 35
+
+      mkdir -p /mnt/var/spool/samba/share/
+      chmod 2777 /mnt/var/spool/samba/share/
+      if [ -e /install/tools/firefox.exe ];then
+        cp /install/tools/firefox.exe /mnt/var/spool/samba/share/
+      fi;
+      if [ -e /install/tools/thunderbird.exe ];then
+        cp /install/tools/thunderbird.exe /mnt/var/spool/samba/share/
+      fi;
+      if [ -e /install/tools/jre.exe ];then
+        cp /install/tools/jre.exe /mnt/var/spool/samba/share/
+      fi;
+      if [ -e /install/tools/vnc.exe ];then
+        cp /install/tools/vnc.exe /mnt/var/spool/samba/share/
+      fi;
+      if [ -e /install/tools/itunes.exe ];then
+        cp /install/tools/itunes.exe /mnt/var/spool/samba/share/
+      fi;
+      chmod -R 664 /mnt/var/spool/samba/share/*
+
+      if [ ! -d /mnt/var/spool/samba/share/odbc ];then
+        mkdir /mnt/var/spool/samba/share/odbc
+      fi;
+      cp -r /install/tools/odbc/* /mnt/var/spool/samba/share/odbc/
+      chmod 775 /mnt/var/spool/samba/share/odbc
+      chmod -R 664 /mnt/var/spool/samba/share/odbc/*
+
+      if [ ! -d /mnt/var/spool/samba/share/fax-software ];then
+        mkdir /mnt/var/spool/samba/share/fax-software
+      fi;
+      cp -r /install/tools/fax-software/* /mnt/var/spool/samba/share/fax-software
+      chmod 775 /mnt/var/spool/samba/share/fax-software
+      chmod -R 664 /mnt/var/spool/samba/share/fax-software/*
+
+      if [ ! -d /mnt/var/spool/samba/share/putty ];then
+        mkdir /mnt/var/spool/samba/share/putty
+      fi;
+      tar -C /mnt/var/spool/samba/share/putty -xzf /install/pkgs/putty.tgz
+      chmod 775 /mnt/var/spool/samba/share/putty
+      chmod 664 /mnt/var/spool/samba/share/putty/*
+ 
+#      if [ ! -d /mnt/var/spool/samba/share/voip ];then
+#        mkdir /mnt/var/spool/samba/share/voip
+#      fi;
+#      cp -r /install/voip/* /mnt/var/spool/samba/share/voip
+#      chmod 775 /mnt/var/spool/samba/share/voip
+#      chmod 664 /mnt/var/spool/samba/share/voip/*
+
+      if [ ! -d /mnt/var/spool/samba/dadmin ];then
+        mkdir /mnt/var/spool/samba/dadmin
+      fi;
+      tar -C /mnt/var/spool/samba/dadmin -xzf /install/pkgs/windomadmin.tgz
+
+      /usr/bin/dialog --backtitle "$BT" --title "Open Office"\
+        --infobox "Installing Open Office Suite" 7 35
+
+      if [ -d /install/openoffice ];then
+        if [ ! -d /mnt/var/spool/samba/share/openoffice ];then
+          mkdir /mnt/var/spool/samba/share/openoffice
+        fi;
+        cp -r /install/openoffice/* /mnt/var/spool/samba/share/openoffice
+        chmod 755 /mnt/var/spool/samba/share/openoffice
+        chmod 644 /mnt/var/spool/samba/share/openoffice/*.*
+        chmod 644 /mnt/var/spool/samba/share/openoffice/*/*.*
+      fi;
+
+      chown -R root.smbadm /mnt/var/spool/samba/share
+
+      if [ -x /etc/rc.d/rc.netmod ];then
+        cp /etc/rc.d/rc.netmod /mnt/etc/rc.d/
+      fi;
+
+      if [ ! -d /mnt/backup ];then
+        /usr/bin/dialog --backtitle "$BT" --title "Locate Database"\
+          --infobox "Updating File Locate Database" 7 35
+        chroot /mnt updatedb --output=/var/db/locate ---prunepaths='/proc /dev /sys /tmp /var/tmp' >/dev/null 2>&1
+      fi;
+
+      echo "clear" > /mnt/root/.bash_logout
+
+      cp /install/.profile /mnt/root/.profile
+      chmod 750 /mnt/root/.profile
+
+      chmod 1777 /mnt/tmp
+      chmod 1777 /mnt/var/run
+      mkdir -p /mnt/var/spool/mail/r/o/
+      chmod 1777 /mnt/var/spool/mail/*/*
+
+#      if [ -e /etc/.networksentry-lite ];then
+#        touch /mnt/etc/.networksentry-lite
+#        touch /mnt/var/spool/apache/htdocs/ns/config/networksentry-lite
+#        chown www.www /mnt/var/spool/apache/htdocs/ns/config/networksentry-lite
+#        if [ -e /mnt/var/spool/apache/htdocs/ns/config/networksentry-full ];then
+#          rm /mnt/var/spool/apache/htdocs/ns/config/networksentry-full
+#        fi;
+#      fi;
+#      New_Serial;
+
+      if [ -d /mnt/backup ];then
+        if [ ! -d /mnt/etc ];then
+          mkdir /mnt/etc
+        fi;
+        if [ -e /mnt/backup/netsentry.conf ];then
+          if [ "$SERIAL" ];then
+            sed -e "s/Serial .*$/Serial $SERIAL/" /mnt/backup/netsentry.conf > /mnt/var/spool/apache/htdocs/ns/config/netsentry.conf
+           else
+            cp /mnt/backup/netsentry.conf /mnt/var/spool/apache/htdocs/ns/config
+          fi
+        fi;
+        if [ -d /mnt/backup/avirus ];then
+            mv /mnt/backup/avirus/* /mnt/var/spool/avirus/
+            rm -rf /mnt/backup/avirus
+            chown -R clamav.clamav /mnt/var/spool/avirus
+        fi;
+
+        if [ -e /mnt/backup/rc.mangle ];then
+            mv /mnt/backup/rc.mangle /mnt/etc/rc.d
+        fi;
+        if [ -e /mnt/backup/srm.conf ];then
+            mv /mnt/backup/srm.conf /mnt/etc/apache
+        fi;
+        if [ -e /mnt/backup/rc.tos ];then
+            mv /mnt/backup/rc.tos /mnt/etc/rc.d
+        fi;
+        if [ -e /mnt/backup/rc.quota ];then
+            mv /mnt/backup/rc.quota /mnt/etc/rc.d
+        fi;
+        if [ -e /mnt/backup/rc.serial ];then
+            mv /mnt/backup/rc.serial /mnt/etc/rc.d
+        fi;
+        if [ -e /mnt/backup/statistics ];then
+            mv /mnt/backup/statistics /mnt/etc/mail/statistics
+        fi;
+        if [ -d /mnt/backup/samba ];then
+          if [ ! -d /mnt/etc/samba/private ];then
+            mkdir -p /mnt/etc/samba/private
+          fi;
+          mv /mnt/backup/samba/* /mnt/etc/samba/private/
+          rm -rf /mnt/backup/samba
+        fi;
+
+        if [ -e /mnt/backup/astdb ];then
+          mv /mnt/backup/astdb /mnt/var/lib/asterisk
+        fi;
+
+        for astfile in capi.conf zapata.conf ivrmenu.conf local.conf iaxtel.conf res_odbc.conf.local;do
+          if [ -e /mnt/backup/asterisk/$astfile ];then
+            cp /mnt/backup/asterisk/$astfile /mnt/etc/asterisk
+          fi;
+        done;
+
+        if [ -e /mnt/backup/asterisk/sounds ];then
+          mv /mnt/backup/asterisk/sounds/* /mnt/var/lib/asterisk/sounds/custom 
+        fi;
+
+        if [ -e /mnt/backup/asterisk/voicemail ];then
+          mv /mnt/backup/asterisk/voicemail/* /mnt/var/spool/asterisk/voicemail/ 
+        fi;
+
+
+        if [ -d /mnt/backup/asterisk ];then
+          rm -rf /mnt/backup/asterisk
+        fi;
+
+        cp -Rp /mnt/backup/* /mnt/etc
+        rm -rf /mnt/backup       
+      fi;
+ 
+      chown -R www.www /mnt/var/spool/apache/htdocs
+      chmod 1777 /mnt/var/run
+      chmod 770 /mnt/var/spool/clientmqueue
+      chmod 1777 /mnt/tmp
+
+      touch /mnt/etc/.install
+      if [ -e /mnt/etc/.firstboot ];then
+        rm /mnt/etc/.firstboot
+      fi;
+      if [ -e /mnt/tmp/.firstconfig ];then
+        rm /mnt/tmp/.firstconfig
+      fi;
+      chroot /mnt /sbin/ldconfig
+      chroot /mnt /sbin/hwclock --systohc --utc
+      chroot /mnt /usr/sbin/rndc-confgen -a > /dev/tty4 2> /dev/tty4
+      chroot /mnt /usr/sbin/setmacl > /dev/null 2>/dev/null
+
+      /usr/bin/dialog --backtitle "$BT" --title "Init RD"\
+        --infobox "Creating Initial RAM Disks" 7 35
+      mount --bind /dev /mnt/dev
+      if [ "`pvdisplay -c 2>/dev/null |grep -E "/dev/sda[0-9]:flash:"`" ];then
+        cp /install/fixup.pl /mnt/root/
+        chmod 750 /mnt/root/fixup.pl
+        chroot /mnt /root/fixup.pl |sh > /dev/null 2>&1
+        mv /mnt/etc/fstab.new /mnt/etc/fstab
+        rm /mnt/root/fixup.pl
+      fi
+      chroot /mnt /usr/sbin/mkgrub > /dev/tty4 2>&1
+
+      touch /mnt/etc/.firstboot
+
+      /usr/bin/dialog --backtitle "$BT" --title "Initial Config"\
+        --infobox "Creating Initial Config This May Take Several Minutes" 7 35
+      cp /var/spool/apache/htdocs/ns/config/netsentry.conf /mnt/var/spool/apache/htdocs/ns/config/
+      if [ -e /mnt/var/spool/apache/htdocs/ns/config/networksentry-lite ];then
+        rm /mnt/var/spool/apache/htdocs/ns/config/networksentry-lite
+      fi;
+      if [ ! -e /mnt/var/spool/apache/htdocs/ns/config/networksentry-full ];then
+        touch /mnt/var/spool/apache/htdocs/ns/config/networksentry-full
+      fi;
+      if [ -e /mnt/etc/.networksentry-lite ];then
+        rm /mnt/etc/.networksentry-lite
+      fi;
+
+      mkdir -p /mnt/var/run/nscd /mnt/var/db/nscd > /dev/null 2>&1
+      touch /mnt/tmp/.firstconfig
+      rm /mnt/etc/.install > /dev/null 2>&1
+      chroot /mnt /usr/sbin/genconf > /dev/null 2>&1
+      chroot /mnt /usr/sbin/servconfig > /dev/tty4 2> /dev/tty4
+
+      if [ -d /mnt/var/log/ldap ];then
+        rm -rf /mnt/var/log/ldap
+      fi;
+      if [ -d /mnt/var/spool/ldap ];then
+        rm -rf /mnt/var/spool/ldap
+      fi;
+
+      rm /mnt/tmp/.firstconfig > /dev/null 2>&1
+      chroot /mnt /usr/sbin/genconf > /dev/null 2>&1
+      chroot /mnt /usr/sbin/servconfig > /dev/null 2>&1
+
+      #Create Serial On Install
+      cp /install/serial.pl /mnt/root
+      chmod 750 /mnt/root/serial.pl
+      chroot /mnt /root/serial.pl ${NET_HNAME}.${NET_DOMAIN} ${NIP_ADDR}+${NSN_ADDR} >> /mnt/var/spool/apache/htdocs/ns/config/netsentry.conf
+      rm /mnt/root/serial.pl
+
+      chroot /mnt /usr/bin/rebuild-info
+      if [ -e /mnt/var/spool/apache/htdocs/auth/sshkey.ppk ];then
+        rm /mnt/var/spool/apache/htdocs/auth/sshkey.ppk
+      fi;
+
+#      /usr/bin/dialog --backtitle "$BT" --title "Set Password"\
+#        --yesno "Do you wish to set the administrator (root) password" 6 35  
+#      PWS=$?
+#      if [ $PWS == "0" ];then
+#        clear;chroot /mnt passwd;
+#      fi;
+      if [ "$SERIAL" ];then
+        echo "Serial $SERIAL" >> /mnt/var/spool/apache/htdocs/ns/config/netsentry.conf
+      fi
+      rm -rf /mnt/var/spool/mail/shared
+
+      rm /mnt/etc/.firstboot
+      for lstcmd in  /etc/rc.d/rc.ldap /usr/sbin/genwebmap "sh /var/spool/apache/htdocs/ns/config/sqlpasswd";do
+        (chroot /mnt $lstcmd) > /dev/null 2>&1
+      done
+      sed -e "s/^\(max_connections =\) [0-9]\+\(.*\)/\1 512\2/" \
+          -e "s/^\(shared_buffers =\) [0-9]\+\(.*\)/\1 18\2/" \
+          -e "s/^#\(escape_string_warning\).*/\1 = off/" /mnt/var/spool/pgsql/postgresql.conf > /tmp/postgresql.conf
+
+      if [ -s /tmp/postgresql.conf ];then
+        cp /tmp/postgresql.conf /mnt/var/spool/pgsql/postgresql.conf
+      fi;
+      rm /tmp/postgresql.conf
+
+      touch /mnt/etc/.needsreconf
+      /sbin/init 0
+    fi
+  }
+
+
+View_Aint()
+  {
+    /sbin/ip addr show >/tmp/ifconfig
+    /usr/bin/dialog --backtitle "$BT" --clear --title "Active Interfaces"\
+      --textbox /tmp/ifconfig 21 78
+  }
+
+View_Aroute()
+  {
+    /sbin/ip route show table all >/tmp/routeing
+    /usr/bin/dialog --backtitle "$BT" --clear --title "Routeing Table"\
+      --textbox /tmp/routeing 21 78
+  }
+
+
+View_disk()
+  {
+    sfdisk -uM -Vl > /tmp/disk.$$ 
+    /usr/bin/dialog --backtitle "$BT" --clear --title "Hard Drives"\
+      --textbox /tmp/disk.$$ 21 78
+  }
+     
+
+View_lspci()
+  {
+    /usr/sbin/lspci >/tmp/lspci
+    /usr/bin/dialog --backtitle "$BT" --clear --title "PCI Database"\
+      --textbox /tmp/lspci 21 78
+  }
+
+View_Amount()
+  {
+    /bin/df -h >/tmp/mounts
+    /usr/bin/dialog --backtitle "$BT" --clear --title "Active Mounts"\
+      --textbox /tmp/mounts 21 78
+  }
+
+View_Proc()
+  {
+    /bin/ps ax >/tmp/procs
+    /usr/bin/dialog --backtitle "$BT" --clear --title "Active Prosesors"\
+      --textbox /tmp/procs 21 78
+  }
+
+Gen_Fstab() {
+  if [ -e /etc/fstab ];then
+    rm /etc/fstab
+  fi;
+  if [ ! -e /tmp/fstab.new ];then
+    cat /proc/mounts |grep -E ".* /mnt" |awk '$1 != "none" {printf "/%s %s\n",substr($2,6),$1}' |sed -e "s/\/dev\/loop\/1/\/dev\/loop0/" -e "s/\/dev\/loop1/\/dev\/loop0/" > /tmp/fstab.new
+  fi;
+  (for dsks in $DSKS;do
+    for prt in `fdisk -l $dsks |grep "Linux" |grep "Linux swap"  |awk  '{print $1}'`;do
+      echo "$prt  swap                                    swap      defaults      0 0">>/etc/fstab
+    done;
+  done) > /dev/null 2>&1
+  (cat /tmp/fstab.new |grep -w "/" |awk '{printf "tune2fs -L root %s\n",$2}' |sh 
+  cat /tmp/fstab.new |sort |grep -vw "/" |awk '{printf "tune2fs -L %s %s\n",$1,$2}' |sh ) >/dev/tty4 2>/dev/tty4
+
+  cat /tmp/fstab.new |grep -w "/" |awk '{printf "%s  %-40sext4      defaults,acl  1 1\n",$2,$1}'>> /etc/fstab
+  cat /tmp/fstab.new |sort |grep -vw "/" |awk '{printf "LABEL=%s  %-40sext4      defaults,acl  1 2\n",$1,$1}'>> /etc/fstab
+
+  (cat<<EOF
+proc       /proc                                   proc      defaults      0 0
+devpts     /dev/pts 	                           devpts    defaults      0 0
+usbfs      /proc/bus/usb                           usbfs     defaults      0 0
+#nfsd       /proc/fs/nfsd			   nfsd      defaults      0 0
+EOF
+)>>/etc/fstab
+}
+
+View_Fstab()
+  {
+    /usr/bin/dialog --backtitle "$BT" --clear --title "Mount Points"\
+      --textbox /etc/fstab 21 78
+  }
+
+View_Menu()
+  {
+    /usr/bin/dialog --backtitle "$BT" --clear --title "View Config Menu (Viewing Items Involves Saveing)"  --menu\
+       "Select The Config You Wish To See."\
+       15 70 8\
+       "1" "Mount Points (/etc/fstab)"\
+       "2" "Active Interfaces"\
+       "3" "Active Routeing Table"\
+       "4" "Active Mounts"\
+       "5" "Active Procesors"\
+       "6" "PCI Database"\
+       "7" "Disk Drives"\
+       "M" "Return To Main Menu" 2> /tmp/menu.tmp.$$
+    RETVAL=$?;
+    CM_CHOICE=`cat /tmp/menu.tmp.$$`;
+    rm /tmp/menu.tmp.$$;
+    if [ $RETVAL == "0" ];then
+      case $CM_CHOICE in
+        1){  
+             if [ -e "/tmp/fstab.new" ];then
+               Gen_Fstab;
+             fi;
+             View_Fstab;
+             View_Menu;
+          };;
+        2){
+            View_Aint;
+           View_Menu;
+          };;
+        3){
+            View_Aroute;
+            View_Menu;
+          };;
+        4){
+            View_Amount;
+            View_Menu;
+          };;
+        5){
+            View_Proc;
+            View_Menu;
+          };;
+        6){
+            View_lspci;
+            View_Menu;
+          };;
+        7){
+            View_disk;
+            View_Menu;
+          };;
+        M)return;;
+      esac;
+    fi;
+  }
+
+Fdisk() {  
+  if [ "${DSKS}" == "" ];then
+    sleep 5
+    MDDSK=`ls /dev/md[a-z] 2>/dev/null`
+    if [ "$MDDSK" ];then
+      DSKS=$MDDSK
+    fi;
+    for hdd in `ls /dev/[hs]d[a-z] 2>/dev/null`;do
+      if [ ! "`pvdisplay -c 2>/dev/null |grep -E "${hdd}[0-9]:flash:"`" ];then
+        DSKS="$DSKS $hdd"
+      fi;
+    done
+  fi;
+
+  DISK="";
+  MAN_FDISK="";
+  DCNT=1;
+  for dsks in $DSKS;do
+    DSIZE=`echo $dsks |awk -F/ '{printf "cat /sys/block/%s/size",$3}' |sh`
+    if [ "${DSIZE}" != "0" ] && [ "${DSIZE}" ];then
+      DISK="$DISK $dsks $DCNT off"
+      let DCNT++;
+    fi;
+  done;
+
+  /usr/bin/dialog --backtitle "$BT" --title "Fdisk" --separate-output\
+                  --checklist "Select Disk To Fdisk\nWARNING: Disks Selected Will Be NUKED!!!\nCall George W This Is A WMD\nWeapon Of M$ Destruction"\
+                  17 45 7 $DISK 2> /tmp/menu.tmp.$$
+  RETVAL=$?;
+  FD_CHOICE=`cat /tmp/menu.tmp.$$`;
+  rm /tmp/menu.tmp.$$; 
+
+  if [ $RETVAL == "0" ] && [ "$FD_CHOICE" ];then
+    LVMCNT=0;
+    for DISK_FD in $FD_CHOICE;do
+      let LVMCNT++
+      (sgdisk -Z ${DISK_FD}
+       parted -s ${DISK_FD} mklabel gpt
+       parted -s ${DISK_FD} mkpart grub 1 2
+       parted -s ${DISK_FD} set 1 bios on
+       parted -s ${DISK_FD} set 1 hidden on
+       parted -s ${DISK_FD} mkpart swap 2 1026
+       parted -s ${DISK_FD} "mkpart lvm 1026 -1"
+       parted -s ${DISK_FD} set 3 lvm on
+       sync
+       dd if=/dev/zero of=${DISK_FD}1
+       sleep 5) >/dev/tty4 2>/dev/tty4
+      /usr/bin/dialog --backtitle "$BT" --title "Formating ${DISK_FD}2"\
+                      --infobox "Formating And Activating Linux Swap Space" 4 35
+      mkswap ${DISK_FD}2 >/dev/tty4 2>/dev/tty4
+      swapon ${DISK_FD}2 >/dev/tty4 2>/dev/tty4
+
+      /usr/bin/dialog --backtitle "$BT" --title "Formating ${DISK_FD}3"\
+                      --infobox "Formating Linux Partition" 4 35
+      if (( $LVMCNT == 1 ));then
+        echo "/ /dev/mapper/lvm-root" >> /tmp/fstab.new
+      fi;
+      (pvremove -ff -y ${DISK_FD}3
+      pvcreate ${DISK_FD}3
+      if [ ! -d /dev/lvm ];then
+        vgcreate lvm ${DISK_FD}3
+       else
+        vgextend lvm ${DISK_FD}3
+      fi;) > /dev/tty4 2>/dev/tty4
+    done;
+
+    (lvcreate lvm -n root -l 100%VG
+    vgchange -a y) > /dev/tty4 2>/dev/tty4
+    /usr/bin/dialog --backtitle "$BT" --title "Formating Root"\
+                    --infobox "Formating Linux Partition" 4 35
+    mkfs.ext4 -L root -j -v /dev/mapper/lvm-root -L root >/dev/tty4 2>/dev/tty4
+    Mount_All
+    Install_System
+   else
+    return
+  fi
+
+#  if [ "$MAN_FDISK" ];then
+#    DISK="";
+#    DCNT=1;
+#    for prt in `fdisk -l $MAN_FDISK |grep "Linux swap" |awk '{print $1}'`;do
+#      DISK="$DISK $prt $DCNT off"
+#      let DCNT++;
+#    done;
+#    /usr/bin/dialog --backtitle "$BT" --title "Format Swap Partition"\
+#                    --checklist "Select Partition To Format"\
+#                    14 35 7 $DISK 2> /tmp/menu.tmp.$$
+#    RETVAL=$?;
+#    FM_CHOICE=`cat /tmp/menu.tmp.$$ |awk '{gsub("\"","");print $0}'`
+#    rm /tmp/menu.tmp.$$; 
+#    if [ $RETVAL == "0" ];then
+#      for dpart in $FM_CHOICE;do
+#         /usr/bin/dialog --backtitle "$BT" --title "Formating ${dpart}"\
+#                         --infobox "Formating And Activating Linux Swap Space" 4 35
+#        mkswap $dpart >/dev/tty4 2>/dev/tty4
+#        swapon $dpart >/dev/tty4 2>/dev/tty4
+#      done;
+#    fi;
+#
+#    DISK="";
+#    DCNT=1;
+#    for prt in `fdisk -l $MAN_FDISK |grep "Linux" |grep -v "Linux swap" |awk '{print $1}'`;do
+#      DISK="$DISK $prt $DCNT off"
+#      let DCNT++;
+#    done;
+#
+#    /usr/bin/dialog --backtitle "$BT" --title "Format Partition"\
+#                    --checklist "Select Partition To Format"\
+#                    14 35 7 $DISK 2> /tmp/menu.tmp.$$
+#    RETVAL=$?;
+#    FM_CHOICE=`cat /tmp/menu.tmp.$$ |awk '{gsub("\"","");print $0}'`
+#    rm /tmp/menu.tmp.$$;
+#    if [ $RETVAL == "0" ];then
+#      for dpart in $FM_CHOICE ;do
+#         /usr/bin/dialog --backtitle "$BT" --title "Formating ${dpart}"\
+#                         --infobox "Formating Linux Partition" 4 35
+#         mke2fs -j -v $dpart >/dev/tty4 2>/dev/tty4
+#      done;
+#    fi;
+#  fi;
+}
+
+Format() {
+  DISK="";
+  DCNT=1;
+  for dsks in $DSKS;do
+    for prt in `fdisk -l $dsks |grep "Linux" |grep -v "Linux swap" |awk '{print $1}'`;do
+      DISK="$DISK $prt $DCNT off"
+      let DCNT++;
+    done;
+  done;
+  /usr/bin/dialog --backtitle "$BT" --title "Format Partition"\
+                  --checklist "Select Partition To Format"\
+                  14 35 7 $DISK 2> /tmp/menu.tmp.$$
+  RETVAL=$?;
+  FM_CHOICE=`cat /tmp/menu.tmp.$$ |awk '{gsub("\"","");print $0}'`
+  rm /tmp/menu.tmp.$$;
+  if [ $RETVAL == "0" ];then
+    for dpart in $FM_CHOICE ;do
+       mkfs.ext4 -j -v $dpart >/dev/tty4 2>/dev/tty4
+    done;
+  fi;
+
+}
+
+Mkswap() {
+  DISK="";
+  DCNT=1;
+  for dsks in $DSKS;do
+    for prt in `fdisk -l $dsks |grep "Linux" |grep "Linux swap" |awk '{print $1}'`;do
+      DISK="$DISK $prt $DCNT off"
+      let DCNT++;
+    done;
+  done;
+  /usr/bin/dialog --backtitle "$BT" --title "Format Swap Partition"\
+                  --checklist "Select Partition To Format"\
+                  15 70 4 $DISK 2> /tmp/menu.tmp.$$
+  RETVAL=$?;
+  FM_CHOICE=`cat /tmp/menu.tmp.$$ |awk '{gsub("\"","");print $0}'`
+  rm /tmp/menu.tmp.$$; 
+  if [ $RETVAL == "0" ];then
+    for dpart in $FM_CHOICE;do
+      mkswap $dpart >/dev/tty4 2>/dev/tty4
+      swapon $dpart >/dev/tty4 2>/dev/tty4
+    done;
+  fi;
+}
+
+Mounts() {
+  touch /tmp/fstab.new
+  DISK="";
+  DCNT=1;
+  PCNT=1;
+  for dsks in $DSKS;do
+    for prt in `fdisk -l $dsks |grep "Linux" |grep -v "Linux swap" |awk '{print $1}'`;do
+      ISMNT=`grep $prt /tmp/fstab.new`;
+      let PCNT++;
+      if [ "$ISMNT" == "" ];then
+        DISK="$DISK $prt $DCNT off"
+        LPART=$prt
+        let DCNT++;
+      fi;
+    done;
+  done;
+
+  if [ "$DISK" == "" ] && [ "$DCNT" == 1 ] && [ "$PCNT" == 1 ];then
+    /usr/bin/dialog --backtitle "$BT" --title "Partition Allocation Error"\
+                    --msgbox "There Where No Partitons Allocated." 6 35
+    return
+   elif [ "$DCNT" == 1  ];then
+    /usr/bin/dialog --backtitle "$BT" --title "Partition(s) Allocated"\
+                    --msgbox "All Partitions Have Been Allocated." 6 35
+    return
+   elif (( $PCNT == 2 ));then
+    echo "/ ${LPART}" >> /tmp/fstab.new
+    Mount_All
+    Install_System
+   elif (( $DCNT > 1 ));then
+    FSTAB=`cat /tmp/fstab.new`;
+    /usr/bin/dialog --backtitle "$BT" --title "Configure Mount Points"\
+                    --radiolist "Please Configure Mount Points Configure\n\
+One Root File System As The Last Partition.\n\n\
+$FSTAB"\
+        20 70 6 $DISK 2> /tmp/menu.tmp.$$
+    RETVAL=$?;
+    PT_CHOICE=`cat /tmp/menu.tmp.$$`
+    rm /tmp/menu.tmp.$$; 
+    if [ $RETVAL == "0" ] && [ "$PT_CHOICE" != "" ];then
+      /usr/bin/dialog --backtitle "$BT" --title "Configure Mount Points"\
+                      --inputbox "Enter Mount Point" 10 35 "/" 2> /tmp/menu.tmp.$$
+      RETVAL=$?;
+      MP_CHOICE=`cat /tmp/menu.tmp.$$`
+      rm /tmp/menu.tmp.$$
+      if [ $RETVAL == "0" ] && [ "$PT_CHOICE" != "" ];then
+        ISMNT1=`grep $PT_CHOICE /tmp/fstab.new`;
+        ISMNT2=`grep -w $MP_CHOICE /tmp/fstab.new`;
+        if [ "$ISMNT1" == "" ] && [ "$ISMNT2" == "" ];then
+          echo "$MP_CHOICE $PT_CHOICE" >> /tmp/fstab.new
+        fi;
+	if [ $MP_CHOICE == "/" ];then
+          Mount_All;
+         else
+          Mounts;
+        fi;
+      fi;
+    fi;
+  fi;
+}
+
+Mount_All() {
+if [ -e "/tmp/fstab.new" ];then
+  cat /proc/mounts |grep "/mnt" |awk '{print $2" "$1}' |sort -r |awk '{print "umount "$1}' |sh
+  cat /tmp/fstab.new |awk '$1 == "/" {print "mount -t ext4 "$2" /mnt/ -o acl,user_xattr >/dev/tty4 2>/dev/tty4"}'|sh
+  MNTRT=`grep "/mnt " /proc/mounts`;
+  if [ "$MNTRT" == "" ];then
+    /usr/bin/dialog --backtitle "$BT" --title "Mount Failure"\
+                    --msgbox "No Root Partition Defined" 5 35
+   else
+    cat /tmp/fstab.new |/bin/sort |awk '$1 != "/" {print "mkdir -p /mnt"$1";mount "$2" /mnt"$1" >/dev/tty4 2> /dev/tty4"}'|sh
+    if [ ! -d "/mnt/proc" ];then
+      mkdir /mnt/proc
+    fi;
+    if [ ! -d /mnt/proc/sys ];then
+      mount -t proc none /mnt/proc
+    fi;
+    if [ ! -d "/mnt/sys" ];then
+      mkdir /mnt/sys
+    fi;
+    if [ ! -d /mnt/sys/bus ];then
+      mount -t sysfs none /mnt/sys
+    fi;
+    if [ ! -d "/mnt/dev" ];then
+      mkdir /mnt/dev
+    fi;
+    if [ ! -d "/mnt/dev/udevdb" ];then
+      mount -t ramfs none /mnt/dev
+      mkdir /mnt/dev/udevdb
+    fi;
+    if [ ! -d /mnt/dev/pts ];then
+      mkdir /mnt/dev/pts
+      mount -t devpts none /mnt/dev/pts
+    fi;
+    if [ ! -d "/mnt/boot" ];then
+      mkdir /mnt/boot
+    fi;
+    if [ ! -d "/mnt/tmp" ];then
+      mkdir /mnt/tmp
+    fi;
+#    if [ ! -h "/mnt/boot/boot" ];then
+#      ln -s / /mnt/boot/boot
+#    fi;
+    Gen_Fstab;
+#    View_Amount;
+  fi
+ else
+  /usr/bin/dialog --backtitle "$BT" --title "Mount Failure"\
+                  --msgbox "No Mount Points Are Defined" 5 35
+fi
+}
+
+New_Serial() {
+    /usr/bin/dialog --backtitle "$BT" --title "New Serial Number" \
+      --inputbox\
+      "Please Enter The Serial Number For This Version. The Existing Serial Will Be Used If Left Blank."\
+       10 51 "" 2> /tmp/menu.tmp.$$
+    RETVAL=$?
+    NEW_SER=`cat /tmp/menu.tmp.$$`;
+    rm /tmp/menu.tmp.$$;
+    if [ $RETVAL == "0" ];then
+      SERIAL=$NEW_SER
+     else
+      return
+    fi;
+}
+
+Date_Time() {
+  dialog --backtitle "$BT" --clear --title "Configure Date And Time" \
+         --inputbox "Set The Date And Time In The Following Format MMDDhhmmCCYY.ss" \
+         9 40 "`date +%m%d%H%M%Y.%S`" 2> /tmp/datetime
+
+  RETVAL=$?;
+  if [ $RETVAL == "0" ];then
+    /usr/bin/date `cat /tmp/datetime` > /dev/null 2>&1
+    DATEOK=$?
+    if [ $DATEOK != "0" ];then
+      /usr/bin/dialog --backtitle "$BT" --clear --title "Date/Time Error"\
+        --msgbox "Invalid Date Format"  9 40
+     else
+      /sbin/hwclock --systohc --utc
+      /usr/bin/dialog --backtitle "$BT" --clear --title "Date/Time Ok"\
+        --msgbox "`date`"  9 40
+    fi;
+  fi;
+}
+
+Network_Address()  {
+  /usr/sbin/sysreconf
+  if [ ! -d /var/spool/apache/htdocs/ns/config ];then
+    mkdir -p /var/spool/apache/htdocs/ns/config
+  fi;
+  cp /tmp/netsentry.conf /var/spool/apache/htdocs/ns/config
+}
+
+(/usr/sbin/sysreconf /install/default.conf.sysvars
+cp /tmp/netsentry.conf /var/spool/apache/htdocs/ns/config) > /dev/tty4 2>&1
+
+Date_Time;
+Fdisk;
+
+RESULT="0";
+while [ $RESULT == 0 ];do
+  Main_Menu;
+  echo "$MEN_CHOICE";
+  case $MEN_CHOICE in
+    1)Fdisk;;
+    2){
+        Mounts;
+        Mount_All;
+      };;
+    3)Network_Address;;
+    4)Date_Time;;
+    I)Install_System;;
+    V)View_Menu;;
+  esac;
+done

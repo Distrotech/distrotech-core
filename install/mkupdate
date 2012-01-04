@@ -1,0 +1,83 @@
+#!/bin/bash
+
+if [ ! -d /mnt/update ];then
+  mkdir /mnt/update
+fi;
+
+mount -L UPGRADE /mnt/update
+if [ $? != 0 ] || [ ! -e /mnt/update/lost+found ];then
+  exit;
+fi;
+
+cd /mnt/update
+
+if [ -e /etc/netsentry-version ];then
+  eval `cat /etc/netsentry-version`
+ else
+  eval `cat /install/netsentry-version`
+fi;
+
+cat /install/pkgs/pkg.list |cut -d: -f2|sort |uniq |awk '$1 != "" {printf "if [ ! -d %s ];then mkdir -p %s;fi\n",$1,$1}' |sh
+
+if [ ! -d /mnt/update/pkgs ];then
+  mkdir /mnt/update/pkgs
+fi;
+
+if [ ! -d /mnt/update/mnt/dev ];then
+  mkdir -p /mnt/update/mnt/dev
+fi;
+
+cat /install/pkgs/pkg.list | awk -F: '$3 != "" {printf "\tif [ ! -e /mnt/update/pkgs/%s ] || [ /install/pkgs/%s -nt /mnt/update/pkgs/%s ];then\n\
+		echo %s\n\
+		tar --use-compress-program=%s -C %s -xf /install/pkgs/%s\n\
+		touch /mnt/update/pkgs/%s\n\tfi;\n",$1,$1,$1,$1,$3,$2,$1,$1}' |sh
+
+if [ ! -e /mnt/update/pkgs/kernel.tar.bz2 ] || [ /install/core/kernel.tar.bz2 -nt /mnt/update/pkgs/kernel.tar.bz2 ];then
+  kuserdir=var/spool/rsync/kernuser/kernel-${KERNEL}-smp
+  rm -rf lib/modules/* boot/* var/spool/rsync/kernuser/*
+  mkdir -p ${kuserdir}
+  tar --use-compress-program=bunzip2 -C ./ -xf /install/core/kernel.tar.bz2 lib/modules
+  tar --use-compress-program=bunzip2 -C ./ -xvf /install/core/kernel.tar.bz2 boot/
+  tar --use-compress-program=bunzip2 --exclude=lib/modules --exclude=boot -C ${kuserdir} -xf /install/core/kernel.tar.bz2
+  touch /mnt/update/pkgs/kernel.tar.bz2
+fi;
+
+rsync -avP /lib/modules/${KERNEL}-install lib/modules/
+rsync -avP /boot/vmlinuz-install boot/vmlinuz-${KERNEL}-install
+rsync -avP /boot/System.map-install boot/System.map-${KERNEL}-install
+
+for shdir in fax-software odbc;do
+  mkdir -p var/spool/samba/share/${shdir}
+done
+
+chmod 775 var/spool/samba/share/putty
+chmod 664 var/spool/samba/share/putty/*
+
+rsync -avcP /install/tools/odbc/* var/spool/samba/share/odbc/
+chmod 775 var/spool/samba/share/odbc
+chmod -R 664 var/spool/samba/share/odbc/*
+
+rsync -avcP /install/tools/fax-software/* var/spool/samba/share/fax-software
+chmod 775 var/spool/samba/share/fax-software
+chmod -R 664 var/spool/samba/share/fax-software/*
+chown -R 0.139 var/spool/samba
+
+mkdir -p var/spool/rsync/programs/var/spool/
+rsync -avP /install/update var/spool/rsync/programs/var/spool/
+
+if [ ! -d var/spool/rsync/programs/var/spool/var/spool/ ];then
+  mkdir -p var/spool/rsync/programs/var/spool/samba/share
+fi;
+rsync -avP /install/tools/firefox.exe /install/tools/vnc.exe /install/tools/jre.exe \
+	var/spool/rsync/programs/var/spool/samba/share/
+chown -R 0.139 var/spool/rsync/programs/var/spool/samba/share/*
+chmod 664 var/spool/rsync/programs/var/spool/samba/share/*
+
+
+rsync -avP /install/avirus var/spool/
+
+cd /root
+sleep 2
+umount /mnt/update
+
+rm /etc/blkid.tab /etc/blkid.tab.old /etc/lvm/cache/.cache /tmp/* /etc/lvm/backup/flash /etc/lvm/archive/* /etc/iftab > /dev/null 2>&1

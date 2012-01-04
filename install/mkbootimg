@@ -1,0 +1,186 @@
+#!/bin/bash
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin
+
+LOOP=`losetup -f`
+
+if [ ! "${LOOP}" ] || [ ! -e "${LOOP}" ];then
+  exit
+fi;
+
+eval `cat /install/netsentry-version`
+
+(dd if=/dev/zero of=/tmp/initrd bs=1M count=8
+losetup ${LOOP} /tmp/initrd
+mkfs.ext2 -F -L initrd -i 1024 /tmp/initrd
+mount ${LOOP} /mnt/initrd) > /dev/null 2>&1
+
+for tld in bin dev etc isofs lib proc sbin sys sysroot var;do
+  mkdir /mnt/initrd/${tld}
+done
+
+mkdir -p /mnt/initrd/lib/modules/${INST_KERNEL}/
+for drvsub in drivers drivers-ata drivers-cd drivers-scsi drivers-usb;do
+  mkdir /mnt/initrd/lib/modules/${INST_KERNEL}/${drvsub}
+done
+
+mkdir -p /var/lock/lvm
+mkdir /mnt/initrd/etc/lvm
+for lvmdir in archive backup cache;do
+  mkdir /mnt/initrd/etc/lvm/${lvmdir}
+done;
+
+cp -r /lib/modules/${INST_KERNEL}/kernel/drivers/ata/* /mnt/initrd/lib/modules/${INST_KERNEL}/drivers-ata
+cp -r /lib/modules/${INST_KERNEL}/kernel/drivers/usb/storage/* /mnt/initrd/lib/modules/${INST_KERNEL}/drivers-usb
+cp -r /lib/modules/${INST_KERNEL}/kernel/drivers/usb/host/* /mnt/initrd/lib/modules/${INST_KERNEL}/drivers-usb
+cp -r /lib/modules/${INST_KERNEL}/kernel/drivers/ssb/* /mnt/initrd/lib/modules/${INST_KERNEL}/drivers-usb
+cp /lib/modules/${INST_KERNEL}/kernel/drivers/cdrom/cdrom.ko.gz /mnt/initrd/lib/modules/${INST_KERNEL}/drivers-cd
+cp /lib/modules/${INST_KERNEL}/kernel/fs/isofs/isofs.ko.gz /mnt/initrd/lib/modules/${INST_KERNEL}/drivers-cd
+cp /lib/modules/${INST_KERNEL}/kernel/fs/udf/udf.ko.gz /mnt/initrd/lib/modules/${INST_KERNEL}/drivers-cd
+cp /lib/modules/${INST_KERNEL}/kernel/fs/nls/nls_iso8859-1.ko.gz /mnt/initrd/lib/modules/${INST_KERNEL}/drivers-cd
+cp /lib/modules/${INST_KERNEL}/kernel/lib/crc-itu-t.ko.gz /mnt/initrd/lib/modules/${INST_KERNEL}/drivers-cd
+cp /lib/modules/${INST_KERNEL}/kernel/drivers/block/loop.ko.gz /mnt/initrd/lib/modules/${INST_KERNEL}/drivers
+cp /lib/modules/${INST_KERNEL}/kernel/drivers/md/dm-mod.ko.gz /mnt/initrd/lib/modules/${INST_KERNEL}/drivers
+cp /lib/modules/${INST_KERNEL}/kernel/lib/crc-t10dif.ko.gz /mnt/initrd/lib/modules/${INST_KERNEL}/drivers-scsi
+cp /lib/modules/${INST_KERNEL}/kernel/drivers/base/firmware_class.ko.gz /mnt/initrd/lib/modules/${INST_KERNEL}/drivers
+cp /lib/modules/${INST_KERNEL}/kernel/fs/ext*/* /mnt/initrd/lib/modules/${INST_KERNEL}/drivers
+cp /lib/modules/${INST_KERNEL}/kernel/fs/jbd*/* /mnt/initrd/lib/modules/${INST_KERNEL}/drivers
+cp /lib/modules/${INST_KERNEL}/kernel/drivers/pcmcia/* /mnt/initrd/lib/modules/${INST_KERNEL}/drivers
+cp /lib/modules/${INST_KERNEL}/kernel/drivers/base/firmware_class.ko.gz /mnt/initrd/lib/modules/${INST_KERNEL}/drivers
+
+for scsidrv in scsi_mod.ko.gz sd_mod.ko.gz sg.ko.gz sr_mod.ko.gz;do
+  cp -r /lib/modules/${INST_KERNEL}/kernel/drivers/scsi/${scsidrv} \
+	/mnt/initrd/lib/modules/${INST_KERNEL}/drivers-scsi
+done;
+
+mv /mnt/initrd/lib/modules/${INST_KERNEL}/drivers-ata/ata_generic.ko.gz \
+	/mnt/initrd/lib/modules/${INST_KERNEL}/drivers-ata/pata_legacy.ko.gz \
+	/mnt/initrd/lib/modules/${INST_KERNEL}/drivers-ata/ahci_platform.ko.gz \
+	/mnt/initrd/lib/modules/${INST_KERNEL}/drivers-ata/pata_qdi.ko.gz \
+	/mnt/initrd/lib/modules/${INST_KERNEL}/drivers-ata/pata_acpi.ko.gz \
+	/mnt/initrd/lib/modules/${INST_KERNEL}/drivers-ata/libahci.ko.gz \
+	/mnt/initrd/lib/modules/${INST_KERNEL}/drivers
+
+/sbin/depmod -b /mnt/initrd -aeF /boot/System.map-install ${INST_KERNEL}
+
+cp /etc/lvm/lvm.conf /mnt/initrd/etc/lvm/
+cp /usr/sbin/lvm.static /mnt/initrd/sbin/lvm
+cp /usr/bin/modprobe.static /mnt/initrd/sbin/modprobe
+cp /sbin/nash /mnt/initrd/bin
+
+touch /mnt/initrd/etc/fstab
+ln -s /proc/mounts /mnt/initrd/etc/mtab
+ln -s /sbin/lvm /mnt/initrd/sbin/vgchange
+ln -s /sbin/lvm /mnt/initrd/sbin/vgscan
+ln -s /sbin/lvm /mnt/initrd/sbin/vgmknodes
+ln -s /linuxrc /mnt/initrd/sbin/init
+
+(cat << EOF
+options loop max_part=63
+options sg allow_dio=1
+EOF
+) > /mnt/initrd/etc/modprobe.conf
+
+(cat << EOF
+#!/bin/nash
+
+mount -t ramfs none /dev
+mount -t proc none /proc
+mount -t sysfs none /sys
+
+mknod /dev/console c 5 1
+mknod /dev/urandom c 1 9
+mknod /dev/null c 1 3
+mknod /dev/systty c 4 0
+mknod /dev/zero c 1 5
+mknod /dev/ram5 b 1 5
+mknod /dev/loop0 b 7 0
+mknod /dev/cdrom b 11 0
+
+EOF
+) > /tmp/linuxrc.0
+
+for driver in `ls -s /mnt/initrd/lib/modules/${INST_KERNEL}/drivers-ata/* |cut -d/ -f8 |cut -d. -f1`;do
+  echo "modprobe ${driver}" >> /tmp/linuxrc.0
+done;
+
+(cat << EOF
+
+modprobe pata_acpi
+modprobe ata_generic
+modprobe uhci_hcd
+modprobe ohci_hcd
+modprobe ehci_hcd
+modprobe usb_storage
+modprobe sd_mod
+modprobe sg
+modprobe sr_mod
+modprobe cdrom
+modprobe loop
+modprobe dm-mod
+
+sleep 10
+EOF
+) >> /tmp/linuxrc.0
+
+(cat << EOF
+
+mount --ro -t iso9660 /dev/cdrom /isofs
+/sbin/losetup /dev/loop0 /isofs/flash.hdd
+EOF
+) > /tmp/linuxrc.1
+
+(cat << EOF
+
+mkdevices /dev
+mkdmnod
+vgchange -a y --sysinit
+vgmknodes
+mount --ro -t ext4 /dev/flash/install /sysroot
+echo 0x0100 > /proc/sys/kernel/real-root-dev
+
+pivot_root /sysroot /sysroot/initrd
+
+mount -t ramfs none /dev
+mount -t proc none /proc
+mount -t sysfs none /sys
+mkdir /dev/udevdb
+mkdir /dev/pts
+mount -t devpts none /dev/pts
+udevstart
+/initrd/sbin/mntetc
+EOF
+) > /tmp/linuxrc.2
+
+(cat << EOF
+#!/bin/bash
+
+gunzip -c /install/core/etc.gz |dd of=/dev/ram5 > /dev/null 2>&1
+mount -n -t ext4 /dev/ram5 /etc
+EOF
+) > /mnt/initrd/sbin/mntetc
+
+chmod 750 /mnt/initrd/sbin/mntetc
+
+cat /tmp/linuxrc.0 /tmp/linuxrc.2 > /mnt/initrd/linuxrc
+chmod 750 /mnt/initrd/linuxrc
+
+umount /mnt/initrd
+e2fsck -Dfy ${LOOP}
+dd if=/tmp/initrd |gzip -c9 > /boot/initrd-install
+
+mount ${LOOP} /mnt/initrd
+
+cat /tmp/linuxrc.0 /tmp/linuxrc.1 /tmp/linuxrc.2 > /mnt/initrd/linuxrc
+chmod 750 /mnt/initrd/linuxrc
+cp /sbin/losetup.static /mnt/initrd/sbin/losetup
+chmod 755 /mnt/initrd/sbin/losetup
+
+umount /mnt/initrd
+e2fsck -Dfy ${LOOP}
+dd if=/tmp/initrd |gzip -c9 > /boot/initrd-install-dvd
+
+sleep 2
+losetup -d ${LOOP}
+rm /tmp/initrd
+rm /tmp/linuxrc.*

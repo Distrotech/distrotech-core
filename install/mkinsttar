@@ -1,0 +1,77 @@
+#!/bin/bash
+
+cd /
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin
+
+LOOP=`/sbin/losetup -f`
+
+dd if=/dev/zero of=/install/core/etc bs=1M count=6
+/sbin/losetup ${LOOP} /install/core/etc
+/sbin/mkfs.ext4 -i 1024 ${LOOP}  > /dev/null 2>&1
+
+if [ ! -d /install/mnt ];then
+  if [ -e /install/mnt ];then
+    rm -rf /install/mnt
+  fi;
+  mkdir /install/mnt
+ else
+  rm -rf /install/mnt/*
+fi;
+mount ${LOOP} /install/mnt
+
+if [ /etc/rsyncd.conf -nt /etc/rsyncd-update.conf ];then
+  sed -e "s/\(path = \)/\1\/mnt\/update/" /etc/rsyncd.conf > /etc/rsyncd-update.conf
+fi;
+
+cp -Rp /etc/* /install/mnt/
+(cat <<EOF
+hosts:  	files dns
+passwd:		files
+shadow:		files
+group:		files
+EOF
+) > /install/mnt/nsswitch.conf
+
+rm /install/mnt/mtab* > /dev/null 2>&1
+
+echo "smbadm::139:" >> /install/mnt/group
+echo "*.*                                       /dev/tty5" > /install/mnt/syslog.conf
+echo "telnet          stream  tcp     nowait  root    /usr/sbin/in.telnetd" > /install/mnt/inetd.conf
+
+sed -e "s/^PasswordAuthentication/PasswordAuthentication yes/" /etc/sshd_config > /install/mnt/sshd_config
+sed -e "s/^\(PasswordAuthentication\) no/\1 yes/" /etc/sshd_config > /install/mnt/sshd_config
+
+sed -e "s/^.*agetty.*//" /etc/inittab > /install/mnt/inittab
+
+sed -e "s/^#skip-innodb$/skip-innodb/" /etc/my.cnf > /install/mnt/my.cnf
+sed -e "s/\(suggested-size.*\)20011/\1211/" /etc/nscd.conf > /install/mnt/nscd.conf
+
+touch /install/mnt/mtab
+touch /install/mnt/.install
+touch /install/mnt/.networksentry-lite
+
+echo "/dev/flash/install	/	ext4	defaults	0	1" > /install/mnt/fstab
+
+if [ -e /install/mnt/HOSTNAME ];then
+  rm /install/mnt/HOSTNAME
+fi;
+
+if [ -e /install/mnt/openssl/ca.conf ];then
+  rm /install/mnt/openssl/ca.conf
+fi;
+
+rm /install/mnt/ifconf/*
+
+umount /install/mnt
+e2fsck -Dfy ${LOOP}
+sleep 2
+/sbin/losetup -d ${LOOP}
+
+gzip -f -9 /install/core/etc
+
+tar --use-compress-program=bzip2 -cvf install/core/install.tbz bin boot/memtest.bin boot/grub/background.jpg \
+         etc home initrd lib/*[\._-]* lib/pkgconfig/ lib/evms/ lib/cpp man mnt root sbin share usr var > install/core/filelist
+
+
+rm /root/.bash_history > /dev/null 2>&1
