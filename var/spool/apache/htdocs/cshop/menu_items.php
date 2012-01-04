@@ -45,6 +45,7 @@ $tariffs["Tariffs For Top 50"]=openpage("tariffs","top50.php");
 */
 
 $credit["Account Topup"]=openpage("credit","topup.php");
+$credit["Monthly Credit Topup"]=openpage("credit","credittop.php");
 
 if ($_SESSION['auser'] == 1) {
   $main['Users/Accounts']="include:users";
@@ -66,8 +67,10 @@ if ($_SESSION['auser'] == 1) {
   $users["Add Operator"]="javascript:addagent(\'f\')";
   $users["Edit Reseller/Operator"]=openpage("users","editagent.php");
  
-  $reports["Old Reports"]=openpage("reports","report.php");
   $reports["Reseller Report"]=openpage("reports","mendrep.php");
+//  $reports["Detailed Report"]=openpage("reports","getbill.php");
+//  $reports["Users Report"]=openpage("reports","getusrreport.php");
+  $reports["Daily Report"]=openpage("reports","getdlyrep.php");
 
   $main["Reports"]="include:reports";
 

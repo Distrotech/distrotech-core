@@ -33,6 +33,7 @@ if ((isset($_POST['addcredit'])) && ($_POST['exchangerate'] > 0)){
 
   $_POST['credit']=$credinfo[0]+$_POST['credit']*10000;
   pg_query($db,"UPDATE reseller SET credit=" . $_POST['credit'] . ",exchangerate=" . $_SESSION['rexrate'] . " WHERE id= 0 ");
+  pg_query($db,"UPDATE reseller SET resetcredit=" . $_POST['credit'] . ",exchangerate=" . $_SESSION['rexrate'] . " WHERE id= 0 ");
   $_POST['credit']=sprintf("%0.2f",$_POST['credit']/10000);
 %>
 <CENTER>

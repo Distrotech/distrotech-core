@@ -30,7 +30,8 @@ if (isset($_POST['saveuser'])) {
     $_POST['ivrwarn']=sprintf("%d",$_POST['ivrwarn']*10000);
   }
   pg_query("UPDATE users SET password='" . $_POST['userpass'] . "',secret='" . $_POST['userpass'] . "',fullname='" . $_POST['firstname'] . "',ivrwarn=" . $_POST['ivrwarn'] .
-        ",tariff='" . $_POST['tariff'] . "',email= '" . $_POST['email'] . "',activated = '" . $_POST['acact'] . "',simuse='" . $_POST['simuse'] . "' WHERE name='" . $_SESSION['number'] . "'");
+        ",tariff='" . $_POST['tariff'] . "',callerid= '" . $_POST['defcli'] . "',email= '" . $_POST['email'] . "',activated = '" . $_POST['acact'] . 
+        "',simuse='" .  $_POST['simuse'] . "' WHERE name='" . $_SESSION['number'] . "'");
 } else if ($_POST['deluser'] == "1") {
   $boothq=pg_query($db,"SELECT id,credit
                      FROM users 
@@ -46,7 +47,7 @@ if (isset($_POST['saveuser'])) {
 }
 
 
-$boothq=pg_query($db,"SELECT password,fullname,tariff,email,activated,simuse,ivrwarn
+$boothq=pg_query($db,"SELECT password,fullname,tariff,email,activated,simuse,ivrwarn,callerid
                      FROM users
                      WHERE usertype=1 AND users.name='" . $_SESSION['number'] . "'
                            AND agentid = " . $_SESSION['resellerid'] . " LIMIT 1");
@@ -65,13 +66,15 @@ $user=pg_fetch_row($boothq,0);
 <TR CLASS=list-color1>
 <TD>Email Address</TD><TD><INPUT TYPE=TEXT NAME=email VALUE="<%print $user[3];%>"></TD></TR>
 <TR CLASS=list-color2>
-<TD>Simuse</TD><TD><INPUT TYPE=TEXT NAME=simuse VALUE="<%print $user[5];%>"></TD></TR>
+<TD>Default Caller ID</TD><TD><INPUT TYPE=TEXT NAME=defcli VALUE="<%print $user[7];%>"></TD></TR>
 <TR CLASS=list-color1>
+<TD>Simuse</TD><TD><INPUT TYPE=TEXT NAME=simuse VALUE="<%print $user[5];%>"></TD></TR>
+<TR CLASS=list-color2>
 <TD>Warn User When Call Goes Bellow</TD><TD>
 <INPUT TYPE=TEXT NAME=ivrwarn VALUE="<%if ($user[6] > 0) {printf("%0.2f",$user[6]/10000);} else if ($user[6] < 0) {print "";} else { print "0";}%>"></TD></TR>
-<TR CLASS=list-color2>
-<TD>Activated</TD><TD><INPUT TYPE=CHECKBOX NAME=acact<%if ($user[4] == "t") {print " CHECKED";};%>></TD></TR>
 <TR CLASS=list-color1>
+<TD>Activated</TD><TD><INPUT TYPE=CHECKBOX NAME=acact<%if ($user[4] == "t") {print " CHECKED";};%>></TD></TR>
+<TR CLASS=list-color2>
 <TD>Rate Plan</TD><TD><SELECT NAME=tariff><%
   $tplan=pg_query($db,"SELECT tariffname,tariffcode FROM tariff WHERE tariffcode LIKE '" .
                        $_SESSION['resellerid'] . "-%' ORDER BY tariffname");
@@ -88,7 +91,7 @@ $user=pg_fetch_row($boothq,0);
 %>
 </SELECT>
 </TD></TR>
-<TR CLASS=list-color2>
+<TR CLASS=list-color1>
 <TD ALIGN=MIDDLE COLSPAN=2>
 <INPUT TYPE=SUBMIT onclick=this.name='saveuser' VALUE="Save Changes">
 <INPUT TYPE=SUBMIT onclick=this.name='vladmin' VALUE="Advanced">

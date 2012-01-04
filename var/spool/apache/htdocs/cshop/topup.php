@@ -53,6 +53,7 @@ if (isset($_POST['conftx'])) {
   $r=pg_fetch_row($udetail,0);
 
   pg_query("UPDATE reseller SET rcallocated=rcallocated + " . $_SESSION['credit'] . " WHERE id = '" . $_SESSION['resellerid'] . "'");
+  pg_query("UPDATE reseller SET resetallocated=resetallocated + " . $_SESSION['credit'] . " WHERE id = '" . $_SESSION['resellerid'] . "'");
   pg_query("INSERT INTO logrefill (credit,card_id,reseller_id) VALUES (" . $_SESSION['credit'] . "," . $r[1] . "," . $_SESSION['resellerid'] . ")");
 
   $credout=($_SESSION['credit']*$ccred[1])/10000;
@@ -60,6 +61,7 @@ if (isset($_POST['conftx'])) {
   $credin=sprintf("%0.2f",$credin-$credout);
 
   pg_query("UPDATE users SET credit=credit + " . $_SESSION['credit'] . " WHERE name = '" . $_SESSION['acnum'] . "'");
+  pg_query("UPDATE users SET resetcredit=resetcredit + " . $_SESSION['credit'] . " WHERE name = '" . $_SESSION['acnum'] . "'");
   pg_query("INSERT INTO sale (saletime,credit,username,cardid,saletype,discount) VALUES (now()," . $_SESSION['credit'] . ",'" . $r[0] . "'," . $r[1] . ",'Account Topup',0)");
 
 

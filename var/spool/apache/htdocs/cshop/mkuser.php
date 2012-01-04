@@ -77,9 +77,9 @@ if (isset($_POST['adduser'])) {
     } else {
       $bnameout=$_POST['bname'];
     }
-    pg_query($db,"INSERT INTO users (name,defaultuser,fromuser,mailbox,secret,password,credit,tariff,
+    pg_query($db,"INSERT INTO users (name,defaultuser,fromuser,mailbox,secret,password,credit,callerid,tariff,
                                      activated,usertype,fullname,email,agentid,qualify,nat,canreinvite) VALUES (
-                                     '$cno','$cno','$cno','$cno','$lpass','$vmpass','0','" . $_POST['tariff'] . "','" . $_POST['active'] . "',
+                                     '$cno','$cno','$cno','$cno','$lpass','$vmpass','0','" . $_POST['defcli'] . "','" . $_POST['tariff'] . "','" . $_POST['active'] . "',
                                      '1','$bnameout','" . $_POST['email'] . "'," . $_SESSION['resellerid'] . ",'yes',
                                      '" . $_POST['nat'] . "','" . $_POST['canreinvite'] . "')");
     pg_query($db,"INSERT INTO features (exten) VALUES ('$cno')");
@@ -101,8 +101,10 @@ if (isset($_POST['adduser'])) {
       $r=pg_fetch_row($udetail,0);
 
       pg_query("UPDATE reseller SET rcallocated=rcallocated + " . $credit . " WHERE id = '" . $_SESSION['resellerid'] . "'");
+      pg_query("UPDATE reseller SET resetallocated=resetallocated + " . $credit . " WHERE id = '" . $_SESSION['resellerid'] . "'");
       pg_query("INSERT INTO logrefill (credit,card_id,reseller_id) VALUES (" . $credit . "," . $r[1] . "," . $_SESSION['resellerid'] . ")");
       pg_query("UPDATE users SET credit=" . $credit . " WHERE name = '" . $cno . "'");
+      pg_query("UPDATE users SET resetcredit=" . $credit . " WHERE name = '" . $cno . "'");
       pg_query("INSERT INTO sale (saletime,credit,username,cardid,saletype,discount) VALUES (now()," . $credit . ",'" . $r[0] . "'," . $r[1] . ",'Account Topup',0)");
     }
 
@@ -156,24 +158,27 @@ if (isset($_POST['adduser'])) {
   <TD>Initial Credit On Account</TD>
   <TD><INPUT TYPE=TEXT NAME=aloccredit></TD></TR>
 <TR CLASS=list-color2>
+  <TD>Default CallerID</TD>
+  <TD><INPUT TYPE=TEXT NAME=defcli></TD></TR>
+<TR CLASS=list-color1>
   <TD>Bulk Create (No. Of Accounts)</TD>
   <TD><INPUT TYPE=TEXT NAME=bulk></TD></TR>
-<TR CLASS=list-color1>
+<TR CLASS=list-color2>
   <TD>Use IAX Protocol</TD>
   <TD><INPUT TYPE=CHECKBOX NAME=iaxline></TD></TR>
-<TR CLASS=list-color2>
+<TR CLASS=list-color1>
   <TD>Activate Account</TD>
   <TD><INPUT TYPE=CHECKBOX NAME=active></TD></TR>
-<TR CLASS=list-color1>
+<TR CLASS=list-color2>
   <TD>Set NAT Flag</TD>
   <TD><INPUT TYPE=CHECKBOX NAME=nat></TD></TR>
-<TR CLASS=list-color2>
+<TR CLASS=list-color1>
   <TD>Allow Reinvite</TD>
   <TD><INPUT TYPE=CHECKBOX NAME=canreinvite CHECKED></TD></TR>
-<TR CLASS=list-color1>
+<TR CLASS=list-color2>
   <TD>Use DDI Pass ON</TD>
   <TD><INPUT TYPE=CHECKBOX NAME=DDIPASS></TD></TR>
-<TR CLASS=list-color2>
+<TR CLASS=list-color1>
 <TD COLSPAN=2 ALIGN=MIDDLE><INPUT TYPE=SUBMIT NAME=adduser VALUE="Add User"></TD></TR>
 </TABLE>
 </FORM><%

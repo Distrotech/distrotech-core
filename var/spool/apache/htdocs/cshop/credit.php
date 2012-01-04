@@ -48,7 +48,9 @@ if (isset($_POST['ctfx'])) {
     $newrate=(($pcred[0]*$pcred[1]) + (abs($_SESSION['credit'])*$ccred[1]))/($pcred[0]+abs($_SESSION['credit']));
 
     pg_query("UPDATE reseller SET rcallocated=rcallocated + " . $_SESSION['credit'] . " WHERE id = '" . $_SESSION['resellerid'] . "'");
+    pg_query("UPDATE reseller SET resetallocated=resetallocated + " . $_SESSION['credit'] . " WHERE id = '" . $_SESSION['resellerid'] . "'");
     pg_query("UPDATE reseller SET credit=credit + " . $_SESSION['credit'] . " WHERE id = '" . $_POST['edituser'] . "'");
+    pg_query("UPDATE reseller SET resetcredit=resetcredit + " . $_SESSION['credit'] . " WHERE id = '" . $_POST['edituser'] . "'");
 
     if ($_SESSION['credit'] > 0) {
       $_SESSION['credit']=floor($_SESSION['credit']*$ccred[1])/10000;
