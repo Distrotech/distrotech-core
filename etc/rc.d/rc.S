@@ -35,4 +35,9 @@ if [ $? != 0 ];then
   fi;
 fi
 
+if [ -e /etc/.install ];then
+  (/usr/sbin/sysreconf /install/default.conf.sysvars
+  cp /tmp/netsentry.conf /var/spool/apache/htdocs/ns/config) > /dev/null 2>&1
+fi;
+
 reset -Q
