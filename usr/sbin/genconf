@@ -14652,20 +14652,28 @@ sub printzapata() {
     while(@sdrow=$getsdef->fetchrow_array) {
       if (@sdrow[0] eq "coding") {
         if (@sdrow[1] eq "hdb3") {
-          $spandef{'t1setup'}.=@sdrow[0] . "='b8zs',";
+	  $t1val="b8zs";
         }
+	$brival="hdb3";
+      } elsif (@sdrow[0] eq "lbo") {
+        $t1val=@sdrow[1];
+        $brival="0";
       } elsif (@sdrow[0] eq "crc4") {
-        if (@sdrow[1] eq "1") {
-          $spandef{'t1setup'}.=@sdrow[0] . "='f',";
-        }
+        $t1val="f";
+        $brival="f";
         @sdrow[1]=@sdrow[1]?"t":"f";
       } elsif (@sdrow[0] eq "framing") {
-        $spandef{'t1setup'}.=@sdrow[0] . "='" . ((@sdrow[1] eq "cas")?"d4":"esf") . "',";
+        $t1val=(@sdrow[1] eq "cas")?"d4":"esf";
+        $brival="ccs";
+      } else {
+        $t1val=@sdrow[1];
+        $brival=@sdrow[1];
       }
       $spandef{'fields'}.="," . @sdrow[0];
-      $spandef{'values'}.=",'" . @sdrow[1] . "'";
+      $spandef{'valuese1'}.=",'" . @sdrow[1] . "'";
+      $spandef{'valuest1'}.=",'" . $t1val . "'";
+      $spandef{'valuesbri'}.=",'" . $brival . "'";
     }
-    chop $spandef{'t1setup'};
 
     $getstime=$dbh->prepare("SELECT max(timingsource)+1 FROM zapspan");
     $getstime->execute;
@@ -14694,29 +14702,47 @@ sub printzapata() {
       $pgrp{'T1'}=@zgrp[0];
     }
 
+    $pgrp{'BRI'}=0;
+    $getprigrp=$dbh->prepare("SELECT zaptrunk from zapgroup where signalling='bri_cpe' AND switchtype='euroisdn' order by zaptrunk LIMIT 1");
+    $getprigrp->execute;        
+    if ($getprigrp->rows > 0) {
+      @zgrp=$getprigrp->fetchrow_array;
+      $pgrp{'BRI'}=@zgrp[0];
+    }
 
     foreach $span (Dahdi::spans()) {
       if ($span->proto ne "") {
-        $pristype=($span->proto eq "E1")?"euroisdn":"national";
         $getspan=$dbh->prepare("SELECT * FROM zapspan WHERE spannum = " . $span->num);
         $getspan->execute;
         if ($getspan->rows == 0) {
           if ($span->proto eq "E1") {
             $dchan=$index+16;
+            $pristype="euroisdn";
+            $prisig="pri_cpe";
+            $bchan=($index+1) . "-" . ($index+15) . "," . ($index+17) . "-" . ($index+31);
+            $spanval=$spandef{'valuese1'};
+          } elsif ($span->proto eq "BRI") {
+            $dchan=$index+3;
+            $pristype="euroisdn";
+            $prisig="bri_cpe";
+            $bchan=($index+1) . "-" . ($index+2);
+            $spanval=$spandef{'valuesbri'};
           } else {
             $dchan=$index+24;
+            $prisig="pri_cpe";
+            $pristype="national";
+            $bchan=($index+1) . "-" . ($index+23); 
+            $spanval=$spandef{'valuest1'};
           }
 
-          if ($span->proto eq "E1") {
-            $bchan=($index+1) . "-" . ($index+15) . "," . ($index+17) . "-" . ($index+31);
+          if ($span->proto eq "BRI") {
+            $hwdchan="'t'";
           } else {
-            $bchan=($index+1) . "-" . ($index+23);
+            $hwdchan="'f'";
           }
-          $dbh->do("INSERT INTO zapspan (spannum,timingsource,dchannel" . $spandef{'fields'} . ") VALUES (" . $span->num . "," . $time . "," . $dchan . $spandef{'values'} . ")");
+
+          $dbh->do("INSERT INTO zapspan (spannum,timingsource,dchannel,hwdchan" . $spandef{'fields'} . ") VALUES (" . $span->num . "," . $time . "," . $dchan . "," . $hwdchan . $spanval . ")");
           $time++;
-          if ($span->proto ne "E1") {
-            $dbh->do("UPDATE zapspan SET " . $spandef{'t1setup'} . " WHERE spannum = " . $span->num);
-          }
 
           if ($pgrp{$span->proto} == 0) {
             $getdgrp=$dbh->prepare("SELECT count(zaptrunk)+1 FROM zapgroup");
@@ -14729,7 +14755,7 @@ sub printzapata() {
               if ($pgrp{$span->proto} eq "") {
                 $pgrp{$span->proto}=1;
               }
-              $dbh->do("INSERT INTO zapgroup (zaptrunk,signalling,busydetect,switchtype) VALUES (" . $pgrp{$span->proto} . ",'pri_cpe','no','" . $pristype . "')");
+              $dbh->do("INSERT INTO zapgroup (zaptrunk,signalling,busydetect,switchtype) VALUES (" . $pgrp{$span->proto} . ",'" . $prisig . "','no','" . $pristype . "')");
             }
           }
           if ($pgrp{$span->proto} > 0) {
@@ -15046,19 +15072,27 @@ __EOB__
   close(ZCR);
 
   $chans="";
-  $zapspanq="SELECT 'span='||spannum||','||timingsource||','||lbo||','||framing||','||coding||case when (crc4) then ',crc4' else '' end||case when (yalarm) then ',yellow' else '' end,dchannel from zapspan ORDER BY spannum";
+  $zapspanq="SELECT 'span='||spannum||','||timingsource||','||lbo||','||framing||','||coding||case when (crc4) then ',crc4' else '' end||case when (yalarm) then ',yellow' else '' end,dchannel,hwdchan from zapspan ORDER BY spannum";
   $getzap=$dbh->prepare($zapspanq);
   $getzap->execute;
   while(@row=$getzap->fetchrow_array) {
     print ZC @row[0] . "\n";
     if ((@row[1] ne "") && (@row[1] ne "0")){
-      $chans.=@row[1] . ",";
+      if (@row[2] eq "f") {
+        $chans.=@row[1] . ",";
+      } else {
+        $hwchans.=@row[1] . ",";
+      }
     }
   }
 
   if ($chans ne "") { 
     chop($chans);
     print ZC "dchan=" . $chans . "\n";
+  }
+  if ($hwchans ne "") { 
+    chop($hwchans);
+    print ZC "hardhdlc=" . $hwchans . "\n";
   }
 
   $zapspanq="SELECT driver||','||address||','||channels||','||timing,dchannel FROM dynspan WHERE channels > 0 ORDER BY id";
@@ -15077,7 +15111,7 @@ __EOB__
   }
 
   $chans="";
-  $zapspanq="SELECT channel from zapchan left outer join zapgroup using (zaptrunk) where channel > '0' AND signalling ~ '^pri_(cpe)|(net)\$' ORDER BY channel";
+  $zapspanq="SELECT channel from zapchan left outer join zapgroup using (zaptrunk) where channel > '0' AND signalling ~ '^[pb]ri_(cpe)|(net)\$' ORDER BY channel";
   $getzap=$dbh->prepare($zapspanq);
   $getzap->execute;
   while(@row=$getzap->fetchrow_array) {
