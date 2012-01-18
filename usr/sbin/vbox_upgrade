@@ -6,6 +6,7 @@ if [ ! -e /etc/netsentry-version ];then
 fi;
 
 DIST="/mnt/dev"
+BASE="/var/spool/distrotech"
 
 #Touch some files that should not be updated just in case
 touch /etc/autofs.conf /etc/dhcpd.conf /etc/freshclam.conf /etc/hosts /etc/mgetty.config /etc/popper.conf /etc/rsyncd.conf 
@@ -14,19 +15,37 @@ touch /etc/ppp/secret /etc/racoon/racoon.conf /etc/radiusclient/port-id-map /etc
 touch /etc/radiusclient/servers /etc/rc.d/rc.mount /etc/rc.d/rc.tunnels /etc/squid/filter.cnf /etc/squid/filter.conf
 
 #Rsync options
-ROPTS="-avOuHKSzP --exclude-from=/var/spool/apache/htdocs/ns/config/exclude.nfs"
+ROPTS="-avOHKzP --exclude-from=/var/spool/apache/htdocs/ns/config/exclude.nfs"
 RROPTS="-R ${ROPTS}"
 RTIMEOUT=60
 
 RERR=0;
+KERR=0;
 DEFVER="10.10.1";
 NOKERN=0;
 RSYNCK=0;
+UPDIST=0;
+UMNT=0;
+NOSYNC=0;
+
+eval `cat /etc/netsentry-version`
+
+if [ ! "${RSERV}" ];then
+  RSERV="pbx.distrotech.co.za";
+ else
+  SERV=${RSERV}
+fi
 
 if [ ! -d /var/spool/rsync/programs ];then
-  /usr/sbin/socktest  127.0.0.1 873 > /dev/null 2>&1 
+  /usr/sbin/socktest ${SERV} 873 > /dev/null 2>&1 
   RES=$?
+  if [ ${RES} != 0 ] && [ "${SERV}" != "127.0.0.1" ];then
+    SERV=127.0.0.1
+    /usr/sbin/socktest ${SERV} 873 > /dev/null 2>&1 
+    RES=$?
+  fi;
  else
+  NOSYNC=1;
   RES=0;
 fi;
 
@@ -34,7 +53,7 @@ if [ ${RES} != 0 ];then
   if [ ! -d /mnt/update ];then
     mkdir -p /mnt/update
   fi;
-  vgchange -a y > /dev/null >&1
+  vgchange -a y flash > /dev/null 2>&1
   mount -L UPGRADE /mnt/update -o ro> /dev/null 2>&1
   if [ $? != 0 ];then
     if [ -e /dev/cdrom ];then
@@ -43,7 +62,7 @@ if [ ${RES} != 0 ];then
          if [ -e /mnt/cdrom/flash.hdd ];then
            LOOP=`losetup -f`
            losetup ${LOOP} /mnt/cdrom/flash.hdd
-           vgchange -a y > /dev/null >&1
+           vgchange -a y flash > /dev/null 2>&1
            mount -L UPGRADE /mnt/update -o ro
            if [ $? != 0 ];then
              umount /mnt/cdrom
@@ -82,14 +101,23 @@ if [ ${RES} != 0 ];then
     exit 255;
   fi;
   RSYNCK=1;
+  DUFS=`findfs LABEL=DTSUTIL`
+  if [ ! "${DUFS}" ];then
+    DUFS=`findfs LABEL=DISTROTECH`
+  fi;
+  if [ "${DUFS}" ];then
+    dosfsck -a ${DUFS}
+    mount ${DUFS} /mnt/update/${DIST}/install/tools -o ro
+  fi; 
 fi;
 
-eval `cat /etc/netsentry-version`
-if [ "$1" == "" ] || [ -d /var/spool/rsync/programs ];then
+if [ "$1" == "" ];then
   NOKERN=1;
-  KERNEL=`uname -r |awk -F- '$2 == "i386" || $2 == "x86" {print $1"-"$2}'`
   if [ "$KERNEL" == "" ];then
-    KERNEL=`uname -r |awk -F- '$3 == "i386"  || $3 == "x86" {print $1"-"$2"-"$3}'`  
+    KERNEL=`uname -r |awk -F- '$2 == "i386" || $2 == "x86" {print $1"-"$2}'`
+    if [ "$KERNEL" == "" ];then
+      KERNEL=`uname -r |awk -F- '$3 == "i386"  || $3 == "x86" {print $1"-"$2"-"$3}'`  
+    fi;
   fi;
  else
   KERNEL=$1
@@ -108,7 +136,7 @@ if [ ! "$KERNOPTS" ];then
 fi;
 
 #Update netsentry-version
-if [ "$1" != "" ] && [ ! -d /var/spool/rsync/programs ];then
+if [ "$1" != "" ];then
   (cat <<__EOF__
 BRAND="$BRAND";
 VERSION="$LVERSION";
@@ -123,6 +151,7 @@ BT="\$BRAND V\$VERSION Linux V\$KERNEL Install";
 KERNOPTS="$KERNOPTS";
 EXTRA_DEV="$EXTRA_DEV";
 USBSLEEP="$USBSLEEP";
+RSERV="$RSERV";
 __EOF__
 ) > /etc/netsentry-version
   touch /var/spool/apache/htdocs/ns/config/exclude.nfs
@@ -131,17 +160,40 @@ fi;
 SMP_KERNEL="$KERNEL-smp";
 INSTALL_KERNEL="$KERNEL-install";
 
-KERNEX="--include=/$INSTALL_KERNEL/** \
-        --include=/$SMP_KERNEL/** \
-        --include=/$INSTALL_KERNEL/ \
-        --include=/$SMP_KERNEL/ \
-        --include=/*$INSTALL_KERNEL \
-        --include=/*$SMP_KERNEL \
-        --exclude=/* \
-        --exclude=*"
+KERNEX="--include=/$INSTALL_KERNEL \
+        --include=/$SMP_KERNEL \
+        --include=/[vS]*$INSTALL_KERNEL \
+        --include=/[vS]*$SMP_KERNEL \
+        --exclude=/*"
 
-#Im not a "master" server so need a sync
-if [ ! -d /var/spool/rsync/programs ];then
+if [ ! -d ${DIST}/install ] && [ ${RSYNCK} == 0 ];then
+  vgchange -a y flash > /dev/null 2>&1
+  if [ -e /dev/flash/install ];then
+    if [ ! -d ${DIST} ];then
+      mkdir ${DIST}
+    fi;
+    e2fsck -p /dev/flash/install
+    if (( $? < 4 ));then
+      mount /dev/flash/install ${DIST}
+      if [ $? == 0 ];then
+        DUFS=`findfs LABEL=DTSUTIL`
+        if [ ! "${DUFS}" ];then
+          DUFS=`findfs LABEL=DISTROTECH`
+        fi;
+        if [ "${DUFS}" ];then
+          dosfsck -a ${DUFS}
+          mount ${DUFS} ${DIST}/install/tools
+        fi; 
+        UPDIST=1
+        UMNT=1
+      fi;
+    fi;
+  fi;
+ elif [ -d ${DIST}/install ];then
+  UPDIST=1
+fi;
+
+if [ ${NOSYNC} == 0 ];then
   #Old upgrade postgre to ver 8
 #  if [ ! "`psql -V |head -1|grep "8.2.3"`" ];then
 #    /usr/bin/pg_dumpall -U pgsql -h 127.0.0.1 -c |gzip -c > /var/tmp/pgsql.sql
@@ -160,7 +212,7 @@ if [ ! -d /var/spool/rsync/programs ];then
 #      /bin/su pgsql -c "pg_ctl -D /var/spool/pgsql -m immediate stop" > /dev/null 2>&1
 #      /bin/su postgres -c "pg_ctl -D /var/spool/cubit -m immediate stop" > /dev/null 2>&1
 #      /usr/bin/killall -9 postmaster > /dev/null 2>&1
-#      /usr/bin/rsync $RROPTS --timeout=$RTIMEOUT 127.0.0.1::postgresql /
+#      /usr/bin/rsync $RROPTS --timeout=$RTIMEOUT ${SERV}::postgresql /
 #      if [ $? != 0 ];then
 #        echo "Upgrade Not Done !!!!"
 #        exit -1
@@ -181,9 +233,9 @@ if [ ! -d /var/spool/rsync/programs ];then
 #    fi;
 #  fi;
 
-  if [ -d /var/spool/vbox ];then
-    if [ ! -d ${DIST}/install ];then
-      rsync $RROPTS --timeout=$RTIMEOUT 127.0.0.1::install/install/core/filelist ${DIST}/
+  if [ ${UPDIST} == 1 ];then
+    if [ ! -f ${DIST}/install/core/filelist ];then
+      rsync $RROPTS --timeout=$RTIMEOUT ${SERV}::base/install/core/filelist ${DIST}/
       if [ -e ${DIST}/install/core/filelist ];then
         grep -vE "(^sys)|(^dev)|(^proc)|(/$)" ${DIST}/install/core/filelist > /tmp/filelist
         cd /
@@ -191,28 +243,19 @@ if [ ! -d /var/spool/rsync/programs ];then
         cd
         rm /tmp/filelist
         tar -C ${DIST} --use-compress-program=bunzip2 -xf ${DIST}/install/core/install.tbz
-        rsync $RROPTS -c --timeout=$RTIMEOUT --exclude /install --exclude /boot --exclude /lib/modules 127.0.0.1::install ${DIST}
+        rsync $RROPTS --timeout=$RTIMEOUT --exclude=/install --exclude=/boot --exclude=/lib/modules ${SERV}::install ${DIST}
       fi;
     fi;
-    if [ -d /lib/modules/${INSTALL_KERNEL} ];then
-      if [ ! -d ${DIST}/lib/modules ];then
-        mkdir -p ${DIST}/lib/modules
-      fi;
-      rsync $ROPTS /lib/modules/${INSTALL_KERNEL} ${DIST}/lib/modules/
-    fi;
-    if [ ! -d /var/spool/rsync/kernuser ];then
-      mkdir -p /var/spool/rsync/kernuser
-    fi;
-    rsync $ROPTS --timeout=$RTIMEOUT 127.0.0.1::kernuser/kernel-${SMP_KERNEL} /var/spool/rsync/kernuser/
 
-    for rdatain in "install/ ${DIST}/" "iso/ /var/spool/vbox/";do
-      echo $rdatain
-      rsync ${RROPTS} --timeout=$RTIMEOUT 127.0.0.1::$rdatain
-      if [ $? != 0 ];then
-        RERR=255;
-      fi;
-      echo;echo
-    done;
+    echo "install/ ${DIST}/"
+    rsync ${RROPTS} --delete --exclude=/proc --exclude=/sys --exclude=/lost+found --exclude=/dev --exclude=/install/mnt \
+	--exclude=install/avirus --exclude=/lib/modules/ --exclude=/install/core --exclude=/boot/initrd-install* \
+	--exclude=/mnt/update --include=/boot/grub/background.jpg --exclude=/boot/grub/* --exclude=/etc/mtab --exclude=/install/netsentry-version \
+	--exclude=/boot/vmlinuz-install --exclude=/boot/System.map-install --timeout=$RTIMEOUT ${SERV}::install/ ${DIST}/
+    if [ $? != 0 ];then
+      RERR=255;
+    fi;
+    echo;echo
   fi;
 
   if [ -e /etc/asterisk/version.10 ];then
@@ -223,7 +266,7 @@ if [ ! -d /var/spool/rsync/programs ];then
 
   for rdatain in "vbox /"  "share /var/spool/samba/share/" "programs /" "manuals /var/spool/apache/htdocs/" "${ast_repo} /" "avirus /var/spool/avirus";do 
     echo $rdatain
-    rsync $RROPTS --timeout=$RTIMEOUT 127.0.0.1::$rdatain
+    rsync $RROPTS -u --delay-updates --timeout=$RTIMEOUT ${SERV}::$rdatain
     if [ $? != 0 ];then
       RERR=255;
     fi;
@@ -232,9 +275,9 @@ if [ ! -d /var/spool/rsync/programs ];then
 
   #Sync Asterisk Modules
   if [ -e /etc/asterisk/version.10 ];then
-    rsync $RROPTS --delete --exclude=chan_lcr.so --timeout=$RTIMEOUT 127.0.0.1::asterisk-10/usr/lib/asterisk/modules-10 /
+    rsync $RROPTS --delete --exclude=chan_lcr.so --timeout=$RTIMEOUT ${SERV}::asterisk-10/usr/lib/asterisk/modules-10 /
    else
-    rsync $RROPTS --delete --exclude=chan_lcr.so --timeout=$RTIMEOUT 127.0.0.1::asterisk/usr/lib/asterisk/modules-1.8 /
+    rsync $RROPTS --delete --exclude=chan_lcr.so --timeout=$RTIMEOUT ${SERV}::asterisk/usr/lib/asterisk/modules-1.8 /
   fi;
   if [ $? != 0 ];then
     RERR=255;
@@ -242,18 +285,30 @@ if [ ! -d /var/spool/rsync/programs ];then
 
   #Update kernel
   if [ "$NOKERN" != "1" ];then
-    KERR=0;
-    for rdatain in "kernel /boot/" "kernmod /lib/modules/";do
-      echo $rdatain
-      rsync -c $RROPTS $KERNEX --timeout=$RTIMEOUT 127.0.0.1::$rdatain
+    if [ ${UPDIST} == 1 ];then
+      if [ -d ${DIST}/lib/modules/${INSTALL_KERNEL} ];then
+        rsync $ROPTS --delete --exclude=/modules.* ${DIST}/lib/modules/${INSTALL_KERNEL}/* /lib/modules/${INSTALL_KERNEL}/
+      fi;
+      if [ ! -d /var/spool/rsync/kernuser ];then
+        mkdir -p /var/spool/rsync/kernuser
+      fi;
+      rsync $ROPTS --delete --timeout=$RTIMEOUT ${SERV}::kernuser/kernel-${SMP_KERNEL} /var/spool/rsync/kernuser/
       if [ $? != 0 ];then
         KERR=1;
       fi;
-      echo;echo
-    done;
-    for rdatain in "kernuser/kernel-${SMP_KERNEL}*/* /" "kernmod/${SMP_KERNEL} /lib/modules/" "kernmod/${INSTALL_KERNEL} /lib/modules/";do
+      if [ ${KERR} == 0 ];then
+        rsync $ROPTS /var/spool/rsync/kernuser/kernel-${SMP_KERNEL}/* /
+      fi;
+     else
+      echo kernuser/kernel-${SMP_KERNEL}/* /
+      rsync $ROPTS --timeout=$RTIMEOUT ${SERV}::kernuser/kernel-${SMP_KERNEL}/* /
+      if [ $? != 0 ];then
+        KERR=1;
+      fi;
+    fi;
+    for rdatain in "kernel/* /boot/" "kernmod/* /lib/modules/";do
       echo $rdatain
-      rsync -c $ROPTS --timeout=$RTIMEOUT 127.0.0.1::$rdatain
+      rsync $ROPTS $KERNEX --timeout=$RTIMEOUT ${SERV}::$rdatain
       if [ $? != 0 ];then
         KERR=1;
       fi;
@@ -269,55 +324,26 @@ fi;
 if [ $RSYNCK == 1 ];then
   while [ `pidof rsync` ];do
     killall rsync
+    sleep 1
   done
+  (umount /mnt/update/${DIST}/install/tools
   umount /mnt/update${DIST}
-  umount /mnt/update
+  umount /mnt/update) > /dev/null 2>&1
   if [ "${LOOP}" ];then
     vgchange  -a n flash > /dev/null 2>&1
+    sleep 2
     losetup -d ${LOOP}
     umount /mnt/cdrom
   fi;
 fi;
 
-if [ -d /var/spool/vbox ];then
-  for MPATH in / /dev /proc /sys;do
-    if [ ! -d ${DIST}${MPATH} ];then
-      mkdir ${DIST}${MPATH}
-    fi;
-  done;
-
-  if [ ! -d ${DIST}/dev/udevdb ];then
-    mount --bind /dev ${DIST}/dev
-  fi;
-
-  if [ ! -e ${DIST}/proc/1 ];then
-    mount -t proc none ${DIST}/proc
-  fi;
-
-  if [ ! -d ${DIST}/sys/module ];then
-    mount -t sysfs none ${DIST}/sys
-  fi;
-
-  chroot ${DIST} /install/mkinsttar
-  chroot ${DIST} /install/mkbootimg
-
-  if [ ! -e ${DIST}/install/core/kernel.tar.bz2 ];then
-    ${DIST}/install/tarkernel
-  fi;
-
-  (rsync -avP /var/spool/avirus/*.* ${DIST}/install/avirus/
-  rsync -avP /var/spool/rsync/programs/var/spool/update ${DIST}/install/ ) > /dev/null 2>&1
-fi;
-
 #Final processing on no error
+ldconfig
+/usr/sbin/genconf
+/usr/sbin/asterisk -rx "dialplan reload"
+
 if [ ${RERR} == 0 ];then
-  ldconfig
-  /usr/sbin/genconf
-
-  chmod 1777 /var/run
   /usr/bin/rebuild-info
-  /usr/sbin/asterisk -rx "dialplan reload"
-
 #  pear channel-update pear.php.net;pear upgrade-all
 
   #Run any SQL / LDAP scripts on no error
@@ -354,7 +380,35 @@ if [ ${RERR} == 0 ];then
     /usr/sbin/mkgrub
    elif [ $NOKERN != 1 ] && [ $KERR == 0 ];then
     /usr/sbin/mkinitrd
+   elif [ /usr/sbin/mkinitrd -nt /boot/initrd-netsentry ] && [ $KERR == 0 ];then
+    /usr/sbin/mkinitrd
   fi
+  if [ ${UPDIST} == 1 ];then
+    if [ ! -e ${DIST}/install/core/kernel.tar.bz2 ] || [ /boot/vmlinuz-${INSTALL_KERNEL} -nt ${DIST}/install/core/kernel.tar.bz2 ];then
+      ${DIST}/install/tarkernel ${KERNEL}
+     elif [ -e ${DIST}/install/.version ];then
+      VERSION=`cat ${DIST}/install/.version`;
+      sed -e "s/\(VERSION=\"\).*/\1${VERSION}\";/" ${DIST}/install/netsentry-version > /tmp/netsentry-version
+      if [ "`diff /tmp/netsentry-version ${DIST}/install/netsentry-version`" ];then
+        mv /tmp/netsentry-version ${DIST}/install/netsentry-version
+       else
+        rm /tmp/netsentry-version
+      fi;
+    fi;
+
+    (rsync -avP /var/spool/avirus/*.* ${DIST}/install/avirus/
+    rsync -avP /var/spool/rsync/programs/var/spool/update ${DIST}/install/ ) > /dev/null 2>&1
+    ${DIST}/install/flashutil iso /var/spool/samba/ftp/distrotech.iso
+  fi;
+fi;
+
+if [ ${UMNT} == 1 ];then
+  umount ${DIST}/dev ${DIST}/proc ${DIST}/sys ${DIST}
+  vgchange -a n flash
+  if [ "${LOOP}" ];then
+    sleep 2
+    losetup -d ${LOOP}
+  fi;
 fi;
 
 exit $RERR
