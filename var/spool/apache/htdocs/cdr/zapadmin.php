@@ -103,6 +103,8 @@ $signalling['fxo_ls']=_("Loop Start (FXS)");
 $signalling['fxs_gs']=_("Ground Start");
 $signalling['pri_cpe']=_("PRI (CPE)");
 $signalling['pri_net']=_("PRI (NET)");
+$signalling['bri_cpe_ptmp']=_("BRI (CPE)");
+$signalling['bri_net_ptmp']=_("BRI (NET)");
 $signalling['mfcr2']=_("MFC/R2");
 
 $cidsignalling['bell']=_("Bell 202");

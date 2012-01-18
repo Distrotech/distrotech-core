@@ -24,9 +24,11 @@ $descrip['framing']=_("Framing");
 $descrip['coding']=_("Coding");
 $descrip['crc4']=_("CRC4 Checking (E1 Only)");
 $descrip['yalarm']=_("Transmit Yellow Alarm");
+$descrip['hwdchan']=_("Hardware D Channel");
 $descrip['dchannel']=_("D Channel If Required");
 
 $yesno['crc4']=1;
+$yesno['hwdchan']=1;
 $yesno['yalarm']=1;
 
 if ((isset($pbxupdate)) && ($update == "seen")) {
@@ -41,13 +43,13 @@ if ((isset($pbxupdate)) && ($update == "seen")) {
     $dchannel="null";
   }
   pg_query($db,"UPDATE zapspan SET dchannel=" . $dchannel . ",timingsource='" . $timingsource . "',lbo='" . $lbo . "',framing='" . $framing . "',
-                                   coding='" . $coding . "',crc4='" . $crc4 . "',yalarm='" . $yalarm . "' WHERE spannum='" . $zapspan . "'");
+                                   coding='" . $coding . "',crc4='" . $crc4 . "',hwdchan='" . $hwdchan . "',yalarm='" . $yalarm . "' WHERE spannum='" . $zapspan . "'");
   unset($framing);
   unset($coding);
   unset($lbo);
 }
 
-$qgetzdata=pg_query($db,"SELECT timingsource,lbo,framing,coding,crc4,yalarm,dchannel FROM zapspan where spannum='" . $zapspan . "'");
+$qgetzdata=pg_query($db,"SELECT timingsource,lbo,framing,coding,crc4,yalarm,hwdchan,dchannel FROM zapspan where spannum='" . $zapspan . "'");
 $zdata=pg_fetch_array($qgetzdata,0,PGSQL_ASSOC);
 
 $framing['d4']="d4/sf/superframe";
