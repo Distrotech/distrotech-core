@@ -399,8 +399,10 @@ cp -r /lib/modules/${SMP_KERNEL}/kernel/lib/raid6/* \
 cp -r /lib/modules/${SMP_KERNEL}/kernel/lib/libcrc32c.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/lib
 
-cp -r /lib/modules/${SMP_KERNEL}/kernel/lib/lzo/* \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/lib
+if [ -d /lib/modules/${SMP_KERNEL}/kernel/lib/lzo ];then
+  cp -r /lib/modules/${SMP_KERNEL}/kernel/lib/lzo/* \
+     /mnt/initrd/lib/modules/${SMP_KERNEL}/lib
+fi;
 
 cp /lib/modules/${SMP_KERNEL}/kernel/fs/ext3/ext3.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
@@ -523,12 +525,11 @@ if [ "$1" == "test" ];then
   rm /boot/System.map-install
   rm /boot/initrd-netsentry
 
-  ln -s /boot/vmlinuz-${SMP_KERNEL} /boot/vmlinuz-smp
-  ln -s /boot/vmlinuz-${INSTALL_KERNEL} /boot/vmlinuz-install
-
-  ln -s /boot/System.map-${SMP_KERNEL} /boot/System.map-smp
-  ln -s /boot/System.map-${INSTALL_KERNEL} /boot/System.map-install
-  ln -s /boot/initrd-netsentry-$KERNEL /boot/initrd-netsentry) > /dev/null 2>&1
+  ln -s vmlinuz-${SMP_KERNEL} /boot/vmlinuz-smp
+  ln -s vmlinuz-${INSTALL_KERNEL} /boot/vmlinuz-install
+  ln -s System.map-${SMP_KERNEL} /boot/System.map-smp
+  ln -s System.map-${INSTALL_KERNEL} /boot/System.map-install
+  ln -s initrd-netsentry-$KERNEL /boot/initrd-netsentry) > /dev/null 2>&1
 
   /usr/sbin/rdev /boot/vmlinuz-smp /dev/ram0
   /usr/sbin/rdev /boot/vmlinuz-install /dev/ram0
@@ -538,6 +539,10 @@ let RTPTN--
 
 if [ -e /usr/sbin/grub-mkconfig ];then
   grub-mkconfig  > /boot/grub/grub.cfg
+fi;
+
+if [ -h /boot/boot ];then
+  rm /boot/boot
 fi;
 
 (cat<<EOF
