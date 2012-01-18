@@ -14703,7 +14703,7 @@ sub printzapata() {
     }
 
     $pgrp{'BRI'}=0;
-    $getprigrp=$dbh->prepare("SELECT zaptrunk from zapgroup where signalling='bri_cpe' AND switchtype='euroisdn' order by zaptrunk LIMIT 1");
+    $getprigrp=$dbh->prepare("SELECT zaptrunk from zapgroup where signalling='bri_cpe_ptmp' AND switchtype='euroisdn' order by zaptrunk LIMIT 1");
     $getprigrp->execute;        
     if ($getprigrp->rows > 0) {
       @zgrp=$getprigrp->fetchrow_array;
@@ -14724,7 +14724,7 @@ sub printzapata() {
           } elsif ($span->proto eq "BRI") {
             $dchan=$index+3;
             $pristype="euroisdn";
-            $prisig="bri_cpe";
+            $prisig="bri_cpe_ptmp";
             $bchan=($index+1) . "-" . ($index+2);
             $spanval=$spandef{'valuesbri'};
           } else {
@@ -14734,13 +14734,11 @@ sub printzapata() {
             $bchan=($index+1) . "-" . ($index+23); 
             $spanval=$spandef{'valuest1'};
           }
-
           if ($span->proto eq "BRI") {
             $hwdchan="'t'";
           } else {
             $hwdchan="'f'";
           }
-
           $dbh->do("INSERT INTO zapspan (spannum,timingsource,dchannel,hwdchan" . $spandef{'fields'} . ") VALUES (" . $span->num . "," . $time . "," . $dchan . "," . $hwdchan . $spanval . ")");
           $time++;
 
@@ -15111,7 +15109,7 @@ __EOB__
   }
 
   $chans="";
-  $zapspanq="SELECT channel from zapchan left outer join zapgroup using (zaptrunk) where channel > '0' AND signalling ~ '^[pb]ri_(cpe)|(net)\$' ORDER BY channel";
+  $zapspanq="SELECT channel from zapchan left outer join zapgroup using (zaptrunk) where channel > '0' AND signalling ~ '^[pb]ri_(cpe)|(net)' ORDER BY channel";
   $getzap=$dbh->prepare($zapspanq);
   $getzap->execute;
   while(@row=$getzap->fetchrow_array) {
