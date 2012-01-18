@@ -191,6 +191,14 @@ if [ -e /etc/.install ];then
   mount -a
   /sbin/hdparm -c1 -d1 /dev/hd? > /dev/null 2>&1
 
+  (DTSU=`findfs LABEL=DISTROTECH`
+  if [ ! "${DTSU}" ];then
+    DTSU=`findfs LABEL=DTSUTIL`
+  fi;
+  if [ "${DTSU}" ];then
+    mount ${DTSU} /install/tools -o ro
+  fi;) >/dev/null 2>&1
+
   #Create The Default Config File
   if [ -e /install/default.conf.sysvars ];then
     if [ ! -e /etc/iftab ];then
