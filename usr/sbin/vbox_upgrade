@@ -235,7 +235,8 @@ if [ ${NOSYNC} == 0 ];then
 
   if [ ${UPDIST} == 1 ];then
     if [ ! -f ${DIST}/install/core/filelist ];then
-      rsync $RROPTS --timeout=$RTIMEOUT ${SERV}::base/install/core/filelist ${DIST}/
+      rsync $RROPTS --timeout=$RTIMEOUT --include=/install/netsentry-version --include=/install/core/filelist --include=/install/core \
+            --exclude=/install/core/* --exclude=/install/* ${SERV}::base/install/* ${DIST}
       if [ -e ${DIST}/install/core/filelist ];then
         grep -vE "(^sys)|(^dev)|(^proc)|(/$)" ${DIST}/install/core/filelist > /tmp/filelist
         cd /
@@ -244,6 +245,7 @@ if [ ${NOSYNC} == 0 ];then
         rm /tmp/filelist
         tar -C ${DIST} --use-compress-program=bunzip2 -xf ${DIST}/install/core/install.tbz
         rsync $RROPTS --timeout=$RTIMEOUT --exclude=/install --exclude=/boot --exclude=/lib/modules ${SERV}::install ${DIST}
+        NOKERN=0
       fi;
     fi;
 
