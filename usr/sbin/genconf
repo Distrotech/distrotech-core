@@ -9942,6 +9942,10 @@ if (! -d "/etc/samba") {
 
 
   print SMB "        ldap suffix = " . $vsuf . "\n";
+  print SMB "        ldap idmap suffix = ou=Idmap\n";
+  print SMB "        ldap user suffix = ou=Users\n";
+  print SMB "        ldap group suffix = ou=Groups\n";
+  print SMB "        ldap machine suffix = ou=Trusts\n";
 
   print SMB "        idmap config * : backend      = ldap\n";
   print SMB "        idmap config * : range        = 524288-589824\n";
@@ -9949,10 +9953,6 @@ if (! -d "/etc/samba") {
   print SMB "        idmap config * : ldap_base_dn = " . $vsuf . "\n";
   print SMB "        idmap config * : ldap_user_dn = " . $ldapserv{'Login'} . "\n";
 
-#  print SMB "        ldap idmap suffix = ou=Idmap\n";
-  print SMB "        ldap user suffix = ou=Users\n";
-  print SMB "        ldap group suffix = ou=Groups\n";
-  print SMB "        ldap machine suffix = ou=Trusts\n";
   if ($smboption{'Winbind'} eq "") {
     $smboption{'Winbind'}="Both";
   }
