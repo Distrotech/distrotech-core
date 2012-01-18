@@ -2,17 +2,21 @@
 
 if [ "$1" ];then
   mount $1 /mnt -o ro
-  mount --bind /dev /mnt/dev
-  mount --bind /sys /mnt/sys
-  chroot /mnt mount -nt proc none /proc
-  /usr/bin/awk '$3 == "ext2" || $3 == "ext3" {printf "chroot /mnt /sbin/e2fsck -C 0 -p %s\nif [ $? -gt 1 ];then\n  chroot /mnt /sbin/e2fsck -C 0 -Dfy %s\nfi\n\n",$1,$1,$1 }' /mnt/etc/fstab |/bin/bash
-  mount /mnt -o remount,rw
-  rm /mnt/etc/mtab
-  chroot /mnt mount -f /proc
-  chroot /mnt swapon -a
-  chroot /mnt mount -a -v -t ext2,ext3
-  if [ -e /mnt/etc/HOSTNAME ];then
-    cp /mnt/etc/hosts /mnt/etc/resolv.conf /etc
-    hostname -F /mnt/etc/HOSTNAME
+  if [ $? == 0 ];then
+    mount --bind /dev /mnt/dev
+    mount --bind /sys /mnt/sys
+    mount --bind /proc /mnt/proc
+    /usr/bin/awk '$3 == "ext2" || $3 == "ext3" || $3 == "ext4" {printf "chroot /mnt /sbin/e2fsck -C 0 -p %s\nif [ $? -gt 1 ];then\n  chroot /mnt /sbin/e2fsck -C 0 -Dfy %s\nfi\n\n",$1,$1,$1 }' /mnt/etc/fstab |/bin/bash
+    mount /mnt -o remount,rw
+    rm /mnt/etc/mtab
+    chroot /mnt mount -f /
+    chroot /mnt swapon -a
+    chroot /mnt mount -a -v -t ext2,ext3,ext4
+    if [ -e /mnt/etc/HOSTNAME ];then
+      cp /mnt/etc/hosts /mnt/etc/resolv.conf /etc
+      hostname -F /mnt/etc/HOSTNAME
+    fi;
+   else
+    echo "Mount failed"
   fi;
 fi;
