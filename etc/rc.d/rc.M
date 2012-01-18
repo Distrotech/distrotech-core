@@ -180,16 +180,6 @@ if [ -e /etc/.install ];then
   fi;
 
   #Set Echo Coefficients
-  if [ -d /proc/zaptel ];then
-    if [  "`cat /proc/zaptel/* |grep FXSKS`" ];then
-      if [ -e /etc/fxotune.conf ];then
-        /usr/bin/fxotune -s > /dev/null 2>&1
-       else
-        echo "Initiating ZAP FXO Coefficients";
-        /usr/bin/fxotune -i 0
-      fi;
-    fi;
-  fi;
   if [ -d /proc/dahdi ];then
     if [  "`cat /proc/dahdi/* 2>/dev/null |grep FXSKS`" ];then
       if [ -e /etc/fxotune.conf ];then
