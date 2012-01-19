@@ -14779,10 +14779,7 @@ __EOB__
           }
 
           $spaninf=$span->description();
-          if ($spaninf =~ m/WP(E1|T1).* wanpipe/) {
-            print $spaninf . "\n";
-          }
-          if ($span->proto eq "BRI") {
+          if ($spaninf =~ m/WP[ETJ]1\/.* \"wanpipe/) || ($span->proto eq "BRI")) {
             $hwdchan="'t'";
           } else {
             $hwdchan="'f'";
