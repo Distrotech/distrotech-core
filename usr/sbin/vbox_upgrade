@@ -340,10 +340,6 @@ if [ $RSYNCK == 1 ];then
 fi;
 
 #Final processing on no error
-ldconfig
-/usr/sbin/genconf
-/usr/sbin/asterisk -rx "dialplan reload"
-
 if [ ${RERR} == 0 ];then
   /usr/bin/rebuild-info
 #  pear channel-update pear.php.net;pear upgrade-all
@@ -377,6 +373,10 @@ if [ ${RERR} == 0 ];then
     fi;
   fi;
 
+  ldconfig
+  /usr/sbin/genconf
+  /usr/sbin/asterisk -rx "dialplan reload"
+
   #Reinstall Grub/Update initrd if needed
   if [ ! -e /boot/grub/core.img ] || [ /usr/lib/grub/i386-pc/ -nt /boot/grub/core.img ];then
     /usr/sbin/mkgrub
@@ -402,6 +402,10 @@ if [ ${RERR} == 0 ];then
     rsync -avP /var/spool/rsync/programs/var/spool/update ${DIST}/install/ ) > /dev/null 2>&1
     ${DIST}/install/flashutil iso /var/spool/samba/ftp/distrotech.iso
   fi;
+ else
+  ldconfig
+  /usr/sbin/genconf
+  /usr/sbin/asterisk -rx "dialplan reload"
 fi;
 
 if [ ${UMNT} == 1 ];then
