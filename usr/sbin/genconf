@@ -14652,7 +14652,10 @@ sub printzapata() {
     while(@sdrow=$getsdef->fetchrow_array) {
       if (@sdrow[0] eq "coding") {
         if (@sdrow[1] eq "hdb3") {
+          $wrcode="HDB3";
 	  $t1val="b8zs";
+        } else {
+          $wrcode="AMI";
         }
 	$brival="hdb3";
       } elsif (@sdrow[0] eq "lbo") {
@@ -14662,6 +14665,7 @@ sub printzapata() {
         $t1val="f";
         $brival="f";
         @sdrow[1]=@sdrow[1]?"t":"f";
+        $wrcrc4=@sdrow[1]?"CRC4":"NCRC4";
       } elsif (@sdrow[0] eq "framing") {
         $t1val=(@sdrow[1] eq "cas")?"d4":"esf";
         $brival="ccs";
@@ -14674,6 +14678,42 @@ sub printzapata() {
       $spandef{'valuest1'}.=",'" . $t1val . "'";
       $spandef{'valuesbri'}.=",'" . $brival . "'";
     }
+
+    $wrcrc4=($wrcrc4 ne "")? $wrcrc4 : "CRC4";
+    $wrcode=($wrcode ne "")? $wrcode : "HDB3";
+
+    open(WRC,">rc.wanpipe");
+    print WRC <<__EOB__;
+#!/bin/bash
+
+if [ ! -e /etc/wanpipe/wanrouter.rc ];then
+  if [ -e /etc/wanpipe/wanrouter.rc.orig ];then
+    cp /etc/wanpipe/wanrouter.rc.orig /etc/wanpipe/wanrouter.rc
+   else
+    touch /etc/wanpipe/wanrouter.rc
+  fi;
+fi
+
+if [ ! -e /etc/wanpipe/wanpipe1.conf ] || [ "\${1}" == "reconfig" ];then
+  if [ "\${1}" == "reconfig" ];then
+    asterisk -rx "stop now";
+    wanrouter stop
+  fi;
+  wancfg_dahdi --tdm_law=ALAW --no-zapata --no-zaptel --no_boot --pri_switchtype=euroisdn \\
+               --silent --fe_lcode=$wrcode --fe_frame=$wrcrc4 --fe_media=E1
+  if [ ! -e /etc/wanpipe/wanpipe1.conf ];then
+    exit
+  fi;
+fi;
+
+wanrouter start
+
+if [ -e /etc/wanpipe/smg_bri.conf ];then
+  /usr/sbin/smg_ctrl start > /dev/null 2>&1
+fi;
+
+__EOB__
+    close(WRC);
 
     $getstime=$dbh->prepare("SELECT max(timingsource)+1 FROM zapspan");
     $getstime->execute;
@@ -14733,6 +14773,11 @@ sub printzapata() {
             $pristype="national";
             $bchan=($index+1) . "-" . ($index+23); 
             $spanval=$spandef{'valuest1'};
+          }
+
+          $spaninf=$span->description();
+          if ($spaninf =~ m/WP(E1|T1).* wanpipe/) {
+            print $spaninf . "\n";
           }
           if ($span->proto eq "BRI") {
             $hwdchan="'t'";

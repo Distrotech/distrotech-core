@@ -1256,6 +1256,21 @@ if [ "$INDIFF" ] && [ ! -e /etc/.cdrom ];then
   /etc/rc.d/rc.interface  
 fi;
 
+
+if [ -e rc.wanpipe ] && [ -e /etc/rc.d/rc.wanpipe ];then 
+  RCWDIFF=`diff rc.wanpipe /etc/rc.d/rc.wanpipe`
+ else
+  if [ -e rc.wanpipe ];then 
+    RCWDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$RCWDIFF" ] && [ ! -e /etc/.firstboot ] && [ ! -e /etc/.needsreconf ];then
+  cp -p rc.wanpipe /etc/rc.d/
+  chmod 750 /etc/rc.d/rc.wanpipe
+  chown root.root /etc/rc.d/rc.wanpipe
+fi;
+
 if [ -e iftab ] && [ -e /etc/iftab ];then 
   IFTDIFF=`diff iftab /etc/iftab`
  else

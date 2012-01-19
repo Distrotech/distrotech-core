@@ -338,11 +338,15 @@ if [ -e /etc/.install ];then
   fi;
 
   #Configure And Load Zap Channels
-  if [ -e /etc/wanpipe/wanrouter.rc ];then
-    /usr/sbin/wanrouter start > /dev/null 2>&1
-    if [ -e /etc/wanpipe/smg_bri.conf ];then
-      /usr/sbin/smg_ctrl start > /dev/null 2>&1
-    fi;
+  if [ -x /etc/rc.d/rc.wanpipe ];then
+    /etc/rc.d/rc.wanpipe
+   else
+    if [ -e /etc/wanpipe/wanrouter.rc ];then
+      /usr/sbin/wanrouter start > /dev/null 2>&1
+      if [ -e /etc/wanpipe/smg_bri.conf ];then
+        /usr/sbin/smg_ctrl start > /dev/null 2>&1
+      fi;
+    fi
   fi;
   if [ -e /lib/modules/${LKERNEL}/dahdi ];then
     /sbin/modprobe wctdm > /dev/null 2>&1
