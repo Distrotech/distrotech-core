@@ -36,10 +36,10 @@ foreach ($files as $file) {
   $zfile=file($dir . $file);
   while(list($lnum,$ldata)=each($zfile)) {
     $ldata=rtrim($ldata);
-    if (eregi("^Span ([0-9]+: [W].*)\$",$ldata)) {
+    if (eregi("^Span ([0-9]+: [WB].*)\$",$ldata)) {
       print "<TR CLASS=list-color" . (($bcol %2) + 1). "><TH COLSPAN=2 CLASS=heading-body2>" . $ldata . "</TH></TR>\n";
       $bcol++;
-    } else if (eregi("^.*([0-9]+) ([XTW].*)\$",$ldata,$chaninf)) {
+    } else if (eregi("^.*([0-9]+) ([BXTW].*)\$",$ldata,$chaninf)) {
       print "<TR CLASS=list-color" . (($bcol %2) + 1). "><TD>" . $chan . "</TD><TD>" . $chaninf[2] . "</TD></TR>\n";
       $bcol++;
       $chan++;
