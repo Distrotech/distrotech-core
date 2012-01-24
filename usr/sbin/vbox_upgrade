@@ -255,6 +255,9 @@ if [ ${NOSYNC} == 0 ];then
 	--exclude=/mnt/update --include=/boot/grub/background.jpg --exclude=/boot/grub/* --exclude=/etc/mtab --exclude=/install/netsentry-version \
 	--exclude=/boot/vmlinuz-install --exclude=/boot/System.map-install --timeout=$RTIMEOUT ${SERV}::install/ ${DIST}/
     echo;echo
+    if [ $? != 0 ];then
+      UERR=255;
+    fi;
   fi;
 
   if [ -e /etc/asterisk/version.10 ];then
@@ -383,7 +386,7 @@ if [ ${RERR} == 0 ];then
    elif [ /usr/sbin/mkinitrd -nt /boot/initrd-netsentry ] && [ $KERR == 0 ];then
     /usr/sbin/mkinitrd
   fi
-  if [ ${UPDIST} == 1 ];then
+  if [ ${UPDIST} == 1 ] && [ ${UERR} == 0 ];then
     if [ ! -e ${DIST}/install/core/kernel.tar.bz2 ] || [ /boot/vmlinuz-${INSTALL_KERNEL} -nt ${DIST}/install/core/kernel.tar.bz2 ];then
       ${DIST}/install/tarkernel ${KERNEL}
      elif [ -e ${DIST}/install/.version ];then
