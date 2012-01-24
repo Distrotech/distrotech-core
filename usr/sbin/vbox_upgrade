@@ -254,9 +254,6 @@ if [ ${NOSYNC} == 0 ];then
 	--exclude=install/avirus --exclude=/lib/modules/ --exclude=/install/core --exclude=/boot/initrd-install* \
 	--exclude=/mnt/update --include=/boot/grub/background.jpg --exclude=/boot/grub/* --exclude=/etc/mtab --exclude=/install/netsentry-version \
 	--exclude=/boot/vmlinuz-install --exclude=/boot/System.map-install --timeout=$RTIMEOUT ${SERV}::install/ ${DIST}/
-    if [ $? != 0 ];then
-      RERR=255;
-    fi;
     echo;echo
   fi;
 
@@ -277,9 +274,9 @@ if [ ${NOSYNC} == 0 ];then
 
   #Sync Asterisk Modules
   if [ -e /etc/asterisk/version.10 ];then
-    rsync $RROPTS --delete --exclude=chan_lcr.so --timeout=$RTIMEOUT ${SERV}::asterisk-10/usr/lib/asterisk/modules-10 /
+    rsync $RROPTS -u --delay-updates --delete --exclude=chan_lcr.so --timeout=$RTIMEOUT ${SERV}::asterisk-10/usr/lib/asterisk/modules-10 /
    else
-    rsync $RROPTS --delete --exclude=chan_lcr.so --timeout=$RTIMEOUT ${SERV}::asterisk/usr/lib/asterisk/modules-1.8 /
+    rsync $RROPTS -u --delay-updates --delete --exclude=chan_lcr.so --timeout=$RTIMEOUT ${SERV}::asterisk/usr/lib/asterisk/modules-1.8 /
   fi;
   if [ $? != 0 ];then
     RERR=255;
@@ -337,6 +334,7 @@ if [ $RSYNCK == 1 ];then
     losetup -d ${LOOP}
     umount /mnt/cdrom
   fi;
+  UPDIST=0;
 fi;
 
 #Final processing on no error
