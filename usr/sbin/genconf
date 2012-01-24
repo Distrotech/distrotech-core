@@ -14779,7 +14779,7 @@ __EOB__
           }
 
           $spaninf=$span->description();
-          if ($spaninf =~ m/WP[ETJ]1\/.* \"wanpipe/) || ($span->proto eq "BRI")) {
+          if (($spaninf =~ m/WP[ETJ]1\/.* \"wanpipe/) || ($span->proto eq "BRI")) {
             $hwdchan="'t'";
           } else {
             $hwdchan="'f'";
@@ -15101,7 +15101,7 @@ __EOB__
     open(ZC,">zaptel.conf");
     open(ZDC,">zaptel_dyn.conf");
   }
-  $zapspanq="SELECT 'span='||spannum||','||timingsource||','||lbo||','||framing||','||coding||case when (crc4) then '' else ',crc4' end||case when (yalarm) then ',yellow' else '' end from zapspan ORDER BY spannum";
+  $zapspanq="SELECT 'span='||spannum||','||timingsource||','||lbo||','||framing||','||coding||case when (crc4) then '' else ',crc4' end||case when (yalarm) then ',yellow' else '' end from zapspan where not hwdchan ORDER BY spannum";
   $getzap=$dbh->prepare($zapspanq);
   $getzap->execute;
   $zrcnt=0;
