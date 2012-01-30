@@ -1,0 +1,12 @@
++ firefox.exe
++ libofice.exe
++ win32diskimager-binary.zip
++ UnxUtils.zip
++ vnc.exe
++ winbox.exe
++ /putty
++ /voip
++ /fax-software
++ /odbc
+- /fax-software/faxcover.ps
+- /*

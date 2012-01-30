@@ -1,0 +1,5 @@
+- /usr/man
+- /usr/etc
+- /opt/MailScanner/etc/reports
+- /etc/wanpipe/wanrouter.rc
+- /opt/apache2/conf/httpd.conf.sogo

@@ -1,0 +1,14 @@
++ /install
++ /install/*
++ /boot
+- /boot/initrd-install*
++ /boot/grub
++ /boot/grub/background.jpg
+- /boot/grub/*
++ /lib
++ /lib/modules
+- /lib/modules/*/modules.*
+- /lib/*
+- /install/avirus/*
+- /install/mnt/*
+- /*
