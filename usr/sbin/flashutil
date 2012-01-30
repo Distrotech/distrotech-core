@@ -578,17 +578,19 @@ Remote_Sync() {
     if [ ${ISDTS} == 1 ];then
       rsync ${ROPT} -u --exclude=/install/core/* --exclude=/lib/modules/*/modules.* \
              --exclude=/boot/initrd-install* --exclude=/install/tools ${SERV}::base/ ${1}
-      KERR=$?
+      RERR=$?
 
-      if [ ${KERR} == 0 ] && [ "${2}" ];then
+      if [ ${RERR} == 0 ] && [ "${2}" ];then
         if [ ! -d /var/spool/rsync/kernuser ];then
           mkdir -p /var/spool/rsync/kernuser
         fi;
         rsync ${ROPT} --delete ${SERV}::kernuser/kernel-${2}-smp /var/spool/rsync/kernuser/
-        KERR=$?
+        RERR=$?
       fi;
-
-      RERR=${KERR}
+      if [ ${RERR} == 0 ] && [ "${2}" ];then
+        rsync ${ROPT} --include=/boot/[vS]*${2}-* --include=/lib/modules/${2}-* --exclude=/lib/modules/* --exclude=/boot/* --filter=". /etc/rsyncd/kernel.filter" ${SERV}::kernel/ / 
+        RERR=$?
+      fi;
      else
       rsync ${ROPT} --include=/install/core/kernel.tar.bz2 --include=/install/netsentry-version --exclude=/install/core/* \
              --exclude=/lib/modules/*/modules.* --exclude=/boot/initrd-install* --include=/install/core --exclude=/install/* \
@@ -756,6 +758,7 @@ Tar_Kernel() {
   if [ "${2}" ];then
     if [ "${2}" != "${KERNEL}" ];then
       KERNEL=${2}
+      rm ${RBASE}/install/core/kernel.tar.bz2
      else
       NOUP=1;
     fi;
@@ -796,7 +799,7 @@ EOF
     cd /var/spool/rsync/kernuser/kernel-${KERNEL}-smp
     tar --use-compress-program=bzip2 -cf ${RBASE}/install/core/kernel.tar.bz2 * /lib/modules/${KERNEL}-smp /boot/[vS]*${KERNEL}-smp
     cd ${CWD}
-    rsync ${ROPT_LOC} --inplace --delete --exclude=modules.* /lib/modules/${KERNEL}-install ${RBASE}/lib/modules
+    rsync ${ROPT_LOC} --inplace --delete --exclude=modules.* /lib/modules/${KERNEL}-* ${RBASE}/lib/modules
     rsync ${ROPT_LOC} --inplace /boot/vmlinuz-${KERNEL}-install ${RBASE}/boot/vmlinuz-install
     rsync ${ROPT_LOC} --inplace /boot/System.map-${KERNEL}-install ${RBASE}/boot/System.map-install
     chroot ${RBASE} /install/mkbootimg
@@ -982,7 +985,7 @@ if [ "`id -u`" != "0" ];then
   exit 255
 fi;
 
-for checkexe in /sbin/dosfsck /sbin/dmsetup /sbin/lvm /bin/dd /sbin/losetup /bin/rsync /sbin/parted /bin/grub-mkrescue /sbin/mkdosfs /bin/bc;do
+for checkexe in /sbin/dosfsck /sbin/dmsetup /sbin/lvm /bin/dd /sbin/losetup /bin/rsync /sbin/parted /bin/grub-mkrescue /sbin/mkdosfs /bin/xorriso /bin/bc;do
   if [ ! -x ${checkexe} ] && [ ! -x /usr${checkexe} ];then
     echo "Missing ${checkexe}"
     exit -1
@@ -1118,7 +1121,7 @@ if [ "${1}" == "iso" ];then
     Umount_Flash
   fi;
   Clean_Init
-  if [ ! -e /dev/loop-flash ] && [ ! -e /dev/loop-util ] && [ -d /dev/flash ] && [ ! -d ${CORE}/install ];then
+  if [ ! -e /dev/loop-flash ] && [ ! -e /dev/loop-util ] && [ -d /dev/flash ] && [ ! -d ${CORE}/install ] && [ -f ${BASE}/flash.hdd ];then
     vgrename flash flashm
     vgmknodes
     if [ -e /dev/flashm/install ];then
@@ -1262,7 +1265,11 @@ if [ "${1}" == "iso" ];then
     fi;
   done
   if [ ${RERR}  == 0 ];then
-    Sync_Local kernuser /var/spool/rsync/kernuser/kernel-${KERNEL}-smp/ /
+    KUSER=/var/spool/rsync/kernuser/kernel-${KERNEL}-smp
+    if [ ! -d ${MNTP}/mnt/update/${KUSER} ] && [ -d ${KUSER} ];then
+      rsync ${ROPT_LOC} ${KUSER} ${MNTP}/mnt/update/${KUSER}
+    fi;
+    Sync_Local kernuser ${KUSER}/ /
     RERR=$?
     echo
   fi;
