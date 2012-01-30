@@ -526,7 +526,6 @@ Load_Flash() {
 
 Remote_Sync() {
   RERR=0;
-  NOAVUP=0;
 
   if [ ! -d ${1}/install/ ];then
     mkdir ${1}/install/
@@ -590,12 +589,6 @@ Remote_Sync() {
       fi;
 
       RERR=${KERR}
-
-      if [ ${RERR} == 0 ] && [ -d /var/spool/avirus ];then
-        rsync ${ROPT_LOC} --inplace /var/spool/avirus/*.* ${1}/install/avirus/
-        NOAVUP=1
-        RERR=$?
-      fi;
      else
       rsync ${ROPT} --include=/install/core/kernel.tar.bz2 --include=/install/netsentry-version --exclude=/install/core/* \
              --exclude=/lib/modules/*/modules.* --exclude=/boot/initrd-install* --include=/install/core --exclude=/install/* \
@@ -612,8 +605,12 @@ Remote_Sync() {
         rm -rf ${kmod}
       fi;
     done;
-    if [ ${NOAVUP} == 0 ];then
-      rsync ${ROPT} ${SERV}::avirus/ ${1}/install/avirus
+    if [ ${RERR} == 0 ];then
+      rsync ${ROPT} --delete ${SERV}::avirus/ ${1}/install/avirus
+      RERR=$?
+    fi;
+    if [ ${RERR} == 0 ];then
+      rsync ${ROPT} --delete ${SERV}::programs/var/spool/update/ ${1}/install/update
       RERR=$?
     fi;
    else
