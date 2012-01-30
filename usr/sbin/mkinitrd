@@ -6,6 +6,9 @@ if [ -e /etc/netsentry-version ];then
   eval `cat /install/netsentry-version`
 fi;
 
+SMP_KERNEL="$KERNEL-smp";
+INSTALL_KERNEL="$KERNEL-install";
+
 if [ ! -e /lib/modules/${SMP_KERNEL} ] || [ ! -e /lib/modules/${INSTALL_KERNEL} ];then
   echo No Kernel Directory
   exit
