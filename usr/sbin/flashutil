@@ -317,9 +317,14 @@ EOF
   /sbin/losetup -d ${LOOP}
   gzip -f -9 install/core/etc
 
-  tar --use-compress-program=bzip2 -cvf install/core/install.tbz bin boot/memtest.bin boot/grub/background.jpg \
-           etc home initrd lib/*[\._-]* lib/pkgconfig/ lib/evms/ lib/cpp man mnt root sbin share usr var \
-           tmp tftpboot media > install/core/filelist
+  TDIR=/tmp/dummy_$$${RANDOM}
+  while [ -e ${TDIR} ];do
+    TDIR=/tmp/dummy_$$${RANDOM}
+  done;
+
+  rsync -avHKOn --out-format="%n" --filter=". install/core/core.filter" \
+        ./ ${TDIR} |awk '/(^[a-z]+\/)|(^home$)/ {print $0}' |sort > install/core/filelist
+  tar --use-compress-program=bzip2 -cf install/core/install.tbz etc/ var/
 
   rm root/.bash_history > /dev/null 2>&1
   cd ${CWD}
@@ -538,37 +543,45 @@ Remote_Sync() {
   fi;
 
   if [ "`cat /proc/mounts | grep ${1}/install/tools`" ] || [ ${ISDTS} == 1 ];then
+    echo "Utilities"
     rsync ${ROPT_FAT} -z --include=/install --include=/install/tools --exclude=/install/* --exclude=/* ${SERV}::base/ ${1}/
     RERR=$?
+    echo
   fi;
 
   if [ ! -d ${1}/root ] && [ ${RERR} == 0 ];then
     if [ ${ISDTS} == 1 ];then
-      rsync ${ROPT} -R --include=/install/netsentry-version --include=/install/core/filelist --include=/install/core \
-            --exclude=/install/core/* --exclude=/install/* ${SERV}::base/install/* ${1}
+      echo "Fileliest/Version"
+      rsync ${ROPT} -R --include=/install/netsentry-version --include=/install/core/filelist --include=/install/core/core.filter \
+            --include=/install/core --exclude=/install/core/* --exclude=/install/* ${SERV}::base/install/* ${1}
       RERR=$?
+      echo
       if [ -e ${1}/install/core/filelist ] && [ ${RERR} == 0 ];then
-        grep -vE "(^sys)|(^dev)|(^proc)|(/$)" ${1}/install/core/filelist > /tmp/filelist
-        cd /
-        tar --use-compress-program=bzip2 -T /tmp/filelist  -cf ${1}/install/core/install.tbz
-        rm /tmp/filelist
-        cd ${CWD}
+        rsync -aHKOq --no-d --exclude=/* --out-format="%n" --files-from=${1}/install/core/filelist / ${1}
+      fi;
+      if [ -e ${CORE}/install/netsentry-version ];then
+        eval `cat ${CORE}/install/netsentry-version`
       fi;
      else
-      rsync ${ROPT} --exclude=/install/tools ${SERV}::base/ ${1}
+      echo "Core files"
+      rsync ${ROPT} --exclude=/install/tools/* ${SERV}::base/ ${1}
       RERR=$?
+      echo
     fi;
-    if [ ${RERR} == 0 ] && [ -f ${1}/install/core/install.tbz ];then
-      tar --use-compress-program=bunzip2 -C ${1} -xf ${1}/install/core/install.tbz
+   elif [ ${ISDTS} == 1 ];then
+    if [ -e ${CORE}/install/netsentry-version ];then
+      eval `cat ${CORE}/install/netsentry-version`
     fi;
   fi;
 
   if [ ${RERR} == 0 ];then
-    rsync ${ROPT} --delete --exclude=/dev --exclude=/sys --exclude=/proc --exclude=/lost+found --include=/boot/grub/background.jpg \
-               --exclude=/lib/modules --exclude=/boot/vmlinuz-install --exclude=/boot/System.map-install  --exclude=/boot/initrd-install* \
-               --exclude=/boot/grub/* --exclude=/install/mnt --exclude=/etc/mtab --exclude=/install/avirus --exclude=/mnt/update \
-               --exclude=/install/core --exclude=/install/tools --exclude=/install/netsentry-version ${SERV}::install/ ${1}/
+    echo "Distribution (Non Core)"
+    rsync ${ROPT} --delete --exclude=/dev/* --exclude=/sys/* --exclude=/proc/* --exclude=/lost+found --include=/boot/grub/background.jpg \
+               --exclude=/lib/modules/* --exclude=/boot/vmlinuz-install --exclude=/boot/System.map-install  --exclude=/boot/initrd-install* \
+               --exclude=/boot/grub/* --exclude=/install/mnt/* --exclude=/etc/mtab --exclude=/install/avirus/* --exclude=/mnt/update/* \
+               --exclude=/install/core/* --exclude=/install/tools/* --exclude=/install/netsentry-version ${SERV}::install/ ${1}/
     RERR=$?
+    echo
    else
     return ${RERR}
   fi;
@@ -576,26 +589,41 @@ Remote_Sync() {
   if [ ${RERR} == 0 ];then
     DOVER=1;
     if [ ${ISDTS} == 1 ];then
-      rsync ${ROPT} -u --exclude=/install/core/* --exclude=/lib/modules/*/modules.* \
-             --exclude=/boot/initrd-install* --exclude=/install/tools ${SERV}::base/ ${1}
+      echo "Base Files (Local Copy [No Kernel])"
+      rsync ${ROPT} -u --include=/install/core/core.filter --exclude=/install/core/* --exclude=/lib/modules/* \
+             --exclude=/boot/vmlinuz-install --exclude=/boot/System.map-install --exclude=/boot/initrd-install* \
+             --exclude=/install/tools/* ${SERV}::base/ ${1}
       RERR=$?
+      echo
 
-      if [ ${RERR} == 0 ] && [ "${2}" ];then
+      if [ "${2}" ];then
+        KVER=${2}
+       elif [ "${KERNEL}" ];then
+        KVER=${KERNEL}
+      fi;
+
+      if [ ${RERR} == 0 ] && [ "${KVER}" ];then
         if [ ! -d /var/spool/rsync/kernuser ];then
           mkdir -p /var/spool/rsync/kernuser
         fi;
-        rsync ${ROPT} --delete ${SERV}::kernuser/kernel-${2}-smp /var/spool/rsync/kernuser/
+        echo "Kernel Files / Firmware (${KVER})"
+        rsync ${ROPT} --delete ${SERV}::kernuser/kernel-${KVER}-smp /var/spool/rsync/kernuser/
         RERR=$?
-      fi;
-      if [ ${RERR} == 0 ] && [ "${2}" ];then
-        rsync ${ROPT} --include=/boot/[vS]*${2}-* --include=/lib/modules/${2}-* --exclude=/lib/modules/* --exclude=/boot/* --filter=". /etc/rsyncd/kernel.filter" ${SERV}::kernel/ / 
-        RERR=$?
+        echo
+        if [ ${RERR} == 0 ];then
+          echo "Kernel/Modules (${KVER})"
+          rsync ${ROPT} --include=/boot/[vS]*${2}-* --include=/lib/modules/${2}-* --exclude=/lib/modules/* --exclude=/boot/* --filter=". /etc/rsyncd/kernel.filter" ${SERV}::kernel/ /
+          RERR=$?
+          echo
+        fi;
       fi;
      else
-      rsync ${ROPT} --include=/install/core/kernel.tar.bz2 --include=/install/netsentry-version --exclude=/install/core/* \
-             --exclude=/lib/modules/*/modules.* --exclude=/boot/initrd-install* --include=/install/core --exclude=/install/* \
-               ${SERV}::base/ ${1}
+      echo "Base Files (Local Repository Kernel)"
+      rsync ${ROPT} --include=/install/core/kernel.tar.bz2 --include=/install/netsentry-version --include=/install/core \
+             --exclude=/lib/modules/*/modules.* --exclude=/boot/initrd-install* --include=/install/core/core.filter --exclude=/install/core/* \
+             --exclude=/install/tools --exclude=/install/* ${SERV}::base/ ${1}
       RERR=$?
+      echo
     fi;
    else
     return ${RERR}
@@ -608,12 +636,16 @@ Remote_Sync() {
       fi;
     done;
     if [ ${RERR} == 0 ];then
+      echo "Anti Virus On Repository"
       rsync ${ROPT} --delete ${SERV}::avirus/ ${1}/install/avirus
       RERR=$?
+      echo
     fi;
     if [ ${RERR} == 0 ];then
+      echo "Update Folder"
       rsync ${ROPT} --delete ${SERV}::programs/var/spool/update/ ${1}/install/update
       RERR=$?
+      echo
     fi;
    else
     return ${RERR}
@@ -628,24 +660,19 @@ Local_Sync() {
     mkdir ${2}/install/
   fi;
   if [ "`cat /proc/mounts | grep ${2}/install/tools`" ] || [ ${2} == ${CORE} ];then
+    echo "Utilities"
     rsync ${ROPT_FAT} ${1}/install/tools ${2}/install/
     RERR=$?
-  fi;
-  if [ ! -d ${2}/root ] && [ ${RERR} == 0 ];then
-    rsync ${ROPT_LOC} --inplace --delete --include=/install --exclude=/install/mnt/* --include=/boot/grub/background.jpg --include=/boot \
-          --include=/boot/grub \--exclude=/boot/grub/* --include=/lib/modules --exclude=/lib/modules/*/modules.* --exclude=/install/tools \
-          --include=/lib --exclude=/lib/* --exclude=/*  ${1}/* ${2}
-    RERR=$?
-    if [ ${RERR} == 0 ] && [ -f ${1}/install/core/install.tbz ];then
-      tar --use-compress-program=bunzip2 -C ${2} -xf ${1}/install/core/install.tbz
-    fi;
+    echo
   fi;
   if [ ${RERR} == 0 ];then
-    rsync ${ROPT_LOC} --inplace --delete --exclude=/proc --exclude=/sys --exclude=/dev --exclude=/lost+found \
-          --exclude=/lib/modules/*/modules.* --exclude=/boot/initrd-install* --exclude=/install/tools \
-          --include=/boot/grub/background.jpg --exclude=/boot/grub/* --exclude=/install/mnt \
-          --exclude=/mnt/update --exclude=/etc/mtab ${1}/* ${2}
+    echo "Distribution"
+    rsync ${ROPT_LOC} --inplace --delete --exclude=/proc/* --exclude=/sys/* --exclude=/dev/* --exclude=/lost+found \
+          --exclude=/lib/modules/*/modules.* --exclude=/boot/initrd-install* --exclude=/install/tools/* \
+          --include=/boot/grub/background.jpg --exclude=/boot/grub/* --exclude=/install/mnt/* \
+          --exclude=/mnt/update/* --exclude=/etc/mtab ${1}/* ${2}
     RERR=$?
+    echo
     if [ ${RERR} == 0 ];then
       for kmod in `ls -d ${2}/lib/modules/*`;do
         if [ ! -d ${kmod}/kernel ];then

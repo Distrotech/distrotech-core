@@ -10,7 +10,7 @@ if [ -e "/tmp/fstab.new" ];then
   rm /tmp/fstab.new
 fi;
 
-if [ -e /mnt/dev/etc/.install ];then
+if [ -e /mnt/etc/.install ];then
   cat /proc/mounts |grep "/mnt" |awk '{print $2" "$1}' |sort -r |awk '{print "umount "$1}' |sh
   awk '$2 == "partition" {print "swapoff "$1}' /proc/swaps |sh
 fi;
@@ -68,8 +68,6 @@ Install_System()
 BRAND="$BRAND";
 VERSION="$VERSION";
 KERNEL="$KERNEL";
-SMP_KERNEL="\$KERNEL-smp";
-INSTALL_KERNEL="\$KERNEL-install";
 IP_ADDR="$IP_ADDR";
 SN_ADDR="$SN_ADDR";
 HN_ADDR="$HN_ADDR";
@@ -234,11 +232,12 @@ _EOF_
         --infobox "Installing Perl Scripting" 7 35
       tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/perl.tbz > /dev/null 2>&1
 
-      tar -C /mnt --use-compress-program=bunzip2 -xvf /install/core/install.tbz |\
-        /install/instguage `grep -c "" /install/core/filelist` |\
+      rsync -avHKOn --out-format="%n" --filter=". /install/core/core.filter" \
+        / /mnt |awk '/(^[a-z]+\/)|(^home$)/ {print $0}' |/install/instguage `grep -c "" /install/core/filelist` |\
         dialog --backtitle "$BT" --title "Installing"\
           --guage "Percentage Files Transfered"\
           6 35 0
+      tar -C /mnt --use-compress-program=bunzip2 -xf /install/core/install.tbz
 
       /usr/bin/dialog --backtitle "$BT" --title "Installing Kernel"\
         --infobox "Installing Linux Kernel" 7 35
@@ -246,8 +245,8 @@ _EOF_
       tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/iptables.tar.bz2 > /dev/null 2>&1
       rsync -a /lib/modules/* /mnt/lib/modules/ > /dev/null 2>&1
       rsync -a /boot/memtest.bin /boot/ > /dev/null 2>&1
-      cp /boot/vmlinuz-install /mnt/boot/vmlinuz-${INSTALL_KERNEL}
-      cp /boot/System.map-install /mnt/boot/System.map-${INSTALL_KERNEL}
+      cp /boot/vmlinuz-install /mnt/boot/vmlinuz-${KERNEL}-install
+      cp /boot/System.map-install /mnt/boot/System.map-${KERNEL}-install
 
       rsync -a /install/update /mnt/var/spool/ > /dev/null 2>&1
 
@@ -257,7 +256,7 @@ _EOF_
        else
         cp /install/netsentry-version /mnt/etc
       fi;
-      
+
       if [ ! -d /mnt/dev ];then
         mkdir /mnt/dev
       fi;
@@ -456,74 +455,14 @@ _EOF_
 
       mkdir -p /mnt/var/spool/samba/share/
       chmod 2777 /mnt/var/spool/samba/share/
-      if [ -e /install/tools/firefox.exe ];then
-        cp /install/tools/firefox.exe /mnt/var/spool/samba/share/
-      fi;
-      if [ -e /install/tools/thunderbird.exe ];then
-        cp /install/tools/thunderbird.exe /mnt/var/spool/samba/share/
-      fi;
-      if [ -e /install/tools/jre.exe ];then
-        cp /install/tools/jre.exe /mnt/var/spool/samba/share/
-      fi;
-      if [ -e /install/tools/vnc.exe ];then
-        cp /install/tools/vnc.exe /mnt/var/spool/samba/share/
-      fi;
-      if [ -e /install/tools/itunes.exe ];then
-        cp /install/tools/itunes.exe /mnt/var/spool/samba/share/
-      fi;
-      chmod -R 664 /mnt/var/spool/samba/share/*
-
-      if [ ! -d /mnt/var/spool/samba/share/odbc ];then
-        mkdir /mnt/var/spool/samba/share/odbc
-      fi;
-      cp -r /install/tools/odbc/* /mnt/var/spool/samba/share/odbc/
-      chmod 775 /mnt/var/spool/samba/share/odbc
-      chmod -R 664 /mnt/var/spool/samba/share/odbc/*
-
-      if [ ! -d /mnt/var/spool/samba/share/fax-software ];then
-        mkdir /mnt/var/spool/samba/share/fax-software
-      fi;
-      cp -r /install/tools/fax-software/* /mnt/var/spool/samba/share/fax-software
-      chmod 775 /mnt/var/spool/samba/share/fax-software
-      chmod -R 664 /mnt/var/spool/samba/share/fax-software/*
-
-      if [ ! -d /mnt/var/spool/samba/share/putty ];then
-        mkdir /mnt/var/spool/samba/share/putty
-      fi;
-      tar -C /mnt/var/spool/samba/share/putty -xzf /install/pkgs/putty.tgz
-      chmod 775 /mnt/var/spool/samba/share/putty
-      chmod 664 /mnt/var/spool/samba/share/putty/*
- 
-#      if [ ! -d /mnt/var/spool/samba/share/voip ];then
-#        mkdir /mnt/var/spool/samba/share/voip
-#      fi;
-#      cp -r /install/voip/* /mnt/var/spool/samba/share/voip
-#      chmod 775 /mnt/var/spool/samba/share/voip
-#      chmod 664 /mnt/var/spool/samba/share/voip/*
+      cp -r /install/tools/* /mnt/var/spool/samba/share/
+      chmod -R -o=rwX,g=rwX,o=rX /mnt/var/spool/samba/share/*
+      chown -R root.smbadm /mnt/var/spool/samba/share
 
       if [ ! -d /mnt/var/spool/samba/dadmin ];then
         mkdir /mnt/var/spool/samba/dadmin
       fi;
       tar -C /mnt/var/spool/samba/dadmin -xzf /install/pkgs/windomadmin.tgz
-
-      /usr/bin/dialog --backtitle "$BT" --title "Open Office"\
-        --infobox "Installing Open Office Suite" 7 35
-
-      if [ -d /install/openoffice ];then
-        if [ ! -d /mnt/var/spool/samba/share/openoffice ];then
-          mkdir /mnt/var/spool/samba/share/openoffice
-        fi;
-        cp -r /install/openoffice/* /mnt/var/spool/samba/share/openoffice
-        chmod 755 /mnt/var/spool/samba/share/openoffice
-        chmod 644 /mnt/var/spool/samba/share/openoffice/*.*
-        chmod 644 /mnt/var/spool/samba/share/openoffice/*/*.*
-      fi;
-
-      chown -R root.smbadm /mnt/var/spool/samba/share
-
-      if [ -x /etc/rc.d/rc.netmod ];then
-        cp /etc/rc.d/rc.netmod /mnt/etc/rc.d/
-      fi;
 
       if [ ! -d /mnt/backup ];then
         /usr/bin/dialog --backtitle "$BT" --title "Locate Database"\
@@ -854,7 +793,7 @@ View_Menu()
     fi;
   }
 
-Fdisk() {  
+Fdisk() {
   if [ "${DSKS}" == "" ];then
     sleep 5
     MDDSK=`ls /dev/md[a-z] 2>/dev/null`
@@ -890,16 +829,29 @@ Fdisk() {
     LVMCNT=0;
     for DISK_FD in $FD_CHOICE;do
       let LVMCNT++
-      (sgdisk -Z ${DISK_FD}
-       parted -s ${DISK_FD} mklabel gpt
-       parted -s ${DISK_FD} mkpart grub 1 2
-       parted -s ${DISK_FD} set 1 bios on
-       parted -s ${DISK_FD} set 1 hidden on
-       parted -s ${DISK_FD} mkpart swap 2 1026
-       parted -s ${DISK_FD} "mkpart lvm 1026 -1"
-       parted -s ${DISK_FD} set 3 lvm on
+      SIZE=`echo ${DISK_FD} |sed -e "s/\/dev\/\(.*\)/cat \/sys\/block\/\\1\/size/" |sh`
+      SIZE=`echo "${SIZE} / (2048*1024)" |bc`
+      if (( ${SIZE} > 1024 ));then
+        (sgdisk -Z ${DISK_FD}
+         parted -s ${DISK_FD} mklabel gpt
+         parted -s ${DISK_FD} mkpart grub 1 2
+         parted -s ${DISK_FD} set 1 bios on
+         parted -s ${DISK_FD} set 1 hidden on
+         parted -s ${DISK_FD} mkpart swap 2 1026
+         parted -s ${DISK_FD} "mkpart lvm 1026 -1"
+         parted -s ${DISK_FD} set 3 lvm on) >/dev/tty4 2>&1
+        else
+        (sgdisk -Z ${DISK_FD}
+         parted -s ${DISK_FD} mklabel msdos
+         parted -s ${DISK_FD} mkpart primary ext2 1 2
+         parted -s ${DISK_FD} set 1 hidden on
+         parted -s ${DISK_FD} mkpart primary linux-swap 2 1026
+         parted -s ${DISK_FD} "mkpart primary ext2 1026 -1"
+         parted -s ${DISK_FD} set 3 boot on
+         parted -s ${DISK_FD} set 3 lvm on) >/dev/tty4 2>&1
+       fi;
        sync
-       dd if=/dev/zero of=${DISK_FD}1
+       (dd if=/dev/zero of=${DISK_FD}1
        sleep 5) >/dev/tty4 2>/dev/tty4
       /usr/bin/dialog --backtitle "$BT" --title "Formating ${DISK_FD}2"\
                       --infobox "Formating And Activating Linux Swap Space" 4 35
@@ -1122,9 +1074,6 @@ if [ -e "/tmp/fstab.new" ];then
     if [ ! -d "/mnt/tmp" ];then
       mkdir /mnt/tmp
     fi;
-#    if [ ! -h "/mnt/boot/boot" ];then
-#      ln -s / /mnt/boot/boot
-#    fi;
     Gen_Fstab;
 #    View_Amount;
   fi

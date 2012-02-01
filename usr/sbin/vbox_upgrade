@@ -148,7 +148,7 @@ Sync_Remote() {
   fi;
 }
 
-if [ ${NOSYNC} == 0 ];then
+if [ ${NOSYNC} == 0 ] && [ ${RERR} == 0 ];then
   #Old upgrade postgre to ver 8
 #  if [ ! "`psql -V |head -1|grep "8.2.3"`" ];then
 #    /usr/bin/pg_dumpall -U pgsql -h 127.0.0.1 -c |gzip -c > /var/tmp/pgsql.sql
