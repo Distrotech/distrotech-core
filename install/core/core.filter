@@ -1,0 +1,16 @@
+- /dev/*
+- /sys/*
+- /proc/*
+- /lost+found
++ /home
++ /boot/grub/background.jpg
+- /boot/grub/*
+- /boot/vmlinuz*
+- /boot/System.map*
+- /boot/initrd-install*
+- /install
+- /mnt/update/*
+- /lib/modules
+- /etc/*
+- /var/*
+- /tmp/*
