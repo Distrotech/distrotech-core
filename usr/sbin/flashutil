@@ -286,7 +286,7 @@ Make_Bootetc() {
   mount ${LOOP} install/mnt
 
   echo "/dev/flash/install	/	ext4	defaults	0	1" > etc/fstab
-  rm etc/blkid.*
+  rm etc/blkid.* > /dev/null 2>&1
   cp -Rp etc/* install/mnt/
 
   (cat <<EOF
@@ -441,12 +441,11 @@ Load_Flash() {
 
   if [ ! -e /dev/flash/install ];then
     LOOP=`losetup -f`
-    LOOP=`readlink -f ${LOOP}`
-
     if [ ! "${LOOP}" ];then
       echo Cannont allocate loop device
       exit -1
     fi;
+    LOOP=`readlink -f ${LOOP}`
 
     if [ -e /dev/loop-flash ];then
       losetup -d /dev/loop-flash
