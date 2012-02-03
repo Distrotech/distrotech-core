@@ -23,7 +23,7 @@ if [ $? != 0 ];then
   /usr/sbin/socktest 127.0.0.1 389 > /dev/null 2>&1
   if [ $? == 0 ];then
     if [ -e /etc/nsswitch.conf.boot ] && [ -e /etc/nsswitch.conf.ldap ];then
-      if [ ! -e /etc/nsswitch.conf.local ];then  
+      if [ ! -e /etc/nsswitch.conf.local ];then
         cp /etc/nsswitch.conf.ldap /etc/nsswitch.conf
        else
         cp /etc/nsswitch.conf.local /etc/nsswitch.conf
@@ -168,16 +168,14 @@ if [ -e /etc/.install ];then
   fi;
 
   #SAMBA
-  if [ ! -e /etc/.firstboot ];then 
-    if [ ! -e /etc/samba/private/secrets.tdb.bak ];then
-      /usr/bin/tdbbackup /etc/samba/private/secrets.tdb > /dev/null 2>&1
-     else
-      /usr/bin/tdbbackup -v /etc/samba/private/secrets.tdb  > /dev/null 2>&1
-    fi;
-    /usr/sbin/winbindd &
-    /usr/sbin/nmbd -D &
-    /usr/sbin/smbd -D &
+  if [ ! -e /etc/samba/private/secrets.tdb.bak ];then
+    /usr/bin/tdbbackup /etc/samba/private/secrets.tdb > /dev/null 2>&1
+   elif [ -e /etc/samba/private/secrets.tdb ];then
+    /usr/bin/tdbbackup -v /etc/samba/private/secrets.tdb  > /dev/null 2>&1
   fi;
+  /usr/sbin/winbindd &
+  /usr/sbin/nmbd -D &
+  /usr/sbin/smbd -D &
 
   #Set Echo Coefficients
   if [ -d /proc/dahdi ];then
