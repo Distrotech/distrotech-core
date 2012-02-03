@@ -53,7 +53,7 @@ if [ ! "`lsmod |grep -E "^dummy"`" ] && [ -x /usr/sbin/noroute ];then
   /usr/sbin/noroute
 fi;
 
-if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /etc/.firstboot ] && [ ! -e /tmp/.firstconfig ];then
+if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstconfig ];then
   if [ ! "`pidof dhcpd`" ];then
     /usr/sbin/dhcpd > /dev/null 2>&1
   fi;
@@ -141,7 +141,7 @@ if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /etc/.firstbo
   fi;
 
   #Start Ldap
-  if [ ! -e /etc/.networksentry-lite ] && [ -e /etc/mail/ldap ] && [ ! -e /etc/.firstboot ];then
+  if [ ! -e /etc/.networksentry-lite ] && [ -e /etc/mail/ldap ] && [ ! -e /tmp/.firstconfig ];then
     ldapsearch -U admin -Y PLAIN -w "`cat /etc/mail/ldap`" -b uid=admin,ou=users uid=admin uid > /tmp/ldaps.out &
     LDS="";
     while [ ! -s /tmp/ldaps.out ] && [ "${LDS}" != "XXXXXXXXXXXXXXXXXXXX" ];do
@@ -171,7 +171,7 @@ if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /etc/.firstbo
     rm /tmp/ldaps.out
   fi;
 
-  if [ ! -e /etc/.firstboot ];then
+  if [ ! -e /tmp/.firstconfig ];then
     diff /etc/nsswitch.conf.ldap /etc/nsswitch.conf > /dev/null 2>&1
     if [ $? != 0 ];then 
       /usr/sbin/socktest 127.0.0.1 389 >/dev/null 2>&1
@@ -950,7 +950,7 @@ if [ -e openvpn.conf ] && [ -e /etc/openvpn/openvpn.conf ];then
   fi;
 fi;
 
-if [ "$OVPNDIFF" ] && [ ! -e /etc/.firstboot ] && [ ! -e networksentry-lite ];then
+if [ "$OVPNDIFF" ] && [ ! -e /tmp/.firstconfig ] && [ ! -e networksentry-lite ];then
  if [ ! -d /etc/openvpn ];then
     mkdir /etc/openvpn
  fi; 
@@ -1265,7 +1265,7 @@ if [ -e rc.wanpipe ] && [ -e /etc/rc.d/rc.wanpipe ];then
   fi;
 fi;
 
-if [ "$RCWDIFF" ] && [ ! -e /etc/.firstboot ] && [ ! -e /etc/.needsreconf ];then
+if [ "$RCWDIFF" ]  && [ ! -e /etc/.needsreconf ];then
   cp -p rc.wanpipe /etc/rc.d/
   chmod 750 /etc/rc.d/rc.wanpipe
   chown root.root /etc/rc.d/rc.wanpipe
@@ -1355,7 +1355,7 @@ if [ -e smb.conf ] && [ -e /etc/samba/smb.conf ];then
   fi;
 fi;
 
-if [ "$SMFDIFF" ] && [ ! -e /etc/.firstboot ] && [ ! -e networksentry-lite ];then
+if [ "$SMFDIFF" ] && [ ! -e /tmp/.firstconfig ] && [ ! -e networksentry-lite ];then
   cp -p smb.conf /etc/samba/
   chmod 644 /etc/samba/smb.conf
   chown root.root /etc/samba/smb.conf
@@ -1741,7 +1741,7 @@ if [ -e slapd.conf ] && [ -e /etc/openldap/slapd.conf ];then
   fi;
 fi;
 
-if [ "$SLDIFF" ] && [ ! -e /etc/.cdrom ] && [ ! -e /etc/.firstboot ];then
+if [ "$SLDIFF" ] && [ ! -e /etc/.cdrom ] && [ ! -e /tmp/.firstconfig ];then
   cp -p slapd.conf /etc/openldap/slapd.conf
   chmod 400 /etc/openldap/slapd.conf
   chown root.root /etc/openldap/slapd.conf
@@ -1759,7 +1759,7 @@ if [ -e sqlpasswd ] && [ -e /usr/sbin/sqlpasswd ];then
   fi;
 fi;
 
-if [ -e networksentry-full ] && [ ! -e /etc/.firstboot ];then
+if [ -e networksentry-full ] && [ ! -e /tmp/.firstconfig ];then
   if [ "$SPDIFF" ] || [ /opt/apache2/conf/httpd.conf.orig -nt /opt/apache2/conf/httpd.conf ];then
     if [ -e /etc/apache/php.ini ] && [ ! -e /opt/apache2/conf/php.ini ];then
       cp /etc/apache/php.ini /opt/apache2/conf/php.ini
@@ -2275,7 +2275,7 @@ if [ -e t38modem_start ] && [ -e /usr/libexec/t38modem_start ];then
   fi;
 fi;
 
-if [ ! -e /etc/.firstboot ] && [ ! -e networksentry-lite ];then
+if [ ! -e /tmp/.firstconfig ] && [ ! -e networksentry-lite ];then
   if [ "$FTCONF" ] || [ "$FGCONF" ] || [ "$FSCONF" ] || [ "$T38CONF" ];then
     cp faxtty /var/spool/hylafax/etc/faxtty
     cp faxconfig /var/spool/hylafax/etc/config
@@ -2795,12 +2795,6 @@ if [ -e /tmp/.firstconfig ];then
   rm /tmp/.firstconfig
   /usr/sbin/genconf
   /usr/sbin/servconfig
-  if [ ! -d /var/spool/cubit ];then
-    /etc/rc.d/rc.cubit
-  fi;
-  if [ ! -e /etc/.firstboot ] && [ ! -e /etc/.install ];then
-    /sbin/shutdown -r now
-  fi;
 fi;
 
 if [ ! "`/sbin/ip route list 0/0`" ];then
