@@ -231,7 +231,7 @@ while(<CF>) {
     } elsif (@words[0] eq "LDAP") {
       shift @words;
       $ldapserv{@words[0]}=@words[1];
-      if ((@words[0] eq "OPassword") && (@words[1] ne $ldapserv{'Password'})) {
+      if ((@words[0] eq "OPassword") && (@words[1] ne $ldapserv{'Password'}) && (-d "/var/spool/ldap")) {
         $ldap = Net::LDAP->new("127.0.0.1",timeout => "10");
         if ($ldap ne "") {
           $lbndr=$ldap->bind($ldapserv{'Login'},password => $ldapserv{'OPassword'});
@@ -1261,7 +1261,6 @@ if ($sysconfig{'Type'} eq "full") {
   &printastvm();
   &printastcli();
   &printastiax();
-  &printastagent();
   &printrrdlim();
   &printrctos();
   &printntpconf();
@@ -1280,7 +1279,6 @@ if ($sysconfig{'Type'} eq "full") {
   &printsmblogon();
   &printsmbconf();
   &printemailconf();
-  &gen_tftpboot_tmpl();
 }
 
 &printfconf();
@@ -1328,21 +1326,26 @@ if ($sysconfig{'Type'} eq "full") {
 &printdiald();
 
 &printedns();
-
-&setldapdom();
+if ( -d "/var/spool/ldap" ) {
+  &setldapdom();
+  &printsogo();
+}
 
 if ($sysconfig{'Type'} eq "full") {
 #  &printgenmon();
   &printodbcdsn();
   &printnfsexport();
-  &printgnugkh323();
   &printasth323();
-  &printzapata();
-  &printmisdn();
-  &printblf();
-  &initcallshop();
+  if ( -e "/var/spool/pgsql/postmaster.pid" ) {
+    &printgnugkh323();
+    &printzapata();
+    &printastagent();
+    &gen_tftpboot_tmpl();
+    &printmisdn();
+    &printblf();
+    &initcallshop();
+  }
   &printchilli();
-  &printsogo();
   &printovpnconf();
   &printippool();
 }
@@ -1600,7 +1603,7 @@ sub printsqlpass(){
 
 __EOF__
 
-if (($sysconfig{'Type'} ne "full") && (! -e "/etc/.firstboot")) {
+if (($sysconfig{'Type'} ne "full") && (! -e "/tmp/.firstconfig")) {
   print SP<<__EOF__;
 if [ -e /tmp/.firstconfig ];then
   (cat << EOF
@@ -3482,9 +3485,9 @@ if [ ! -d /var/spool/mail/shared ] || [ "`ls -ld /var/spool/mail/shared |awk '{p
   if [ ! -d /var/spool/mail/shared ];then
     mkdir -m 2775 /var/spool/mail/shared
   fi;
-  chown bin.users /var/spool/mail/shared
+  chown 1.100 /var/spool/mail/shared
   touch /var/spool/mail/shared/dovecot-shared
-  chown bin.users /var/spool/mail/shared/dovecot-shared
+  chown 1.100 /var/spool/mail/shared/dovecot-shared
   chmod 660 /var/spool/mail/shared/dovecot-shared
 fi;
 
@@ -3492,17 +3495,17 @@ if [ ! -d /var/spool/mail/shared/.Administrators ] || [ "`ls -ld /var/spool/mail
   if [ ! -d /var/spool/mail/shared/.Administrators ];then
     mkdir -m 2770 /var/spool/mail/shared/.Administrators
   fi;
-  chown bin.smbadm /var/spool/mail/shared/.Administrators
+  chown 1.139 /var/spool/mail/shared/.Administrators
 
   touch /var/spool/mail/shared/.Administrators/dovecot-shared
-  chown bin.smbadm /var/spool/mail/shared/.Administrators/dovecot-shared
+  chown 1.139 /var/spool/mail/shared/.Administrators/dovecot-shared
   chmod 660 /var/spool/mail/shared/.Administrators/dovecot-shared
 
   for mbox in cur new tmp;do
     if [ ! -d /var/spool/mail/shared/.Administrators/\${mbox} ];then
       mkdir -m 2770 /var/spool/mail/shared/.Administrators/\${mbox}
     fi;
-    chown bin.smbadm /var/spool/mail/shared/.Administrators/\${mbox}
+    chown 1.139 /var/spool/mail/shared/.Administrators/\${mbox}
   done;
   if [ -e /var/spool/mail/shared/.Administrators/dovecot-acl ];then
     rm /var/spool/mail/shared/.Administrators/dovecot-acl
@@ -3511,13 +3514,13 @@ fi;
 
 if [ ! -e /var/spool/mail/shared/.Administrators/dovecot-acl ];then
   echo "group=smbadm lrwstipex" > /var/spool/mail/shared/.Administrators/dovecot-acl
-  chown bin.smbadm /var/spool/mail/shared/.Administrators/dovecot-acl
+  chown 1.139 /var/spool/mail/shared/.Administrators/dovecot-acl
   DROPACL=1
 fi;
 
 __EOB__
 
-  if ($ldap ne "") {
+  if (($ldap ne "") && ( -d "/var/spool/ldap")) {
     $ldap->bind($ldapserv{'Login'},password => $ldapserv{'Password'});
     $mesg = $ldap->search(base=>"ou=email",filter =>"(&(description=*)(sendmailMTAAliasValue=pubbox))",attrs=>['sendmailMTAKey','description']);
     while($entry = $mesg->shift_entry) {
@@ -12526,7 +12529,6 @@ __EOF__
 
 
 sub setldapdom() {
-
   if ($sysconfig{'Type'} eq "full") {
     $ldap = Net::LDAPS->new($repmaster,port=>"636",verify => 'none',timeout => "10");
   } else {
@@ -14641,10 +14643,10 @@ __EOF__
 }
 
 sub printzapata() {
-  $dsn = "DBI:ODBC:Asterisk";
-  $dbh = DBI->connect($dsn,"asterisk","$sqlvoippass") or return;
+  if (! -e "/etc/.needsreconf") {
+    $dsn = "DBI:ODBC:Asterisk";
+    $dbh = DBI->connect($dsn,"asterisk","$sqlvoippass") or return;
 
-  if ((! -e "/etc/.firstboot") && (! -e "/etc/.needsreconf")) {
     $index=0;
 
     $getsdef=$dbh->prepare("SELECT substr(key,4),value from astdb where family = 'Setup' AND key ~ '^PRI'");
@@ -16263,4 +16265,3 @@ __EOF__
 #}
 
 unlink("/var/run/netsentry-config");
- 
