@@ -257,10 +257,7 @@ if [ -e /etc/.install ];then
   /sbin/modprobe psmouse > /dev/null 2>&1
 
   #Turn Swap On
-  for disk in `ls /dev/[hs]d[a-z]`;do
-    (fdisk -l ${disk} 2>/dev/null|grep swap  |awk '{printf "swapon %s\n",$1}' |sh 
-    gdisk -l ${disk} 2>/dev/null |awk -v disk=${disk} '$7 == "swap" {printf "swapon %s%s\n",disk,$1}' |sh) > /dev/null 2>&1
-  done
+  blkid -t TYPE=swap |awk -F: '{printf "swapon %s\n",$1}' |sh
 
   #load the vesa fb if no other fb is loaded 
   if [ ! -e /dev/fb1 ];then
