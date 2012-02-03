@@ -153,15 +153,15 @@ Mount_Flash() {
 Umount_Flash() {
   (rm ${MNTP}/root/.bash_history ${MNTP}/var/lib/nfs/rmtab ${MNTP}/etc/lvm/*/*
   rm ${MNTP}/var/spool/samba/ftp/welcome.txt ${MNTP}/var/state/dhcp/dhcpd.leases
-  rm ${MNTP}/root/.bash_history /etc/blkid.tab ${MNTP}/etc/blkid.tab.old ${MNTP}/etc/lvm/cache/.cache
+  rm ${MNTP}/root/.bash_history ${MNTP}/etc/lvm/cache/.cache
   rm -rf ${MNTP}/intall/mnt/* ${MNTP}/var/run/* ${MNTP}/var/spool/ldap/* ) > /dev/null 2>&1
 
-  while [ "`pidof rsync`" ];do
-    killall rsync
-    sleep 1
-  done
 
   if [ -d ${MNTP}/mnt/update/${CORE}/lost+found ];then
+    while [ "`pidof rsync`" ];do
+      killall rsync
+      sleep 1
+     done
      (umount ${MNTP}/var/run
      umount ${MNTP}/mnt/update/${CORE}/install/tools
      umount ${MNTP}/mnt/update/${CORE}) > /dev/null 2>&1
@@ -285,7 +285,10 @@ Make_Bootetc() {
   fi;
   mount ${LOOP} install/mnt
 
+  echo "/dev/flash/install	/	ext4	defaults	0	1" > etc/fstab
+  rm etc/blkid.*
   cp -Rp etc/* install/mnt/
+
   (cat <<EOF
 hosts:  	files dns
 passwd:		files
@@ -300,7 +303,6 @@ EOF
   echo "smbadm::139:" >> install/mnt/group
   echo "*.*                                       /dev/tty5" > install/mnt/syslog.conf
   echo "telnet          stream  tcp     nowait  root    /usr/sbin/in.telnetd" > install/mnt/inetd.conf
-  echo "/dev/flash/install	/	ext4	defaults	0	1" > install/mnt/fstab
   sed -e "s/^PasswordAuthentication/PasswordAuthentication yes/" etc/sshd_config > install/mnt/sshd_config
   sed -e "s/^\(PasswordAuthentication\) no/\1 yes/" etc/sshd_config > install/mnt/sshd_config
   sed -e "s/^.*agetty.*//" etc/inittab > install/mnt/inittab
@@ -324,9 +326,10 @@ EOF
     TDIR=/tmp/dummy_$$${RANDOM}
   done;
 
-  rsync -avHKOn --out-format="%n" --filter=". install/core/core.filter" \
-        ./ ${TDIR} |awk '/(^[a-z]+\/)|(^home$)/ {print $0}' |sort > install/core/filelist
-  tar --use-compress-program=bzip2 -cf install/core/install.tbz etc/ var/
+  rsync -avHKOn --out-format="%n" --filter=". install/core/core.filter" ./ ${TDIR} |awk '/(^[a-z]+\/)|(^home$)/ {print $0}' |\
+      sort > install/core/filelist
+  tar --use-compress-program=bzip2 -cf install/core/install.tbz etc/group etc/syslog.conf etc/inetd.conf etc/sshd_config\
+      etc/inittab etc/my.cnf etc/nscd.conf var
 
   rm root/.bash_history > /dev/null 2>&1
   cd ${CWD}
@@ -405,6 +408,7 @@ Sync_Update() {
 
 Update_Flash() {
   if [ -d ${CORE}/install/core ];then
+    Make_Bootetc ${CORE}
     Local_Sync ${CORE} ${MNTP}
    else
     Remote_Sync ${MNTP}
@@ -573,7 +577,7 @@ Remote_Sync() {
 
   if [ ! -d ${1}/root ] && [ ${RERR} == 0 ];then
     if [ ${ISDTS} == 1 ];then
-      echo "Fileliest/Version"
+      echo "Filelist/Version"
       rsync ${ROPT} -R --include=/install/netsentry-version --include=/install/core/filelist --include=/install/core/core.filter \
             --include=/install/core/install.tbz --include=/install/core --exclude=/install/core/* --exclude=/install/update/* ${SERV}::base/install/* ${1}
       echo
@@ -755,6 +759,7 @@ Mount Point: ${MNTP}
 Partitions automounted on ${AMNT}/<NAME> will be unmounted as needed.
 
 There are various options available
+
 
         iso <IMAGE FILE>
                 Create a boot-able/installable/rescue ISO image (<IMAGE FILE>) that can be burnt onto a DVD.
