@@ -248,19 +248,21 @@ Check_Grub() {
     chroot ${MNTP} /install/mkbootimg
   fi;
 
-  if [ ${MNTP}/boot/grub/grub.cfg -nt ${BASE}/boot/grub/grub.cfg ];then
-    cp ${MNTP}/boot/grub/grub.cfg ${BASE}/boot/grub/grub.cfg
-  fi;
+  if [ -d ${BASE} ];then
+    if [ ${MNTP}/boot/grub/grub.cfg -nt ${BASE}/boot/grub/grub.cfg ];then
+      cp ${MNTP}/boot/grub/grub.cfg ${BASE}/boot/grub/grub.cfg
+    fi;
 
-  if [ ! -f ${BASE}/rescue/grub.iso ] || [ ${MNTP}/boot/grub/grub.cfg -nt ${BASE}/rescue/grub.iso ];then
-    TDIR=/tmp/rescue_$$${RANDOM}
-    while [ -e ${TDIR} ];do
+    if [ ! -f ${BASE}/rescue/grub.iso ] || [ ${MNTP}/boot/grub/grub.cfg -nt ${BASE}/rescue/grub.iso ];then
       TDIR=/tmp/rescue_$$${RANDOM}
-    done;
-    mkdir -p ${TDIR}/boot/grub
-    cp ${MNTP}/boot/grub/grub.cfg ${TDIR}/boot/grub/grub.cfg
-    grub-mkrescue -o ${BASE}/rescue/grub.iso --volid DISTROTECH_RESCUE ${TDIR}
-    rm -rf ${TDIR}
+      while [ -e ${TDIR} ];do
+        TDIR=/tmp/rescue_$$${RANDOM}
+      done;
+      mkdir -p ${TDIR}/boot/grub
+      cp ${MNTP}/boot/grub/grub.cfg ${TDIR}/boot/grub/grub.cfg
+      grub-mkrescue -o ${BASE}/rescue/grub.iso --volid DISTROTECH_RESCUE ${TDIR}
+      rm -rf ${TDIR}
+    fi;
   fi;
 }
 
@@ -376,10 +378,15 @@ Sync_Update() {
     tar --use-compress-program=bunzip2 --exclude=lib/modules --exclude=boot -C ${kuserdir} -xf ${1}/install/core/kernel.tar.bz2
     touch pkgs/kernel.tar.bz2
   fi;
-
+  echo "Install Kernel Modules"
   rsync ${ROPT_LOC} --delete --exclude=${KERNEL}-install/modules.* ${1}/lib/modules/${KERNEL}-install lib/modules/
+  echo
+  echo "Install Kernel"
   rsync ${ROPT_LOC} ${1}/boot/vmlinuz-install boot/vmlinuz-${KERNEL}-install
+  echo
+  echo "Install Kernel System Map"
   rsync ${ROPT_LOC} ${1}/boot/System.map-install boot/System.map-${KERNEL}-install
+  echo
 
   if [ ! -h var/spool/avirus ] || [ -e var/spool/avirus ];then
     rm -rf var/spool/avirus > /dev/null 2>&1
@@ -411,7 +418,11 @@ Update_Flash() {
       Make_Bootetc ${MNTP}
     fi;
     Check_Grub
-    rsync ${ROPT_LOC} --inplace ${MNTP}/install/tools/* ${BASE}/wintools/
+    if [ -d ${BASE} ];then
+      echo "Sync Tools To ISO Folder"
+      rsync ${ROPT_LOC} --inplace ${MNTP}/install/tools/* ${BASE}/wintools/
+      echo
+    fi;
   fi;
   return ${RERR}
 }
@@ -472,6 +483,17 @@ Load_Flash() {
         echo "Not  allowed to create repository one does not exists or DVD not present"
         exit 255
       fi;
+
+      if [ ! -d ${BASE}/boot/grub ];then
+        mkdir -p ${BASE}/boot/grub
+      fi;
+
+      for utildir in rescue wintools boot;do
+        if [ ! -d ${BASE}/${utildir} ];then
+          mkdir ${BASE}/${utildir}
+        fi;
+      done
+
       dd if=/dev/zero of=${FLASH} bs=16M count=230
       Make_GPT ${FLASH} loop
       MKFS=1;
@@ -553,18 +575,18 @@ Remote_Sync() {
     if [ ${ISDTS} == 1 ];then
       echo "Fileliest/Version"
       rsync ${ROPT} -R --include=/install/netsentry-version --include=/install/core/filelist --include=/install/core/core.filter \
-            --include=/install/core --exclude=/install/core/* --exclude=/install/* ${SERV}::base/install/* ${1}
-      RERR=$?
+            --include=/install/core/install.tbz --include=/install/core --exclude=/install/core/* --exclude=/install/update/* ${SERV}::base/install/* ${1}
       echo
-      if [ -e ${1}/install/core/filelist ] && [ ${RERR} == 0 ];then
+      if [ -e ${1}/install/core/filelist ];then
         rsync -aHKOq --no-d --exclude=/* --out-format="%n" --files-from=${1}/install/core/filelist / ${1}
+        tar --use-compress-program=bunzip2 -C ${1} -xf ${1}/install/core/install.tbz etc/ var/
       fi;
       if [ -e ${CORE}/install/netsentry-version ];then
         eval `cat ${CORE}/install/netsentry-version`
       fi;
      else
       echo "Core files"
-      rsync ${ROPT} --exclude=/install/tools/* ${SERV}::base/ ${1}
+      rsync ${ROPT} --exclude=/install/tools/* --exclude=/install/avirus/* --exclude=/install/update/* ${SERV}::base/ ${1}
       RERR=$?
       echo
     fi;
@@ -579,7 +601,8 @@ Remote_Sync() {
     rsync ${ROPT} --delete --exclude=/dev/* --exclude=/sys/* --exclude=/proc/* --exclude=/lost+found --include=/boot/grub/background.jpg \
                --exclude=/lib/modules/* --exclude=/boot/vmlinuz-install --exclude=/boot/System.map-install  --exclude=/boot/initrd-install* \
                --exclude=/boot/grub/* --exclude=/install/mnt/* --exclude=/etc/mtab --exclude=/install/avirus/* --exclude=/mnt/update/* \
-               --exclude=/install/core/* --exclude=/install/tools/* --exclude=/install/netsentry-version ${SERV}::install/ ${1}/
+               --exclude=/install/avirus/* --exclude=/install/update/* --exclude=/install/core/* --exclude=/install/tools/* \
+               --exclude=/install/netsentry-version ${SERV}::install/ ${1}/
     RERR=$?
     echo
    else
@@ -590,9 +613,9 @@ Remote_Sync() {
     DOVER=1;
     if [ ${ISDTS} == 1 ];then
       echo "Base Files (Local Copy [No Kernel])"
-      rsync ${ROPT} -u --include=/install/core/core.filter --exclude=/install/core/* --exclude=/lib/modules/* \
-             --exclude=/boot/vmlinuz-install --exclude=/boot/System.map-install --exclude=/boot/initrd-install* \
-             --exclude=/install/tools/* ${SERV}::base/ ${1}
+      rsync ${ROPT} -u --include=/install/core/core.filter --include=/install/core/install.tbz --exclude=/install/core/* \
+             --exclude=/lib/modules/* --exclude=/boot/vmlinuz-install --exclude=/boot/System.map-install \
+             --exclude=/install/avirus/* --exclude=/install/update/* --exclude=/boot/initrd-install* --exclude=/install/tools/* ${SERV}::base/ ${1}
       RERR=$?
       echo
 
@@ -616,10 +639,18 @@ Remote_Sync() {
           RERR=$?
           echo
         fi;
+        if [ ${RERR} == 0 ];then
+          echo "Install Kernel (Modules ${KVER}) / Anti Virus / Updates"
+          rsync ${ROPT_LOC} -R --include=/lib --include=/lib/modules --include=/lib/modules/${2}-install \
+                --exclude=/lib/modules/*/modules.* --exclude=/lib/* --exclude=/lib/modules/* --exclude=/* / ${1}/
+          RERR=$?
+          rsync ${ROPT_LOC} -u --include=/update --include=/avirus --exclude=/avirus/clamav-* --exclude=/*/.* --exclude=/* /var/spool/ / ${1}/install/
+          echo
+        fi;
       fi;
      else
       echo "Base Files (Local Repository Kernel)"
-      rsync ${ROPT} --include=/install/core/kernel.tar.bz2 --include=/install/netsentry-version --include=/install/core \
+      rsync ${ROPT} -u --include=/install/core/kernel.tar.bz2 --include=/install/netsentry-version --include=/install/core \
              --exclude=/lib/modules/*/modules.* --exclude=/boot/initrd-install* --include=/install/core/core.filter --exclude=/install/core/* \
              --exclude=/install/tools --exclude=/install/* ${SERV}::base/ ${1}
       RERR=$?
@@ -637,13 +668,13 @@ Remote_Sync() {
     done;
     if [ ${RERR} == 0 ];then
       echo "Anti Virus On Repository"
-      rsync ${ROPT} --delete ${SERV}::avirus/ ${1}/install/avirus
+      rsync ${ROPT} -u --delete ${SERV}::avirus/ ${1}/install/avirus
       RERR=$?
       echo
     fi;
     if [ ${RERR} == 0 ];then
       echo "Update Folder"
-      rsync ${ROPT} --delete ${SERV}::programs/var/spool/update/ ${1}/install/update
+      rsync ${ROPT} -u --delete ${SERV}::programs/var/spool/update/ ${1}/install/update
       RERR=$?
       echo
     fi;
@@ -818,7 +849,14 @@ EOF
     fi;
   done
 
+  if [ ! -e ${RBASE}/boot/vmlinuz-install ] || [ ! -e ${RBASE}/boot/System.map-install ];then
+    NOUP=0;
+  fi;
+
   if [ ${NOUP} == 1 ] && [ -e ${RBASE}/install/core/kernel.tar.bz2 ];then
+    if [ ! -e ${RBASE}/boot/initrd-install ] || [ ! -e ${RBASE}/boot/initrd-install-dvd ] || [ ! -e ${RBASE}/lib/modules/${KERNEL}/modules.dep ];then
+      chroot ${RBASE} /install/mkbootimg
+    fi;
     return 0;
   fi;
 
@@ -826,9 +864,15 @@ EOF
     cd /var/spool/rsync/kernuser/kernel-${KERNEL}-smp
     tar --use-compress-program=bzip2 -cf ${RBASE}/install/core/kernel.tar.bz2 * /lib/modules/${KERNEL}-smp /boot/[vS]*${KERNEL}-smp
     cd ${CWD}
-    rsync ${ROPT_LOC} --inplace --delete --exclude=modules.* /lib/modules/${KERNEL}-* ${RBASE}/lib/modules
+    echo "Kernel Modules"
+    rsync ${ROPT_LOC} --inplace --delete --exclude=modules.* /lib/modules/${KERNEL}-install ${RBASE}/lib/modules
+    echo
+    echo "Kernel"
     rsync ${ROPT_LOC} --inplace /boot/vmlinuz-${KERNEL}-install ${RBASE}/boot/vmlinuz-install
+    echo
+    echo "Kernel System Map"
     rsync ${ROPT_LOC} --inplace /boot/System.map-${KERNEL}-install ${RBASE}/boot/System.map-install
+    echo
     chroot ${RBASE} /install/mkbootimg
    else
     echo "No kernel folder";
@@ -1025,20 +1069,8 @@ for mypart in INSTALL UPGRADE DISTROTECH DTSUTIL BOOTISO;do
   fi;
 done
 
-for newdir in ${MNTP} ${BASE};do
-  if [ ! -d ${newdir} ];then
-    mkdir -p ${newdir}
-  fi;
-done;
-
-for utildir in rescue wintools boot;do
-  if [ ! -d ${BASE}/${utildir} ];then
-    mkdir ${BASE}/${utildir}
-  fi;
-done
-
-if [ ! -d ${BASE}/boot/grub ];then
-  mkdir ${BASE}/boot/grub
+if [ ! -d ${MNTP} ];then
+  mkdir -p ${MNTP}
 fi;
 
 if [ "${1}" == "iso" ];then
@@ -1294,7 +1326,9 @@ if [ "${1}" == "iso" ];then
   if [ ${RERR}  == 0 ];then
     KUSER=/var/spool/rsync/kernuser/kernel-${KERNEL}-smp
     if [ ! -d ${MNTP}/mnt/update/${KUSER} ] && [ -d ${KUSER} ];then
+      echo "Local Kernel User Files"
       rsync ${ROPT_LOC} ${KUSER} ${MNTP}/mnt/update/${KUSER}
+      echo;
     fi;
     Sync_Local kernuser ${KUSER}/ /
     RERR=$?
