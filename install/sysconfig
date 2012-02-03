@@ -232,12 +232,16 @@ _EOF_
         --infobox "Installing Perl Scripting" 7 35
       tar -C /mnt --use-compress-program=bunzip2 -xf /install/pkgs/perl.tbz > /dev/null 2>&1
 
-      rsync -avHKOn --out-format="%n" --filter=". /install/core/core.filter" \
-        / /mnt |awk '/(^[a-z]+\/)|(^home$)/ {print $0}' |/install/instguage `grep -c "" /install/core/filelist` |\
+      rsync -avHKO --out-format="%n" --filter=". /install/core/core.filter" / /mnt/ |\
+        awk '/(^[a-z]+\/)|(^home$)/ {print $0}' |/install/instguage `grep -c "" /install/core/filelist` |\
         dialog --backtitle "$BT" --title "Installing"\
           --guage "Percentage Files Transfered"\
           6 35 0
       tar -C /mnt --use-compress-program=bunzip2 -xf /install/core/install.tbz
+
+      for newdir in autofs cdrom floppy initrd proc update;do
+        mkdir -p /mnt/mnt/${newdir}
+      done
 
       /usr/bin/dialog --backtitle "$BT" --title "Installing Kernel"\
         --infobox "Installing Linux Kernel" 7 35
@@ -249,7 +253,6 @@ _EOF_
       cp /boot/System.map-install /mnt/boot/System.map-${KERNEL}-install
 
       rsync -a /install/update /mnt/var/spool/ > /dev/null 2>&1
-
 
       if [ -e /etc/netsentry-version ];then
         cp /etc/netsentry-version /mnt/etc
