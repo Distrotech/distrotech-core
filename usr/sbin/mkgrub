@@ -8,6 +8,7 @@ if [ -d /var/boot ];then
   BOOTDIR=/boot
 fi;
 
+#pvdisplay -c |awk -F: '$2 == "flash" {printf "grub-install %s\n",substr($1,3)}'
 DCNT=0
 for hdisk in `awk '{printf "%s ",$2}' /boot/grub/device.map`;do
   if [ "`pvdisplay -c 2>/dev/null |grep -E "${hdisk}[0-9]:lvm:"`" ];then
@@ -16,6 +17,8 @@ for hdisk in `awk '{printf "%s ",$2}' /boot/grub/device.map`;do
   fi;
 done;
 
+#check for disk of mounted path opt ${1}
+#cat /proc/mounts |awk '$2 == "/mnt/floppy" {printf "grub-install %s\n",$1}'
 if [ ${DCNT} == 0 ];then
   /usr/sbin/grub-install --force --boot-directory=${BOOTDIR} "(hd0)"
 fi;
