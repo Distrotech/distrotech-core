@@ -12,7 +12,6 @@
 - /lost+found
 - /mnt
 - /lib/modules
-- /lib/*so*
 - /var/home
 - /var/lib/nfs
 - /var/lock
