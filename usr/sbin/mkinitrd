@@ -164,8 +164,6 @@ for ADAPTER in `lspci -nm |awk -F\" '$2 == "Class 0100" || $2 == "Class 0101" ||
   done;
 done
 
-#pata_legacy,pata_winbond,pata_qdi 
-
 for scard in `ls /lib/modules/$SMP_KERNEL/kernel/drivers/ata/  |grep -vE "(^lib)|(^ahci_platform)|(^pata_legacy)|(^pata_winbond)|(^pata_qdi)|(^ata_generic)" |cut -d. -f1`;do
   if [ ! -e /mnt/initrd/lib/modules/${SMP_KERNEL}/scsi/${scard}.ko.gz ];then
      echo "modprobe $scard" >>/mnt/initrd/linuxrc
@@ -327,9 +325,9 @@ cd /mnt/initrd/etc
 ln -s /proc/mounts mtab
 
 cd /mnt/initrd/sbin
-ln -s /bin 
+ln -s /bin
 cp /usr/bin/modprobe.static modprobe
-	
+
 cp /lib/modules/${SMP_KERNEL}/kernel/fs/jbd/jbd.ko.gz \
    /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
 cp /lib/modules/${SMP_KERNEL}/kernel/fs/jbd2/jbd2.ko.gz \
@@ -538,8 +536,6 @@ if [ "$1" == "test" ];then
   /usr/sbin/rdev /boot/vmlinuz-install /dev/ram0
 fi;
 
-let RTPTN--
-
 if [ -e /usr/sbin/grub-mkconfig ];then
   grub-mkconfig  > /boot/grub/grub.cfg
 fi;
@@ -548,36 +544,3 @@ if [ -h /boot/boot ];then
   rm /boot/boot
 fi;
 
-(cat<<EOF
-default 0
-timeout 5
-splashimage /boot/grub/linuxinside.xpm.gz
-
-title $BRAND V$VERSION ($SMP_KERNEL)
-kernel /boot/vmlinuz-$SMP_KERNEL root=$RTPT quiet${KERNOPTS}
-initrd /boot/initrd-netsentry-$KERNEL
-
-title $BRAND V$VERSION Rescue Mode ($SMP_KERNEL)
-kernel /boot/vmlinuz-$SMP_KERNEL root=$RTPT quiet S${KERNOPTS}
-initrd /boot/initrd-netsentry-$KERNEL
-
-title $BRAND V$VERSION Rescue Boot Install Kernel ($INSTALL_KERNEL)
-kernel /boot/vmlinuz-$INSTALL_KERNEL root=$RTPT quiet vga=0 S
-initrd /boot/initrd-netsentry-$KERNEL
-
-title Memory Test (memtest86.bin)
-kernel /boot/memtest.bin
-
-title $BRAND V$VERSION Setup MBR On hd0
-root (hd0,$RTPTN)
-setup (hd0)
-reboot
-EOF
-) > /boot/grub/menu.lst
-
-
-(cat<<EOF
-root (hd0,$RTPTN)
-setup (hd0)
-EOF
-) > /boot/grub/setup.lst
