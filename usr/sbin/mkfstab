@@ -1,0 +1,53 @@
+#!/usr/bin/perl
+
+$len=length(@ARGV[0])-1;
+
+if (rindex(@ARGV[0],"/") == $len) {
+  chop @ARGV[0];
+}
+$path=join("\\\/",split(/\//,@ARGV[0]));
+
+open(BLKID,"blkid -s UUID|");
+while(<BLKID>) {
+  if (/^(\/[\w\/-]+): (.*)/) {
+    $uuid{$1}=$2;
+  };
+}
+
+$passno=0;
+
+open(MNT,"/proc/mounts");
+while(<MNT>) {
+  if (!(/^\/dev\/(flash|ram)/) && (/^(\/[\w\/-]+)\s$path([\w\/-]+||\/)\s([\w]+)/)) {
+    if (($2 eq "/install/tools") || (($2 ne "/") && ($passno == 0))) {
+      next;
+    }
+    if ($uuid{$1} eq "") {
+      $blkid=`blkid -o value -s UUID $1`;
+      if ($blkid ne "") {
+        chop $blkid;
+        $uuid{$1}="UUID=\"" . $blkid . "\"";
+      } else {
+        $uuid{$1}=$1;
+      }
+    }
+    if (($2 eq "" ) || ($2 eq "/" )) {
+      $passno="1";
+      $mpath="/";
+    } else {
+      $passno="2";
+      $mpath=$2;
+    }
+    if (index($3,"ext") == 0) {
+      $opts=",acl,user_xattr";
+    } else {
+      $opts="";
+    }
+    printf "%-45s %-50s %-10s defaults%-20s 0 %s\n",$uuid{$1},$mpath,$3,$opts,$passno;
+  }
+}
+
+printf "%-45s %-50s %-10s defaults%-20s 0 0\n","proc","/proc","proc","";
+printf "%-45s %-50s %-10s defaults%-20s 0 0\n","devpts","/dev/pts","devpts","";
+printf "%-45s %-50s %-10s defaults%-20s 0 0\n","usbfs","/proc/bus/usb","usbfs","";
+printf "%-45s %-50s %-10s defaults%-20s 0 0\n","nfsd","/proc/fs/nfsd","nfsd","";
