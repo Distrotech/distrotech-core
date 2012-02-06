@@ -7,17 +7,20 @@ if [ -e /install/netsentry-version ];then
   exit 255
 fi
 
+setterm -blank 20
+
 if [ -e "/tmp/fstab.new" ];then
   rm /tmp/fstab.new
 fi;
 
 Install_System() {
-  INST_BASE=${1}
+  setterm -cursor off
+  INST_BASE=/mnt/install
   /usr/bin/dialog --backtitle "$BT" --title "Perl Scripting"  --infobox "Installing Perl Scripting" 7 35
   tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/perl.tbz > /dev/null 2>&1
 
   (cat << EOF
-#!${INST_BASE}/usr/bin/perl -I /mnt/usr/lib/perl5
+#!${INST_BASE}/usr/bin/perl -I ${INST_BASE}/usr/lib/perl5
 
 open(FL,"-");
 \$cnt=0;
@@ -37,6 +40,7 @@ EOF
 ) > /root/instguage
   chmod 750 /root/instguage
 
+  setterm -cursor on
   rsync -avHKO --out-format="%n" --filter=". /install/core/core.filter" / ${INST_BASE}/ |\
     awk '/(^[a-z]+\/)|(^home$)/ {print $0}' |/root/instguage `grep -c "" /install/core/filelist` 2>/dev/null|\
     dialog --backtitle "$BT" --title "Installing" --guage "Percentage Files Transfered" 6 35 0
@@ -47,6 +51,7 @@ EOF
     mkdir -p ${INST_BASE}/mnt/${newdir}
   done
 
+  setterm -cursor off
   /usr/bin/dialog --backtitle "$BT" --title "Installing Kernel" --infobox "Installing Linux Kernel" 7 35
   tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/core/kernel.tar.bz2 > /dev/null 2>&1
   tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/iptables.tar.bz2 > /dev/null 2>&1
@@ -164,7 +169,6 @@ EOF
   fi;
 
   /usr/bin/dialog --backtitle "$BT" --title "Client Software" --infobox "Installing Client Software" 7 35
-
   mkdir -p ${INST_BASE}/var/spool/samba/share/
   chmod 2777 ${INST_BASE}/var/spool/samba/share/
   cp -r /install/tools/* ${INST_BASE}/var/spool/samba/share/
@@ -180,9 +184,6 @@ EOF
   cp /install/.profile ${INST_BASE}/root/.profile
   chmod 750 ${INST_BASE}/root/.profile
   echo "clear" > ${INST_BASE}/root/.bash_logout
-
-  Gen_Fstab;
-  cp /etc/fstab ${INST_BASE}/etc/
 
   for sysdir in dev proc sys;do
     if [ ! -d ${INST_BASE}/${sysdir} ];then
@@ -212,19 +213,21 @@ EOF
     rm ${INST_BASE}/root/serial.pl
   fi
 
-  /usr/bin/dialog --backtitle "$BT" --title "Locate Database" --infobox "Updating File Locate Database" 7 35
   chmod 1777 ${INST_BASE}/tmp ${INST_BASE}/var/run
   chown -R www.www ${INST_BASE}/var/spool/apache/htdocs
   chmod 770 ${INST_BASE}/var/spool/clientmqueue
   mkdir -p ${INST_BASE}/var/run/nscd ${INST_BASE}/var/db/nscd > /dev/null 2>&1
 
   chroot ${INST_BASE} /sbin/ldconfig
-  chroot ${INST_BASE} /usr/bin/updatedb --output=/var/db/locate --prunepaths='/proc /dev /sys /tmp /var/tmp' >/dev/null 2>&1
   chroot ${INST_BASE} /sbin/hwclock --systohc --utc
   chroot ${INST_BASE} /usr/sbin/rndc-confgen -a > /dev/null 2> /dev/null
   chroot ${INST_BASE} /usr/bin/rebuild-info
 
+#  /usr/bin/dialog --backtitle "$BT" --title "Locate Database" --infobox "Updating File Locate Database" 7 35
+#  chroot ${INST_BASE} /usr/bin/updatedb --output=/var/db/locate --prunepaths='/proc /dev /sys /tmp /var/tmp' >/dev/null 2>&1
+
   /usr/bin/dialog --backtitle "$BT" --title "Init RD" --infobox "Creating Initial RAM Disks" 7 35
+  chroot ${INST_BASE} /usr/sbin/mkfstab > ${INST_BASE}/etc/fstab
   chroot ${INST_BASE} /usr/sbin/mkgrub > /dev/null 2>&1
 
   /usr/bin/dialog --backtitle "$BT" --title "Post Install" --infobox "Running genconf/servconfig This Takes Several Minutes" 7 35
@@ -233,35 +236,17 @@ EOF
   chroot ${INST_BASE} /usr/sbin/servconfig > /dev/tty4 2> /dev/tty4
   rm -rf ${INST_BASE}/var/spool/mail/shared
 
+  setterm -cursor on
+  clear
   return 0
 }
 
-Gen_Fstab() {
-  if [ -e /etc/fstab ];then
-    rm /etc/fstab
-  fi;
-  if [ ! -e /tmp/fstab.new ];then
-    cat /proc/mounts |grep -E ".* /mnt" |awk '$1 != "none" {printf "/%s %s\n",substr($2,6),$1}' |sed -e "s/\/dev\/loop\/1/\/dev\/loop0/" -e "s/\/dev\/loop1/\/dev\/loop0/" > /tmp/fstab.new
-  fi;
-  (for dsk in ${DSKS};do
-    for prt in `fdisk -l $dsk |grep "Linux" |grep "Linux swap"  |awk  '{print $1}'`;do
-      echo "$prt  swap                                    swap      defaults      0 0">>/etc/fstab
-    done;
-  done) > /dev/null 2>&1
-  cat /tmp/fstab.new |grep -w "/" |awk '{printf "%s  %-40sext4      defaults,acl  1 1\n",$2,$1}'>> /etc/fstab
-  cat /tmp/fstab.new |sort |grep -vw "/" |awk '{printf "LABEL=%s  %-40sext4      defaults,acl  1 2\n",$1,$1}'>> /etc/fstab
-
-  (cat<<EOF
-proc       /proc                                   proc      defaults      0 0
-devpts     /dev/pts 	                           devpts    defaults      0 0
-usbfs      /proc/bus/usb                           usbfs     defaults      0 0
-#nfsd       /proc/fs/nfsd			   nfsd      defaults      0 0
-EOF
-)>>/etc/fstab
-}
-
 Fdisk_Do() {
-  DISK_FD=${1}
+  DISK_FD=${2}
+
+  (pvdisplay -c ${DISK_FD}* 2>/dev/null |awk -F: '!/:#orphan.*/ && $12 != "" {printf "if [ \"%s\" ];then vgremove -f %s;fi\n",$2,$2}' |sh
+  pvdisplay -c ${DISK_FD}* 2>/dev/null |awk -F: '$12 != "" {printf "pvremove -ff -y%s\n",$1}' |sh) > /dev/null 2>&1
+
   SIZE=`echo ${DISK_FD} |sed -e "s/\/dev\/\(.*\)/cat \/sys\/block\/\\1\/size/" |sh`
   SIZE=`echo "${SIZE} / (2048*1024)" |bc`
   sgdisk -Z ${DISK_FD}
@@ -282,20 +267,39 @@ Fdisk_Do() {
     parted -s ${DISK_FD} set 3 boot on
     parted -s ${DISK_FD} set 3 lvm on
   fi;
-  sync
-  dd if=/dev/zero of=${DISK_FD}1
-  sleep 5
-  mkswap ${DISK_FD}2
-  swapon ${DISK_FD}2
-  pvdisplay -c ${DISK_FD}3 |awk -F: '{printf "vgremove -f %s\n",$2}' |sh
-  pvremove -ff -y ${DISK_FD}3
-  pvcreate ${DISK_FD}3
 
-  if [ ! -d /dev/lvm ];then
-    vgcreate lvm ${DISK_FD}3
-   else
-    vgextend lvm ${DISK_FD}3
+  sync
+  losetup ${DISK_FD} 2>/dev/null |sed -e "s/\([a-z0-9\/]\+\):.*(\(.*\))/losetup -d \1;losetup \1 \2/" |sh
+  sync
+  sleep 5
+
+  if [ -b ${DISK_FD}p1 ];then
+    DISK_FD=${DISK_FD}p
   fi;
+
+  if [ -b ${DISK_FD}1 ];then
+    dd if=/dev/zero of=${DISK_FD}1
+  fi;
+
+  if [ -b ${DISK_FD}2 ];then
+    mkswap ${DISK_FD}2
+    swapon ${DISK_FD}2
+  fi;
+
+  if [ -b ${DISK_FD}3 ];then
+    pvcreate -ff -y ${DISK_FD}3
+    if [ ! -d /dev/${1} ];then
+      vgcreate -f ${1} ${DISK_FD}3
+     else
+      vgextend -f ${1} ${DISK_FD}3
+    fi;
+  fi;
+}
+
+Format_LVM() {
+  (lvcreate $1 -n $2 -l 100%VG
+  vgchange -a y $1
+  mkfs.ext4 -L $2 -j -v /dev/$1/$2 -L $2) >/dev/tty4 2>/dev/tty4
 }
 
 Fdisk() {
@@ -333,14 +337,12 @@ Fdisk() {
   if [ $RETVAL == "0" ] && [ "$FD_CHOICE" ];then
     for DISK_FD in $FD_CHOICE;do
       /usr/bin/dialog --backtitle "$BT" --title "Fdisk" --infobox "Creating partitions and assiging to PV/VG" 4 35
-      Fdisk_Do ${DISK_FD} > /dev/tty4 2>/dev/tty4
+      Fdisk_Do lvm ${DISK_FD} > /dev/tty4 2>/dev/tty4
     done;
 
     /usr/bin/dialog --backtitle "$BT" --title "Formating Root LV" --infobox "Formating Linux Partition" 4 35
-    (lvcreate lvm -n root -l 100%VG
-    vgchange -a y lvm
-    mkfs.ext4 -L root -j -v /dev/mapper/lvm-root -L root) >/dev/tty4 2>/dev/tty4
-    echo "/ /dev/mapper/lvm-root" >> /tmp/fstab.new
+    Format_LVM lvm root
+    echo "/ /dev/lvm/root" >> /tmp/fstab.new
     Mount_All
     Local_Install
    else
@@ -379,38 +381,27 @@ View_Proc() {
   /usr/bin/dialog --backtitle "$BT" --clear --title "Active Prosesors" --textbox /tmp/procs 21 78
 }
 
-View_Fstab() {
-  /usr/bin/dialog --backtitle "$BT" --clear --title "Mount Points" --textbox /etc/fstab 21 78
-}
-
 View_Menu() {
   /usr/bin/dialog --backtitle "$BT" --clear --title "View Config Menu (Viewing Items Involves Saveing)" \
     --menu "Select The Config You Wish To See." 15 70 8\
-       "1" "Mount Points (/etc/fstab)"\
-       "2" "Active Interfaces"\
-       "3" "Active Routeing Table"\
-       "4" "Active Mounts"\
-       "5" "Active Procesors"\
-       "6" "PCI Database"\
-       "7" "Disk Drives"\
+       "1" "Active Interfaces"\
+       "2" "Active Routeing Table"\
+       "3" "Active Mounts"\
+       "4" "Active Procesors"\
+       "5" "PCI Database"\
+       "6" "Disk Drives"\
        "M" "Return To Main Menu" 2> /tmp/menu.tmp.$$
   RETVAL=$?;
   CM_CHOICE=`cat /tmp/menu.tmp.$$`;
   rm /tmp/menu.tmp.$$;
   if [ $RETVAL == "0" ];then
     case $CM_CHOICE in
-       1){
-         if [ -e "/tmp/fstab.new" ];then
-           Gen_Fstab;
-         fi;
-         View_Fstab;
-        };;
-        2)View_Aint;;
-        3)View_Aroute;;
-        4)View_Amount;;
-        5)View_Proc;;
-        6)View_lspci;;
-        7)View_disk;;
+        1)View_Aint;;
+        2)View_Aroute;;
+        3)View_Amount;;
+        4)View_Proc;;
+        5)View_lspci;;
+        6)View_disk;;
         M)return 1;;
       esac;
     fi;
@@ -452,7 +443,7 @@ $FSTAB"\
         20 70 6 ${DISK} 2> /tmp/menu.tmp.$$
     RETVAL=$?;
     PT_CHOICE=`cat /tmp/menu.tmp.$$`
-    rm /tmp/menu.tmp.$$; 
+    rm /tmp/menu.tmp.$$;
     if [ $RETVAL == "0" ] && [ "$PT_CHOICE" != "" ];then
       /usr/bin/dialog --backtitle "$BT" --title "Configure Mount Points"\
                       --inputbox "Enter Mount Point" 10 35 "/" 2> /tmp/menu.tmp.$$
@@ -476,20 +467,17 @@ $FSTAB"\
 }
 
 Mount_All() {
-if [ -e "/tmp/fstab.new" ];then
-  cat /proc/mounts |grep "/mnt" |awk '{print $2" "$1}' |sort -r |awk '{print "umount "$1}' |sh
-  cat /tmp/fstab.new |awk '$1 == "/" {print "mount -t ext4 "$2" /mnt/ -o acl,user_xattr >/dev/tty4 2>/dev/tty4"}'|sh
-  MNTRT=`grep "/mnt " /proc/mounts`;
-  if [ "$MNTRT" == "" ];then
-    /usr/bin/dialog --backtitle "$BT" --title "Mount Failure" --msgbox "No Root Partition Defined" 5 35
+  if [ -e "/tmp/fstab.new" ];then
+    cat /tmp/fstab.new |awk '$1 == "/" {print "mount -t ext4 "$2" /mnt/install -o acl,user_xattr >/dev/tty4 2>/dev/tty4"}'|sh
+    MNTRT=`grep "/mnt/install " /proc/mounts`;
+    if [ "$MNTRT" == "" ];then
+      /usr/bin/dialog --backtitle "$BT" --title "Mount Failure" --msgbox "No Root Partition Defined" 5 35
+     else
+      cat /tmp/fstab.new |/bin/sort |awk '$1 != "/" {print "mkdir -p /mnt/install/"$1";mount "$2" /mnt/install/"$1" >/dev/tty4 2> /dev/tty4"}'|sh
+    fi
    else
-    cat /tmp/fstab.new |/bin/sort |awk '$1 != "/" {print "mkdir -p /mnt"$1";mount "$2" /mnt"$1" >/dev/tty4 2> /dev/tty4"}'|sh
-    Gen_Fstab;
-#    View_Amount;
+    /usr/bin/dialog --backtitle "$BT" --title "Mount Failure" --msgbox "No Mount Points Are Defined" 5 35
   fi
- else
-  /usr/bin/dialog --backtitle "$BT" --title "Mount Failure" --msgbox "No Mount Points Are Defined" 5 35
-fi
 }
 
 New_Serial() {
@@ -524,13 +512,13 @@ Date_Time() {
 }
 
 Local_Install(){
-  MNTRT=`grep "/mnt " /proc/mounts`;
+  MNTRT=`grep "/mnt/install " /proc/mounts`;
   if [ "$MNTRT" == "" ];then
     /usr/bin/dialog --backtitle "$BT" --title "Cannot Install" --msgbox "No Root Partition Mounted" 5 35
     return 1;
   fi;
 
-  Install_System /mnt
+  Install_System
   /sbin/init 0
 }
 
@@ -556,24 +544,25 @@ Network_Address()  {
 }
 
 if [ "${1}" == "install" ];then
-  if [ ! "${2}" ];then
-    Install_System /mnt
-   else
-    Install_System ${2}
-  fi;
+  Install_System
   exit
  elif [ "${1}" == "fdisk" ];then
   shift
+  vg=$1
+  shift
   for dfdisk in $@;do
     if [ -b ${dfdisk} ];then
-      Fdisk_Do ${dfdisk}
+      Fdisk_Do $vg ${dfdisk}
     fi;
   done;
   exit
+ elif [ "${1}" == "format" ];then
+  Format_LVM ${2} ${3}
+  exit
 fi;
 
-if [ -e /mnt/etc/.install ];then
-  cat /proc/mounts |grep "/mnt" |awk '{print $2" "$1}' |sort -r |awk '{print "umount "$1}' |sh
+if [ -e /mnt/install/etc/.install ];then
+  cat /proc/mounts |grep "/mnt/install" |awk '{print $2" "$1}' |sort -r |awk '{print "umount "$1}' |sh
   awk '$2 == "partition" {print "swapoff "$1}' /proc/swaps |sh
 fi;
 
