@@ -1,26 +1,29 @@
 #!/bin/bash
 
 /usr/sbin/grub-mkdevicemap --no-floppy
-
-if [ -d /var/boot ];then
-  BOOTDIR=/var/boot
- else
-  BOOTDIR=/boot
-fi;
-
-#pvdisplay -c |awk -F: '$2 == "flash" {printf "grub-install %s\n",substr($1,3)}'
 DCNT=0
-for hdisk in `awk '{printf "%s ",$2}' /boot/grub/device.map`;do
-  if [ "`pvdisplay -c 2>/dev/null |grep -E "${hdisk}[0-9]:lvm:"`" ];then
-    /usr/sbin/grub-install --boot-directory=${BOOTDIR} --force ${hdisk}
+
+for hdisk in `pvdisplay -c 2>/dev/null |awk -F: '$2 == "lvm" {printf "%s\n",$1}'`;do
+  echo "Installing GRUB on ${hdisk}"
+  DEV=`grub-probe --target=drive -d ${hdisk} |sed -e "s/\(.*\),.*/\1)/"`
+  /usr/sbin/grub-install --force ${DEV}
+  if [ $? == 0 ];then
     let DCNT++
   fi;
-done;
+done
 
-#check for disk of mounted path opt ${1}
-#cat /proc/mounts |awk '$2 == "/mnt/floppy" {printf "grub-install %s\n",$1}'
-if [ ${DCNT} == 0 ];then
-  /usr/sbin/grub-install --force --boot-directory=${BOOTDIR} "(hd0)"
+DEV=`grub-probe --target=drive /boot |sed -e "s/\(.*\),.*/\1)/"`
+if [ $? == 0 ] && [ "${DEV}" != "(lvm-root)" ];then
+  echo "Installing GRUB on ${DEV}"
+  /usr/sbin/grub-install --force ${DEV}
+  if [ $? == 0 ];then
+    let DCNT++
+  fi;
 fi;
 
-/usr/sbin/mkinitrd
+if [ ${DCNT} != 0 ];then
+  /usr/sbin/mkinitrd
+ else
+  echo "Grub NOT Installed"
+  exit -1
+fi;
