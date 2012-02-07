@@ -116,6 +116,13 @@ Mount_Flash() {
     exit -1
   fi;
 
+  if [ -d ${MNTP}/etc ];then
+    rm ${MNTP}/etc/mtab
+    touch ${MNTP}/etc/mtab
+    chroot ${MNTP}/ mount -f /
+    chroot ${MNTP}/ mount -fa
+  fi;
+
   for sdir in dev proc sys;do
     if [ ! -d ${MNTP}/${sdir} ];then
       mkdir ${MNTP}/${sdir}
@@ -137,13 +144,6 @@ Mount_Flash() {
   fi;
   dosfsck -a ${DUFS}
   mount ${DUFS} ${MNTP}/install/tools
-
-  if [ -d ${MNTP}/etc ];then
-    rm ${MNTP}/etc/mtab
-    touch ${MNTP}/etc/mtab
-    chroot ${MNTP}/ mount -f /
-    chroot ${MNTP}/ mount -fa
-  fi;
 
   if [ -e ${MNTP}/install/netsentry-version ];then
     eval `cat ${MNTP}/install/netsentry-version`
@@ -396,6 +396,13 @@ Sync_Update() {
   fi;
   if [ ! -e var/spool/avirus ];then
     ln -s /mnt/update/${CORE}/install/avirus var/spool/avirus > /dev/null 2>&1
+  fi;
+
+  if [ ! -h var/spool/rsync/programs/var/spool/update ] || [ -e var/spool/rsync/programs/var/spool/update ];then
+    rm -rf var/spool/rsync/programs/var/spool/update > /dev/null 2>&1
+  fi;
+  if [ ! -e var/spool/rsync/programs/var/spool/update ];then
+    ln -s /mnt/update/${CORE}/install/update var/spool/rsync/programs/var/spool/update > /dev/null 2>&1
   fi;
 
   cd ${CWD}
