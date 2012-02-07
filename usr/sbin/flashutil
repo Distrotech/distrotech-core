@@ -611,7 +611,7 @@ Remote_Sync() {
     rsync ${ROPT} --delete --exclude=/dev/* --exclude=/sys/* --exclude=/proc/* --exclude=/lost+found --include=/boot/grub/background.jpg \
                --exclude=/lib/modules/* --exclude=/boot/vmlinuz-install --exclude=/boot/System.map-install  --exclude=/boot/initrd-install* \
                --exclude=/boot/grub/* --exclude=/install/mnt/* --exclude=/etc/mtab --exclude=/install/avirus/* --exclude=/mnt/update/* \
-               --exclude=/install/avirus/* --exclude=/install/update/* --exclude=/install/core/* --exclude=/install/tools/* \
+               --exclude=/install/avirus/* --exclude=/install/update/* --exclude=/install/core/* --exclude=/install/tools/* --exclude=/lib/firmwware/* \
                --exclude=/install/netsentry-version ${SERV}::install/ ${1}/
     RERR=$?
     echo
@@ -624,7 +624,7 @@ Remote_Sync() {
     if [ ${ISDTS} == 1 ];then
       echo "Base Files (Local Copy [No Kernel])"
       rsync ${ROPT} -u --include=/install/core/core.filter --include=/install/core/install.tbz --exclude=/install/core/* \
-             --exclude=/lib/modules/* --exclude=/boot/vmlinuz-install --exclude=/boot/System.map-install \
+             --exclude=/lib/modules/* --exclude=/boot/vmlinuz-install --exclude=/boot/System.map-install --exclude=/lib/firmware/* \
              --exclude=/install/avirus/* --exclude=/install/update/* --exclude=/boot/initrd-install* --exclude=/install/tools/* ${SERV}::base/ ${1}
       RERR=$?
       echo
@@ -640,7 +640,7 @@ Remote_Sync() {
           mkdir -p /var/spool/rsync/kernuser
         fi;
         echo "Kernel Files / Firmware (${KVER})"
-        rsync ${ROPT} --delete ${SERV}::kernuser/kernel-${KVER}-smp /var/spool/rsync/kernuser/
+        rsync ${ROPT} --delete ${SERV}::kernuser/kernel-${KVER}-* /var/spool/rsync/kernuser/
         RERR=$?
         echo
         if [ ${RERR} == 0 ];then
@@ -651,7 +651,7 @@ Remote_Sync() {
         fi;
         if [ ${RERR} == 0 ];then
           echo "Install Kernel (Modules ${KVER}) / Anti Virus / Updates"
-          rsync ${ROPT_LOC} -R --include=/lib --include=/lib/modules --include=/lib/modules/${2}-install \
+          rsync ${ROPT_LOC} -R --include=/lib --include=/lib/modules --include=/lib/modules/${2}-install --include=/lib/firmware \
                 --exclude=/lib/modules/*/modules.* --exclude=/lib/* --exclude=/lib/modules/* --exclude=/* / ${1}/
           RERR=$?
           rsync ${ROPT_LOC} -u --include=/update --include=/avirus --exclude=/avirus/clamav-* --exclude=/*/.* --exclude=/* /var/spool/ / ${1}/install/
@@ -878,6 +878,11 @@ EOF
     echo "Kernel Modules"
     rsync ${ROPT_LOC} --inplace --delete --exclude=modules.* /lib/modules/${KERNEL}-install ${RBASE}/lib/modules
     echo
+    if [ -d /var/spool/rsync/kernuser/kernel-${KERNEL}-install/lib/firmware ];then
+      echo "Kernel Firmware"
+      rsync ${ROPT_LOC} --inplace --delete var/spool/rsync/kernuser/kernel-${KERNEL}-install/lib/firmware ${RBASE}/lib/firmware
+      echo
+    fi;
     echo "Kernel"
     rsync ${ROPT_LOC} --inplace /boot/vmlinuz-${KERNEL}-install ${RBASE}/boot/vmlinuz-install
     echo

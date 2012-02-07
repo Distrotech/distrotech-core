@@ -1,6 +1,3 @@
-- /dev/*
-- /sys/*
-- /proc/*
 - /lost+found
 + /home
 + /boot/grub/background.jpg
@@ -11,6 +8,12 @@
 - /install
 - /mnt/update/*
 - /lib/modules
+- /lib/firmware
 - /etc/*
 - /var/*
 - /tmp/*
+- /mnt
+- /dev
+- /sys
+- /proc
+- /install
