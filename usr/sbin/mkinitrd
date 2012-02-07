@@ -62,28 +62,6 @@ for kernel in $SMP_KERNEL $INSTALL_KERNEL;do
   mkdir -p /mnt/initrd/lib/modules/${kernel}/net
 done;
 
-if [ -h "$RTPT" ] && [ "$1" != "NEWBOOT" ];then
-  RTDEV=`ls -l $RTPT |awk '{print $10}'`
-  if [ "$RTDEV" == "->" ];then
-    ls -l $RTPT |awk '{print "ls -l /dev/"$11}' |sh |awk '{print "mknod -m 600 /mnt/initrd/etc/rootdev b "$5" "$6}' |sh
-   else
-    ls -l $RTPT |awk '{print "ls -l /dev/"$10}' |sh |awk '{print "mknod -m 600 /mnt/initrd/etc/rootdev b "$5" "$6}' |sh
-  fi;
- else
-   if [ "$1" == "NEWBOOT" ];then
-     mknod -m 600 /mnt/initrd/etc/rootdev b $2 $3
-    else
-     ls -l $RTPT |awk '{print "mknod -m 600 /mnt/initrd/etc/rootdev b "$5" "$6}' |sh
-   fi;
-fi;
-rsync -tp --devices /mnt/initrd/etc/rootdev /etc/rootdev
-
-if [ ! -e /mnt/initrd/etc/rootdev ];then
-  ls -l /mnt/initrd/etc
-  mknod -m 600 /mnt/initrd/etc/rootdev b 8 3
-fi;
-
-mknod -m 600 /mnt/initrd/etc/testroot b 22 6
 
 (cat <<_EOF_
 #!/bin/nash
@@ -199,6 +177,7 @@ _EOF_
 )>>/mnt/initrd/linuxrc
 
 if [ "$1" == "test" ];then
+  mknod -m 600 /mnt/initrd/etc/testroot b 22 6
   (cat <<_EOF_
 mount -t ext3 /etc/testroot /isofs
 
@@ -215,7 +194,7 @@ _EOF_
  elif [ "$1" == "nfs" ];then
   (cat <<_EOF_
 /sbin/portmap
-/sbin/mount -t nfs $2:/mnt/dev /sysroot -o ro
+/bin/mount -t nfs $2:/mnt/dev /sysroot -o ro
 _EOF_
 )>>/mnt/initrd/linuxrc
  else
@@ -236,20 +215,18 @@ _EOF_
 )>>/mnt/initrd/linuxrc
 fi
 
-if [ ! -e /dev/mapper/lvm-root ];then
-  ROOTDEV=/etc/rootdev
- else
-  ROOTDEV=/dev/mapper/lvm-root
+if [ ! -e /boot/grub/device.map ];then
+  grub-mkdevicemap
 fi;
+ROOTDEV=`grub-probe -t fs_uuid /`
 
 (cat <<_EOF_
 /sbin/udevstart
 /sbin/dmsetup mknodes
 /sbin/vgchange -a y --sysinit lvm
 
+/bin/mount -o ro -t ext4 -U ${ROOTDEV} /sysroot
 umount /proc
-
-mount --ro -t ext4 ${ROOTDEV} /sysroot
 mount -t ramfs none /sysroot/dev
 mkdir /sysroot/dev/udevdb
 mkdir /sysroot/dev/pts
@@ -294,7 +271,7 @@ cp /usr/sbin/dmsetup.static /mnt/initrd/sbin/dmsetup
 cp /sbin/mdadm /mnt/initrd/sbin/
 cp /sbin/udevstart /mnt/initrd/sbin/
 cp /bin/sleep.static /mnt/initrd/sbin/sleep
-cp /sbin/mount.static /mnt/initrd/sbin/mount
+cp /sbin/mount.static /mnt/initrd/bin/mount
 cp /usr/sbin/portmap.static /mnt/initrd/sbin/portmap
 cp /etc/modprobe.* /mnt/initrd/etc/
 cp -r /etc/udev /mnt/initrd/etc/
@@ -543,4 +520,3 @@ fi;
 if [ -h /boot/boot ];then
   rm /boot/boot
 fi;
-
