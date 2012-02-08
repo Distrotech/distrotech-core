@@ -12,12 +12,14 @@ for hdisk in `pvdisplay -c 2>/dev/null |awk -F: '$2 == "lvm" {printf "%s\n",$1}'
   fi;
 done
 
-DEV=`grub-probe --target=drive /boot |sed -e "s/\(.*\),.*/\1)/"`
-if [ $? == 0 ] && [ "${DEV}" != "(lvm-root)" ];then
-  echo "Installing GRUB on ${DEV}"
-  /usr/sbin/grub-install --force ${DEV}
-  if [ $? == 0 ];then
-    let DCNT++
+if [ ${DCNT} == 0 ];then
+  DEV=`grub-probe --target=drive /boot |sed -e "s/\(.*\),.*/\1)/"`
+  if [ $? == 0 ] && [ "${DEV}" != "(lvm-root)" ];then
+    echo "Installing GRUB on ${DEV}"
+    /usr/sbin/grub-install --force ${DEV}
+    if [ $? == 0 ];then
+      let DCNT++
+    fi;
   fi;
 fi;
 
