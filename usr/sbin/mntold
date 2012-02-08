@@ -3,18 +3,28 @@
 if [ "$1" ];then
   mount $1 /mnt -o ro
   if [ $? == 0 ];then
-    mount --bind /dev /mnt/dev
-    mount --bind /sys /mnt/sys
-    mount --bind /proc /mnt/proc
-    /usr/bin/awk '$3 == "ext2" || $3 == "ext3" || $3 == "ext4" {printf "chroot /mnt /sbin/e2fsck -C 0 -p %s\nif [ $? -gt 1 ];then\n  chroot /mnt /sbin/e2fsck -C 0 -Dfy %s\nfi\n\n",$1,$1,$1 }' /mnt/etc/fstab |/bin/bash
+    for bind in dev proc sys;do
+      mount --bind /${bind} /mnt/${bind}
+    done;
+    chroot /mnt fsck -A -p
     mount /mnt -o remount,rw
     rm /mnt/etc/mtab
+    touch /mnt/etc/mtab
     chroot /mnt mount -f /
     chroot /mnt swapon -a
-    chroot /mnt mount -a -v -t ext2,ext3,ext4
+    chroot /mnt mount -a -t ext2,ext3,ext4,vfat
     if [ -e /mnt/etc/HOSTNAME ];then
       cp /mnt/etc/hosts /mnt/etc/resolv.conf /etc
       hostname -F /mnt/etc/HOSTNAME
+    fi;
+    UDEV=`findfs LABEL=UPGRADE`;
+    if [ ${UDEV} ];then
+      mount ${UDEV} /mnt/mnt/update
+      mount --bind / /mnt/mnt/update/mnt/dev
+      if [ -e /mnt/var/run/rsyncd.pid ];then
+        rm /mnt/var/run/rsyncd.pid
+      fi;
+      chroot /mnt rsync --daemon --config /etc/rsyncd-update.conf
     fi;
    else
     echo "Mount failed"
