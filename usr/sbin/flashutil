@@ -656,15 +656,17 @@ Remote_Sync() {
         echo
         if [ ${RERR} == 0 ];then
           echo "Kernel/Modules (${KVER})"
-          rsync ${ROPT} --include=/boot/[vS]*${2}-* --include=/lib/modules/${2}-* --exclude=/lib/modules/* --exclude=/boot/* --filter=". /etc/rsyncd/kernel.filter" ${SERV}::kernel/ /
+          rsync ${ROPT} -u --include=/boot/[vS]*${2}-* --include=/lib/modules/${2}-* --exclude=/lib/modules/* --exclude=/boot/* --filter=". /etc/rsyncd/kernel.filter" ${SERV}::kernel/ /
           RERR=$?
           echo
         fi;
         if [ ${RERR} == 0 ];then
-          echo "Install Kernel (Modules ${KVER}) / Anti Virus / Updates"
-          rsync ${ROPT_LOC} -R --include=/lib --include=/lib/modules --include=/lib/modules/${2}-install --include=/lib/firmware \
+          echo "Install Kernel (Modules ${KVER})"
+          rsync ${ROPT_LOC} -R --include=/lib --include=/lib/modules --include=/lib/modules/${2}-install \
                 --exclude=/lib/modules/*/modules.* --exclude=/lib/* --exclude=/lib/modules/* --exclude=/* / ${1}/
-          RERR=$?
+          echo "Install Kernel (Firmware ${KVER})"
+          rsync ${ROPT_LOC} /var/spool/rsync/kernuser/kernel-${KVER}-install/ ${1}/
+          echo "Install Anti Virus / Updates"
           rsync ${ROPT_LOC} -u --include=/update --include=/avirus --exclude=/avirus/clamav-* --exclude=/*/.* --exclude=/* /var/spool/ / ${1}/install/
           echo
         fi;
