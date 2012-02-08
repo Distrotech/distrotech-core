@@ -208,6 +208,9 @@ if [ ${NOSYNC} == 0 ] && [ ${RERR} == 0 ];then
       if [ ${RERR} == 0 ];then
         flashutil upgrade
         RERR=$?
+       else
+        RERR=0
+        Sync_Remote
       fi;
      else
       Sync_Remote
