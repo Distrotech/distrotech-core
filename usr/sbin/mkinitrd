@@ -1,521 +1,260 @@
 #!/bin/bash
 
+init_rd_drivers() {
+  kernel=${2}
+
+  for kdir in drivers drivers-ata drivers-scsi drivers-usb;do
+    mkdir -p ${3}/lib/modules/${kernel}/${kdir}
+  done;
+
+  cp ${1}lib/modules/${kernel}/kernel/drivers/ata/* ${1}lib/modules/${kernel}/kernel/drivers/mmc/host/* ${3}/lib/modules/${kernel}/drivers-ata
+  mv ${3}/lib/modules/${kernel}/drivers-ata/ata_generic.ko.gz \
+     ${3}/lib/modules/${kernel}/drivers-ata/pata_legacy.ko.gz \
+     ${3}/lib/modules/${kernel}/drivers-ata/ahci_platform.ko.gz \
+     ${3}/lib/modules/${kernel}/drivers-ata/pata_acpi.ko.gz \
+     ${3}/lib/modules/${kernel}/drivers-ata/libahci.ko.gz \
+     ${3}/lib/modules/${kernel}/drivers
+
+  cp -r ${1}lib/modules/${kernel}/kernel/drivers/usb/storage/* ${3}/lib/modules/${kernel}/drivers-usb
+
+  for kmod in block/loop.ko.gz base/firmware_class.ko.gz pcmcia mmc/core \
+           mmc/card misc/cb710 misc/tifm_core.ko.gz cdrom/cdrom.ko.gz ssb \
+           usb/host md/ usb/wusbcore uwb usb/misc/ftdi-elan.ko.gz connector/cn.ko.gz;do
+   if [ -f ${1}lib/modules/${kernel}/kernel/drivers/${kmod} ];then
+     cp ${1}lib/modules/${kernel}/kernel/drivers/${kmod} ${3}/lib/modules/${kernel}/drivers
+    elif [ -d ${1}lib/modules/${kernel}/kernel/drivers/${kmod} ];then
+     cp -r ${1}lib/modules/${kernel}/kernel/drivers/${kmod}/* ${3}/lib/modules/${kernel}/drivers
+   fi;
+  done;
+
+  for kmod in isofs/isofs.ko.gz nls/nls_iso8859-1.ko.gz "ext*/*" "jbd*/*";do
+    cp -r ${1}lib/modules/${kernel}/kernel/fs/${kmod} ${3}/lib/modules/${kernel}/drivers
+  done;
+
+  for klib in zlib_deflate raid6 lzo libcrc32c.ko.gz crc16.ko.gz crc-t10dif.ko.gz;do
+    if [ -f ${1}lib/modules/${kernel}/kernel/lib/${klib} ];then
+      cp ${1}lib/modules/${kernel}/kernel/lib/${klib} ${3}/lib/modules/${kernel}/drivers
+     elif [ -d ${1}lib/modules/${kernel}/kernel/lib/${klib} ];then
+      cp -r ${1}lib/modules/${kernel}/kernel/lib/${klib}/* ${3}/lib/modules/${kernel}/drivers
+    fi;
+  done;
+
+  for scard in scsi_wait_scan scsi_mod scsi_tgt sd_mod sr_mod "libsas/*" \
+            scsi_transport_iscsi scsi_transport_fc scsi_transport_sas \
+            scsi_transport_spi "device_handler/*" "megaraid/*";do
+    cp ${1}lib/modules/${kernel}/kernel/drivers/scsi/${scard}.ko.gz ${3}/lib/modules/${kernel}/drivers
+  done
+  cp -r ${1}lib/modules/${kernel}/kernel/crypto ${3}/lib/modules/${kernel}/
+}
+
+init_rd_drivers_scsi() {
+  cd ${1}lib/modules/${kernel}
+  for ADAPTER in `lspci -nm |awk -F\" '$2 == "Class 0100" || $2 == "Class 0101" || $2 == "Class 0102" || $2 == "Class 0103" || $2 == "Class 0104" || $2 == "Class 0106" || $2 == "Class 0107" || $2 == "Class 0180" {printf "grep -E \"%s.*%s\" modules.pcimap\n",$4,$6}' |sh |awk '{print $1}'`${EXTRA_DEV};do 
+    if [ "$ADAPTER" == "sym53c8xx" ];then
+      ADAPTER="sym53c8xx_2/sym53c8xx";
+    fi;
+    if [ "$ADAPTER" == "aic79xx" ];then
+      ADAPTER="aic7xxx/aic79xx";
+    fi;
+
+    if [ -e ${1}lib/modules/${kernel}/kernel/drivers/scsi/$ADAPTER.ko.gz ];then
+      cp ${1}lib/modules/${kernel}/kernel/drivers/scsi/$ADAPTER.ko.gz ${3}/lib/modules/${kernel}/drivers-scsi
+     elif [ -d ${1}lib/modules/${kernel}/kernel/drivers/scsi/$ADAPTER ];then
+      cp -r ${1}lib/modules/${kernel}/kernel/drivers/scsi/$ADAPTER/* ${3}/lib/modules/${kernel}/drivers-scsi
+     elif [ -e ${1}lib/modules/${kernel}/kernel/drivers/message/fusion/$ADAPTER.ko.gz ];then
+      cp -r ${1}lib/modules/${kernel}/kernel/drivers/message/fusion/* ${3}/lib/modules/${kernel}/drivers-scsi
+     elif [ -e ${1}lib/modules/${kernel}/kernel/drivers/message/i2o/$ADAPTER.ko.gz ];then
+      cp -r ${1}lib/modules/${kernel}/kernel/drivers/message/i2o/* ${3}/lib/modules/${kernel}/drivers-scsi
+    fi;
+  done
+  cd ${CWD}
+}
+
+initrd_init() {
+  LOOP=`losetup -f`
+  if [ ! "${LOOP}" ] || [ ! -e "${LOOP}" ];then
+    return 255
+  fi;
+
+  (dd if=/dev/zero of=${1} bs=1M count=${3}
+  mkfs.ext2 -F -L initrd -i 1024 ${1}
+  losetup ${LOOP} ${1}
+  mount ${LOOP} ${2}) >/dev/null 2>&1
+
+  for tld in bin dev etc isofs lib proc sbin sys sysroot var;do
+    mkdir ${2}/${tld}
+  done
+
+  mkdir -p /var/lock/lvm
+  mkdir ${2}/etc/lvm
+  for lvmdir in archive backup cache;do
+    mkdir ${2}/etc/lvm/${lvmdir}
+  done;
+
+  cp /etc/lvm/lvm.conf ${2}/etc/lvm/
+  cp /usr/sbin/lvm.static ${2}/sbin/lvm
+  cp /usr/bin/modprobe.static ${2}/sbin/modprobe
+  cp /sbin/nash ${2}/bin
+  cp /sbin/losetup.static ${2}/sbin/losetup
+  cp /sbin/mount.static ${2}/bin/mount
+  ln -s /proc/mounts ${2}/etc/mtab
+  ln -s /sbin/lvm ${2}/sbin/vgchange
+  ln -s /sbin/lvm ${2}/sbin/vgscan
+  ln -s /sbin/lvm ${2}/sbin/vgmknodes
+  ln -s /linuxrc ${2}/sbin/init
+  touch ${2}/etc/fstab
+}
+
+initrd_config() {
+  cat <<_EOF_
+#!/bin/nash
+
+mount -t ramfs none /dev
+mount -t proc none /proc
+mount -t sysfs none /sys
+
+mknod /dev/console c 5 1
+mknod /dev/urandom c 1 9
+mknod /dev/null c 1 3
+mknod /dev/systty c 4 0
+mknod /dev/zero c 1 5
+mknod /dev/ram5 b 1 5
+mknod /dev/loop0 b 7 0
+mknod /dev/cdrom b 11 0
+
+_EOF_
+
+  for driver in `ls ${1}/lib/modules/${2}-smp/drivers-scsi |cut -d. -f1`;do
+    echo "modprobe ${driver}"
+  done;
+
+  for driver in `ls ${1}/lib/modules/${2}-smp/drivers-ata |cut -d. -f1`;do
+    echo "modprobe ${driver}"
+  done;
+
+  cat <<_EOF_
+
+modprobe pata_acpi
+modprobe ata_generic
+modprobe uhci_hcd
+modprobe ohci_hcd
+modprobe ehci_hcd
+_EOF_
+
+  for driver in `ls ${1}/lib/modules/${2}-smp/drivers-usb |cut -d. -f1`;do
+    echo "modprobe ${driver}"
+  done;
+
+  cat <<_EOF_
+modprobe sd_mod
+modprobe scsi_wait_scan
+
+modprobe loop
+modprobe dm-mod
+
+_EOF_
+
+  if [ "$USBSLEEP" ];then
+    echo "sleep ${USBSLEEP}"
+  fi;
+
+#  /sbin/dmraid -c -sa -i > /dev/null 2>&1
+#  if [ $? == 0 ];then
+#    echo "/sbin/dmraid -ay -i"
+#  fi;
+
+  if [ -e /etc/mdadm.conf ];then
+    cat <<_EOF_
+/sbin/mdadm -Ebsc part > /etc/mdadm.conf
+/sbin/mdadm -As
+_EOF_
+  fi;
+
+  if [ -e /etc/initrd.local ];then
+    cat /etc/initrd.local
+  fi;
+
+cat <<_EOF_
+
+mkdevices /dev
+mkdmnod
+vgchange -a y --sysinit lvm
+vgmknodes
+/bin/mount -o ro -t ext4 -U ${ROOTDEV} /sysroot
+echo 0x0100 > /proc/sys/kernel/real-root-dev
+
+pivot_root /sysroot /sysroot/initrd
+
+mount -t ramfs none /dev
+mount -t proc none /proc
+mount -t sysfs none /sys
+mkdir /dev/udevdb
+mkdir /dev/pts
+mkdir /dev/shm
+mount -t devpts none /dev/pts
+
+udevstart
+_EOF_
+}
+
 if [ -e /etc/netsentry-version ];then
   eval `cat /etc/netsentry-version`
- else
+ elif [ -e /install/netsentry-version ];then
   eval `cat /install/netsentry-version`
+ else
+  echo "No Config File"
+  exit;
 fi;
 
-SMP_KERNEL="$KERNEL-smp";
-INSTALL_KERNEL="$KERNEL-install";
-
-if [ ! -e /lib/modules/${SMP_KERNEL} ] || [ ! -e /lib/modules/${INSTALL_KERNEL} ];then
+if [ ! -e /lib/modules/${KERNEL}-smp ] || [ ! -e /lib/modules/${KERNEL}-install ];then
   echo No Kernel Directory
-  exit
-fi;
-
-depmod -a -F /boot/System.map-${SMP_KERNEL} ${SMP_KERNEL}
-depmod -a -F /boot/System.map-${INSTALL_KERNEL} ${INSTALL_KERNEL}
-
-if [ "`uname -r |grep nosmp`" ] || [ -e "/etc/.bootnosmp" ];then
-  SMPOPTS=" nosmp"
-fi;
-
-if [ "$KERNOPTS" ] || [ "$SMPOPTS" ];then
-  KERNOPTS=" ${KERNOPTS}${SMPOPTS}"
+  exit;
 fi;
 
 if [ "$EXTRA_DEV" ];then
   EXTRA_DEV=" ${EXTRA_DEV}"
 fi;
 
-RTPT=`cat /etc/fstab |grep -w "/" |awk '{print $1}'`
-RTPTN=`echo $RTPT |awk '{printf "%s",substr($1,length($1))}'`
-
-if [ ! -e /dev/loop6 ];then
-  mknod /dev/loop6 b 7 6
-fi;
-
-dd if=/dev/zero of=/tmp/initrd bs=1M count=16  > /dev/null 2>&1
-mke2fs -Fi 1024 /tmp/initrd >/dev/null 2>&1
-losetup /dev/loop6 /tmp/initrd
-mount /dev/loop6 /mnt/initrd
-
-mkdir /mnt/initrd/bin
-mkdir /mnt/initrd/dev
-mkdir /mnt/initrd/etc
-mkdir /mnt/initrd/proc
-mkdir /mnt/initrd/sys
-mkdir /mnt/initrd/sbin
-mkdir /mnt/initrd/isofs
-mkdir /mnt/initrd/sysroot
-
-rm -rf /mnt/initrd/lib/modules/*
-
-for kernel in $SMP_KERNEL $INSTALL_KERNEL;do
-  mkdir -p /mnt/initrd/lib/modules/${kernel}/scsi
-  mkdir -p /mnt/initrd/lib/modules/${kernel}/lib
-  mkdir -p /mnt/initrd/lib/modules/${kernel}/usb
-  mkdir -p /mnt/initrd/lib/modules/${kernel}/fs
-  mkdir -p /mnt/initrd/lib/modules/${kernel}/block
-  mkdir -p /mnt/initrd/lib/modules/${kernel}/io
-  mkdir -p /mnt/initrd/lib/modules/${kernel}/net
-done;
-
-
-(cat <<_EOF_
-#!/bin/nash
-
-mount -t proc /proc /proc
-mount -t ramfs none /dev
-mount -t sysfs none /sys
-
-mkdir /dev/udevdb
-mkdir /dev/pts
-mkdir /dev/shm
-/sbin/udevstart
-
-echo 0x0100 > /proc/sys/kernel/real-root-dev
-_EOF_
-)>/mnt/initrd/linuxrc
-
-for scard in scsi_wait_scan scsi_mod scsi_tgt sd_mod libsas libahci ahci_platform pata_sis libata scsi_transport_iscsi scsi_transport_fc scsi_transport_sas scsi_transport_spi megaraid_mm megaraid_sas megaraid_mbox;do
-  if [ "$scard" == "megaraid_mbox" ];then
-    scard="megaraid/megaraid_mbox";
-  fi;
-  if [ "$scard" == "megaraid_sas" ];then
-    scard="megaraid/megaraid_sas";
-  fi;
-  if [ "$scard" == "megaraid_mm" ];then
-    scard="megaraid/megaraid_mm";
-  fi;
-
-  for kernel in $SMP_KERNEL $INSTALL_KERNEL;do
-    if [ ! -e /mnt/initrd/lib/modules/${kernel}/scsi/${scard}.ko.gz ] && [ -e /lib/modules/${kernel}/kernel/drivers/scsi/${scard}.ko.gz ];then
-      cp /lib/modules/${kernel}/kernel/drivers/scsi/${scard}.ko.gz \
-         /mnt/initrd/lib/modules/${kernel}/scsi
-     else
-      if [ ! -e /mnt/initrd/lib/modules/${kernel}/scsi/${scard}.ko.gz ] && [ -e /lib/modules/${kernel}/kernel/drivers/ata/${scard}.ko.gz ];then
-        cp /lib/modules/${kernel}/kernel/drivers/ata/${scard}.ko.gz \
-           /mnt/initrd/lib/modules/${kernel}/scsi
-      fi;
-    fi;
-  done
-done
-
-cd /lib/modules/${SMP_KERNEL}
-for ADAPTER in `lspci -nm |awk -F\" '$2 == "Class 0100" || $2 == "Class 0101" || $2 == "Class 0102" || $2 == "Class 0103" || $2 == "Class 0104" || $2 == "Class 0106" || $2 == "Class 0107" || $2 == "Class 0180" {printf "grep -E \"%s.*%s\" modules.pcimap\n",$4,$6}' |sh |awk '{print $1}'`${EXTRA_DEV};do 
-  echo "modprobe $ADAPTER" >>/mnt/initrd/linuxrc
-
-  if [ "$ADAPTER" == "sym53c8xx" ];then
-    ADAPTER="sym53c8xx_2/sym53c8xx";
-  fi;
-  if [ "$ADAPTER" == "aic79xx" ];then
-    ADAPTER="aic7xxx/aic79xx";
-  fi;
-
-  for KERNELD in $SMP_KERNEL $INSTALL_KERNEL;do
-    if [ -e /lib/modules/${KERNELD}/kernel/drivers/scsi/$ADAPTER.ko.gz ];then
-      cp /lib/modules/${KERNELD}/kernel/drivers/scsi/$ADAPTER.ko.gz \
-         /mnt/initrd/lib/modules/${KERNELD}/scsi > /dev/null 2>&1
-     else
-      if [ -d /lib/modules/${KERNELD}/kernel/drivers/scsi/$ADAPTER ];then
-        cp -r /lib/modules/${KERNELD}/kernel/drivers/scsi/$ADAPTER/* \
-              /mnt/initrd/lib/modules/${KERNELD}/scsi > /dev/null 2>&1
-       else
-        if [ -e /lib/modules/${KERNELD}/kernel/drivers/message/fusion/$ADAPTER.ko.gz ];then
-          cp -r /lib/modules/${KERNELD}/kernel/drivers/message/fusion/* \
-                /mnt/initrd/lib/modules/${KERNELD}/scsi > /dev/null 2>&1
-         else
-          if [ -e /lib/modules/${KERNELD}/kernel/drivers/message/i2o/$ADAPTER.ko.gz ];then
-            cp -r /lib/modules/${KERNELD}/kernel/drivers/message/i2o/* \
-                  /mnt/initrd/lib/modules/${KERNELD}/scsi > /dev/null 2>&1
-           else
-            if [ -e /lib/modules/${KERNELD}/kernel/drivers/ata/$ADAPTER.ko.gz ];then
-               cp /lib/modules/${KERNELD}/kernel/drivers/ata/$ADAPTER.ko.gz \
-                  /mnt/initrd/lib/modules/${KERNELD}/scsi > /dev/null 2>&1
-            fi;
-          fi;
-        fi;
-      fi;
-    fi;
-  done;
-done
-
-for scard in `ls /lib/modules/$SMP_KERNEL/kernel/drivers/ata/  |grep -vE "(^lib)|(^ahci_platform)|(^pata_legacy)|(^pata_winbond)|(^pata_qdi)|(^ata_generic)" |cut -d. -f1`;do
-  if [ ! -e /mnt/initrd/lib/modules/${SMP_KERNEL}/scsi/${scard}.ko.gz ];then
-     echo "modprobe $scard" >>/mnt/initrd/linuxrc
-  fi;
-  for kernel in $SMP_KERNEL $INSTALL_KERNEL;do
-    if [ ! -e /mnt/initrd/lib/modules/${kernel}/scsi/${scard}.ko.gz ] && [ -e /lib/modules/${kernel}/kernel/drivers/ata/${scard}.ko.gz ];then
-      cp /lib/modules/${kernel}/kernel/drivers/ata/${scard}.ko.gz \
-         /mnt/initrd/lib/modules/${kernel}/scsi
-    fi;
-  done;
-done;
-
-for kernel in $SMP_KERNEL $INSTALL_KERNEL;do
-      cp /lib/modules/${kernel}/kernel/drivers/ata/ata_generic.ko.gz \
-         /mnt/initrd/lib/modules/${kernel}/scsi
-done;
-echo "modprobe ata_generic" >>/mnt/initrd/linuxrc
-
-(cat <<_EOF_
-modprobe uhci-hcd
-modprobe ohci-hcd
-modprobe ehci-hcd
-modprobe usb-storage
-modprobe sd_mod
-modprobe scsi_wait_scan
-
-modprobe loop
-modprobe nfs
-modprobe dm-mirror
-
-/sbin/udevstart
-_EOF_
-)>>/mnt/initrd/linuxrc
-
-if [ "$1" == "test" ];then
-  mknod -m 600 /mnt/initrd/etc/testroot b 22 6
-  (cat <<_EOF_
-mount -t ext3 /etc/testroot /isofs
-
-/isofs/bin/mount -t ext3 /isofs/test-install /sysroot -o loop=/dev/loop0,rw
-mount -t ramfs none /sysroot/dev
-mount -t sysfs none /sysroot/sys
-mkdir /sysroot/dev/udevdb
-mkdir /sysroot/dev/pts
-mkdir /sysroot/dev/shm
-pivot_root /sysroot /sysroot/initrd
-/sbin/udevstart
-_EOF_
-)>>/mnt/initrd/linuxrc;
- elif [ "$1" == "nfs" ];then
-  (cat <<_EOF_
-/sbin/portmap
-/bin/mount -t nfs $2:/mnt/dev /sysroot -o ro
-_EOF_
-)>>/mnt/initrd/linuxrc
- else
-  if [ "$USBSLEEP" ];then
-    echo "/sbin/sleep ${USBSLEEP}" >>/mnt/initrd/linuxrc
-  fi;
-
-#/sbin/dmraid -c -sa -i > /dev/null 2>&1
-#if [ $? == 0 ];then
-#  echo "/sbin/dmraid -ay -i" >> /mnt/initrd/linuxrc
-#fi;
-
-if [ -e /etc/mdadm.conf ];then
-(cat <<_EOF_
-/sbin/mdadm -Ebsc part > /etc/mdadm.conf
-/sbin/mdadm -As
-_EOF_
-)>>/mnt/initrd/linuxrc
-fi
-
 if [ ! -e /boot/grub/device.map ];then
   grub-mkdevicemap
 fi;
-ROOTDEV=`grub-probe -t fs_uuid /`
 
-(cat <<_EOF_
-/sbin/udevstart
-/sbin/dmsetup mknodes
-/sbin/vgchange -a y --sysinit lvm
-
-/bin/mount -o ro -t ext4 -U ${ROOTDEV} /sysroot
-umount /proc
-mount -t ramfs none /sysroot/dev
-mkdir /sysroot/dev/udevdb
-mkdir /sysroot/dev/pts
-mkdir /sysroot/dev/shm
-mount -t sysfs none /sysroot/sys
-mount -t proc none /sysroot/proc
-pivot_root /sysroot /sysroot/initrd
-/sbin/udevstart
-_EOF_
-)>>/mnt/initrd/linuxrc
+ROOTDEV=`grub-probe -t fs_uuid / 2>/dev/null`
+if [ ! "${ROOTDEV}" ] && [ -e /dev/lvm/root ];then
+  ROOTDEV=`blkid -s UUID -o value /dev/lvm/root`
 fi;
 
-(cat <<_EOF_
-#!/bin/sh
+CWD=`pwd`
 
-exec /sbin/init \$@ < /dev/console > /dev/console > 2&1
-_EOF_
-)>>/mnt/initrd/sbin/init
-
-(cat <<_EOF_
-#!/bin/bash
-
-gunzip -c /install/etc.gz |dd of=/dev/ram5 bs=1k count=3584 > /dev/null 2>&1
-mount -n /dev/ram5 /etc
-if [ -e /etc/.networksentry-lite ];then
-  touch /etc/.networksentry-lite
-fi;
-_EOF_
-)>>/mnt/initrd/sbin/mntetc
-
-chmod 750 /mnt/initrd/linuxrc
-cp /mnt/initrd/linuxrc /mnt/initrd/init
-chmod 750 /mnt/initrd/init
-chmod 750 /mnt/initrd/sbin/init
-
-cp /sbin/nash /mnt/initrd/bin/
-#cp /sbin/dmraid /mnt/initrd/sbin/
-cp /usr/sbin/lvm.static /mnt/initrd/sbin/lvm
-ln -s /sbin/lvm /mnt/initrd/sbin/vgchange
-ln -s /sbin/lvm /mnt/initrd/sbin/lvchange
-cp /usr/sbin/dmsetup.static /mnt/initrd/sbin/dmsetup
-cp /sbin/mdadm /mnt/initrd/sbin/
-cp /sbin/udevstart /mnt/initrd/sbin/
-cp /bin/sleep.static /mnt/initrd/sbin/sleep
-cp /sbin/mount.static /mnt/initrd/bin/mount
-cp /usr/sbin/portmap.static /mnt/initrd/sbin/portmap
+initrd_init /tmp/initrd /mnt/initrd 16
 cp /etc/modprobe.* /mnt/initrd/etc/
-cp -r /etc/udev /mnt/initrd/etc/
-grep -v "NAME=\"flash" /etc/udev/rules.d/50-udev.rules > /mnt/initrd/etc/udev/rules.d/50-udev.rules
 
-(cat <<_EOF_
-udev_root="/dev"
-udev_db="/dev/udevdb"
-udev_rules="/etc/udev/rules.d"
-udev_permissions="/etc/udev/permissions.d"
-default_mode="0600"
-default_owner="root"
-default_group="root"
-udev_log="yes"
-_EOF_
-)>/mnt/initrd/etc/udev/udev.conf
+for ktype in smp install;do
+  depmod -a -F /boot/System.map-${KERNEL}-${ktype} ${KERNEL}-${ktype}
+  init_rd_drivers / ${KERNEL}-${ktype} /mnt/initrd
+  init_rd_drivers_scsi / ${KERNEL}-${ktype} /mnt/initrd
+  depmod -a -e -F /boot/System.map-${KERNEL}-${ktype} -b /mnt/initrd ${KERNEL}-${ktype}
+  rm /boot/vmlinuz-${ktype} /boot/System.map-${ktype} > /dev/null 2>&1
+  ln -s vmlinuz-${KERNEL}-${ktype} /boot/vmlinuz-${ktype}
+  ln -s System.map-${KERNEL}-${ktype} /boot/System.map-${ktype}
+done
 
-mknod /mnt/initrd/dev/console c 5 1
-mknod /mnt/initrd/dev/urandom c 1 9
-mknod /mnt/initrd/dev/null c 1 3
-mknod /mnt/initrd/dev/systty c 4 0
-mknod /mnt/initrd/dev/zero c 1 5
-mknod -m 400 /mnt/initrd/dev/initrd b 1 250
-
-touch /mnt/initrd/etc/fstab
-
-cd /mnt/initrd/etc
-ln -s /proc/mounts mtab
-
-cd /mnt/initrd/sbin
-ln -s /bin
-cp /usr/bin/modprobe.static modprobe
-
-cp /lib/modules/${SMP_KERNEL}/kernel/fs/jbd/jbd.ko.gz \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
-cp /lib/modules/${SMP_KERNEL}/kernel/fs/jbd2/jbd2.ko.gz \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
-
-cp /lib/modules/${INSTALL_KERNEL}/kernel/fs/jbd/jbd.ko.gz \
-   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/fs
-cp /lib/modules/${INSTALL_KERNEL}/kernel/fs/jbd2/jbd2.ko.gz \
-   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/fs
-
-cp /lib/modules/${SMP_KERNEL}/kernel/drivers/block/loop.ko.gz \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/block
-cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/block/loop.ko.gz \
-   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/block
-
-if [ -e /lib/modules/${SMP_KERNEL}/kernel/drivers/acpi/dock.ko.gz ];then
-  cp /lib/modules/${SMP_KERNEL}/kernel/drivers/acpi/dock.ko.gz \
-     /mnt/initrd/lib/modules/${SMP_KERNEL}/block
-fi;
-
-cp /lib/modules/${SMP_KERNEL}/kernel/drivers/md/dm-mod.ko.gz \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/block
-cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/md/dm-mod.ko.gz \
-   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/block
-
-if [ /lib/modules/${SMP_KERNEL}/kernel/drivers/md/dm-log.ko.gz ];then
-  cp /lib/modules/${SMP_KERNEL}/kernel/drivers/md/dm-log.ko.gz \
-     /mnt/initrd/lib/modules/${SMP_KERNEL}/block
-fi;
-
-if [ /lib/modules/${SMP_KERNEL}/kernel/drivers/md/dm-region-hash.ko.gz ];then
-  cp /lib/modules/${SMP_KERNEL}/kernel/drivers/md/dm-region-hash.ko.gz \
-     /mnt/initrd/lib/modules/${SMP_KERNEL}/block
-fi;
-
-if [ /lib/modules/${INSTALL_KERNEL}/kernel/drivers/md/dm-log.ko.gz ];then
-  cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/md/dm-log.ko.gz \
-     /mnt/initrd/lib/modules/${INSTALL_KERNEL}/block
-fi;
-
-if [ /lib/modules/${INSTALL_KERNEL}/kernel/drivers/md/dm-region-hash.ko.gz ];then
-  cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/md/dm-region-hash.ko.gz \
-     /mnt/initrd/lib/modules/${INSTALL_KERNEL}/block
-fi;
-
-cp /lib/modules/${SMP_KERNEL}/kernel/drivers/md/md-mod.ko.gz \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/block
-cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/md/md-mod.ko.gz \
-   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/block
-
-cp /lib/modules/${SMP_KERNEL}/kernel/drivers/md/dm-mirror.ko.gz \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/block
-cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/md/dm-mirror.ko.gz \
-   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/block
-
-cp /lib/modules/${SMP_KERNEL}/kernel/drivers/md/raid*.ko.gz \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/block
-cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/md/raid*.ko.gz \
-   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/block
-
-cp -r /lib/modules/${SMP_KERNEL}/kernel/crypto \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/
-
-cp -r /lib/modules/${SMP_KERNEL}/kernel/lib/zlib* \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/lib
-
-cp -r /lib/modules/${SMP_KERNEL}/kernel/lib/raid6/* \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/lib
-
-cp -r /lib/modules/${SMP_KERNEL}/kernel/lib/libcrc32c.ko.gz \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/lib
-
-if [ -d /lib/modules/${SMP_KERNEL}/kernel/lib/lzo ];then
-  cp -r /lib/modules/${SMP_KERNEL}/kernel/lib/lzo/* \
-     /mnt/initrd/lib/modules/${SMP_KERNEL}/lib
-fi;
-
-cp /lib/modules/${SMP_KERNEL}/kernel/fs/ext3/ext3.ko.gz \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
-cp /lib/modules/${INSTALL_KERNEL}/kernel/fs/ext3/ext3.ko.gz \
-   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/fs
-
-cp -r /lib/modules/${SMP_KERNEL}/kernel/lib/crc16.ko.gz \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/lib
-
-cp /lib/modules/${SMP_KERNEL}/kernel/fs/ext4/ext4.ko.gz \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
-cp /lib/modules/${INSTALL_KERNEL}/kernel/fs/ext4/ext4.ko.gz \
-   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/fs
-
-cp /lib/modules/${SMP_KERNEL}/kernel/fs/nfs/nfs.ko.gz \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
-cp /lib/modules/${SMP_KERNEL}/kernel/fs/fscache/fscache.ko.gz \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
-cp /lib/modules/${INSTALL_KERNEL}/kernel/fs/nfs/nfs.ko.gz \
-   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/fs
-
-cp /lib/modules/${SMP_KERNEL}/kernel/fs/lockd/lockd.ko.gz \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
-cp /lib/modules/${INSTALL_KERNEL}/kernel/fs/lockd/lockd.ko.gz \
-   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/fs
-
-cp /lib/modules/${SMP_KERNEL}/kernel/fs/nfs_common/nfs_acl.ko.gz \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/fs
-cp /lib/modules/${INSTALL_KERNEL}/kernel/fs/nfs_common/nfs_acl.ko.gz \
-   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/fs
-
-cp /lib/modules/${SMP_KERNEL}/kernel/net/sunrpc/auth_gss/auth_rpcgss.ko.gz \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/net
-cp /lib/modules/${INSTALL_KERNEL}/kernel/net/sunrpc/auth_gss/auth_rpcgss.ko.gz \
-   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/net
-
-cp /lib/modules/${SMP_KERNEL}/kernel/net/sunrpc/sunrpc.ko.gz \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/net
-cp /lib/modules/${INSTALL_KERNEL}/kernel/net/sunrpc/sunrpc.ko.gz \
-   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/net
-
-if [ -e /lib/modules/${SMP_KERNEL}/kernel/lib/crc-t10dif.ko.gz ];then
-  cp /lib/modules/${SMP_KERNEL}/kernel/lib/crc-t10dif.ko.gz \
-     /mnt/initrd/lib/modules/${SMP_KERNEL}/lib
-fi;
-
-if [ -e /lib/modules/${SMP_KERNEL}/kernel/drivers/usb/core/usbcore.ko.gz ];then
-  cp /lib/modules/${SMP_KERNEL}/kernel/drivers/usb/core/usbcore.ko.gz \
-     /mnt/initrd/lib/modules/${SMP_KERNEL}/usb
-fi;
-
-if [ -e /lib/modules/${SMP_KERNEL}/kernel/drivers/ssb/ssb.ko.gz ];then
-  cp /lib/modules/${SMP_KERNEL}/kernel/drivers/ssb/ssb.ko.gz \
-     /mnt/initrd/lib/modules/${SMP_KERNEL}/usb
-  cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/ssb/ssb.ko.gz \
-     /mnt/initrd/lib/modules/${INSTALL_KERNEL}/usb
-  cp /lib/modules/${SMP_KERNEL}/kernel/drivers/mmc/core/mmc_core.ko.gz \
-     /mnt/initrd/lib/modules/${SMP_KERNEL}/usb
-fi;
-
-cp /lib/modules/${SMP_KERNEL}/kernel/drivers/pcmcia/pcmcia.ko.gz \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/usb
-cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/pcmcia/pcmcia.ko.gz \
-   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/usb > /dev/null 2>&1
-cp /lib/modules/${SMP_KERNEL}/kernel/drivers/pcmcia/pcmcia_core.ko.gz \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/usb
-cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/pcmcia/pcmcia_core.ko.gz \
-   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/usb > /dev/null 2>&1
-
-if [ -e /lib/modules/${SMP_KERNEL}/kernel/drivers/base/firmware_class.ko.gz ];then
-  cp /lib/modules/${SMP_KERNEL}/kernel/drivers/base/firmware_class.ko.gz \
-     /mnt/initrd/lib/modules/${SMP_KERNEL}/usb
-fi;
-
-cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/base/firmware_class.ko.gz \
-   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/usb
-
-cp /lib/modules/${SMP_KERNEL}/kernel/drivers/usb/host/* \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/usb > /dev/null 2>&1
-cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/usb/host/* \
-   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/usb > /dev/null 2>&1
-
-rm /mnt/initrd/lib/modules/${SMP_KERNEL}/usb/hwa-hc.ko.gz
-
-cp /lib/modules/${SMP_KERNEL}/kernel/drivers/usb/storage/* \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/usb
-cp /lib/modules/${INSTALL_KERNEL}/kernel/drivers/usb/storage/* \
-   /mnt/initrd/lib/modules/${INSTALL_KERNEL}/usb
-
-cp /lib/modules/${SMP_KERNEL}/kernel/drivers/usb/misc/ftdi-elan.ko.gz \
-   /mnt/initrd/lib/modules/${SMP_KERNEL}/usb
-
-if [ -e /lib/modules/${SMP_KERNEL}/kernel/drivers/ata/ata_generic.ko.gz ];then
-  cp /lib/modules/${SMP_KERNEL}/kernel/drivers/ata/ata_generic.ko.gz \
-     /mnt/initrd/lib/modules/${SMP_KERNEL}/ide
-fi;
-
-depmod -a -e -F /boot/System.map-${SMP_KERNEL} -b /mnt/initrd ${SMP_KERNEL}
-depmod -a -F /boot/System.map-${INSTALL_KERNEL} -b /mnt/initrd ${INSTALL_KERNEL}
-
-cd /root
+initrd_config /mnt/initrd ${KERNEL} > /mnt/initrd/linuxrc
+cp /mnt/initrd/linuxrc /tmp/linuxrc
+chmod 750 /mnt/initrd/linuxrc
 
 umount /mnt/initrd
-losetup -d /dev/loop6
+losetup -d ${LOOP}
 
-e2fsck -y /tmp/initrd  > /dev/null 2>&1
-if [ "$1" == "test" ];then
-  (dd if=/tmp/initrd bs=1k |gzip -c9 |dd bs=1k of=/boot/initrd-test-$KERNEL) > /dev/null 2>&1
-  cp /boot/initrd-test-$KERNEL /boot/initrd-test
- elif [ "$1" == "nfs" ];then
-  (dd if=/tmp/initrd bs=1k |gzip -c9 |dd bs=1k of=/boot/initrd-nfs-$KERNEL) > /dev/null 2>&1
-  cp /boot/initrd-nfs-$KERNEL /boot/initrd-nfs
- else
-  (dd if=/tmp/initrd bs=1k |gzip -c9 |dd bs=1k of=/boot/initrd-netsentry-$KERNEL) > /dev/null 2>&1
+(e2fsck -Dfy /tmp/initrd
+dd if=/tmp/initrd bs=1k |gzip -c9 > /boot/initrd-netsentry-$KERNEL
+rm /tmp/initrd /boot/initrd-netsentry
+ln -s initrd-netsentry-${KERNEL} /boot/initrd-netsentry) > /dev/null 2>&1
 
-  (rm /tmp/initrd
-  rm /boot/vmlinuz-smp
-  rm /boot/vmlinuz-install
-  rm /boot/System.map-smp
-  rm /boot/System.map-install
-  rm /boot/initrd-netsentry
+/usr/sbin/rdev /boot/vmlinuz-smp /dev/ram0
+/usr/sbin/rdev /boot/vmlinuz-install /dev/ram0
 
-  ln -s vmlinuz-${SMP_KERNEL} /boot/vmlinuz-smp
-  ln -s vmlinuz-${INSTALL_KERNEL} /boot/vmlinuz-install
-  ln -s System.map-${SMP_KERNEL} /boot/System.map-smp
-  ln -s System.map-${INSTALL_KERNEL} /boot/System.map-install
-  ln -s initrd-netsentry-$KERNEL /boot/initrd-netsentry) > /dev/null 2>&1
-
-  /usr/sbin/rdev /boot/vmlinuz-smp /dev/ram0
-  /usr/sbin/rdev /boot/vmlinuz-install /dev/ram0
-fi;
-
-if [ -e /usr/sbin/grub-mkconfig ];then
-  grub-mkconfig  > /boot/grub/grub.cfg
-fi;
+grub-mkconfig  > /boot/grub/grub.cfg
 
 if [ -h /boot/boot ];then
   rm /boot/boot
