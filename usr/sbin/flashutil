@@ -15,7 +15,7 @@ ULIMIT=510656512
 
 ROPT="-avHKOPz --inplace --timeout=60"
 ROPT_LOC="-avHKOP"
-ROPT_FAT="-rtvcOP --chmod=ugo=rwX --no-p --no-g --inplace"
+ROPT_FAT="-rtvcOP --chmod=ugo=rwX --no-p --no-g --inplace --delete"
 
 Make_GPT() {
   parted -s ${1} mklabel msdos
@@ -373,14 +373,23 @@ Sync_Update() {
 		tar --use-compress-program=%s -C %s -xf %s/install/pkgs/%s\n\
 		touch pkgs/%s\n\tfi;\n",$1,BASE,$1,$1,$1,$3,$2,BASE,$1,$1}' |sh
 
+  kuserdir=var/spool/rsync/kernuser/kernel-${KERNEL}
   if [ ! -e pkgs/kernel.tar.bz2 ] || [ ${1}/install/core/kernel.tar.bz2 -nt pkgs/kernel.tar.bz2 ];then
-    kuserdir=var/spool/rsync/kernuser/kernel-${KERNEL}-smp
     rm -rf lib/modules/* boot/* var/spool/rsync/kernuser/*
-    mkdir -p ${kuserdir}
+    mkdir -p ${kuserdir}-smp
     tar --use-compress-program=bunzip2 -C ./ -xf ${1}/install/core/kernel.tar.bz2 lib/modules boot/
-    tar --use-compress-program=bunzip2 --exclude=lib/modules --exclude=boot -C ${kuserdir} -xf ${1}/install/core/kernel.tar.bz2
+    tar --use-compress-program=bunzip2 --exclude=lib/modules --exclude=boot -C ${kuserdir}-smp -xf ${1}/install/core/kernel.tar.bz2
     touch pkgs/kernel.tar.bz2
   fi;
+  echo "Install Kernel Firmware"
+  if [ ! -d ${kuserdir}-install/lib/firmware ];then
+    if [ -e ${kuserdir}-install/lib/firmware ];then
+      rm -rf ${kuserdir}-install/lib/firmware
+    fi;
+    mkdir -p ${kuserdir}-install/lib/firmware
+  fi;
+  rsync ${ROPT_LOC} --delete --exclude=${KERNEL}-install/modules.* ${1}/lib/firmware/ ${kuserdir}-install/lib/firmware
+  echo
   echo "Install Kernel Modules"
   rsync ${ROPT_LOC} --delete --exclude=${KERNEL}-install/modules.* ${1}/lib/modules/${KERNEL}-install lib/modules/
   echo
@@ -398,12 +407,14 @@ Sync_Update() {
     ln -s /mnt/update/${CORE}/install/avirus var/spool/avirus > /dev/null 2>&1
   fi;
 
-  if [ ! -h var/spool/rsync/programs/var/spool/update ] || [ -e var/spool/rsync/programs/var/spool/update ];then
-    rm -rf var/spool/rsync/programs/var/spool/update > /dev/null 2>&1
+  if [ ! -d var/spool/rsync/programs/var/spool/update ];then
+    (rm -rf var/spool/rsync/programs/var/spool/update
+    mkdir var/spool/rsync/programs/var/spool/update) > /dev/null 2>&1
   fi;
-  if [ ! -e var/spool/rsync/programs/var/spool/update ];then
-    ln -s /mnt/update/${CORE}/install/update var/spool/rsync/programs/var/spool/update > /dev/null 2>&1
-  fi;
+  echo "Schema Updates"
+  rsync ${ROPT_LOC} ${1}/install/update/ var/spool/rsync/programs/var/spool/update
+  echo
+
 
   cd ${CWD}
   sleep 2
@@ -657,6 +668,11 @@ Remote_Sync() {
           rsync ${ROPT_LOC} -u --include=/update --include=/avirus --exclude=/avirus/clamav-* --exclude=/*/.* --exclude=/* /var/spool/ / ${1}/install/
           echo
         fi;
+        for kmod in `ls ${1}/lib/modules`;do
+          if [ ${kmod} != ${KVER}-install ];then
+            rm -rf ${1}/lib/modules/${kmod}
+          fi;
+        done;
       fi;
      else
       echo "Base Files (Local Repository Kernel)"
@@ -671,11 +687,6 @@ Remote_Sync() {
   fi;
 
   if [ ${RERR} == 0 ];then
-    for kmod in `ls -d ${1}/lib/modules/*`;do
-      if [ ! -d ${kmod}/kernel ];then
-        rm -rf ${kmod}
-      fi;
-    done;
     if [ ${RERR} == 0 ];then
       echo "Anti Virus On Repository"
       rsync ${ROPT} -u --delete ${SERV}::avirus/ ${1}/install/avirus
@@ -876,11 +887,17 @@ EOF
     tar --use-compress-program=bzip2 -cf ${RBASE}/install/core/kernel.tar.bz2 * /lib/modules/${KERNEL}-smp /boot/[vS]*${KERNEL}-smp
     cd ${CWD}
     echo "Kernel Modules"
+    if [ -d ${RBASE}/lib/modules ];then
+      rm -rf ${RBASE}/lib/modules
+    fi;
     rsync ${ROPT_LOC} --inplace --delete --exclude=modules.* /lib/modules/${KERNEL}-install ${RBASE}/lib/modules
     echo
     if [ -d /var/spool/rsync/kernuser/kernel-${KERNEL}-install/lib/firmware ];then
       echo "Kernel Firmware"
-      rsync ${ROPT_LOC} --inplace --delete var/spool/rsync/kernuser/kernel-${KERNEL}-install/lib/firmware ${RBASE}/lib/firmware
+      if [ -d ${RBASE}/lib/firmware ];then
+        rm -rf ${RBASE}/lib/firmware
+      fi;
+      rsync ${ROPT_LOC} --inplace --delete /var/spool/rsync/kernuser/kernel-${KERNEL}-install/lib/firmware/ ${RBASE}/lib/firmware
       echo
     fi;
     echo "Kernel"
@@ -1340,13 +1357,19 @@ if [ "${1}" == "iso" ];then
     fi;
   done
   if [ ${RERR}  == 0 ];then
-    KUSER=/var/spool/rsync/kernuser/kernel-${KERNEL}-smp
-    if [ ! -d ${MNTP}/mnt/update/${KUSER} ] && [ -d ${KUSER} ];then
+    KUSER=/var/spool/rsync/kernuser/kernel-${KERNEL}
+    if [ ! -d ${MNTP}/mnt/update/${KUSER}-smp ] && [ -d ${KUSER}-smp ];then
       echo "Local Kernel User Files"
-      rsync ${ROPT_LOC} ${KUSER} ${MNTP}/mnt/update/${KUSER}
+      rsync ${ROPT_LOC} ${KUSER}-smp ${MNTP}/mnt/update/${KUSER}-smp
       echo;
     fi;
-    Sync_Local kernuser ${KUSER}/ /
+    if [ ! -d ${MNTP}/mnt/update/${KUSER}-install ] && [ -d ${KUSER}-install ];then
+      echo "Local Kernel User Files"
+      rsync ${ROPT_LOC} ${KUSER}-install ${MNTP}/mnt/update/${KUSER}-install
+      echo;
+    fi;
+    Sync_Local kernuser ${KUSER}-smp/ /
+    Sync_Local kernuser ${KUSER}-install/ /
     RERR=$?
     echo
   fi;
