@@ -48,6 +48,7 @@ init_rd_drivers() {
 }
 
 init_rd_drivers_scsi() {
+  CWD=`pwd`
   cd ${1}lib/modules/${kernel}
   for ADAPTER in `lspci -nm |awk -F\" '$2 == "Class 0100" || $2 == "Class 0101" || $2 == "Class 0102" || $2 == "Class 0103" || $2 == "Class 0104" || $2 == "Class 0106" || $2 == "Class 0107" || $2 == "Class 0180" {printf "grep -E \"%s.*%s\" modules.pcimap\n",$4,$6}' |sh |awk '{print $1}'`${EXTRA_DEV};do 
     if [ "$ADAPTER" == "sym53c8xx" ];then
@@ -170,14 +171,19 @@ _EOF_
 _EOF_
   fi;
 
-  if [ -e /etc/initrd.local ];then
-    cat /etc/initrd.local
-  fi;
-
 cat <<_EOF_
 
 mkdevices /dev
 mkdmnod
+_EOF_
+
+  if [ -e /etc/initrd.local ];then
+    echo
+    cat /etc/initrd.local
+    echo
+  fi;
+
+cat <<_EOF_
 vgchange -a y --sysinit lvm
 vgmknodes
 /bin/mount -o ro -t ext4 -U ${ROOTDEV} /sysroot
@@ -224,8 +230,6 @@ if [ ! "${ROOTDEV}" ] && [ -e /dev/lvm/root ];then
   ROOTDEV=`blkid -s UUID -o value /dev/lvm/root`
 fi;
 
-CWD=`pwd`
-
 initrd_init /tmp/initrd /mnt/initrd 16
 cp /etc/modprobe.* /mnt/initrd/etc/
 
@@ -238,6 +242,13 @@ for ktype in smp install;do
   ln -s vmlinuz-${KERNEL}-${ktype} /boot/vmlinuz-${ktype}
   ln -s System.map-${KERNEL}-${ktype} /boot/System.map-${ktype}
 done
+
+#Example of boot from loop
+#/bin/mount -t ext4 -U c826731b-dab7-4844-b3e9-90f06241dee1 /isofs
+#/sbin/losetup /dev/loop0 /media/root/install.img
+#sleep 4
+#mkdevices /dev
+#mkdmnod
 
 initrd_config /mnt/initrd ${KERNEL} > /mnt/initrd/linuxrc
 cp /mnt/initrd/linuxrc /tmp/linuxrc
