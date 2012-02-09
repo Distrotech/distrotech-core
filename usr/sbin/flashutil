@@ -171,14 +171,6 @@ Umount_Flash() {
     umount ${MNTP}/mnt/update
   fi;
 
-  if [ -d ${MNTP}/install/mnt/install/tools ];then
-    umount ${MNTP}/install/mnt/install/tools > /dev/null 2>&1
-  fi;
-
-  if [ -d ${MNTP}/install/mnt/lost+found ];then
-    umount ${MNTP}/install/mnt
-  fi;
-
   sleep 2
 
   (umount ${MNTP}/sys
@@ -270,24 +262,30 @@ Make_Bootetc() {
   cd ${1}
 
   dd if=/dev/zero of=install/core/etc bs=1M count=6
-  LOOP=`/sbin/losetup -f`
-  LOOP=`readlink -f ${LOOP}`
-  /sbin/losetup ${LOOP} install/core/etc
+  ELOOP=`/sbin/losetup -f`
+  ELOOP=`readlink -f ${LOOP}`
+  /sbin/losetup ${ELOOP} install/core/etc
   /sbin/mkfs.ext4 -L bootetc -i 1024 ${LOOP}
 
-  if [ ! -d install/mnt ]  && [ -e install/mnt ];then
-    rm -rf install/mnt
-    mkdir install/mnt
-   elif [ ! -e install/mnt ];then
-    mkdir install/mnt
+  if [ ! -d mnt/floppy ] && [ -e mnt/floppy ];then
+    rm -rf mnt/floppy
+    mkdir mnt/floppy
+   elif [ ! -e mnt/floppy ];then
+    mkdir mnt/floppy
    else
-    rm -rf install/mnt/*
+    rm -rf mnt/floppy/*
   fi;
-  mount ${LOOP} install/mnt
+  mount ${ELOOP} mnt/floppy
+
+  if [ $? != 0 ];then
+    losetup -d ${ELOOP}
+    rm install/core/etc
+    return 1
+  fi;
 
   echo "/dev/flash/install	/	ext4	defaults	0	1" > etc/fstab
   rm etc/blkid.* > /dev/null 2>&1
-  cp -Rp etc/* install/mnt/
+  cp -Rp etc/* mnt/floppy
 
   (cat <<EOF
 hosts:  	files dns
@@ -295,30 +293,36 @@ passwd:		files
 shadow:		files
 group:		files
 EOF
-) > install/mnt/nsswitch.conf
+) > mnt/floppy/nsswitch.conf
 
   if [ etc/rsyncd.conf -nt etc/rsyncd-update.conf ];then
     sed -e "s/\(path = \)/\1\/mnt\/update/" etc/rsyncd.conf > etc/rsyncd-update.conf
   fi;
-  echo "smbadm::139:" >> install/mnt/group
-  echo "*.*                                       /dev/tty5" > install/mnt/syslog.conf
-  echo "telnet          stream  tcp     nowait  root    /usr/sbin/in.telnetd" > install/mnt/inetd.conf
-  sed -e "s/^PasswordAuthentication/PasswordAuthentication yes/" etc/sshd_config > install/mnt/sshd_config
-  sed -e "s/^\(PasswordAuthentication\) no/\1 yes/" etc/sshd_config > install/mnt/sshd_config
-  sed -e "s/^.*agetty.*//" etc/inittab > install/mnt/inittab
-  sed -e "s/^#skip-innodb$/skip-innodb/" etc/my.cnf > install/mnt/my.cnf
-  sed -e "s/\(suggested-size.*\)20011/\1211/" etc/nscd.conf > install/mnt/nscd.conf
-  rm install/mnt/HOSTNAME install/mnt/openssl/ca.conf install/mnt/ifconf/* install/mnt/mtab* > /dev/null 2>&1
-  touch install/mnt/mtab install/mnt/.install install/mnt/.networksentry-lite
+  echo "smbadm::139:" >> mnt/floppy/group
+  echo "*.*                                       /dev/tty5" > mnt/floppy/syslog.conf
+  echo "telnet          stream  tcp     nowait  root    /usr/sbin/in.telnetd" > mnt/floppy/inetd.conf
+  sed -e "s/^PasswordAuthentication/PasswordAuthentication yes/" etc/sshd_config > mnt/floppy/sshd_config
+  sed -e "s/^\(PasswordAuthentication\) no/\1 yes/" etc/sshd_config > mnt/floppy/sshd_config
+  sed -e "s/^.*agetty.*//" etc/inittab > mnt/floppy/inittab
+  sed -e "s/^#skip-innodb$/skip-innodb/" etc/my.cnf > mnt/floppy/my.cnf
+  sed -e "s/\(suggested-size.*\)20011/\1211/" etc/nscd.conf > mnt/floppy/nscd.conf
 
-  while [ -d install/mnt/lost+found ];do
-    umount install/mnt > /dev/null 2>&1
+  for todel in HOSTNAME openssl/ca.conf ifconf/* mtab*;do
+    rm mnt/floppy/${todel} > /dev/null 2>&1
+  done
+
+  for totouch in mtab .install .networksentry-lite;do
+    touch ${totouch}
+  done
+
+  while [ -d mnt/floppy/lost+found ];do
+    umount mnt/floppy > /dev/null 2>&1
     sleep 2
   done;
 
-  e2fsck -Dfy ${LOOP}
+  e2fsck -Dfy ${ELOOP}
   sleep 2
-  /sbin/losetup -d ${LOOP}
+  /sbin/losetup -d ${ELOOP}
   gzip -f -9 install/core/etc
 
   TDIR=/tmp/dummy_$$${RANDOM}
