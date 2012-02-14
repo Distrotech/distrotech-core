@@ -16,11 +16,7 @@ while(<BLKID>) {
 
 $passno=0;
 
-if ( -e "/etc/mtab") {
-  open(MNT,"/etc/mtab");
-} else {
-  open(MNT,"/proc/mounts");
-}
+open(MNT,"/proc/mounts");
 while(<MNT>) {
   if (!(/^\/dev\/(flash|ram)/) && (/^(\/[\w\/-]+)\s$path([\w\/-]+||\/)\s([\w]+)/)) {
     if (($2 eq "/install/tools") || (($2 ne "/") && ($passno == 0))) {
@@ -49,6 +45,13 @@ while(<MNT>) {
     }
     printf "%-45s %-50s %-10s defaults%-20s 0 %s\n",$uuid{$1},$mpath,$3,$opts,$passno;
   }
+}
+
+open(FSW,"blkid -t TYPE=swap -s UUID -o value |");
+while(<FSW>) {
+  chop $_;
+  $UUID="UUID=\"$_\"";
+  printf "%-45s %-50s %-10s nofail%-22s 0 0\n",$UUID,"none","swap","";
 }
 
 printf "%-45s %-50s %-10s defaults%-20s 0 0\n","proc","/proc","proc","";
