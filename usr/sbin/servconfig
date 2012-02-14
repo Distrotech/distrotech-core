@@ -1411,6 +1411,12 @@ if [ -e iax.conf ] && [ -e /etc/asterisk/iax.conf ];then
   fi;
 fi;
 
+if [ -e musiconhold.conf ] && [ -e /etc/asterisk/musiconhold.conf ];then 
+  ASTMOH=`diff musiconhold.conf /etc/asterisk/musiconhold.conf`
+ elif [ -e musiconhold.conf ];then 
+  ASTMOH="NO FILE";
+fi;
+
 if [ -e agents.conf ] && [ -e /etc/asterisk/agents.conf ];then 
   ASTAGENT=`diff agents.conf /etc/asterisk/agents.conf`
  else
@@ -1555,6 +1561,13 @@ if [ "$ASTIAX" ] && [ ! -e networksentry-lite ];then
   /usr/sbin/asterisk -r -x "reload"
  else
   touch /etc/asterisk/iax.conf
+fi;
+
+if [ "$ASTMOH" ] && [ ! -e networksentry-lite ];then
+  cp -p musiconhold.conf /etc/asterisk
+  chmod 640 /etc/asterisk/musiconhold.conf
+  chown root.root /etc/asterisk/musiconhold.conf
+  /usr/sbin/asterisk -r -x "reload res_musiconhold.so"
 fi;
 
 if [ "$ASTAGENT" ] && [ ! -e networksentry-lite ];then

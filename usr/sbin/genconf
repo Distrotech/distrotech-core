@@ -1344,6 +1344,7 @@ if ($sysconfig{'Type'} eq "full") {
     &printmisdn();
     &printblf();
     &initcallshop();
+    &printmoh();
   }
   &printchilli();
   &printovpnconf();
@@ -11453,6 +11454,10 @@ __EOB__
   }
 
   foreach $hdom (@slaves) {
+    $domfile=$hdom;
+    if ($hdom eq $dnsconf{'Domain'}) {
+       $domfile="domain.ext";
+    }
     $txout="";
     @txsite=split(/,/,$allowtx{$hdom});
     shift @txsite;
@@ -11464,7 +11469,7 @@ __EOB__
       print DNS<<__EOB__;
        zone "$hdom" {
               type slave;
-              file "$hdom";
+              file "$domfile";
               allow-notify {
                         any;
               };
@@ -16240,6 +16245,35 @@ SummerTime = 0
 
 __EOF__
     close(TFTP);
+  }
+}
+
+sub printmoh() {
+  $dsn = "DBI:ODBC:Asterisk";
+  $dbh = DBI->connect($dsn,"asterisk","$sqlvoippass") or return;
+  $bgrp = "SELECT DISTINCT value FROM astdb WHERE key='BGRP' AND value IS NOT NULL AND value != '' ORDER BY value";
+
+  $getbgrp=$dbh->prepare($bgrp);
+  $getbgrp->execute;
+
+  open(MOH,">musiconhold.conf");
+  chmod(0600,"musiconhold.conf");
+
+print MOH <<__EOF__;
+[default]
+mode=files
+directory=/var/lib/asterisk/moh
+
+__EOF__
+
+  while (@row = $getbgrp->fetchrow_array) {
+    if (-d "/var/lib/asterisk/moh-" . @row[0]) {
+print MOH <<__EOF__;
+[@row[0]]
+mode=files
+directory=/var/lib/asterisk/moh-@row[0]
+__EOF__
+    }
   }
 }
 
