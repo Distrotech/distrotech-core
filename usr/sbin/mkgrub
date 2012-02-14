@@ -4,8 +4,8 @@
 DCNT=0
 
 for hdisk in `pvdisplay -c 2>/dev/null |awk -F: '$2 == "lvm" {printf "%s\n",$1}'`;do
-  echo "Installing GRUB on ${hdisk}"
   DEV=`grub-probe --target=drive -d ${hdisk} |sed -e "s/\(.*\),.*/\1)/"`
+  echo "Installing GRUB on ${DEV}"
   /usr/sbin/grub-install --force ${DEV}
   if [ $? == 0 ];then
     let DCNT++
