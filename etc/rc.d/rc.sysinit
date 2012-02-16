@@ -256,9 +256,6 @@ if [ -e /etc/.install ];then
   #Load Mouse Needed For Boom
   /sbin/modprobe psmouse > /dev/null 2>&1
 
-  #Turn Swap On
-  blkid -t TYPE=swap |awk -F: '{printf "swapon %s\n",$1}' |sh
-
   #load the vesa fb if no other fb is loaded 
   if [ ! -e /dev/fb1 ];then
      ls -l /lib/modules/${LKERNEL}/kernel/drivers/video/uvesafb.ko.gz > /dev/null 2>&1
@@ -268,7 +265,15 @@ if [ -e /etc/.install ];then
   fi;
 
   #Run File System Check On All Devices
-  /usr/bin/awk '$1 != "/dev/loop0" && ($3 == "ext3" || $3 == "ext4") {printf "/sbin/e2fsck -C 0 -p %s\nERR=$?\nif [ $ERR -gt 1 ] && [ $ERR -lt 8 ];then\n  /sbin/e2fsck -C 0 -Dfy %s\n  /sbin/reboot\nfi\n\n",$1,$1,$1 }' /etc/fstab |/bin/bash 2>/dev/null
+  fsck -TCAa
+  RES=$?
+  if (( ${RES} >= 2 )) && (( ${RES} != 32 ));then
+    echo "FILE SYSTEM ERROR"
+    if [ ${RES} == 2 ];then
+      echo "REBOOT REQUIRED"
+    fi;
+    halt -fn
+  fi;
 
   #Run a ext4 convert and scan on /
 #  awk '$3 == "ext3" && $2 == "/" {printf "tune2fs -O extents,uninit_bg,dir_index %s;fsck.ext4 -C 0 -yfD %s\n",$1,$1}' /etc/fstab |sh
@@ -303,9 +308,25 @@ if [ -e /etc/.install ];then
    chmod 1777 /tmp)>/dev/null 2>&1
 
   #Mount All Mount Points
-  mount -at ext4,ext3 > /dev/null 2>&1
+  mount -a > /dev/null 2>&1
 
   /usr/sbin/vgchange -a y --poll y --monitor y > /dev/null 2>&1
+
+  #Turn Swap On
+  #run mkswap on partitions that do not have a UUID
+  blkid -t TYPE=swap -o device |awk '{printf "\
+    if [ ! \"`blkid %s -s UUID`\" ];then\
+      touch /tmp/.fstab.new\
+      mkswap %s;\
+    fi;\n",$1,$1,$1}' |sh > /dev/null 2>&1
+
+  #write swap partitions to fstab
+  if [ -e /tmp/.fstab.new ];then
+    rm /tmp/.fstab.new
+    /usr/sbin/mkfstab > /etc/fstab
+  fi;
+
+  /sbin/swapon -a
 
   #Startup Syslog
   if [ -e /var/run/syslog.pid ];then
