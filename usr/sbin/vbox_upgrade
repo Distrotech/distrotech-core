@@ -266,6 +266,9 @@ if [ ${RERR} == 0 ];then
    elif [ /usr/sbin/mkinitrd -nt /boot/initrd-netsentry ] && [ ${KERR} == 0 ];then
     /usr/sbin/mkinitrd
   fi
+  if [ -e  /usr/sbin/mkfstab ] && [ /usr/sbin/mkfstab -nt /etc/fstab ];then
+    /usr/sbin/mkfstab > /etc/fstab
+  fi
  else
   ldconfig
   /usr/sbin/genconf
