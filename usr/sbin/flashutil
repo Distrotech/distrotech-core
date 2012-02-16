@@ -812,7 +812,7 @@ init_rd_drivers() {
 
   for scard in scsi_wait_scan scsi_mod scsi_tgt sd_mod sr_mod libsas \
             scsi_transport_iscsi scsi_transport_fc scsi_transport_sas \
-            scsi_transport_spi device_handler megaraid;do
+            scsi_transport_spi device_handler megaraid/megaraid_mm;do
     if [ -f ${2}lib/modules/${kernel}/kernel/drivers/scsi/${scard}.ko.gz ];then
       cp ${2}lib/modules/${kernel}/kernel/drivers/scsi/${scard}.ko.gz ${1}/lib/modules/${kernel}/drivers
      elif [ -d ${2}lib/modules/${kernel}/kernel/drivers/scsi/${scard} ];then
@@ -875,6 +875,9 @@ init_rd_drivers_scsi() {
     if [ "$ADAPTER" == "aic79xx" ];then
       ADAPTER="aic7xxx/aic79xx";
     fi;
+    if [ "$ADAPTER" == "megaraid_sas" ] || [ "$ADAPTER" == "megaraid_mbox" ];then
+      ADAPTER="megaraid/${ADAPTER}";
+    fi;
 
     if [ -e ${2}lib/modules/${3}/kernel/drivers/scsi/$ADAPTER.ko.gz ];then
       cp ${2}lib/modules/${3}/kernel/drivers/scsi/$ADAPTER.ko.gz ${1}/lib/modules/${3}/drivers-scsi
@@ -912,11 +915,11 @@ mknod /dev/cdrom b 11 0
 
 _EOF_
 
-  for driver in `ls ${1}/lib/modules/${3}/drivers-scsi |cut -d. -f1`;do
+  for driver in `ls ${1}/lib/modules/${3}/drivers-scsi/ |cut -d. -f1`;do
     echo "modprobe ${driver}"
   done;
 
-  for driver in `ls ${1}/lib/modules/${3}/drivers-ata |cut -d. -f1`;do
+  for driver in `ls ${1}/lib/modules/${3}/drivers-ata/ |cut -d. -f1`;do
     echo "modprobe ${driver}"
   done;
 
@@ -1155,9 +1158,6 @@ mk_initrd() {
   mount ${LOOP} ${1}) >/dev/null 2>&1
 
   initrd_init ${1} ${2} ${KERNEL}-smp ${KERNEL}-install
-  initrd_config ${1} ${2} ${KERNEL}-smp > ${1}/linuxrc
-  chmod 750 ${1}/linuxrc
-
   cp ${2}/etc/modprobe.* ${1}/etc/
 
   for ktype in smp install;do
@@ -1169,6 +1169,8 @@ mk_initrd() {
     ln -s vmlinuz-${KERNEL}-${ktype} ${2}/boot/vmlinuz-${ktype}
     ln -s System.map-${KERNEL}-${ktype} ${2}/boot/System.map-${ktype}
   done
+  initrd_config ${1} ${2} ${KERNEL}-smp > ${1}/linuxrc
+  chmod 750 ${1}/linuxrc
 
   umount ${1}
   losetup -d ${LOOP}
