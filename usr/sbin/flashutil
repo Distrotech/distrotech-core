@@ -812,7 +812,8 @@ init_rd_drivers() {
 
   for scard in scsi_wait_scan scsi_mod scsi_tgt sd_mod sr_mod libsas \
             scsi_transport_iscsi scsi_transport_fc scsi_transport_sas \
-            scsi_transport_spi device_handler megaraid/megaraid_mm;do
+            scsi_transport_spi device_handler cxgbi/libcxgbi megaraid/megaraid_mm \
+            libiscsi libiscsi_tcp scsi_transport_iscsi fcoe osd libfc;do
     if [ -f ${2}lib/modules/${kernel}/kernel/drivers/scsi/${scard}.ko.gz ];then
       cp ${2}lib/modules/${kernel}/kernel/drivers/scsi/${scard}.ko.gz ${1}/lib/modules/${kernel}/drivers
      elif [ -d ${2}lib/modules/${kernel}/kernel/drivers/scsi/${scard} ];then
@@ -877,6 +878,9 @@ init_rd_drivers_scsi() {
     fi;
     if [ "$ADAPTER" == "megaraid_sas" ] || [ "$ADAPTER" == "megaraid_mbox" ];then
       ADAPTER="megaraid/${ADAPTER}";
+    fi;
+    if [ "$ADAPTER" == "cxgb4i" ] || [ "$ADAPTER" = "cxgb3i" ];then
+      ADAPTER="cxgbi/${ADAPTER}/${ADAPTER}";
     fi;
 
     if [ -e ${2}lib/modules/${3}/kernel/drivers/scsi/$ADAPTER.ko.gz ];then
