@@ -18,7 +18,7 @@ $passno=0;
 
 open(MNT,"/proc/mounts");
 while(<MNT>) {
-  if (!(/^\/dev\/(flash|ram)/) && (/^(\/[\w\/-]+)\s$path([\w\/-]+||\/)\s([\w]+)/)) {
+  if (!(/^\/dev\/mapper\/flash/) && !(/^\/dev\/(flash|ram)/) && (/^(\/[\w\/-]+)\s$path([\w\/-]+||\/)\s([\w]+)/)) {
     if (($2 eq "/install/tools") || (($2 ne "/") && ($passno == 0))) {
       next;
     }

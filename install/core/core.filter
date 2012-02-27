@@ -9,7 +9,13 @@
 - /mnt/update/*
 - /lib/modules
 - /lib/firmware
-- /etc/*
+- /etc/group
+- /etc/syslog.conf
+- /etc/inetd.conf
+- /etc/sshd_config
+- /etc/inittab
+- /etc/my.cnf
+- /etc/nscd.conf
 - /var/*
 - /tmp/*
 - /mnt

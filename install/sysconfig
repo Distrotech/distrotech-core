@@ -235,6 +235,7 @@ EOF
   chroot ${INST_BASE} /usr/sbin/genconf > /dev/null 2>&1
   chroot ${INST_BASE} /usr/sbin/servconfig > /dev/tty4 2> /dev/tty4
   rm -rf ${INST_BASE}/var/spool/mail/shared
+  rm ${INST_BASE}/etc/.install ${INST_BASE}/etc/.cdrom > /dev/null 2>&1
 
   setterm -cursor on
   clear
