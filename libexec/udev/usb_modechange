@@ -1,0 +1,5 @@
+#!/bin/bash
+
+if [ -e "/usr/share/usb_modeswitch/${1}:${2}" ];then
+  /usr/sbin/usb_modeswitch -v 0x${1} -p 0x${2} -b ${BUSNUM} -g ${DEVNUM} -s 10 -c "/usr/share/usb_modeswitch/${1}:${2}"
+fi;

@@ -1,0 +1,31 @@
+#!/bin/bash
+
+PATH=/usr/local/sbin:/usr/sbin:/sbin:/usr/local/bin:/usr/bin:/bin:/usr/X11R6/bin:/opt/sophos/bin
+export PATH
+
+if [ ! "${DEVNAME}" ];then
+  exit
+fi;
+
+if [ ${ID_FS_TYPE} == "LVM2_member" ];then
+  LVMADD=`/usr/sbin/pvdisplay -c ${DEVNAME} |/usr/bin/awk -F: '{printf "%s ",$2}'`
+
+  for newlvm in ${LVMADD};do
+    vgchange -a y ${newlvm}
+    if [ -x /etc/udev/scripts/lvm_add_${newlvm} ];then
+      for fcheck in `ls /dev/${newlvm}`;do
+        fsck -aT /dev/${newlvm}/${fcheck}
+        RES=$?
+        if (( ${RES} < 2)) || ((${RES} == 32 ));then
+          /etc/udev/scripts/lvm_add_${newlvm}
+        fi;
+      done;
+    fi;
+  done;
+ elif [ -x /etc/udev/scripts/block_add ];then
+  fsck -aT ${DEVNAME}
+  RES=$?
+  if (( ${RES} < 2)) || ((${RES} == 32 ));then
+    /etc/udev/scripts/block_add "${DEVNAME}" "${ID_FS_UUID}" "${ID_FS_LABEL}"
+  fi;
+fi;

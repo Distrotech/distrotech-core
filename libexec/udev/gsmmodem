@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if [ "${1}" ] && [ ! -e /dev/gsmmodem ];then
+  /usr/bin/modemtest ${1}
+  RES=$?
+  if [ ${RES} == 0 ];then
+    /etc/ifconf/pppup.ppp3g
+  fi;
+  exit ${RES}
+ else
+  exit -1
+fi;

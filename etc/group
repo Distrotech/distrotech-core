@@ -24,4 +24,12 @@ www::80:www
 svn::13:svn
 nogroup::65535:
 majordomo::45:
-asterisk::20:
+asterisk::20:root
+dialout::51:root
+kmem::52:root
+video::53:root
+audio::54:root
+disk::55:root
+floppy::56:root
+cdrom::57:root
+tape::58:root
