@@ -13,9 +13,11 @@ LIMIT=3167748096
 UOFFSET=1048576
 ULIMIT=510656512
 
-ROPT="-avHKOPz --inplace --timeout=60"
 ROPT_LOC="-avHKOP"
+ROPT="${ROPT_LOC} -z --inplace --timeout=60"
 ROPT_FAT="-rtvcOP --chmod=ugo=rwX --no-p --no-g --inplace --delete"
+UROPT_LOC="${ROPT_LOC} -u --delay-updates --exclude-from=/var/spool/apache/htdocs/ns/config/exclude.nfs"
+UROPT="${UROPT_LOC} -z --timeout=60"
 
 Make_GPT() {
   parted -s ${1} mklabel msdos
@@ -100,20 +102,20 @@ Mount_Flash() {
   e2fsck -C 0 ${FSCKO} /dev/flash/install
   if (( $? >=  4 ));then
     echo "File System Error"
-    exit 255
+    return 255
   fi;
   if [ -w /dev/flash/upgrade ];then
     e2fsck -C 0 ${FSCKO} /dev/flash/upgrade
     if (( $? >=  4 ));then
       echo "File System Error"
-      exit 255
+      return 255
     fi;
   fi;
 
   mount /dev/flash/install ${MNTP}
   if [ $? != 0 ];then
     echo Mount failure
-    exit -1
+    return 255
   fi;
 
   if [ -d ${MNTP}/etc ];then
@@ -185,6 +187,20 @@ Umount_Flash() {
   (dmsetup remove /dev/flash/install
   dmsetup remove /dev/flash/upgrade) > /dev/null 2>&1
 
+  if [ -e /dev/flashm/install ] && [ -d ${CORE}/lost+found ];then
+    umount ${CORE}/install/tools
+    umount ${CORE}
+    vgchange -a n flashm
+    (dmsetup remove /dev/flashm/install
+    dmsetup remove /dev/flashm/upgrade) > /dev/null 2>&1
+  fi;
+  
+  sleep 2
+  vgmknodes >/dev/null 2>&1
+  if [ -d /dev/flashm ] && [ ! -d /dev/flash ];then
+    vgrename flashm flash
+  fi;
+
   if [ -e /dev/loop-flash ];then
     vgchange -a n flash > /dev/null 2>&1
     sleep 2
@@ -194,6 +210,7 @@ Umount_Flash() {
       unset LOOP
     fi;
   fi;
+
   if [ -e /dev/loop-util ];then
     losetup -d /dev/loop-util
     if [ $? == 0 ] && [ -e /dev/loop-util ];then
@@ -201,6 +218,7 @@ Umount_Flash() {
       unset ULOOP
     fi;
   fi;
+
   if [ -f /mnt/cdrom/flash.hdd ];then
     umount /mnt/cdrom
   fi;
@@ -392,7 +410,7 @@ Sync_Update() {
     fi;
     mkdir -p ${kuserdir}-install/lib/firmware
   fi;
-  rsync ${ROPT_LOC} --delete --exclude=${KERNEL}-install/modules.* ${1}/lib/firmware/ ${kuserdir}-install/lib/firmware
+  rsync ${ROPT_LOC} --delete ${kuserdir}-install/lib/firmware lib/
   echo
   echo "Install Kernel Modules"
   rsync ${ROPT_LOC} --delete --exclude=${KERNEL}-install/modules.* ${1}/lib/modules/${KERNEL}-install lib/modules/
@@ -433,7 +451,7 @@ Update_Flash() {
     Make_Bootetc ${CORE}
     Local_Sync ${CORE} ${MNTP}
    else
-    Remote_Sync ${MNTP}
+    Remote_Sync ${MNTP} ${1}
   fi
   RERR=$?
   if [ ${RERR} == 0 ];then
@@ -442,11 +460,14 @@ Update_Flash() {
     fi;
     if [ ! -d ${CORE}/install ];then
       Make_Bootetc ${MNTP}
+      if [ "${1}" ];then
+        Tar_Kernel ${MNTP} ${1}
+      fi;
     fi;
     Check_Grub
     if [ -d ${BASE} ];then
       echo "Sync Tools To ISO Folder"
-      rsync ${ROPT_LOC} --inplace ${MNTP}/install/tools/* ${BASE}/wintools/
+      rsync ${ROPT_LOC} --delete --inplace ${MNTP}/install/tools/* ${BASE}/wintools/
       echo
     fi;
   fi;
@@ -568,9 +589,13 @@ Load_Flash() {
   fi;
 
   Mount_Flash ${1}
-  if [ ! -d ${MNTP}/root ];then
+  RES=$?
+  if [ ! -d ${MNTP}/root ] && [ ${RES} == 0 ];then
     Update_Flash
-    return ${RERR}
+    RES=$?
+  fi;
+  if [ ${RES} != 0 ];then
+    exit ${RES}
    else
     return 0
   fi;
@@ -615,10 +640,8 @@ Remote_Sync() {
       RERR=$?
       echo
     fi;
-   elif [ ${ISDTS} == 1 ];then
-    if [ -e ${CORE}/install/netsentry-version ];then
-      eval `cat ${CORE}/install/netsentry-version`
-    fi;
+   elif [ ${ISDTS} == 1 ] && [ -e ${CORE}/install/netsentry-version ];then
+    eval `cat ${CORE}/install/netsentry-version`
   fi;
 
   if [ ${RERR} == 0 ];then
@@ -626,7 +649,7 @@ Remote_Sync() {
     rsync ${ROPT} --delete --exclude=/dev/* --exclude=/sys/* --exclude=/proc/* --exclude=/lost+found --include=/boot/grub/background.jpg \
                --exclude=/lib/modules/* --exclude=/boot/vmlinuz-install --exclude=/boot/System.map-install  --exclude=/boot/initrd-install* \
                --exclude=/boot/grub/* --exclude=/mnt/install/* --exclude=/etc/mtab --exclude=/install/avirus/* --exclude=/mnt/update/* \
-               --exclude=/install/avirus/* --exclude=/install/update/* --exclude=/install/core/* --exclude=/install/tools/* --exclude=/lib/firmwware/* \
+               --exclude=/install/avirus/* --exclude=/install/update/* --exclude=/install/core/* --exclude=/install/tools/* --exclude=/lib/firmware/* \
                --exclude=/install/netsentry-version ${SERV}::install/ ${1}/
     RERR=$?
     echo
@@ -660,7 +683,7 @@ Remote_Sync() {
         echo
         if [ ${RERR} == 0 ];then
           echo "Kernel/Modules (${KVER})"
-          rsync ${ROPT} -u --include=/boot/[vS]*${2}-* --include=/lib/modules/${2}-* --exclude=/lib/modules/* --exclude=/boot/* --filter=". /etc/rsyncd/kernel.filter" ${SERV}::kernel/ /
+          rsync ${ROPT} -u --include=/boot/[vS]*${2}-* --include=/lib/modules/${2}-* --exclude=/lib/modules/* --exclude=/boot/* --filter=". ${1}/etc/rsyncd/kernel.filter" ${SERV}::kernel/ /
           RERR=$?
           echo
         fi;
@@ -786,7 +809,8 @@ init_rd_drivers() {
 
   for kmod in block/loop.ko.gz base/firmware_class.ko.gz pcmcia mmc/core \
            mmc/card misc/cb710 misc/tifm_core.ko.gz cdrom/cdrom.ko.gz ssb \
-           usb/host md/ usb/wusbcore uwb usb/misc/ftdi-elan.ko.gz connector/cn.ko.gz;do
+           usb/host md/ usb/wusbcore uwb usb/misc/ftdi-elan.ko.gz connector/cn.ko.gz \
+           hid/hid.ko.gz hid/usbhid;do
    if [ -f ${2}lib/modules/${kernel}/kernel/drivers/${kmod} ];then
      cp ${2}lib/modules/${kernel}/kernel/drivers/${kmod} ${1}/lib/modules/${kernel}/drivers
     elif [ -d ${2}lib/modules/${kernel}/kernel/drivers/${kmod} ];then
@@ -904,18 +928,9 @@ initrd_config() {
   cat <<_EOF_
 #!/bin/nash
 
-mount -t ramfs none /dev
+mount -t devtmpfs none /dev
 mount -t proc none /proc
 mount -t sysfs none /sys
-
-mknod /dev/console c 5 1
-mknod /dev/urandom c 1 9
-mknod /dev/null c 1 3
-mknod /dev/systty c 4 0
-mknod /dev/zero c 1 5
-mknod /dev/ram5 b 1 5
-mknod /dev/loop0 b 7 0
-mknod /dev/cdrom b 11 0
 
 _EOF_
 
@@ -946,6 +961,7 @@ modprobe scsi_wait_scan
 
 modprobe loop
 modprobe dm-mod
+modprobe usbhid
 
 _EOF_
 
@@ -965,11 +981,23 @@ _EOF_
 _EOF_
   fi;
 
-cat <<_EOF_
+  if [ "${LOOP_FILE}" ] && [ "${LOOP_DEV}" ];then
+    cat << _EOF_
+/bin/mount -n -o ro -t `blkid /dev/sda3 -s TYPE -o value` -U `grub-probe -t fs_uuid -d ${LOOP_DEV}` /isofs
+/bin/mount -t devtmpfs none /isofs/dev
+/bin/mount -t proc none /isofs/proc
+/bin/mount -t sysfs none /isofs/sys
+pivot_root /isofs /isofs/media
+/sbin/fsck -TCAa
+/bin/mount / -o remount,rw
+/sbin/losetup /dev/loop0 ${LOOP_FILE}
+umount /proc
+umount /dev
+umount /sys
+pivot_root /media /media/isofs
 
-mkdevices /dev
-mkdmnod
 _EOF_
+  fi;
 
   if [ -e /etc/initrd.local ];then
     echo
@@ -979,21 +1007,16 @@ _EOF_
 
 cat <<_EOF_
 vgchange -a y --sysinit lvm
+mount -t ramfs none /var/lock/lvm
 vgmknodes
+umount /var/lock/lvm
 /bin/mount -o ro -t ext4 -U ${ROOTDEV} /sysroot
 echo 0x0100 > /proc/sys/kernel/real-root-dev
 
 pivot_root /sysroot /sysroot/initrd
 
-mount -t ramfs none /dev
 mount -t proc none /proc
 mount -t sysfs none /sys
-mkdir /dev/udevdb
-mkdir /dev/pts
-mkdir /dev/shm
-mount -t devpts none /dev/pts
-
-udevstart
 _EOF_
 }
 
@@ -1001,18 +1024,9 @@ mkbootimg_cfg() {
   cat << EOF
 #!/bin/nash
 
-mount -t ramfs none /dev
+mount -t devtmpfs none /dev
 mount -t proc none /proc
 mount -t sysfs none /sys
-
-mknod /dev/console c 5 1
-mknod /dev/urandom c 1 9
-mknod /dev/null c 1 3
-mknod /dev/systty c 4 0
-mknod /dev/zero c 1 5
-mknod /dev/ram5 b 1 5
-mknod /dev/loop0 b 7 0
-mknod /dev/cdrom b 11 0
 
 EOF
 
@@ -1039,37 +1053,46 @@ modprobe sr_mod
 modprobe cdrom
 modprobe loop
 modprobe dm-mod
+modprobe usbhid
 
-sleep 10
 EOF
 
   if [ "${3}" == "dvd" ];then
     cat << EOF
-
+sleep 5
 /bin/mount -n -o ro -t iso9660 -L DISTROTECH_INSTALL /isofs
 /sbin/losetup /dev/loop0 /isofs/flash.hdd
+sleep 5
 EOF
+   elif [ "${3}" == "loop" ];then
+    LROOT=`grub-probe -t fs_uuid ${BASE}`
+    LFLASH=`grub-mkrelpath ${BASE}/flash.hdd`
+
+    if [ "${LROOT}" ] && [ ${LFLASH} ];then
+    cat << EOF
+sleep 3
+/bin/mount -n -o ro -t ext4 -U ${LROOT} /isofs
+/sbin/losetup /dev/loop0 /isofs${LFLASH}
+sleep 3
+EOF
+    fi;
+   else
+    echo "sleep 5";
   fi;
 
   cat << EOF
 
-mkdevices /dev
-mkdmnod
 vgchange -a y --sysinit
+mount -t ramfs none /var/lock/lvm
 vgmknodes
-/bin/mount -o ro -n -t ext4 -L INSTALL /sysroot
+umount /var/lock/lvm
+/bin/mount -n -o ro -t ext4 -L INSTALL /sysroot
 echo 0x0100 > /proc/sys/kernel/real-root-dev
 
 pivot_root /sysroot /sysroot/initrd
 
-mount -t ramfs none /dev
 mount -t proc none /proc
 mount -t sysfs none /sys
-mkdir /dev/udevdb
-mkdir /dev/pts
-mkdir /dev/shm
-mount -t devpts none /dev/pts
-udevstart
 /initrd/sbin/mntetc
 EOF
 }
@@ -1089,17 +1112,20 @@ mkbootimg() {
 
   initrd_init ${1}/mnt/initrd ${1} ${2}-install
 
+  mkdir ${1}/mnt/initrd/etc/modprobe.d
   (cat << EOF
 options loop max_part=63
 options sg allow_dio=1
 EOF
-) > ${1}/mnt/initrd/etc/modprobe.conf
+) > ${1}/mnt/initrd/etc/modprobe.d/modprobe.conf
 
   (cat << EOF
 #!/bin/bash
 
+mount -t devtmpfs none /dev
 gunzip -c /install/core/etc.gz |dd of=/dev/ram5 > /dev/null 2>&1
 mount -n -t ext4 /dev/ram5 /etc
+umount /dev
 EOF
 ) > ${1}/mnt/initrd/sbin/mntetc
   chmod 750 ${1}/mnt/initrd/sbin/mntetc
@@ -1110,6 +1136,10 @@ EOF
   chmod 750 ${1}/mnt/initrd/linuxrc
   sleep 2
   umount ${1}/mnt/initrd
+  while [ -d ${1}/mnt/initrd/lost+found ];do
+    sleep 2
+    umount ${1}/mnt/initrd
+  done;
   e2fsck -Dfy ${ILOOP}
   dd if=${1}/tmp/initrd |gzip -c9 > ${1}/boot/initrd-install
 
@@ -1118,8 +1148,24 @@ EOF
   chmod 750 ${1}/mnt/initrd/linuxrc
   sleep 2
   umount ${1}/mnt/initrd
+  while [ -d ${1}/mnt/initrd/lost+found ];do
+    sleep 2
+    umount ${1}/mnt/initrd
+  done;
   e2fsck -Dfy ${ILOOP}
   dd if=${1}/tmp/initrd |gzip -c9 > ${1}/boot/initrd-install-dvd
+
+  mount ${ILOOP} ${1}/mnt/initrd
+  mkbootimg_cfg ${1} ${2}-install loop > ${1}/mnt/initrd/linuxrc
+  chmod 750 ${1}/mnt/initrd/linuxrc
+  sleep 2
+  umount ${1}/mnt/initrd
+  while [ -d ${1}/mnt/initrd/lost+found ];do
+    sleep 2
+    umount ${1}/mnt/initrd
+  done;
+  e2fsck -Dfy ${ILOOP}
+  dd if=${1}/tmp/initrd |gzip -c9 > ${1}/boot/initrd-install-loop
 
   sleep 2
   losetup -d ${ILOOP}
@@ -1128,18 +1174,17 @@ EOF
 }
 
 mk_initrd() {
-  if [ -e ${2}/etc/netsentry-version ];then
-    eval `cat ${2}/etc/netsentry-version`
-   elif [ -e ${2}/install/netsentry-version ];then
-    eval `cat ${2}/install/netsentry-version`
-   else
-    echo "No Config File"
-   exit;
+  if [ -d /dev/loop ];then
+    rm -rf /dev/loop
+  fi;
+
+  if [ -h /boot/boot ];then
+    rm /boot/boot
   fi;
 
   if [ ! -e ${2}/lib/modules/${KERNEL}-smp ] || [ ! -e ${2}/lib/modules/${KERNEL}-install ];then
     echo No Kernel Directory
-    exit;
+    return 255
   fi;
 
   if [ "$EXTRA_DEV" ];then
@@ -1162,7 +1207,7 @@ mk_initrd() {
   mount ${LOOP} ${1}) >/dev/null 2>&1
 
   initrd_init ${1} ${2} ${KERNEL}-smp ${KERNEL}-install
-  cp ${2}/etc/modprobe.* ${1}/etc/
+  cp -r ${2}/etc/modprobe.d ${1}/etc/
 
   for ktype in smp install;do
     ${2}/sbin/depmod -a -F ${2}/boot/System.map-${KERNEL}-${ktype} -b ${2} ${KERNEL}-${ktype}
@@ -1183,6 +1228,320 @@ mk_initrd() {
   dd if=${TINIT} bs=1k |gzip -c9 > ${2}/boot/initrd-netsentry-$KERNEL
   rm ${TINIT} ${2}/boot/initrd-netsentry
   ln -s initrd-netsentry-${KERNEL} ${2}/boot/initrd-netsentry) > /dev/null 2>&1
+
+  return 0
+}
+
+Grub_Local() {
+  GPARTI=`grub-probe -t partmap ${BASE}`
+  GFSMODI=`grub-probe -t fs ${BASE}`
+  GDRIVEI=`grub-probe -t drive ${BASE}`
+  GUUIDI=`grub-probe -t fs_uuid ${BASE}`
+
+  if [ "${1}" ] && [ -e "${1}" ];then
+    GUUIDT=`grub-probe -t fs_uuid ${1}`
+    if [ "${GUUIDT}" == "${GUUIDI}" ];then
+      GPARTT=${GPARTI}
+      GFSMODT=${GFSMODI}
+      GDRIVET=${GDRIVEI}
+     else
+      GPARTT=`grub-probe -t partmap ${1}`
+      GFSMODT=`grub-probe -t fs ${1}`
+      GDRIVET=`grub-probe -t drive ${1}`
+     fi;
+  fi;
+
+  cat << EOF
+menuentry "Distrotech Repository (${BASE}/flash.hdd)" --class distrotech --class os {
+	insmod part_${GPARTI}
+	insmod ${GFSMODI}
+	insmod loopback
+	set root='${GDRIVEI}'
+        search --no-floppy --fs-uuid --set=root ${GUUIDI}
+        loopback install ${BASE}/flash.hdd
+        insmod lvm
+	set root='(flash-install)'
+        configfile  /boot/grub/grub.cfg
+}
+EOF
+
+  if [ "${1}" ] && [ -e "${1}" ];then
+    cat << EOF
+
+menuentry "Distrotech Test Install (${1})" --class distrotech --class os {
+	insmod part_${GPARTT}
+	insmod ${GFSMODT}
+	insmod loopback
+	set root='${GDRIVET}'
+        search --no-floppy --fs-uuid --set=root ${GUUIDT}
+        loopback test ${1}
+        insmod lvm
+	set root='(lvm-root)'
+        configfile  /boot/grub/grub.cfg
+}
+EOF
+  fi;
+}
+
+Post_Update() {
+  #Update netsentry-version
+  if [ "${1}" ] && [ ${KERNEL} != ${1} ];then
+    KERNEL=$1
+    (cat <<__EOF__
+BRAND="$BRAND";
+VERSION="$VERSION";
+KERNEL="$KERNEL";
+IP_ADDR="$IP_ADDR";
+SN_ADDR="$SN_ADDR";
+HN_ADDR="$HN_ADDR";
+DOM_ADDR="$DOM_ADDR";
+BT="\$BRAND V\$VERSION Linux V\$KERNEL Install";
+KERNOPTS="$KERNOPTS";
+EXTRA_DEV="$EXTRA_DEV";
+USBSLEEP="$USBSLEEP";
+RSERV="$RSERV";
+LOOP_FILE="${LOOP_FILE}";
+LOOP_DEV="${LOOP_DEV}";
+__EOF__
+) > /etc/netsentry-version
+  fi;
+
+  /sbin/ldconfig
+
+  /usr/bin/rebuild-info
+#  pear channel-update pear.php.net;pear upgrade-all
+
+  #Run any SQL / LDAP scripts on no error
+  if [ -d /var/spool/update ];then
+    for I in /var/spool/update/*.sql ; do
+      if test $I -nt /etc/asterisk/astschema.psql.gz ;then
+        cat $I |psql -U asterisk -h 127.0.0.1
+      fi
+    done;
+    touch /etc/asterisk/astschema.psql.gz
+
+    for I in /var/spool/update/*.esql ; do
+      if test $I -nt /var/spool/pgsql/exchange.db ;then
+        cat $I |psql -U exchange -h 127.0.0.1
+      fi
+    done;
+    touch /var/spool/pgsql/exchange.db
+
+    if [ /var/spool/update/remote.keys -nt /root/.ssh/authorized_keys ] || [ ! -e /root/.ssh/authorized_keys ] || [ ! -s /root/.ssh/authorized_keys ];then
+      (/usr/bin/ldapmodify -U admin -Y PLAIN -w "`cat /etc/mail/ldap`" -cf /var/spool/update/remote.keys
+      /usr/bin/gensshauth > /root/.ssh/authorized_keys.tmp
+      if [ ! -d /root/.ssh ];then
+        mkdir /root/.ssh
+        chmod 700 /root/.ssh
+      fi;
+      if [ -s /root/.ssh/authorized_keys.tmp ];then
+        cp /root/.ssh/authorized_keys.tmp /root/.ssh/authorized_keys
+      fi) > /dev/null 2>&1
+    fi;
+  fi;
+
+  if [ -d /etc/modprobe.d ];then
+    rm /etc/modprobe.* >/dev/null 2>&1
+  fi
+  rm /etc/udev/rules.d/[145x]* >/dev/null 2>&1
+
+  #Reinstall Grub/Update initrd if needed
+  if [ ! -e /boot/grub/core.img ] || [ /usr/lib/grub/i386-pc/ -nt /boot/grub/core.img ];then
+    /usr/sbin/mkgrub
+   elif [ ! -e /boot/initrd-netsentry-${KERNEL} ] || [ /boot/vmlinuz-${KERNEL}-smp -nt /boot/initrd-netsentry-${KERNEL} ];then
+    mk_initrd /mnt/initrd /
+    if [ $? == 0 ];then
+      /usr/sbin/rdev /boot/vmlinuz-smp /dev/ram0
+      /usr/sbin/rdev /boot/vmlinuz-install /dev/ram0
+      grub-mkconfig  > /boot/grub/grub.cfg
+    fi;
+  fi
+
+  if [ -e  /usr/sbin/mkfstab ] && [ /usr/sbin/mkfstab -nt /etc/fstab ];then
+    /usr/sbin/mkfstab > /etc/fstab
+  fi
+
+  /usr/sbin/genconf
+  /usr/sbin/asterisk -rx "dialplan reload"
+}
+
+Local_Upgrade() {
+  if [ ! -d ${MNTP}/mnt/update ];then
+      mkdir -p ${MNTP}/mnt/update
+  fi;
+
+  if [ ! -d ${MNTP}/mnt/update/lost+found ];then
+    mount /dev/flash/upgrade ${MNTP}/mnt/update
+    if [ $? != "0" ];then
+      Umount_Flash
+      echo "Not available"
+      return 255
+    fi;
+  fi;
+
+  RERR=0;
+  KROPT="--include=/boot/[vS]*${1}-* --include=/lib/modules/${1}-* --exclude=/lib/modules/* --exclude=/boot/*"
+  for updata in "vbox /mnt/dev /" "share /var/spool/samba/share /var/spool/samba/share/" "programs /var/spool/rsync/programs /" \
+                "manuals /var/spool/rsync/webman /var/spool/apache/htdocs/" "asterisk-10 /var/spool/rsync/asterisk-10 /" \
+                "avirus /var/spool/avirus /var/spool/avirus" "kernel / /";do
+    if [ ${RERR}  == 0 ];then
+      Sync_Local ${updata}
+      RERR=$?
+      echo
+    fi;
+  done
+  if [ ${RERR}  == 0 ];then
+    KUSER=/var/spool/rsync/kernuser/kernel-${1}
+    if [ ! -d ${MNTP}/mnt/update/${KUSER}-smp ] && [ -d ${KUSER}-smp ];then
+      echo "Local Kernel User Files"
+      rsync ${ROPT_LOC} ${KUSER}-smp ${MNTP}/mnt/update/${KUSER}-smp
+      echo;
+    fi;
+    if [ ! -d ${MNTP}/mnt/update/${KUSER}-install ] && [ -d ${KUSER}-install ];then
+      echo "Local Kernel User Files"
+      rsync ${ROPT_LOC} ${KUSER}-install ${MNTP}/mnt/update/${KUSER}-install
+      echo;
+    fi;
+    Sync_Local kernuser ${KUSER}-smp/ /
+    Sync_Local kernuser ${KUSER}-install/ /
+    RERR=$?
+    echo
+  fi;
+  if [ ${RERR}  == 0 ];then
+    echo updates
+    rsync ${ROPT_LOC} -u --delay-updates ${MNTP}/install/update/ /var/spool/update
+    RERR=$?
+  fi;
+
+  if [ -e /etc/netsentry-version ];then
+    eval `cat /etc/netsentry-version`
+  fi;
+
+  Post_Update ${1}
+  return ${RERR}
+}
+
+Repo_Sync() {
+  if [ -e /dev/flash/install ];then
+    vgrename flash flashm
+    vgmknodes
+    if [ -e /dev/flashm/install ];then
+      e2fsck -C 0 -p /dev/flashm/install
+      if (( $? >= 4 ));then
+        echo "Filesystem Error"
+        return 255
+      fi;
+      if [ ! -d ${CORE} ];then
+        mkdir -p ${CORE}
+      fi;
+      mount /dev/flashm/install ${CORE}
+      if [ $? != 0 ];then
+        echo "Mount Error"
+        return 255
+      fi;
+      if [ -e /media/DISTROTECH ];then
+        umount /media/DISTROTECH
+      fi;
+      DUFS=`findfs LABEL=DISTROTECH`
+      if [ "${DUFS}" ];then
+        dosfsck -a ${DUFS}
+        mount ${DUFS} ${CORE}/install/tools
+      fi;
+    fi;
+  fi;
+
+  Load_Flash
+  RET=$?
+  if [ ${RET} == 0 ];then
+    Update_Flash
+    RET=$?
+  fi;
+
+  return ${RET}
+}
+
+Remote_Upgrade() {
+  RES=0;
+
+  if [ -d ${CORE}/install/core ];then
+    Remote_Sync ${CORE} ${1}
+    RES=$?
+    if [ ${RES} == 0 ];then
+      Tar_Kernel ${CORE} ${1}
+      Make_Bootetc ${CORE}
+    fi;
+  fi;
+
+  if [ -e /dev/flash/install ] && [ ${RES} == 0 ];then
+    Mount_Flash
+    RES=$?
+    if [ ${RES} == 0 ];then
+      Update_Flash ${1}
+      RES=$?
+    fi;
+  fi;
+
+  if [ ${RES} != 0 ];then
+    return ${RES}
+  fi;
+
+  if [ ! -e ${BASE}/flash.hdd ] && [ -e /dev/flash/install ];then
+    Local_Upgrade ${KERNEL}
+    return $?
+   elif [ ! -e ${BASE}/flash.hdd ];then
+    Sync_Remote ${1}
+    return $?
+   elif [ -e /dev/flash/install ];then
+    Umount_Flash
+    Clean_Init
+    if [ -d ${MNTP}/lost+found ] || [ -e /dev/loop-flash ] || [ -e /dev/loop-util ];then
+      echo "Error Media not unmounted !!!"
+      exit 255
+    fi;
+    Repo_Sync
+    RES=$?
+   else
+    Load_Flash
+    RES=$?
+    if [ ${RES} == 0 ];then
+      Update_Flash ${1}
+      RES=$?
+    fi;
+  fi;
+  if [ ${RES} == 0 ];then
+    Local_Upgrade ${KERNEL}
+    RES=$?
+  fi;
+  return ${RES}
+}
+
+Vbox_Upgrade() {
+  RES=255
+
+  /usr/sbin/socktest ${SERV} 873 > /dev/null 2>&1
+  RES=$?
+  if [ ${RES} != 0 ] && [ "${SERV}" != "127.0.0.1" ];then
+    SERV=127.0.0.1
+    /usr/sbin/socktest ${SERV} 873 > /dev/null 2>&1
+    RES=$?
+  fi;
+
+  if [ ${RES} != 0 ] && [ -e /dev/flash/upgrade ];then
+    Mount_Flash
+    RES=$?
+    if [ ${RES} ];then
+      Local_Upgrade ${KERNEL}
+    fi;
+    RES=$?
+   elif [ ${RES} != 0 ];then
+    Load_Flash std 0
+    Local_Upgrade ${KERNEL}
+    RES=$?
+   else
+    Remote_Upgrade ${1}
+    RES=$?
+  fi;
+  return ${RES}
 }
 
 Show_Help() {
@@ -1257,22 +1616,30 @@ There are various options available
                 copy modules and required files from source to destination for the kernels specified this currently only
                 copys the files the creation mounting modprobing is not done.
 
+        grub2 [<TEST LOOPBACK>]
+                outputs menu entries for grub2 suitiable for use in /boot/grub/custom.cfg.
+                the loopback file if specified will boot this test installation.
+
 EOF
 }
 
 Tar_Kernel() {
-  RBASE=${1}
-  eval `cat ${RBASE}/install/netsentry-version`
+  if [ ! -e ${1}/install/netsentry-version ];then
+    echo "No config file";
+    return 255
+  fi;
+
+  eval `cat ${1}/install/netsentry-version`
   NOUP=0;
 
-  if [ -e ${RBASE}/install/.version ];then
-    VERSION=`cat ${RBASE}/install/.version`
+  if [ -e ${1}/install/.version ];then
+    VERSION=`cat ${1}/install/.version`
   fi;
 
   if [ "${2}" ];then
     if [ "${2}" != "${KERNEL}" ];then
       KERNEL=${2}
-      rm ${RBASE}/install/core/kernel.tar.bz2
+      rm ${1}/install/core/kernel.tar.bz2
      else
       NOUP=1;
     fi;
@@ -1287,70 +1654,67 @@ DOM_ADDR="${DOM_ADDR}";
 BT="\${BRAND} V\${VERSION} Linux V\${KERNEL} Install";
 USBSLEEP="${USBSLEEP}";
 EOF
-) > ${RBASE}/install/netsentry-version
+) > ${1}/install/netsentry-version
    else
     NOUP=1;
-    VERSION=`cat ${RBASE}/install/.version`;
-    sed -e "s/\(VERSION=\"\).*/\1${VERSION}\";/" ${RBASE}/install/netsentry-version > /tmp/netsentry-version
-    if [ "`diff /tmp/netsentry-version ${RBASE}/install/netsentry-version`" ];then
-      mv /tmp/netsentry-version ${RBASE}/install/netsentry-version
+    VERSION=`cat ${1}/install/.version`;
+    sed -e "s/\(VERSION=\"\).*/\1${VERSION}\";/" ${1}/install/netsentry-version > /tmp/netsentry-version
+    if [ "`diff /tmp/netsentry-version ${1}/install/netsentry-version`" ];then
+      mv /tmp/netsentry-version ${1}/install/netsentry-version
      else
       rm /tmp/netsentry-version
     fi;
   fi;
 
-  for kern in `ls ${RBASE}/lib/modules/`;do
+  for kern in `ls ${1}/lib/modules/`;do
     if [ $kern != ${KERNEL}-install ];then
-      rm -rf ${RBASE}/lib/modules/$kern
+      rm -rf ${1}/lib/modules/$kern
     fi;
   done
 
-  if [ ! -e ${RBASE}/boot/vmlinuz-install ] || [ ! -e ${RBASE}/boot/System.map-install ];then
+  if [ ! -e ${1}/boot/vmlinuz-install ] || [ ! -e ${1}/boot/System.map-install ];then
     NOUP=0;
   fi;
 
-  if [ ${NOUP} == 1 ] && [ -e ${RBASE}/install/core/kernel.tar.bz2 ];then
-    if [ ! -e ${RBASE}/boot/initrd-install ] || [ ! -e ${RBASE}/boot/initrd-install-dvd ] || [ ! -e ${RBASE}/lib/modules/${KERNEL}/modules.dep ];then
-      mkbootimg ${RBASE}/ ${KERNEL}
+  if [ ${NOUP} == 1 ] && [ -e ${1}/install/core/kernel.tar.bz2 ];then
+    if [ ! -e ${1}/boot/initrd-install ] || [ ! -e ${1}/boot/initrd-install-dvd ] || [ ! -e ${1}/boot/initrd-install-loop ] || [ ! -e ${1}/lib/modules/${KERNEL}/modules.dep ];then
+      mkbootimg ${1}/ ${KERNEL}
     fi;
     return 0;
   fi;
 
   if [ -d /var/spool/rsync/kernuser/kernel-${KERNEL}-smp ] && [ -d /lib/modules/${KERNEL}-install ] && [ -d /lib/modules/${KERNEL}-smp ];then
     cd /var/spool/rsync/kernuser/kernel-${KERNEL}-smp
-    tar --use-compress-program=bzip2 -cf ${RBASE}/install/core/kernel.tar.bz2 * /lib/modules/${KERNEL}-smp /boot/[vS]*${KERNEL}-smp
+    tar --use-compress-program=bzip2 -cf ${1}/install/core/kernel.tar.bz2 * /lib/modules/${KERNEL}-smp /boot/[vS]*${KERNEL}-smp
     cd ${CWD}
     echo "Kernel Modules"
-    if [ -d ${RBASE}/lib/modules ];then
-      rm -rf ${RBASE}/lib/modules
+    if [ -d ${1}/lib/modules ];then
+      rm -rf $1}/lib/modules/*
     fi;
-    rsync ${ROPT_LOC} --inplace --delete --exclude=modules.* /lib/modules/${KERNEL}-install ${RBASE}/lib/modules
+    rsync ${ROPT_LOC} --inplace --delete --exclude=modules.* /lib/modules/${KERNEL}-install ${1}/lib/modules
     echo
     if [ -d /var/spool/rsync/kernuser/kernel-${KERNEL}-install/lib/firmware ];then
       echo "Kernel Firmware"
-      if [ -d ${RBASE}/lib/firmware ];then
-        rm -rf ${RBASE}/lib/firmware
-      fi;
-      rsync ${ROPT_LOC} --inplace --delete /var/spool/rsync/kernuser/kernel-${KERNEL}-install/lib/firmware/ ${RBASE}/lib/firmware
+      rsync ${ROPT_LOC} --inplace --delete /var/spool/rsync/kernuser/kernel-${KERNEL}-install/lib/firmware/ ${1}/lib/firmware
       echo
     fi;
     echo "Kernel"
-    rsync ${ROPT_LOC} --inplace /boot/vmlinuz-${KERNEL}-install ${RBASE}/boot/vmlinuz-install
+    rsync ${ROPT_LOC} --inplace /boot/vmlinuz-${KERNEL}-install ${1}/boot/vmlinuz-install
     echo
     echo "Kernel System Map"
-    rsync ${ROPT_LOC} --inplace /boot/System.map-${KERNEL}-install ${RBASE}/boot/System.map-install
+    rsync ${ROPT_LOC} --inplace /boot/System.map-${KERNEL}-install ${1}/boot/System.map-install
     echo
-    mkbootimg ${RBASE}/ ${KERNEL}
+    mkbootimg ${1}/ ${KERNEL}
    else
     echo "No kernel folder";
     return 1
   fi;
 }
 
-Make_Grubcfg(){
-for inmod in part_msdos part_gpt ext2 vbe vga video_bochs video_cirrus jpeg gfxterm gettext;do
-  echo "insmod $inmod";
-done
+Make_Grubcfg_Head(){
+  for inmod in part_msdos part_gpt ext2 vbe vga video_bochs video_cirrus jpeg gfxterm gettext;do
+    echo "insmod $inmod";
+  done
 
 (cat << EOF
 
@@ -1385,32 +1749,35 @@ set timeout=5
 
 EOF
 )
+}
 
+Make_Grubcfg(){
+  Make_Grubcfg_Head;
 
-for bdisk in hd0 hd1 hd2 hd3;do
-  for mpart in 1 2 3 4;do
-    for bpath in /boot/ /;do
+  for bdisk in hd0 hd1 hd2 hd3;do
+    for mpart in 1 2 3 4;do
+      for bpath in /boot/ /;do
 (cat <<  EOF
 if test -e ($bdisk,msdos$mpart)${bpath}initrd-netsentry ;then
   menuentry "$bdisk $mpart $bpath Standard Kernel" {
 	set root=(${bdisk},msdos${mpart})
-	linux ${bpath}vmlinuz-smp root=/dev/loop/0 ro single
+	linux ${bpath}vmlinuz-smp root=/dev/loop0 ro single
 	initrd ${bpath}initrd-netsentry
   }
   menuentry "$bdisk $mpart $bpath Install Kernel" {
 	set root=(${bdisk},msdos${mpart})
-	linux ${bpath}vmlinuz-install root=/dev/loop/0 ro single
+	linux ${bpath}vmlinuz-install root=/dev/loop0 ro single
 	initrd ${bpath}initrd-netsentry
   }
 fi
 
 EOF
 )
+      done;
     done;
   done;
-done;
 
-(cat <<  EOF
+  (cat <<  EOF
 if test -e (lvm-root)/boot/initrd-netsentry ;then
   menuentry "LVM Standard Kernel" {
 	set root=(lvm-root)
@@ -1427,7 +1794,7 @@ fi
 EOF
 )
 
-(cat <<  EOF
+  (cat <<  EOF
 if test -e (flash-install)/boot/initrd-install ;then
   if test -e (cd)/flash.hdd ;then
     menuentry "Install" {
@@ -1441,17 +1808,30 @@ if test -e (flash-install)/boot/initrd-install ;then
         initrd /boot/initrd-install-dvd
     }
    else
-    menuentry "Install" {
+    if test -d (install,msdos1)/putty ;then
+      menuentry "Install" {
+	set root=(flash-install)
+        linux /boot/vmlinuz-install root=/dev/flash/install ro quiet
+        initrd /boot/initrd-install-loop
+      }
+      menuentry "Install (Rescue)" {
+	set root=(flash-install)
+        linux /boot/vmlinuz-install root=/dev/flash/install ro single
+        initrd /boot/initrd-install-loop
+      }
+     else
+      menuentry "Install" {
 	set root=(flash-install)
         linux /boot/vmlinuz-install root=/dev/flash/install ro quiet
         initrd /boot/initrd-install
-    }
-    menuentry "Install (Rescue)" {
+      }
+      menuentry "Install (Rescue)" {
 	set root=(flash-install)
         linux /boot/vmlinuz-install root=/dev/flash/install ro single
         initrd /boot/initrd-install
-    }
-  fi
+      }
+    fi;
+  fi;
   menuentry "Memory test (memtest86+)" {
 	set root=(flash-install)
         linux16 /boot/memtest.bin
@@ -1490,6 +1870,83 @@ if test -e (hd0,msdos3)/ubcd ;then
 fi;
 EOF
 )
+}
+
+Sync_Remote() {
+  RERR=0
+
+  if [ -e /etc/asterisk/version.10 ];then
+    ast_repo="asterisk-10";
+    ast_ver="10";
+   else
+    ast_repo="asterisk";
+    ast_ver="1.8";
+  fi;
+
+  if [ -d ${CORE}/install/core ];then
+    echo "vbox/etc/rsyncd /etc/"
+    rsync ${UROPT_LOC} ${CORE}/etc/rsyncd /etc/
+    echo;echo
+    echo "vbox /"
+    rsync ${UROPT_LOC} --filter=". /etc/rsyncd/vbox.filter" ${CORE}/ /
+    echo;echo
+    echo "share /var/spool/samba/share/"
+    rsync ${UROPT_LOC} --filter=". /etc/rsyncd/share.filter" ${CORE}/install/tools/ /var/spool/samba/share
+    echo;echo
+    echo "avirus /var/spool/avirus"
+    rsync ${UROPT_LOC} --filter=". /etc/rsyncd/avirus.filter" ${CORE}/install/avirus/ /var/spool/avirus
+    echo;echo
+    echo "update /var/spool/update"
+    rsync ${UROPT_LOC} ${CORE}/install/update/* /var/spool/update
+    echo;echo
+   else
+    for rdatain in "vbox /"  "share /var/spool/samba/share/" "avirus /var/spool/avirus";do
+      if [ ${RERR} == 0 ];then
+        echo $rdatain
+        rsync ${UROPT} ${SERV}::$rdatain
+        echo;echo
+        RERR=$?;
+      fi;
+    done;
+  fi;
+
+  for rdatain in "programs /" "manuals /var/spool/apache/htdocs/" "${ast_repo} /";do
+    if [ ${RERR} == 0 ];then
+      echo $rdatain
+      rsync ${UROPT} ${SERV}::$rdatain
+      echo;echo
+      RERR=$?;
+    fi;
+  done;
+
+  #Sync Asterisk Modules
+  if [ ${RERR} == 0 ];then
+    rsync ${UROPT} -R --delete --exclude=chan_lcr.so ${SERV}::${ast_repo}/usr/lib/asterisk/modules-${ast_ver} /
+    RERR=$?;
+  fi;
+
+  #Update kernel
+  if [ "${1}" ] && [ ${RERR} == 0 ];then
+    echo "Kernel Update"
+    rsync ${UROPT} --include=/boot/[vS]*${1}-* --include=/lib/modules/${1}-* \
+          --exclude=/lib/modules/* --exclude=/boot/* ${SERV}::kernel/ /
+    RERR=$?
+
+    if [ -d /var/spool/rsync/kernuser/kernel-${1}-smp ] && [ -d ${CORE}/install/core ] && [ ${RERR} == 0 ];then
+      echo kernuser/kernel-${1}-smp/* /
+      rsync ${UROPT_LOC} /var/spool/rsync/kernuser/kernel-${1}-smp/* /
+     elif [ ${RERR} == 0 ];then
+      echo kernuser/kernel-${1}-smp/* /
+      rsync ${UROPT} ${SERV}::kernuser/kernel-${1}-smp/* /
+      RERR=$?;
+    fi;
+  fi;
+
+  if [ ${RERR} == 0 ];then
+    Post_Update ${1}
+  fi;
+
+  return ${RERR}
 }
 
 Sync_Local(){
@@ -1542,10 +1999,10 @@ fi;
 
 if [ "${1}" == "iso" ];then
   if [ -f ${BASE}/flash.hdd ] && [ "${2}" ];then
-    Clean_Init
     if [ -e /dev/loop-flash ] || [ -d ${MNTP}/lost+found ];then
       Umount_Flash
     fi;
+    Clean_Init
     sleep 2
     Load_Flash clean
     sleep 2
@@ -1647,52 +2104,23 @@ if [ "${1}" == "iso" ];then
     Umount_Flash
   fi;
   Clean_Init
-  if [ ! -e /dev/loop-flash ] && [ ! -e /dev/loop-util ] && [ -d /dev/flash ] && [ ! -d ${CORE}/install ] && [ -f ${BASE}/flash.hdd ];then
-    vgrename flash flashm
-    vgmknodes
-    if [ -e /dev/flashm/install ];then
-      e2fsck -C 0 -p /dev/flashm/install
-      if (( $? >= 4 ));then
-        echo "Filesystem Error"
-        exit 255
-      fi;
-      mount /dev/flashm/install ${CORE}
-      if [ $? != 0 ];then
-        echo "Mount Error"
-        exit 255
-      fi;
-      if [ -e /media/DISTROTECH ];then
-        umount /media/DISTROTECH
-      fi;
-      DUFS=`findfs LABEL=DISTROTECH`
-      if [ "${DUFS}" ];then
-        dosfsck -a ${DUFS}
-        mount ${DUFS} ${CORE}/install/tools
-      fi;
-    fi;
+  if [ -e /dev/loop-flash ] || [ -e /dev/loop-util ] || [ ! -f ${BASE}/flash.hdd ];then
+    echo "Cant sync repository is it loaded / non existant"
+    exit 255
   fi;
-
-  Load_Flash
-  if [ $? == 0 ];then
-    Update_Flash
-    RET=$?
-  fi;
+  Repo_Sync
   Umount_Flash
-
-  if [ -e /dev/flashm/install ] && [ -d ${CORE}/lost+found ];then
-    umount ${CORE}/install/tools
-    umount ${CORE}
-    vgchange -a n flashm
-    vgrename flashm flash
-  fi;
-  exit ${RET}
  elif [ "${1}" == "grub" ];then
   Clean_Init
   Load_Flash
   if [ -e ${MNTP}/boot/grub/core.img ];then
     rm ${MNTP}/boot/grub/core.img
   fi;
+  if [ -e ${MNTP}/boot/initrd-install ];then
+    rm ${MNTP}/boot/initrd-install
+  fi;
   Check_Grub
+  Make_Bootetc ${MNTP}
   Umount_Flash
  elif [ "${1}" == "mkflash" ];then
   Clean_Init
@@ -1715,7 +2143,9 @@ if [ "${1}" == "iso" ];then
     fi;
     Clean_Init
     Load_Flash std 0
-    Local_Sync ${MNTP} ${CORE}
+    if [ $? == 0 ];then
+      Local_Sync ${MNTP} ${CORE}
+    fi;
     Umount_Flash
    else
     if [ "${3}" ];then
@@ -1724,12 +2154,11 @@ if [ "${1}" == "iso" ];then
     if [ ! -d /var/spool/rsync/programs ];then
       Remote_Sync ${CORE} $2
       RET=$?
-    fi;
-    if [ -e  ${CORE}/install/netsentry-version ];then
-      Tar_Kernel ${CORE} ${2}
      else
-      echo "No config file";
+      echo "Sync Anti Virus / Upgrade"
+      rsync ${ROPT_LOC} -u --include=/update --include=/avirus --exclude=/avirus/clamav-* --exclude=/*/.* --exclude=/* /var/spool/ / ${CORE}/install/
     fi;
+    Tar_Kernel ${CORE} ${2}
     Make_Bootetc ${CORE}
     exit ${RET}
   fi
@@ -1758,69 +2187,80 @@ if [ "${1}" == "iso" ];then
     exit 255
   fi;
 
-  Clean_Init
-  Load_Flash std 0
-
-  if [ ! -d ${MNTP}/lost+found ] || [ ! -e /dev/flash/upgrade ];then
+  if [ -e /dev/loop-flash ] || [ -e /dev/loop-util ] || [ -d ${MNTP}/lost+found ];then
     Umount_Flash
-    echo "Not available"
+  fi;
+  Clean_Init
+
+  if [ -d ${MNTP}/lost+found ] || [ -e /dev/loop-flash ] || [ -e /dev/loop-util ];then
+    echo "Error Media not unmounted !!!"
     exit 255
   fi;
 
-  if [ ! -d ${MNTP}/mnt/update ];then
-      mkdir -p ${MNTP}/mnt/update
-  fi;
-  if [ ! -d ${MNTP}/mnt/update/lost+found ];then
-    mount /dev/flash/upgrade ${MNTP}/mnt/update
-    if [ $? != "0" ];then
-      Umount_Flash
-      echo "Not available"
-      exit 255
-    fi;
+  eval `cat /etc/netsentry-version`
+
+  if [ "${2}" ] && [ "${KERNEL}" != "${2}" ];then
+    UPKERN=${2}
+   else
+    UPKERN=${KERNEL}
   fi;
 
-  RERR=0;
-  KROPT="--include=/boot/[vS]*${KERNEL}-* --include=/lib/modules/${KERNEL}-* --exclude=/lib/modules/* --exclude=/boot/*"
-  for updata in "vbox /mnt/dev /" "share /var/spool/samba/share /var/spool/samba/share/" "programs /var/spool/rsync/programs /" \
-                "manuals /var/spool/rsync/webman /var/spool/apache/htdocs/" "asterisk-10 /var/spool/rsync/asterisk-10 /" \
-                "avirus /var/spool/avirus /var/spool/avirus" "kernel / /";do
-    if [ ${RERR}  == 0 ];then
-      Sync_Local ${updata}
-      RERR=$?
-      echo
+  if [ -d /mnt/update/mnt/dev/lost+found ] && [ "`pidof rsync`" ];then
+    SERV=127.0.0.1
+    Sync_Remote ${UPKERN}
+    exit $?
+   elif [ -d /mnt/update/mnt/dev/lost+found ];then
+    echo "Rsync daemon not running ??"
+    exit 255;
+   elif [ -d /var/spool/rsync/programs ] && [ -d ${CORE}/install/core ];then
+    echo "Sync Anti Virus / Upgrade"
+    rsync ${ROPT_LOC} -u --include=/update --include=/avirus --exclude=/avirus/clamav-* --exclude=/*/.* --exclude=/* /var/spool/ / ${CORE}/install/
+    Tar_Kernel ${CORE} ${UPKERN}
+    Make_Bootetc ${CORE}
+    if [ -f ${BASE}/flash.hdd ];then
+      Load_Flash
+      RES=$?
+      if [ ${RES} == 0 ];then
+        Update_Flash
+        RES=$?
+      fi;
     fi;
-  done
-  if [ ${RERR}  == 0 ];then
-    KUSER=/var/spool/rsync/kernuser/kernel-${KERNEL}
-    if [ ! -d ${MNTP}/mnt/update/${KUSER}-smp ] && [ -d ${KUSER}-smp ];then
-      echo "Local Kernel User Files"
-      rsync ${ROPT_LOC} ${KUSER}-smp ${MNTP}/mnt/update/${KUSER}-smp
-      echo;
-    fi;
-    if [ ! -d ${MNTP}/mnt/update/${KUSER}-install ] && [ -d ${KUSER}-install ];then
-      echo "Local Kernel User Files"
-      rsync ${ROPT_LOC} ${KUSER}-install ${MNTP}/mnt/update/${KUSER}-install
-      echo;
-    fi;
-    Sync_Local kernuser ${KUSER}-smp/ /
-    Sync_Local kernuser ${KUSER}-install/ /
-    RERR=$?
-    echo
+   elif [ -d /var/spool/rsync/programs ];then
+    echo "Local copy not seeded ??"
+    exit 255;
+   else
+    if [ "${3}" ];then
+      SERV=${3}
+     elif [ ! "${RSERV}" ];then
+      SERV="127.0.0.1"
+     else
+      SERV=${RSERV}
+    fi
+    Vbox_Upgrade ${UPKERN}
+    RES=$?
   fi;
-  if [ ${RERR}  == 0 ];then
-    echo updates
-    rsync ${ROPT_LOC} -u --delay-updates ${MNTP}/install/update/ /var/spool/update
-    RERR=$?
-  fi;
+
   Umount_Flash
-  exit ${RERR}
+  exit ${RES}
  elif [ "${1}" == "initrd" ];then
   if [ ! "${2}" ] || [ ! "${3}" ];then
     Show_Help
     exit
   fi;
   shift
+
+  if [ -e ${2}/etc/netsentry-version ];then
+    eval `cat ${2}/etc/netsentry-version`
+   elif [ -e ${2}/install/netsentry-version ];then
+    eval `cat ${2}/install/netsentry-version`
+   else
+    echo "No Config File"
+    exit -1
+  fi;
+
   mk_initrd ${1} ${2}
+ elif [ "${1}" == "grub2" ];then
+  Grub_Local ${2}
  elif [ "${1}" == "mount" ] && [ ! -d ${MNTP}/lost+found ];then
   Clean_Init
   Load_Flash
@@ -1834,3 +2274,4 @@ if [ "${1}" == "iso" ];then
  else
   Show_Help
 fi;
+

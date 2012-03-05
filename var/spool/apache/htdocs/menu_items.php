@@ -325,6 +325,7 @@ $voip[_("ACD Setup")]=openpage("voip","cdr/mkacd.php");
 $voip[_("ACD Agents")]=openpage("voip","cdr/agents.php");
 if ($authtype > 0) {
   $voip[_("Auto Attendant")]="javascript:openreception()";
+  $voip[_("IVR Admin")]=openpage("voip","cdr/ivradmin.php");
 }
 $voip[_("Web Phone Setup")]=openpage("voip","cdr/htmlphone.php");
 if ($authtype > 0) {

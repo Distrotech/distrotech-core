@@ -1266,3 +1266,41 @@ function randomID(size) {
         }
         return str;
 }
+
+var ivropt = new Array();
+function XMLSelect(source,url,selbox) {
+  ajax = null;
+  this.ajax = new XMLHttpRequest();
+  this.selbox = selbox;
+  this.source = source;
+  this.url = url;
+
+  this.submit = function() {
+    if ((this.ajax != null) && (this.ajax.readyState > 0)) {
+      this.ajax.abort();
+    } else if (this.ajax == null) {
+      this.ajax = new XMLHttpRequest();
+    }
+    var filter='search='+source[source.selectedIndex].value;
+    this.ajax.onreadystatechange=this.stateChanged;
+    this.ajax.open('POST',url,true);
+    this.ajax.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    this.ajax.setRequestHeader("Content-length", filter.length);
+    this.ajax.setRequestHeader("Connection", "close");
+    this.ajax.send(filter);
+  }
+
+  this.stateChanged = function() {
+    ajax = this;
+    if ((ajax != null) && (ajax.readyState == 4) && (ajax.status == 200) && (ajax.responseXML != null)) {
+      var userdat=ajax.responseXML.getElementsByTagName("option");
+      while(selbox.options.length > 0) {
+        selbox.remove(selbox.options.length-1);
+      }
+      for(var i=0;i < userdat.length;i++) {
+        selbox.add(new Option(userdat[i].firstChild.nodeValue,userdat[i].getAttribute('value')));
+      }
+    }
+  }
+  this.submit();
+}

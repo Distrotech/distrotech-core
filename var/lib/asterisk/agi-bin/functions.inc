@@ -58,11 +58,14 @@ function getagivar($variable,$default) {
   verbose(print_r($vresult,TRUE));
   if ($vresult['result'] == 1) {
     $retval=$vresult['data'];
+  } else if ($vresult['result'] == "") {
+    $retval="HANGUP";
   } else if ($default != "") {
     $retval=$default;
   } else {
     $retval='';
   }
+  //verbose(print_r($retval,TRUE));
   return $retval;
 }
 
@@ -363,6 +366,7 @@ SET uniquecdrid credit and starttime
   //resellers credit used
   $credit_used=($racredit_used*$resell["exrate"])/100;
 
+  verbose(print_r($dialstatus,TRUE));
   if ($dialstatus == "ANSWER") {
     //answered non H323 Call
     $QUERY="INSERT INTO call (uniqueid,sessionid,username,calledstation,".

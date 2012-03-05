@@ -227,7 +227,11 @@ EOF
 #  chroot ${INST_BASE} /usr/bin/updatedb --output=/var/db/locate --prunepaths='/proc /dev /sys /tmp /var/tmp' >/dev/null 2>&1
 
   /usr/bin/dialog --backtitle "$BT" --title "Init RD" --infobox "Creating Initial RAM Disks" 7 35
+  rm ${INST_BASE}/etc/mtab
+  ln -s /proc/mounts ${INST_BASE}/etc/mtab
   chroot ${INST_BASE} /usr/sbin/mkfstab > ${INST_BASE}/etc/fstab
+  rm ${INST_BASE}/etc/mtab
+  chroot ${INST_BASE} mount -fa
   chroot ${INST_BASE} /usr/sbin/mkgrub > /dev/null 2>&1
 
   /usr/bin/dialog --backtitle "$BT" --title "Post Install" --infobox "Running genconf/servconfig This Takes Several Minutes" 7 35

@@ -649,6 +649,24 @@ RewriteCond %1             ^(callshop)|(voip)$
 RewriteCond %{REQUEST_URI} ^/auth
 RewriteRule ^/auth/(.*) /var/spool/apache/htdocs/cshop/$1 [L,T=application/x-httpd-php]
 
+#VOIP billing engine must be https://
+RewriteCond %{HTTP_HOST}   ^([^.]*).*$
+RewriteCond %1             ^(client)|(portal)$
+RewriteCond ${lowercase:%{HTTPS}}	^off$
+RewriteRule ^/(.*)$ https://%{HTTP_HOST}:666/$1 [R,L]
+
+#VOIP billing engine rewrite
+RewriteCond %{HTTP_HOST}   ^([^.]*).*$
+RewriteCond %1             ^(client)|(portal)$
+RewriteCond %{REQUEST_URI} !^/(client)|(spe-img)|(images)|(login.php)|(main_style.css)|(spe-main_style.css)
+RewriteRule ^/(.*) /var/spool/apache/htdocs/cshop/client/$1 [L,T=application/x-httpd-php]
+
+#VOIP billing engine rewrite /auth
+RewriteCond %{HTTP_HOST}   ^([^.]*).*$
+RewriteCond %1             ^(client)|(portal)$
+RewriteCond %{REQUEST_URI} ^/auth
+RewriteRule ^/auth/(.*) /var/spool/apache/htdocs/cshop/client/$1 [L,T=application/x-httpd-php]
+
 #(horde)|(mail)|(webmail).* Horde Webmail
 RewriteCond ${lowercase:%{HTTP_HOST}}   ^([^.]*).*$
 RewriteCond %{REQUEST_URI} !^/horde

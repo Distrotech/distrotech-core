@@ -193,6 +193,7 @@ if ($_POST['print'] !=2) {%>
   <link rel="stylesheet" href="/style.php<%print $_SESSION['sname'];%>">
       <script language="JavaScript" src="/ajax.js" type="text/javascript"></script>
       <script language="JavaScript" src="/autocomplete.js" type="text/javascript"></script>
+      <script language="JavaScript" src="/formsubmit.js" type="text/javascript"></script>
       <script language="JavaScript" src="/java_popups.php<%print $_SESSION['sname'];%>" type="text/javascript"></script><%
 
   /*

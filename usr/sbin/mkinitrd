@@ -6,14 +6,3 @@ flashutil initrd /mnt/initrd /
 /usr/sbin/rdev /boot/vmlinuz-install /dev/ram0
 
 grub-mkconfig  > /boot/grub/grub.cfg
-
-if [ -h /boot/boot ];then
-  rm /boot/boot
-fi;
-
-#Example of boot from loop
-#/bin/mount -t ext4 -U c826731b-dab7-4844-b3e9-90f06241dee1 /isofs
-#/sbin/losetup /dev/loop0 /media/root/install.img
-#sleep 4
-#mkdevices /dev
-#mkdmnod

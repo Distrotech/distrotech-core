@@ -53,14 +53,15 @@ if [ -e ${MPNT}/etc/HOSTNAME ];then
   hostname -F ${MPNT}/etc/HOSTNAME
 fi;
 
-UDEV=`findfs LABEL=UPGRADE`;
-if [ ${UDEV} ];then
-  mount ${UDEV} ${MPNT}/mnt/update -o ro
+if [ "`findfs LABEL=UPGRADE`" ];then
+  mount -L UPGRADE -o ro ${MPNT}/mnt/update
   if [ $? == 0 ];then
     mount --bind / ${MPNT}/mnt/update/mnt/dev -o ro
     if [ -e ${MPNT}/var/run/rsyncd.pid ];then
       rm ${MPNT}/var/run/rsyncd.pid
     fi;
+    cp -p /usr/sbin/vbox_upgrade /usr/sbin/flashutil /${MPNT}/usr/sbin
+    cp -pr /etc/rsyncd* ${MPNT}/etc
     chroot ${MPNT} rsync --daemon --config /etc/rsyncd-update.conf
   fi;
 fi;

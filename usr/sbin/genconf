@@ -3896,8 +3896,11 @@ __EOB__
   if (($mdmconf{'Connection'} eq "3G") && ($sysconf{'External'} eq "Dialup")) {
     print PU3G "exit\n";
   } else {
-    print PU3G "sleep 2\n";
-    print PU3G "if [ ! \"`/sbin/ip addr show ppp10 |grep UP`\" ] && [ -e /dev/tts/GSM0 ];then\n";
+    print PU3G "sleep 3\n";
+    print PU3G "if [ ! -e /dev/gsmmodem ] && [ -e /dev/tts/GSN0 ];then\n";
+    print PU3G "  ln -s /dev/tts/GSM0 /dev/gsmmodem\n";
+    print PU3G "fi\n";
+    print PU3G "if [ -e /dev/gsmmodem ] && [ ! \"`/sbin/ip addr show ppp10 |grep UP`\" ];then\n";
     print PU3G "  if [ -e /var/run/ppp10.pid ];then\n";
     print PU3G "    kill `cat /var/run/ppp10.pid`\n";
     print PU3G "    sleep 5\n";
@@ -3905,7 +3908,7 @@ __EOB__
     print PU3G "  /bin/ps axww |grep \"unit 10\" |awk '{printf \"kill -9 %s;sleep 2\\n\",\$1}' |sh\n";
     print PU3G "  rm /var/log/pppd.log.3g\n";
     print PU3G "  date > /var/log/pppd.log.3g\n";
-    print PU3G "  /usr/sbin/pppd /dev/tts/GSM0 connect \"/usr/sbin/chat -v -f /etc/ppp/diald.3g\" maxfail 5 unit 10 logfile /var/log/pppd.log.3g linkname 3g ipparam 3g nodefaultroute noauth persist nomultilink nodetach usepeerdns &\n";
+    print PU3G "  /usr/sbin/pppd /dev/gsmmodem connect \"/usr/sbin/chat -v -f /etc/ppp/diald.3g\" maxfail 5 unit 10 logfile /var/log/pppd.log.3g linkname 3g ipparam 3g nodefaultroute noauth persist nomultilink nodetach usepeerdns &\n";
     print PU3G "fi;\n";
   }
   close(PU3G);
@@ -3959,7 +3962,7 @@ __EOB__
     print PU "  /usr/sbin/pppd $mdmconf{'ComPort'} connect \"/usr/sbin/chat -v -f /etc/ppp/diald.scr\" unit 0 logfile /var/log/pppd.log.0 mru $mdmconf{'MTU'} mtu $mdmconf{'MTU'} linkname main user $mdmconf{'Username'} defaultroute noauth persist nomultilink usepeerdns nodetach &\n";
     &startexadsl();
   } elsif (($mdmconf{'Connection'} eq "3G") && ($sysconf{'External'} eq "Dialup")) {
-    $mdmconf{'ComPort'}="/dev/tts/GSM0";
+    $mdmconf{'ComPort'}="/dev/gsmmodem";
     $usbport=0;
     while (( ! -e "/dev/tts/GSM$usbport") && ($usbport <= 64)) {
       $usbport++;
@@ -14786,7 +14789,7 @@ __EOB__
           }
 
           $spaninf=$span->description();
-          if (($spaninf =~ m/WP[ETJ]1\/.* \"wanpipe/) || ($span->proto eq "BRI")) {
+          if (($spaninf =~ m/\"wanpipe/) || ($span->proto eq "BRI")) {
             $hwdchan="'t'";
           } else {
             $hwdchan="'f'";
@@ -15128,7 +15131,7 @@ __EOB__
   while(@row=$getzap->fetchrow_array) {
     print ZC @row[0] . "\n";
     if ((@row[1] ne "") && (@row[1] ne "0")){
-      if (@row[2] eq "f") {
+      if ((@row[2] eq "f") || (@row[2] eq "0")) {
         $chans.=@row[1] . ",";
       } else {
         $hwchans.=@row[1] . ",";

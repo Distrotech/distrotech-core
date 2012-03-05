@@ -1,184 +1,28 @@
 #!/bin/bash
 
-if [ ! -e /etc/netsentry-version ];then
-  echo "This script must be run on a valid server"
-  exit 255
-fi;
+flashutil upgrade $@
+exit $?
 
-#Rsync options
-ROPTS="-avHKOPz --exclude-from=/var/spool/apache/htdocs/ns/config/exclude.nfs"
-RROPTS="-R ${ROPTS}"
-RTIMEOUT=60
-
-DIST="/mnt/dev"
-BASE="/var/spool/distrotech"
-RERR=0;
-KERR=0;
-DEFVER="10.10.1";
-NOKERN=0;
-UMNT=0;
-NOSYNC=0;
-
-eval `cat /etc/netsentry-version`
-
-AKERNEL=`uname -r |awk -F- '$2 == "i386" || $2 == "x86" {print $1"-"$2}'`
-if [ "$AKERNEL" == "" ];then
-  AKERNEL=`uname -r |awk -F- '$3 == "i386"  || $3 == "x86" {print $1"-"$2"-"$3}'`
-fi
-
-if [ ! "${KERNEL}" ];then
-  KERNEL=${AKERNEL};
-fi;
-
-if [ "$VERSION" == "" ];then
-  LVERSION="${DEFVER}"
- else
-  LVERSION=$VERSION
-fi;
-
-if [ ! "$KERNOPTS" ];then
-  if [ "`uname -r |grep nosmp`" ] || [ -e "/etc/.bootnosmp" ];then
-    KERNOPTS="nosmp"
-  fi;
-fi;
-
-#Update netsentry-version
-if [ "${1}" ] && [ ${KERNEL} != ${1} ];then
-  KERNEL=$1
-  (cat <<__EOF__
-BRAND="$BRAND";
-VERSION="$LVERSION";
-KERNEL="$KERNEL";
-IP_ADDR="$IP_ADDR";
-SN_ADDR="$SN_ADDR";
-HN_ADDR="$HN_ADDR";
-DOM_ADDR="$DOM_ADDR";
-BT="\$BRAND V\$VERSION Linux V\$KERNEL Install";
-KERNOPTS="$KERNOPTS";
-EXTRA_DEV="$EXTRA_DEV";
-USBSLEEP="$USBSLEEP";
-RSERV="$RSERV";
-__EOF__
-) > /etc/netsentry-version
- elif [ ! "${1}" ];then
-  NOKERN=1;
-fi;
-
-if [ ! -d /var/spool/rsync/programs ];then
-  if [ ! "${RSERV}" ];then
-    RSERV="pbx.distrotech.co.za";
-   else
-    SERV=${RSERV}
-  fi
-  /usr/sbin/socktest ${SERV} 873 > /dev/null 2>&1
-  RES=$?
-  if [ ${RES} != 0 ] && [ "${SERV}" != "127.0.0.1" ];then
-    SERV=127.0.0.1
-    /usr/sbin/socktest ${SERV} 873 > /dev/null 2>&1
-    if [ $? != 0 ];then
-      flashutil upgrade
-      RERR=$?
-      NOSYNC=1;
-    fi;
-  fi;
- else
-  NOSYNC=1;
-fi;
-
-Sync_Remote() {
-  if [ -e /etc/asterisk/version.10 ];then
-    ast_repo="asterisk-10";
-    ast_ver="10";
-   else
-    ast_repo="asterisk";
-    ast_ver="1.8";
-  fi;
-
-  if [ -d ${DIST}/install/core ];then
-    echo "vbox /"
-    rsync $RROPTS -u --delay-updates --filter=". /etc/rsyncd/vbox.filter" ${DIST}/ /
-    echo;echo
-    echo "share /var/spool/samba/share/"
-    rsync $ROPTS -u --delay-updates --filter=". /etc/rsyncd/share.filter" ${DIST}/install/tools/* /var/spool/samba/share
-    echo;echo
-    echo "avirus /var/spool/avirus"
-    rsync $ROPTS -u --delay-updates --filter=". /etc/rsyncd/avirus.filter" ${DIST}/install/avirus/* /var/spool/avirus
-    echo;echo
-    echo "update /var/spool/update"
-    rsync $ROPTS -u --delay-updates ${DIST}/install/update/* /var/spool/update
-    echo;echo
-   else
-    for rdatain in "vbox /"  "share /var/spool/samba/share/" "avirus /var/spool/avirus";do
-      if [ ${RERR} == 0 ];then
-        echo $rdatain
-        rsync $RROPTS -u --delay-updates --timeout=$RTIMEOUT ${SERV}::$rdatain
-        echo;echo
-        RERR=$?;
-      fi;
-    done;
-  fi;
-
-  for rdatain in "programs /" "manuals /var/spool/apache/htdocs/" "${ast_repo} /";do 
-    if [ ${RERR} == 0 ];then
-      echo $rdatain
-      rsync $RROPTS -u --delay-updates --timeout=$RTIMEOUT ${SERV}::$rdatain
-      echo;echo
-      RERR=$?;
-    fi;
-  done;
-
-  #Sync Asterisk Modules
-  if [ ${RERR} == 0 ];then
-    rsync $RROPTS -u --delay-updates --delete --exclude=chan_lcr.so --timeout=$RTIMEOUT ${SERV}::${ast_repo}/usr/lib/asterisk/modules-${ast_ver} /
-    RERR=$?;
-  fi;
-
-  #Update kernel
-  if [ ${NOKERN} == 0 ] && [ ${RERR} == 0 ];then
-    echo "Kernel Update"
-    rsync $ROPTS --timeout=$RTIMEOUT --include=/boot/[vS]*${KERNEL}-* --include=/lib/modules/${KERNEL}-* \
-          --exclude=/lib/modules/* --exclude=/boot/* ${SERV}::kernel/ /
-    RERR=$?
-
-    if [ ${RERR} == 0 ];then
-      echo kernuser/kernel-${KERNEL}-smp/* /
-      rsync $ROPTS --timeout=$RTIMEOUT ${SERV}::kernuser/kernel-${KERNEL}-smp/* /
-      RERR=$?;
-    fi;
-  fi;
-}
-
-if [ ${NOSYNC} == 0 ] && [ ${RERR} == 0 ];then
-  #Old upgrade postgre to ver 8
+#Old upgrade postgre to ver 8
 #  if [ ! "`psql -V |head -1|grep "8.2.3"`" ];then
 #    /usr/bin/pg_dumpall -U pgsql -h 127.0.0.1 -c |gzip -c > /var/tmp/pgsql.sql
 #    if [ $? != 0 ];then
 #      echo "Upgrade Not Done !!!!"
 #      exit -1
 #    fi;
-#    /usr/bin/pg_dumpall -U postgres -p 5433 -h 127.0.0.1 -c |gzip -c > /var/tmp/cubit.sql
-#    if [ $? != 0 ];then
-#      echo "Upgrade Not Done !!!!"
-#      exit -1
-#    fi;
-#    if [ -s /var/tmp/pgsql.sql ] && [ -s /var/tmp/cubit.sql ];then
+#    if [ -s /var/tmp/pgsql.sql ];then
 #      /usr/bin/killall -9 crond > /dev/null 2>&1
 #      /usr/bin/killall -9 asterisk > /dev/null 2>&1
 #      /bin/su pgsql -c "pg_ctl -D /var/spool/pgsql -m immediate stop" > /dev/null 2>&1
-#      /bin/su postgres -c "pg_ctl -D /var/spool/cubit -m immediate stop" > /dev/null 2>&1
 #      /usr/bin/killall -9 postmaster > /dev/null 2>&1
-#      /usr/bin/rsync $RROPTS --timeout=$RTIMEOUT ${SERV}::postgresql /
+#      /usr/bin/rsync ${UROPT} ${SERV}::postgresql /
 #      if [ $? != 0 ];then
 #        echo "Upgrade Not Done !!!!"
 #        exit -1
 #      fi;
 #      /bin/rm -rf /var/spool/pgsql
-#      /bin/rm -rf /var/spool/cubit
 #      /etc/rc.d/rc.exchange > /dev/null 2>&1
 #      /usr/bin/zcat /var/tmp/pgsql.sql |psql -U pgsql -h 127.0.0.1 -f - asterisk > /dev/null 2>&1
-#      /etc/rc.d/rc.cubit > /dev/null 2>&1
-#      /usr/bin/sleep 5
-#      /usr/bin/zcat /var/tmp/cubit.sql |psql -U postgres -h 127.0.0.1 -p 5433 -f - template1 > /dev/null 2>&1
 #      /usr/sbin/crond >> /var/log/cron 2>&1
 #      sed -e "s/#listen_addresses.*/listen_addresses = '*'/" -e "s/#ssl.*/ssl= on/" "/var/spool/pgsql/postgresql.conf" > /tmp/pg.cnf
 #      cp /tmp/pg.cnf "/var/spool/pgsql/postgresql.conf"
@@ -187,92 +31,3 @@ if [ ${NOSYNC} == 0 ] && [ ${RERR} == 0 ];then
 #      echo "Upgrade Not Done !!!!"
 #    fi;
 #  fi;
-
-  #Touch some files that should not be updated just in case
-  touch /etc/autofs.conf /etc/dhcpd.conf /etc/freshclam.conf /etc/hosts /etc/mgetty.config /etc/popper.conf /etc/rsyncd.conf
-  touch /etc/asterisk/agents.conf /etc/asterisk/iax.conf /etc/ppp/diald.scr /etc/ppp/ip-down /etc/ppp/options
-  touch /etc/ppp/secret /etc/racoon/racoon.conf /etc/radiusclient/port-id-map /etc/radiusclient/radiusclient.conf
-  touch /etc/radiusclient/servers /etc/rc.d/rc.mount /etc/rc.d/rc.tunnels /etc/squid/filter.cnf /etc/squid/filter.conf
-  touch /var/spool/apache/htdocs/ns/config/exclude.nfs
-
-  if [ -d ${DIST}/install/core ];then
-    flashutil update ${KERNEL} ${SERV}
-    RERR=$?
-  fi;
-
-  if [ ${RERR} == 0 ];then
-    vgchange -a y flash > /dev/null 2>&1
-    if [ -e ${BASE}/flash.hdd ] || [ -e /dev/flash/upgrade ];then
-      flashutil sync
-      RERR=$?
-      if [ ${RERR} == 0 ];then
-        flashutil upgrade
-        RERR=$?
-       else
-        RERR=0
-        Sync_Remote
-      fi;
-     else
-      Sync_Remote
-    fi;
-   else
-    Sync_Remote
-  fi;
-fi;
-
-#Final processing on no error
-if [ ${RERR} == 0 ];then
-  /usr/bin/rebuild-info
-#  pear channel-update pear.php.net;pear upgrade-all
-
-  #Run any SQL / LDAP scripts on no error
-  if [ -d /var/spool/update ];then
-    for I in /var/spool/update/*.sql ; do
-      if test $I -nt /etc/asterisk/astschema.psql.gz ;then
-        cat $I |psql -U asterisk -h 127.0.0.1
-      fi
-    done;
-    touch /etc/asterisk/astschema.psql.gz
-
-    for I in /var/spool/update/*.esql ; do
-      if test $I -nt /var/spool/pgsql/exchange.db ;then
-        cat $I |psql -U exchange -h 127.0.0.1
-      fi
-    done;
-    touch /var/spool/pgsql/exchange.db
-
-    if [ /var/spool/update/remote.keys -nt /root/.ssh/authorized_keys ] || [ ! -e /root/.ssh/authorized_keys ] || [ ! -s /root/.ssh/authorized_keys ];then
-      (/usr/bin/ldapmodify -U admin -Y PLAIN -w "`cat /etc/mail/ldap`" -cf /var/spool/update/remote.keys
-      /usr/bin/gensshauth > /root/.ssh/authorized_keys.tmp
-      if [ ! -d /root/.ssh ];then
-        mkdir /root/.ssh
-        chmod 700 /root/.ssh
-      fi;
-      if [ -s /root/.ssh/authorized_keys.tmp ];then
-        cp /root/.ssh/authorized_keys.tmp /root/.ssh/authorized_keys
-      fi) > /dev/null 2>&1
-    fi;
-  fi;
-
-  ldconfig
-  /usr/sbin/genconf
-  /usr/sbin/asterisk -rx "dialplan reload"
-
-  #Reinstall Grub/Update initrd if needed
-  if [ ! -e /boot/grub/core.img ] || [ /usr/lib/grub/i386-pc/ -nt /boot/grub/core.img ];then
-    /usr/sbin/mkgrub
-   elif [ ${NOKERN} == 0 ] && [ ${KERR} == 0 ];then
-    /usr/sbin/mkinitrd
-   elif [ /usr/sbin/mkinitrd -nt /boot/initrd-netsentry ] && [ ${KERR} == 0 ];then
-    /usr/sbin/mkinitrd
-  fi
-  if [ -e  /usr/sbin/mkfstab ] && [ /usr/sbin/mkfstab -nt /etc/fstab ];then
-    /usr/sbin/mkfstab > /etc/fstab
-  fi
- else
-  ldconfig
-  /usr/sbin/genconf
-  /usr/sbin/asterisk -rx "dialplan reload"
-fi;
-
-exit $RERR
