@@ -2,3 +2,4 @@
 - /*/lib/modules
 - /boot
 - /*/boot
+- /etc/udev/rules.d
