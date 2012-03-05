@@ -19,22 +19,12 @@
 
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
-/sbin/udevd --daemon
-
 LKERNEL=`/usr/bin/uname -r`
 
-if [ ! -e /dev/null ];then
-  /bin/mknod -m 0666 /dev/null c 1 3
+if [ ! -d /dev/pts ];then
+  (mkdir /dev/pts
+  mount -t devpts none /dev/pts) > /dev/null 2>&1
 fi;
-
-if [ ! -d /sys/block ];then
-  mount -t sysfs none /sys
-fi;
-
-#if [ -e /etc/.install ];then
-#  modprobe dm-mod
-#  dmraid -ay -i > /dev/null 2>&1
-#fi;
 
 #Bring Up Loopback Device
 /sbin/ip addr add 127.0.0.1/8 dev lo
@@ -47,7 +37,6 @@ fi;
 /sbin/ip link set dev dummy0 up
 /sbin/ip route add 127.255.255.252/30 src 127.255.255.253 dev dummy0 scope link table 80) > /dev/null 2>&1
 
-#Setup Welcome Message And Hostname
 if [ -e /etc/netsentry-version ];then
   eval `cat /etc/netsentry-version`
  else
@@ -64,28 +53,12 @@ if [ -e /etc/HOSTNAME ];then
   fi
 fi;
 
-#Setup Disk Mapper
-(mount -t ramfs none /var/lock/lvm
-/usr/sbin/vgchange -a y --sysinit
-/usr/sbin/vgscan --mknodes
-umount /var/lock/lvm) >/dev/null 2>&1
-
 #if [ "`/sbin/dmraid -c -sa -i | grep -iv "No RAID"`" ];then
 #  ln -s mapper/`/sbin/dmraid -c -sa -i` /dev/mda
 #  for mddev in /dev/mapper/`/sbin/dmraid -c -sa -i`? ;do 
 #    echo $mddev |awk '{printf "ln -s %s /dev/mda%s\n",substr($1,6),substr($1,length($1))}' |sh
 #  done
 #fi;
-
-if [ ! -d /dev/loop ];then
-  mkdir /dev/loop
-  for ldev in 0 1 2 3 4 5 6 7;do
-    mknod /dev/loop/$ldev b 7 $ldev;
-    if [ ! -e /dev/loop$ldev ];then
-      ln -s /dev/loop/$ldev /dev/loop$ldev;
-    fi;
-  done
-fi;
 
 if [ -e /etc/.install ];then
   mount -f -t ext4 /dev/flash/install / > /dev/null 2>&1
@@ -94,10 +67,6 @@ if [ -e /etc/.install ];then
   mount -t ramfs none /var > /dev/null 2>&1
   mount -t ramfs none /root > /dev/null 2>&1
   mount -t tmpfs none /tmp > /dev/null 2>&1
-
-  mount -t proc none /proc > /dev/null 2>&1
-  mount -t devpts none /dev/pts > /dev/null 2>&1
-  mount -t tmpfs none /dev/shm > /dev/null 2>&1
 
   for vardir in log run lock tmp lib spool home state named empty logs net-snmp db;do
     mkdir /var/$vardir
@@ -130,7 +99,7 @@ if [ -e /etc/.install ];then
 
   chmod 755 /var/spool/hylafax
   chown fax.fax /var/spool/hylafax
-  
+
   mkdir /var/spool/mailscanner/incoming
   mkdir /var/spool/mailscanner/quarantine
   mkdir /var/spool/mailscanner/archive
@@ -172,21 +141,15 @@ if [ -e /etc/.install ];then
   cp /etc/root.cache /var/named
   echo "clear" > /root/.bash_logout
 
+  mount -t ramfs none /run/udev
+  /libexec/udev/udevd --daemon
+
   #Load Network Modules
   for ADAPTER in `lspci -nm |awk -F\" -v LPATH=/lib/modules/${LKERNEL} '$2 == "Class 0200" {printf "grep -E \"%s.*%s\" %s/modules.pcimap\n",$4,$6,LPATH}' |sh |awk '{print $1}' |sort |uniq`;do 
     if [ ! -d /sys/module/${ADAPTER} ];then
       /sbin/modprobe $ADAPTER > /dev/null 2>&1
     fi;
   done
-
-  #Fire Up Device Discovery And Initilise Devices
-  /sbin/udevtrigger
-  /sbin/udevsettle --timeout=30
-
-  while [ "`ps ax |grep /sbin/hotplug |grep -v grep`" ] && [ "$time_out" != "XXXXXXXXXX" ];do
-    time_out=X$time_out
-    sleep 2;
-  done;
 
   mount -a
   /sbin/hdparm -c1 -d1 /dev/hd? > /dev/null 2>&1
@@ -221,8 +184,6 @@ if [ -e /etc/.install ];then
   /usr/sbin/syslogd &
   /usr/sbin/klogd -c 1 &
  else
-  /sbin/modprobe usbcore > /dev/null 2>&1
-
   #Load IMQ Devices And Netfilter
   (/sbin/modprobe imq numdevs=16
   /sbin/modprobe lp) >/dev/null 2>&1
@@ -256,7 +217,7 @@ if [ -e /etc/.install ];then
   #Load Mouse Needed For Boom
   /sbin/modprobe psmouse > /dev/null 2>&1
 
-  #load the vesa fb if no other fb is loaded 
+  #load the vesa fb if no other fb is loaded
   if [ ! -e /dev/fb1 ];then
      ls -l /lib/modules/${LKERNEL}/kernel/drivers/video/uvesafb.ko.gz > /dev/null 2>&1
      if [ $? == 0 ];then
@@ -280,6 +241,9 @@ if [ -e /etc/.install ];then
 
   #Remount Root Device Read Write
   mount -n -o remount,rw /
+  if [ ! -d /run/udev ];then
+    mkdir -p /run/udev
+  fi;
 
   #Mount ext3 as ext4
 #  if [ "`grep -w ext3 /etc/fstab`" ];then
@@ -318,7 +282,7 @@ if [ -e /etc/.install ];then
     if [ ! \"`blkid %s -s UUID`\" ];then\
       touch /tmp/.fstab.new\
       mkswap %s;\
-    fi;\n",$1,$1,$1}' |sh > /dev/null 2>&1
+    fi;\n",$1,$1}' |sh > /dev/null 2>&1
 
   #write swap partitions to fstab
   if [ -e /tmp/.fstab.new ];then
@@ -347,7 +311,9 @@ if [ -e /etc/.install ];then
   fi;
 
   #Link FD
-  ln -s /proc/self/fd /dev
+  if [ ! -e /dev/fd ];then
+    ln -s /proc/self/fd /dev
+  fi;
 
   #Setup LCR
   if [ -e /dev/mISDNtimer ] && [ -x /usr/sbin/lcr ];then
@@ -366,9 +332,13 @@ if [ -e /etc/.install ];then
       fi;
     fi
   fi;
+
   if [ -e /lib/modules/${LKERNEL}/dahdi ];then
     /sbin/modprobe wctdm > /dev/null 2>&1
   fi;
+
+  #Start UDEVD
+  /libexec/udev/udevd --daemon
 
   #Housekeeping Delete Orphaned Files
   if [ -e /etc/nologin ];then
@@ -393,13 +363,13 @@ if [ -e /etc/.install ];then
   #File Server
   if [ -e /var/lock/gencache.tdb ];then
     rm /var/lock/gencache.tdb
-  fi; 
+  fi;
   if [ -e /var/lock/browse.dat ];then
     rm /var/lock/browse.dat
-  fi; 
+  fi;
   if [ -e /var/lock/wins.dat ];then
     rm /var/lock/wins.dat
-  fi; 
+  fi;
   if [ ! -d /var/lock/LCK..tts ];then
     mkdir /var/lock/LCK..tts
     chmod 1777 /var/lock/LCK..tts
@@ -623,18 +593,9 @@ EOF
     fi;
   done
 
-  #Fire Up Device Discovery And Initilise Devices
-  /sbin/udevtrigger
-  /sbin/udevsettle --timeout=30
-
-  while [ "`ps ax |grep /sbin/hotplug |grep -v grep`" ] && [ "$time_out" != "XXXXXXXXX" ];do
-    time_out=X$time_out
-    sleep 3;
-  done;
-
   #Mount All Other Filesytems Except NFS
   mount -at nonfs > /dev/null 2>&1
-  
+
   #Configure The Bridge
   if [ -x /etc/rc.d/rc.interface ]; then
     /etc/rc.d/rc.interface > /dev/null 2>&1
@@ -659,6 +620,11 @@ EOF
   done;
 fi;
 
+
+#Fire Up Device Discovery And Initilise Devices
+(/bin/udevadm trigger
+/bin/udevadm settle) >/dev/null 2>&1
+
 if [ -d /initrd/isofs/boot ] && [ -d /media ];then
   mount --move /initrd/isofs /media > /dev/null 2>&1
 fi;
@@ -669,7 +635,7 @@ umount /initrd/sys
 umount /initrd/proc
 umount /initrd) > /dev/null 2>&1
 
-if [ ! -e /initrd/linuxrc ];then 
+if [ ! -e /initrd/linuxrc ];then
   blockdev --flushbufs /dev/ram0
 fi;
 
@@ -704,16 +670,6 @@ if [ ! -e /etc/resolv.conf ];then
   echo "domain company.co.za" > /etc/resolv.conf
 fi;
 
-if [ -e /etc/HOSTNAME ];then
-  /usr/bin/hostname -F /etc/HOSTNAME
- else
-  if [ -e /etc/.networksentry-lite ];then
-    /usr/bin/hostname $HN_ADDR-lite
-   else
-    /usr/bin/hostname $HN_ADDR
-  fi
-fi;
-
 if [ ! -e /etc/.install ];then
   #Turn On Syn Flood Protection
   if [ -e /proc/sys/net/ipv4/tcp_syncookies ];then
@@ -746,9 +702,9 @@ if [ ! -e /etc/.install ];then
 
   #Load Dummy Sound Card And Set Up Any Found Cards
   if [ -d /lib/modules/${LKERNEL}/kernel/sound/ ];then
-    modprobe snd-dummy >/dev/null 2>&1
-    modprobe snd-pcm-oss >/dev/null 2>&1
-    (/sbin/modprobe snd-opl3-synth
+    (/sbin/modprobe snd-dummy
+    /sbin/modprobe snd-pcm-oss
+    /sbin/modprobe snd-opl3-synth
     /sbin/modprobe snd-opl4-synth
     /sbin/modprobe snd-emux-synth
     /sbin/modprobe snd_seq_midi
