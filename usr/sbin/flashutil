@@ -448,7 +448,6 @@ Sync_Update() {
 
 Update_Flash() {
   if [ -d ${CORE}/install/core ];then
-    Make_Bootetc ${CORE}
     Local_Sync ${CORE} ${MNTP}
    else
     Remote_Sync ${MNTP} ${1}
@@ -463,6 +462,8 @@ Update_Flash() {
       if [ "${1}" ];then
         Tar_Kernel ${MNTP} ${1}
       fi;
+     else
+      Make_Bootetc ${CORE}
     fi;
     Check_Grub
     if [ -d ${BASE} ];then
@@ -648,9 +649,9 @@ Remote_Sync() {
     echo "Distribution (Non Core)"
     rsync ${ROPT} --delete --exclude=/dev/* --exclude=/sys/* --exclude=/proc/* --exclude=/lost+found --include=/boot/grub/background.jpg \
                --exclude=/lib/modules/* --exclude=/boot/vmlinuz-install --exclude=/boot/System.map-install  --exclude=/boot/initrd-install* \
-               --exclude=/boot/grub/* --exclude=/mnt/install/* --exclude=/etc/mtab --exclude=/install/avirus/* --exclude=/mnt/update/* \
-               --exclude=/install/avirus/* --exclude=/install/update/* --exclude=/install/core/* --exclude=/install/tools/* --exclude=/lib/firmware/* \
-               --exclude=/install/netsentry-version ${SERV}::install/ ${1}/
+               --exclude=/boot/grub/* --exclude=/mnt/install/* --exclude=/etc/mtab --exclude=/etc/fstab --exclude=/install/avirus/* \
+               --exclude=/mnt/update/*  --exclude=/install/avirus/* --exclude=/install/update/* --exclude=/install/core/* \
+               --exclude=/install/tools/* --exclude=/lib/firmware/* --exclude=/install/netsentry-version ${SERV}::install/ ${1}/
     RERR=$?
     echo
    else
@@ -661,7 +662,7 @@ Remote_Sync() {
     DOVER=1;
     if [ ${ISDTS} == 1 ];then
       echo "Base Files (Local Copy [No Kernel])"
-      rsync ${ROPT} -u --include=/install/core/core.filter --include=/install/core/install.tbz --exclude=/install/core/* \
+      rsync ${ROPT} -u --include=/install/core/core.filter --exclude=/install/core/* \
              --exclude=/lib/modules/* --exclude=/boot/vmlinuz-install --exclude=/boot/System.map-install --exclude=/lib/firmware/* \
              --exclude=/install/avirus/* --exclude=/install/update/* --exclude=/boot/initrd-install* --exclude=/install/tools/* ${SERV}::base/ ${1}
       RERR=$?
@@ -1006,6 +1007,7 @@ _EOF_
   fi;
 
 cat <<_EOF_
+sleep 2
 vgchange -a y --sysinit lvm
 mount -t ramfs none /var/lock/lvm
 vgmknodes
@@ -1082,6 +1084,7 @@ EOF
 
   cat << EOF
 
+sleep 2
 vgchange -a y --sysinit
 mount -t ramfs none /var/lock/lvm
 vgmknodes

@@ -188,11 +188,10 @@ if [ -e /etc/.install ];then
   (/sbin/modprobe imq numdevs=16
   /sbin/modprobe lp) >/dev/null 2>&1
 
-  /sbin/modprobe -a -lt netfilter \*nf_nat* |awk -F/ '{printf "modprobe %s\n",substr($9,0,index($9,".")-1)}' |sh > /dev/null 2>&1
-  /sbin/modprobe -a -lt hwmon |awk -F/ '{printf "modprobe %s\n",substr($8,0,index($8,".")-1)}' |sh > /dev/null 2>&1
-  /sbin/modprobe -a -lt acpi |awk -F/ '{printf "modprobe %s\n",substr($8,0,index($8,".")-1)}' |sh > /dev/null 2>&1
-  /sbin/modprobe -a -lt dma |awk -F/ '{printf "modprobe %s\n",substr($8,0,index($8,".")-1)}' |sh > /dev/null 2>&1
-  /sbin/modprobe -a -lt cpu/cpufreq |awk -F/ '{printf "modprobe %s\n",substr($11,0,index($11,".")-1)}' |sh > /dev/null 2>&1
+  (/sbin/modprobe -a -lt netfilter \*nf_nat* |awk -F/ '{printf "modprobe %s\n",substr($5,0,index($5,".")-1)}' |sh
+  /sbin/modprobe -a -lt hwmon |awk -F/ '{printf "modprobe %s\n",substr($4,0,index($4,".")-1)}' |sh
+  /sbin/modprobe -a -lt acpi |awk -F/ '{printf "modprobe %s\n",substr($4,0,index($4,".")-1)}' |sh 
+  /sbin/modprobe -a -lt dma |awk -F/ '{printf "modprobe %s\n",substr($4,0,index($4,".")-1)}' |sh) > /dev/null 2>&1
 
   if [ -e /lib/modules/${LKERNEL}/extra/dazuko.ko.gz ];then
     /sbin/modprobe dazuko >/dev/null 2>&1
