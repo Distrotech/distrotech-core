@@ -1,7 +1,38 @@
 #!/bin/bash
 
-flashutil upgrade $@
-exit $?
+if [ ! -e "/etc/firewall.conf" ] || [ ! -e "/etc/netsentry-version" ];then
+  echo "This does not look like a valid server to upgrade"
+  exit 255
+fi
+
+eval `cat /etc/netsentry-version`
+
+if [ "${2}" ];then   
+  SERV=${2}
+ elif [ ! "${RSERV}" ];then
+  SERV="127.0.0.1"
+ else
+  SERV=${RSERV}
+fi
+
+rsync -az --contimeout=20 rsync://${SERV}/updates/ / > /dev/null 2>&1
+RES=$?
+if [ ${RES} != 0 ] && [ "${SERV}" != "127.0.0.1" ];then
+  SERV=127.0.0.1
+  rsync -az --contimeout=20 rsync://${SERV}/updates/ / > /dev/null 2>&1
+fi;
+RES=$?
+
+if [ "${1}" ] && [ "${KERNEL}" != "${1}" ];then
+  UPKERN=${1}
+ else
+  UPKERN=${KERNEL}
+fi;
+
+flashutil upgrade ${UPKERN} ${SERV}
+RES=$?
+
+exit ${RES}
 
 #Old upgrade postgre to ver 8
 #  if [ ! "`psql -V |head -1|grep "8.2.3"`" ];then

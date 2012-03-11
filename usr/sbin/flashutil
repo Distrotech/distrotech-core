@@ -14,10 +14,10 @@ UOFFSET=1048576
 ULIMIT=510656512
 
 ROPT_LOC="-avHKOP"
-ROPT="${ROPT_LOC} -z --inplace --timeout=60"
+ROPT="${ROPT_LOC} -z --inplace --timeout=120"
 ROPT_FAT="-rtvcOP --chmod=ugo=rwX --no-p --no-g --inplace --delete"
 UROPT_LOC="${ROPT_LOC} -u --delay-updates --exclude-from=/var/spool/apache/htdocs/ns/config/exclude.nfs"
-UROPT="${UROPT_LOC} -z --timeout=60"
+UROPT="${UROPT_LOC} -z --timeout=120"
 
 Make_GPT() {
   parted -s ${1} mklabel msdos
@@ -626,7 +626,8 @@ Remote_Sync() {
     if [ ${ISDTS} == 1 ];then
       echo "Filelist/Version"
       rsync ${ROPT} -R --include=/install/netsentry-version --include=/install/core/filelist --include=/install/core/core.filter \
-            --include=/install/core/install.tbz --include=/install/core --exclude=/install/core/* --exclude=/install/update/* ${SERV}::base/install/* ${1}
+            --include=/install/core/install.tbz --include=/install/core --exclude=/install/core/* --exclude=/install/update/* \
+            rsync://${SERV}/base/install/* ${1}
       echo
       if [ -e ${1}/install/core/filelist ];then
         rsync -aHKOq --no-d --exclude=/* --out-format="%n" --files-from=${1}/install/core/filelist / ${1}
@@ -637,7 +638,7 @@ Remote_Sync() {
       fi;
      else
       echo "Core files"
-      rsync ${ROPT} --exclude=/install/tools/* --exclude=/install/avirus/* --exclude=/install/update/* ${SERV}::base/ ${1}
+      rsync ${ROPT} --exclude=/install/tools/* --exclude=/install/avirus/* --exclude=/install/update/* rsync://${SERV}/base/ ${1}
       RERR=$?
       echo
     fi;
@@ -651,7 +652,7 @@ Remote_Sync() {
                --exclude=/lib/modules/* --exclude=/boot/vmlinuz-install --exclude=/boot/System.map-install  --exclude=/boot/initrd-install* \
                --exclude=/boot/grub/* --exclude=/mnt/install/* --exclude=/etc/mtab --exclude=/etc/fstab --exclude=/install/avirus/* \
                --exclude=/mnt/update/*  --exclude=/install/avirus/* --exclude=/install/update/* --exclude=/install/core/* \
-               --exclude=/install/tools/* --exclude=/lib/firmware/* --exclude=/install/netsentry-version ${SERV}::install/ ${1}/
+               --exclude=/install/tools/* --exclude=/lib/firmware/* --exclude=/install/netsentry-version rsync://${SERV}/install/ ${1}/
     RERR=$?
     echo
    else
@@ -664,7 +665,8 @@ Remote_Sync() {
       echo "Base Files (Local Copy [No Kernel])"
       rsync ${ROPT} -u --include=/install/core/core.filter --exclude=/install/core/* \
              --exclude=/lib/modules/* --exclude=/boot/vmlinuz-install --exclude=/boot/System.map-install --exclude=/lib/firmware/* \
-             --exclude=/install/avirus/* --exclude=/install/update/* --exclude=/boot/initrd-install* --exclude=/install/tools/* ${SERV}::base/ ${1}
+             --exclude=/install/avirus/* --exclude=/install/update/* --exclude=/boot/initrd-install* --exclude=/install/tools/* \
+             rsync://${SERV}/base/ ${1}
       RERR=$?
       echo
 
@@ -679,12 +681,13 @@ Remote_Sync() {
           mkdir -p /var/spool/rsync/kernuser
         fi;
         echo "Kernel Files / Firmware (${KVER})"
-        rsync ${ROPT} --delete ${SERV}::kernuser/kernel-${KVER}-* /var/spool/rsync/kernuser/
+        rsync ${ROPT} --delete rsync://${SERV}/kernuser/kernel-${KVER}-* /var/spool/rsync/kernuser/
         RERR=$?
         echo
         if [ ${RERR} == 0 ];then
           echo "Kernel/Modules (${KVER})"
-          rsync ${ROPT} -u --include=/boot/[vS]*${2}-* --include=/lib/modules/${2}-* --exclude=/lib/modules/* --exclude=/boot/* --filter=". ${1}/etc/rsyncd/kernel.filter" ${SERV}::kernel/ /
+          rsync ${ROPT} -u --include=/boot/[vS]*${2}-* --include=/lib/modules/${2}-* --exclude=/lib/modules/* --exclude=/boot/* \
+                --filter=". ${1}/etc/rsyncd/kernel.filter" rsync://${SERV}/kernel/ /
           RERR=$?
           echo
         fi;
@@ -708,7 +711,7 @@ Remote_Sync() {
       echo "Base Files (Local Repository Kernel)"
       rsync ${ROPT} -u --include=/install/core/kernel.tar.bz2 --include=/install/netsentry-version --include=/install/core \
              --exclude=/lib/modules/*/modules.* --exclude=/boot/initrd-install* --include=/install/core/core.filter --exclude=/install/core/* \
-             --exclude=/install/tools --exclude=/install/* ${SERV}::base/ ${1}
+             --exclude=/install/tools --exclude=/install/* rsync://${SERV}/base/ ${1}
       RERR=$?
       echo
     fi;
@@ -719,13 +722,13 @@ Remote_Sync() {
   if [ ${RERR} == 0 ];then
     if [ ${RERR} == 0 ];then
       echo "Anti Virus On Repository"
-      rsync ${ROPT} -u --delete ${SERV}::avirus/ ${1}/install/avirus
+      rsync ${ROPT} -u --delete rsync://${SERV}/avirus/ ${1}/install/avirus
       RERR=$?
       echo
     fi;
     if [ ${RERR} == 0 ];then
       echo "Update Folder"
-      rsync ${ROPT} -u --delete ${SERV}::programs/var/spool/update/ ${1}/install/update
+      rsync ${ROPT} -u --delete rsync://${SERV}/programs/var/spool/update/ ${1}/install/update
       RERR=$?
       echo
     fi;
@@ -1007,7 +1010,7 @@ _EOF_
   fi;
 
 cat <<_EOF_
-sleep 2
+sleep 5
 vgchange -a y --sysinit lvm
 mount -t ramfs none /var/lock/lvm
 vgmknodes
@@ -1064,27 +1067,24 @@ EOF
 sleep 5
 /bin/mount -n -o ro -t iso9660 -L DISTROTECH_INSTALL /isofs
 /sbin/losetup /dev/loop0 /isofs/flash.hdd
-sleep 5
+
 EOF
-   elif [ "${3}" == "loop" ];then
+   elif [ "${3}" == "loop" ] && [ -e ${BASE}/flash.hdd ];then
     LROOT=`grub-probe -t fs_uuid ${BASE}`
     LFLASH=`grub-mkrelpath ${BASE}/flash.hdd`
 
     if [ "${LROOT}" ] && [ ${LFLASH} ];then
     cat << EOF
-sleep 3
+sleep 5
 /bin/mount -n -o ro -t ext4 -U ${LROOT} /isofs
 /sbin/losetup /dev/loop0 /isofs${LFLASH}
-sleep 3
+
 EOF
     fi;
-   else
-    echo "sleep 5";
   fi;
 
   cat << EOF
-
-sleep 2
+sleep 5
 vgchange -a y --sysinit
 mount -t ramfs none /var/lock/lvm
 vgmknodes
@@ -1411,6 +1411,7 @@ Local_Upgrade() {
     echo
   fi;
   if [ ${RERR}  == 0 ];then
+    touch /boot/vmlinuz-${1}-smp /boot/vmlinuz-${1}-install /boot/System.map-${1}-smp /boot/System.map-${1}-install
     echo updates
     rsync ${ROPT_LOC} -u --delay-updates ${MNTP}/install/update/ /var/spool/update
     RERR=$?
@@ -1424,7 +1425,7 @@ Local_Upgrade() {
   return ${RERR}
 }
 
-Repo_Sync() {
+Repo_Mount() {
   if [ -e /dev/flash/install ];then
     vgrename flash flashm
     vgmknodes
@@ -1454,81 +1455,62 @@ Repo_Sync() {
   fi;
 
   Load_Flash
-  RET=$?
-  if [ ${RET} == 0 ];then
-    Update_Flash
-    RET=$?
-  fi;
-
-  return ${RET}
+  return $?
 }
 
 Remote_Upgrade() {
-  RES=0;
-
   if [ -d ${CORE}/install/core ];then
     Remote_Sync ${CORE} ${1}
     RES=$?
     if [ ${RES} == 0 ];then
       Tar_Kernel ${CORE} ${1}
       Make_Bootetc ${CORE}
+     else
+       return ${RES}
     fi;
   fi;
 
-  if [ -e /dev/flash/install ] && [ ${RES} == 0 ];then
-    Mount_Flash
-    RES=$?
-    if [ ${RES} == 0 ];then
-      Update_Flash ${1}
-      RES=$?
-    fi;
-  fi;
-
-  if [ ${RES} != 0 ];then
-    return ${RES}
-  fi;
-
-  if [ ! -e ${BASE}/flash.hdd ] && [ -e /dev/flash/install ];then
-    Local_Upgrade ${KERNEL}
-    return $?
-   elif [ ! -e ${BASE}/flash.hdd ];then
+  if [ "`grep -E "^(\/dev\/flash\/)|(\/dev\/mapper\/flash\-)" /proc/mounts`" ];then
     Sync_Remote ${1}
     return $?
-   elif [ -e /dev/flash/install ];then
-    Umount_Flash
-    Clean_Init
-    if [ -d ${MNTP}/lost+found ] || [ -e /dev/loop-flash ] || [ -e /dev/loop-util ];then
-      echo "Error Media not unmounted !!!"
-      exit 255
+  fi;
+
+  if [ -e /dev/flash/install ] || [ -e ${BASE}/flash.hdd ];then
+    if [ -e ${BASE}/flash.hdd ] && [ -e /dev/flash/install ];then
+      Repo_Mount
+      RES=$?
+      if [ ${RES} == 0 ] && [ -d ${CORE}/install/core ];then
+        Remote_Sync ${CORE} ${1}
+        RES=$?
+        if [ ${RES} == 0 ];then
+          Tar_Kernel ${CORE} ${1}
+          Make_Bootetc ${CORE}
+        fi;
+      fi;
+     elif [ -e ${BASE}/flash.hdd ];then
+      Load_Flash
+      RES=$?
+     else
+      Mount_Flash
+      RES=$?
     fi;
-    Repo_Sync
-    RES=$?
-   else
-    Load_Flash
-    RES=$?
+
     if [ ${RES} == 0 ];then
       Update_Flash ${1}
       RES=$?
+      if [ ${RES} == 0 ];then
+        Local_Upgrade ${KERNEL};
+        RES=$?
+      fi;
     fi;
+    return ${RES}
+   else
+    Sync_Remote ${1}
+    return $?
   fi;
-  if [ ${RES} == 0 ];then
-    Local_Upgrade ${KERNEL}
-    RES=$?
-  fi;
-  return ${RES}
 }
 
 Vbox_Upgrade() {
-  RES=255
-
-  /usr/sbin/socktest ${SERV} 873 > /dev/null 2>&1
-  RES=$?
-  if [ ${RES} != 0 ] && [ "${SERV}" != "127.0.0.1" ];then
-    SERV=127.0.0.1
-    /usr/sbin/socktest ${SERV} 873 > /dev/null 2>&1
-    RES=$?
-  fi;
-
   if [ ${RES} != 0 ] && [ -e /dev/flash/upgrade ];then
     Mount_Flash
     RES=$?
@@ -1887,12 +1869,10 @@ Sync_Remote() {
   fi;
 
   if [ -d ${CORE}/install/core ];then
-    echo "vbox/etc/rsyncd /etc/"
-    rsync ${UROPT_LOC} ${CORE}/etc/rsyncd /etc/
-    echo;echo
     echo "vbox /"
     rsync ${UROPT_LOC} --filter=". /etc/rsyncd/vbox.filter" ${CORE}/ /
     echo;echo
+    ldconfig /dev/null 2>&1
     echo "share /var/spool/samba/share/"
     rsync ${UROPT_LOC} --filter=". /etc/rsyncd/share.filter" ${CORE}/install/tools/ /var/spool/samba/share
     echo;echo
@@ -1906,9 +1886,10 @@ Sync_Remote() {
     for rdatain in "vbox /"  "share /var/spool/samba/share/" "avirus /var/spool/avirus";do
       if [ ${RERR} == 0 ];then
         echo $rdatain
-        rsync ${UROPT} ${SERV}::$rdatain
-        echo;echo
+        rsync ${UROPT} rsync://${SERV}/$rdatain
         RERR=$?;
+        echo;echo
+        ldconfig > /dev/null 2>&1
       fi;
     done;
   fi;
@@ -1916,15 +1897,16 @@ Sync_Remote() {
   for rdatain in "programs /" "manuals /var/spool/apache/htdocs/" "${ast_repo} /";do
     if [ ${RERR} == 0 ];then
       echo $rdatain
-      rsync ${UROPT} ${SERV}::$rdatain
-      echo;echo
+      rsync ${UROPT} rsync://${SERV}/$rdatain
       RERR=$?;
+      echo;echo
+      ldconfig > /dev/null 2>&1
     fi;
   done;
 
   #Sync Asterisk Modules
   if [ ${RERR} == 0 ];then
-    rsync ${UROPT} -R --delete --exclude=chan_lcr.so ${SERV}::${ast_repo}/usr/lib/asterisk/modules-${ast_ver} /
+    rsync ${UROPT} -R --delete --exclude=chan_lcr.so rsync://${SERV}/${ast_repo}/usr/lib/asterisk/modules-${ast_ver} /
     RERR=$?;
   fi;
 
@@ -1932,7 +1914,7 @@ Sync_Remote() {
   if [ "${1}" ] && [ ${RERR} == 0 ];then
     echo "Kernel Update"
     rsync ${UROPT} --include=/boot/[vS]*${1}-* --include=/lib/modules/${1}-* \
-          --exclude=/lib/modules/* --exclude=/boot/* ${SERV}::kernel/ /
+          --exclude=/lib/modules/* --exclude=/boot/* rsync://${SERV}/kernel/ /
     RERR=$?
 
     if [ -d /var/spool/rsync/kernuser/kernel-${1}-smp ] && [ -d ${CORE}/install/core ] && [ ${RERR} == 0 ];then
@@ -1940,12 +1922,14 @@ Sync_Remote() {
       rsync ${UROPT_LOC} /var/spool/rsync/kernuser/kernel-${1}-smp/* /
      elif [ ${RERR} == 0 ];then
       echo kernuser/kernel-${1}-smp/* /
-      rsync ${UROPT} ${SERV}::kernuser/kernel-${1}-smp/* /
+      rsync ${UROPT} rsync://${SERV}/kernuser/kernel-${1}-smp/* /
       RERR=$?;
     fi;
+    ldconfig > /dev/null 2>&1
   fi;
 
   if [ ${RERR} == 0 ];then
+    touch /boot/vmlinuz-${1}-smp /boot/vmlinuz-${1}-install /boot/System.map-${1}-smp /boot/System.map-${1}-install
     Post_Update ${1}
   fi;
 
@@ -1974,7 +1958,13 @@ Sync_Local(){
    else
     /usr/bin/rsync ${EROPT} ${SPATH}/ ${3}
   fi;
-  return $?
+  RES=$?
+
+  if [ "${1}" == "vbox" ] || [ "${1}" == "programs" ];then
+    ldconfig > /dev/null 2>&1
+  fi;
+
+  return ${RES}
 }
 
 if [ "`id -u`" != "0" ];then
@@ -2111,7 +2101,10 @@ if [ "${1}" == "iso" ];then
     echo "Cant sync repository is it loaded / non existant"
     exit 255
   fi;
-  Repo_Sync
+  Repo_Mount
+  if [ $? == 0 ];then
+    Update_Flash
+  fi;
   Umount_Flash
  elif [ "${1}" == "grub" ];then
   Clean_Init
@@ -2232,15 +2225,25 @@ if [ "${1}" == "iso" ];then
     echo "Local copy not seeded ??"
     exit 255;
    else
+    RES=0;
     if [ "${3}" ];then
       SERV=${3}
-     elif [ ! "${RSERV}" ];then
-      SERV="127.0.0.1"
      else
-      SERV=${RSERV}
+      if [ "${RSERV}" ];then
+        SERV=${RSERV}
+      fi;
+      rsync -az --contimeout=20 rsync://${SERV}/updates/ / > /dev/null 2>&1
+      RES=$? 
+      if [ ${RES} != 0 ] && [ "${SERV}" != "127.0.0.1" ];then
+        SERV=127.0.0.1
+        rsync -az --contimeout=20 rsync://${SERV}/updates/ / > /dev/null 2>&1
+        RES=$?
+      fi;
     fi
-    Vbox_Upgrade ${UPKERN}
-    RES=$?
+    if [ ${RES} == 0 ];then
+      Vbox_Upgrade ${UPKERN}
+      RES=$?
+    fi;
   fi;
 
   Umount_Flash
