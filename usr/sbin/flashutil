@@ -194,7 +194,7 @@ Umount_Flash() {
     (dmsetup remove /dev/flashm/install
     dmsetup remove /dev/flashm/upgrade) > /dev/null 2>&1
   fi;
-  
+
   sleep 2
   vgmknodes >/dev/null 2>&1
   if [ -d /dev/flashm ] && [ ! -d /dev/flash ];then
@@ -2183,15 +2183,17 @@ if [ "${1}" == "iso" ];then
     exit 255
   fi;
 
-  if [ -e /dev/loop-flash ] || [ -e /dev/loop-util ] || [ -d ${MNTP}/lost+found ];then
-    Umount_Flash
+  if [ ! "`pidof rsync`" ];then
+    if [ -e /dev/loop-flash ] || [ -e /dev/loop-util ] || [ -d ${MNTP}/lost+found ];then
+      Umount_Flash
+      if [ -e /dev/loop-flash ] || [ -e /dev/loop-util ] || [ -d ${MNTP}/lost+found ];then
+        echo "Error Media not unmounted !!!"
+        exit 255
+      fi;
+    fi;
   fi;
-  Clean_Init
 
-  if [ -d ${MNTP}/lost+found ] || [ -e /dev/loop-flash ] || [ -e /dev/loop-util ];then
-    echo "Error Media not unmounted !!!"
-    exit 255
-  fi;
+  Clean_Init
 
   eval `cat /etc/netsentry-version`
 
