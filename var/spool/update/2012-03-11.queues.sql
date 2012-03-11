@@ -1,4 +1,4 @@
-ALTER TABLE users ADD sendrpid varchar(8) default='no';
+ALTER TABLE users ADD sendrpid varchar(8) default 'no';
 CREATE INDEX cdr_callrep ON cdr USING btree (userfield,dstchannel,disposition);
 CREATE INDEX cdr_callrepdate ON cdr USING btree (userfield,dstchannel,disposition,calldate);
 CREATE INDEX cdr_callrepdate2 ON cdr USING btree (userfield,dstchannel,calldate);
