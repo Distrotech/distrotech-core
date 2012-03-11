@@ -21,6 +21,13 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
 LKERNEL=`/usr/bin/uname -r`
 
+if [ ! -e /dev/console ];then
+  mount -t ramfs none /dev
+  mkdir /dev/udevdb
+  /sbin/udevstart
+  /sbin/udevd --daemon
+fi;
+
 if [ ! -d /dev/pts ];then
   (mkdir /dev/pts
   mount -t devpts none /dev/pts) > /dev/null 2>&1
@@ -142,7 +149,9 @@ if [ -e /etc/.install ];then
   echo "clear" > /root/.bash_logout
 
   mount -t ramfs none /run/udev
-  /libexec/udev/udevd --daemon
+  if [ -x /libexec/udev/udevd ];then
+    /libexec/udev/udevd --daemon
+  fi;
 
   #Load Network Modules
   for ADAPTER in `lspci -nm |awk -F\" -v LPATH=/lib/modules/${LKERNEL} '$2 == "Class 0200" {printf "grep -E \"%s.*%s\" %s/modules.pcimap\n",$4,$6,LPATH}' |sh |awk '{print $1}' |sort |uniq`;do 
@@ -337,7 +346,9 @@ if [ -e /etc/.install ];then
   fi;
 
   #Start UDEVD
-  /libexec/udev/udevd --daemon
+  if [ -x /libexec/udev/udevd ];then
+    /libexec/udev/udevd --daemon
+  fi;
 
   #Housekeeping Delete Orphaned Files
   if [ -e /etc/nologin ];then
@@ -592,6 +603,16 @@ EOF
     fi;
   done
 
+  #Fire Up Old Device Discovery And Initilise Devices [Back Compat]
+  if [ -d /dev/udevdb ];then
+    /sbin/udevtrigger
+    /sbin/udevsettle --timeout=30
+    while [ "`ps ax |grep /sbin/hotplug |grep -v grep`" ] && [ "$time_out" != "XXXXXXXXX" ];do
+      time_out=X$time_out
+      sleep 3;
+    done;
+  fi;
+
   #Mount All Other Filesytems Except NFS
   mount -at nonfs > /dev/null 2>&1
 
@@ -621,8 +642,10 @@ fi;
 
 
 #Fire Up Device Discovery And Initilise Devices
-(/bin/udevadm trigger
-/bin/udevadm settle) >/dev/null 2>&1
+if [ -x /libexec/udev/udevd ];then
+  (/bin/udevadm trigger
+  /bin/udevadm settle) >/dev/null 2>&1
+fi;
 
 if [ -d /initrd/isofs/boot ] && [ -d /media ];then
   mount --move /initrd/isofs /media > /dev/null 2>&1
