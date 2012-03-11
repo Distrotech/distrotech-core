@@ -231,7 +231,7 @@ SELECT starttime,uniqueid,sessiontime,case when (substr(calledstation,1,2)='27')
             NOT cdr.dstchannel ~ '^Zap/[0-9]+-' AND NOT cdr.dstchannel ~ '^DAHDI/[0-9]+-' AND
             NOT cdr.dstchannel ~ '^mISDN/[0-9]+-' AND userfield ~ '^[0-9]{4}\$')";
   } else if ($type == "7") {
-     $chan="channel ~ 'SIP/[0-9]{8}-' OR cdr.dstchannel ~ 'SIP/[0-9]{8}-'";
+     $chan="(channel ~ '^SIP/[0-9]{8}-' OR cdr.dstchannel ~ '^SIP/[0-9]{8}-')";
   } else if ($type == "4") {
     $chan="(cdr.dstchannel ~ '" . $trunkchan . "' AND 
             dst ~ '(^0[1-6][0-9]{8}$)|(^0881[0-9]{6}$)|(^080[0-9]{7}$)|(^086[0-1][0-9]{6}$)|(^0862000000$)|(^0862[129][0-9]{5}$)|(^0867[1-5][0-9]{5}$)|(^0866[0-9]{6}$)|(^088[0-9]{7}$)|(^1021[0-9]$)|(^1013[1-6]$)|(^10177$)|(^1011[16]$)|(^102[0-9]$)|(^0900$)')";

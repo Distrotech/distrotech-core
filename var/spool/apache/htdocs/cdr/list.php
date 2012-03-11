@@ -33,25 +33,26 @@
 </TD><TD>
 <SELECT NAME=date>
 <%
-  $getcdr=pg_query($db,"SELECT date_part('month',calldate) AS month,
-                               date_part('year',calldate) AS year
-                             from cdr where 
-                               userfield != '' AND dstchannel != '' AND disposition='ANSWERED' AND 
-                               length(accountcode) = 4
-                             group by year,month
-                             order by year,month");
+  $getcdr=pg_query($db,"SELECT date_part('year', min(calldate)),date_part('month', min(calldate)),
+                               date_part('year', max(calldate)),date_part('month', max(calldate)) from cdr");
 
-  for($i=0;$i<pg_num_rows($getcdr);$i++) {
-    $r=pg_fetch_row($getcdr, $i);
-    print "<OPTION VALUE=\"" . $r[0] . "/" . $r[1] . "\"";
-    if ((($dtime['year'] == $r[1]) && ($dtime['mon'] == $r[0]) && (! isset($date))) ||
-        (($month[0] == $r[0]) && ($month[1] == $r[1]) && (isset($date)))) {
-      print " SELECTED";
-      $mqset="1";
-    } else if (($dtime['year'] == $r[1]) && ($dtime['mon'] == $r[0]) && ($mqset != "1")) {
-      print " SELECTED";
+  $r=pg_fetch_row($getcdr, $i);
+  for ($year=$r[0];$year <= $r[2];$year++) {
+    for($mon=1;$mon <= 12;$mon++) {
+      if ((($year == $r[0]) && ($mon < $r[1])) ||
+          (($year == $r[2]) && ($mon > $r[3]))) {
+        continue;
+      }
+      print "<OPTION VALUE=\"" . $mon . "/" . $year . "\"";
+      if ((($dtime['year'] == $year) && ($dtime['mon'] == $mon) && (! isset($date))) ||
+          (($month[0] == $year) && ($month[1] == $mon) && (isset($date)))) {
+        print " SELECTED";
+        $mqset="1";
+      } else if (($dtime['year'] == $year) && ($dtime['mon'] == $mon) && ($mqset != "1")) {
+        print " SELECTED";
+      }
+      print ">" . $year . "/" . $mon . "\n"; 
     }
-    print ">" . $r[0] . "/" . $r[1] . "\n"; 
   }
 %>
 </SELECT></TD></TR>

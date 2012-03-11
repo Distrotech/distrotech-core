@@ -104,69 +104,91 @@
   print printcsv(array(($fqueue == "")?"Agent":"Time","Tot. Calls","Tot. Time","Tot. Avg.","In Calls","In Time","In Avg.",
                        "Out Calls","Out Time","Out Avg.","Out Cost","ACD Calls","ACD Time","ACD Avg.","RNA","A. Dis"));
 }
+
+  $usersq=pg_query($db,"SELECT name,fullname||' ('||users.name||')' FROM users 
+		LEFT OUTER JOIN astdb AS local ON  (local.family='LocalPrefix' AND local.key=substr(name,1,2)) WHERE local.value=1 ORDER BY fullname,name");
+  for($qcnt=0;$qcnt < pg_num_rows($usersq);$qcnt++) {
+    $r=pg_fetch_array($usersq,$qcnt,PGSQL_NUM);
+    $userinf[$r[0]]['name']=$r[1];
+  }
+
+  $perstart="'" . $time_year . "-" . $time_month . "-" . $time_day ." " . $time_hour . ":" . $time_min . ":" . $time_sec . "'";
+  $perstop="'" . $mtime_year . "-" . $mtime_month . "-" . $mtime_day ." " . $mtime_hour . ":" . $mtime_min . ":" . $mtime_sec . "'";
+
+  $acdcallqsql="SELECT membername,count(CASE WHEN (event = 'CONNECT') THEN agent ELSE null END),
+                    sum(CASE WHEN (event='COMPLETECALLER' OR event='COMPLETEAGENT') THEN CAST(data2 AS integer) ELSE
+                      CASE WHEN (event='TRANSFER') THEN CAST(data4 AS integer) ELSE NULL END END),NULL,
+                    count(CASE WHEN (event = 'RINGNOANSWER') THEN agent ELSE null END),
+                    count(CASE WHEN (event = 'COMPLETEAGENT') THEN agent ELSE null END)
+                  FROM queue_log
+                    LEFT OUTER JOIN queue_members ON (queuename=queue_name AND (agent=membername or agent=interface))
+                  WHERE time > " . $perstart . " AND time < " . $perstop . " AND membername IS NOT NULL AND
+                        (event='CONNECT' OR event='RINGNOANSWER' OR event='COMPLETEAGENT' OR event='COMPLETECALLER' OR event='TRANSFER')
+                  GROUP BY membername";
+
+//  print $acdcallqsql . ";<P>";
+  $acdcallq=pg_query($db,$acdcallqsql);
+
+  for($qcnt=0;$qcnt < pg_num_rows($acdcallq);$qcnt++) {
+    $r=pg_fetch_array($acdcallq,$qcnt,PGSQL_NUM);
+    if (is_array($userinf[$r[0]])) {
+      $user=array_shift($r);
+      $r[2]=$r[1]/$r[0];
+      $userinf[$user]['acd']=$r;
+    }
+  }
+
+  $cdrcallqsql="SELECT users.name,
+                     count(CASE WHEN (cdr.dst = users.name) THEN cdr.uniqueid ELSE NULL END),
+                     sum(CASE WHEN (cdr.dst = users.name) THEN billsec ELSE NULL END),NULL,
+                     count(CASE WHEN (cdr.accountcode = users.name) THEN cdr.uniqueid ELSE NULL END),
+                     sum(CASE WHEN (cdr.accountcode = users.name) THEN billsec ELSE NULL END),NULL,
+                     sum(CASE WHEN (cdr.accountcode = users.name) THEN cost ELSE NULL END)
+                   FROM cdr
+                     LEFT OUTER JOIN trunkcost ON (cdr.uniqueid = trunkcost.uniqueid)
+                     LEFT OUTER JOIN users ON (dst=users.name OR cdr.accountcode=users.name)
+                   WHERE calldate > " . $perstart . " AND calldate < " . $perstop . " AND disposition='ANSWERED' AND
+                     users.name IS NOT NULL GROUP BY fullname,users.name";
+
+//  print $cdrcallqsql . ";<P>";
+  $cdrcallq=pg_query($db,$cdrcallqsql);
+
+  for($qcnt=0;$qcnt < pg_num_rows($cdrcallq);$qcnt++) {
+    $r=pg_fetch_array($cdrcallq,$qcnt,PGSQL_NUM);
+    if (is_array($userinf[$r[0]])) {
+      $user=array_shift($r);
+      $r[1]=($r[1] != "") ? $r[1] : "0";
+      $r[4]=($r[4] != "") ? $r[4] : "0";
+      $r[6]=($r[6] != "") ? $r[6] : "0";
+      $r[2]=($r[1] > 0) ? ($r[1]/$r[0]) : "0";
+      $r[5]=($r[4] > 0) ? ($r[4]/$r[3]) : "0";
+      $userinf[$user]['cdr']=$r;
+    }
+  }
+
   $ccnt=0;
   $toc=0;
   $rcol=0;
 
-  $acdstatq="SELECT " . $dfield . ",fullname||' ('||users.name||')',
-       count(CASE WHEN (event = 'CONNECT' OR ((cdr.accountcode = users.name OR cdr.dst = users.name) AND callid IS NULL AND queue_table.name IS NULL AND  disposition='ANSWERED')) THEN '1' ELSE null END) AS totcalls, 
-       sum(CASE WHEN (event='COMPLETECALLER' OR event='COMPLETEAGENT') THEN CAST(data2 AS integer) ELSE 
-             CASE WHEN (event='TRANSFER') THEN CAST(data4 AS integer) ELSE 
-             CASE WHEN ((cdr.dst = users.name AND callid IS NULL AND queue_table.name IS NULL) OR 
-                        (cdr.accountcode = users.name AND callid IS NULL)) THEN billsec ELSE NULL END END END) AS totcalltime,
-       avg(CASE WHEN (event='COMPLETECALLER' OR event='COMPLETEAGENT') THEN CAST(data2 AS integer) ELSE 
-             CASE WHEN (event='TRANSFER') THEN CAST(data4 AS integer) ELSE 
-             CASE WHEN (cdr.disposition='ANSWERED' AND ((cdr.dst = users.name AND callid IS NULL AND queue_table.name IS NULL)  OR 
-                        (cdr.accountcode = users.name AND callid IS NULL))) THEN billsec ELSE NULL END END END)  AS totavg,
-       count(CASE WHEN (cdr.dst = users.name AND callid IS NULL AND queue_table.name IS NULL AND disposition='ANSWERED') THEN cdr.uniqueid ELSE NULL END) AS incall,
-       sum(CASE WHEN (cdr.dst = users.name AND callid IS NULL AND queue_table.name IS NULL AND disposition='ANSWERED') THEN billsec ELSE NULL END) AS intime,
-       avg(CASE WHEN (cdr.dst = users.name AND callid IS NULL AND queue_table.name IS NULL AND disposition='ANSWERED') THEN billsec ELSE NULL END) AS inavg,
-       count(CASE WHEN (cdr.accountcode = users.name AND callid IS NULL AND disposition='ANSWERED') THEN cdr.uniqueid ELSE NULL END) AS outcall,
-       sum(CASE WHEN (cdr.accountcode = users.name AND callid IS NULL) THEN billsec ELSE NULL END) AS outtime,
-       avg(CASE WHEN (cdr.accountcode = users.name AND callid IS NULL AND disposition='ANSWERED') THEN billsec ELSE NULL END) AS outavg,
-       sum(CASE WHEN (cdr.accountcode = users.name AND callid IS NULL AND disposition='ANSWERED') THEN cost ELSE NULL END) AS outcost,
-       count(CASE WHEN (event = 'CONNECT') THEN agent ELSE null END) AS acdcalls, 
-       sum(CASE WHEN (event='COMPLETECALLER' OR event='COMPLETEAGENT') THEN CAST(data2 AS integer) ELSE 
-             CASE WHEN (event='TRANSFER') THEN CAST(data4 AS integer) ELSE NULL END END) AS acdcalltime,
-       avg(CASE WHEN (event='COMPLETECALLER' OR event='COMPLETEAGENT') THEN CAST(data2 AS integer) ELSE 
-             CASE WHEN (event='TRANSFER') THEN CAST(data4 AS integer) ELSE NULL END END) AS acdavg,
-       count(CASE WHEN (event = 'RINGNOANSWER') THEN agent ELSE null END) as rna,
-       count(CASE WHEN (event = 'COMPLETEAGENT') THEN agent ELSE null END) AS ahu
- FROM cdr
-   LEFT OUTER JOIN queue_log ON (callid=cdr.uniqueid AND dst=queuename)
-   LEFT OUTER JOIN users ON (dst=users.name OR cdr.accountcode=users.name OR agent=users.name)
-   LEFT OUTER JOIN queue_table ON (queue_table.name=users.name)
-   LEFT OUTER JOIN trunkcost ON (cdr.uniqueid = trunkcost.uniqueid)";
-  if ($SUPER_USER != 1) {
-    $acdstatq.="LEFT OUTER JOIN astdb AS bgrp ON (users.name=bgrp.family AND bgrp.key='BGRP') ";
-  }
-  $acdstatq.=" WHERE 
-   calldate > '" . $time_year . "-" . $time_month . "-" . $time_day ." " . $time_hour . ":" . $time_min . ":" . $time_sec . "' AND
-   calldate < '" . $mtime_year . "-" . $mtime_month . "-" . $mtime_day ." " . $mtime_hour . ":" . $mtime_min . ":" . $mtime_sec . "' AND
-   (event='CONNECT' OR event='RINGNOANSWER' OR event='COMPLETEAGENT' OR event='COMPLETECALLER' OR event='TRANSFER' OR event IS NULL) AND
-   queue_table.name IS NULL AND users.name IS NOT NULL" . $dfilt;
-  if ($SUPER_USER != 1) {
-    $acdstatq.=" AND " . $clogacl;
-  }
-  $acdstatq.=" GROUP BY fullname,users.name" . $dfiltgb . " ORDER BY fullname,users.name";
-
-//  print $acdstatq . "<P>";
-
-//  if ($SUPER_USER != 1) {
-//    $getcdrq.=" LEFT OUTER JOIN astdb AS bgrp ON ((accountcode=bgrp.family  OR src=bgrp.family OR exten=bgrp.family OR dst=bgrp.family) AND bgrp.key='BGRP')";
-//  }
-//  if ($SUPER_USER != 1) {
-//    $getcdrq.=" AND $clogacl";
-//  }
-//  $getcdrq.=" GROUP BY calldate,calllog.uniqueid,clid,billsec,src,dst,userfield,accountcode,cdr.uniqueid 
-//                ORDER BY calldate,cdr.uniqueid;";
-
-  $getcdr=pg_query($db,$acdstatq);
-  $lastqueue="";
-
   $totcol=array(1,2,4,5,7,8,10,11,12,14,15);
-  for($i=0;$i < pg_num_rows($getcdr);$i++) {
-    $r=pg_fetch_row($getcdr, $i);
+  while(list($user) = each($userinf)) {
+    $udata=$userinf[$user];
+    if ((!is_array($udata['acd'])) && (!is_array($udata['cdr']))) {
+      continue;
+    }
+    if (!is_array($udata['cdr'])) {
+      $udata['cdr']=array("0","0","0","0","0","0","0");
+    }
+    if (!is_array($udata['acd'])) {
+      $udata['acd']=array("0","0","0","0","0");
+    }
+    $udata['name']=($udata['name'] == "") ? $user : $udata['name'];
+    $tot=$udata['cdr'][0]+$udata['cdr'][3]+$udata['acd'][0];
+    $totdur=$udata['cdr'][1]+$udata['cdr'][4]+$udata['acd'][1];
+    $totavg=$totdur/$tot;
+    $r=array_merge(array($user,$udata['name'],$tot,$totdur,$totavg),$udata['cdr'],$udata['acd']);
+
+/*
     if ($fqueue == "") {
       if ($_POST['print'] < 1) {
         $r[1]="<A HREF=javascript:openqueue('" . $r[0] . "')>" . $r[1] . "</A></TD>";
@@ -174,6 +196,7 @@
     } else {
       $r[1]=$r[0];
     }
+*/
     array_shift($r);
     for($icol=0;$icol < count($totcol);$icol++) {
       $colidx=$totcol[$icol];

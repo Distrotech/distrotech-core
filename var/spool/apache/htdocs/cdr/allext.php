@@ -20,6 +20,16 @@
 
   include "func.inc";
 
+  $datestart="'" . $month[1] . "-" . $month[0] . "-01'";
+  if ($month[0] == 12) {
+    $cdyear=$month[1]+1;
+    $cdmon="01";
+  } else {
+    $cdmon=$month[0]+1;
+    $cdyear=$month[1];
+  }
+  $dateend="'" . $cdyear . "-" . $cdmon . "-01'";
+
   if ($ADMIN_USER != "admin") {
     return;
   }
@@ -51,10 +61,8 @@
     if ($TMS_USER != 1) {
       $avgcdrq.=" LEFT OUTER JOIN astdb AS bgrp ON (bgrp.family=accountcode AND bgrp.key='BGRP')";
     }
-    $avgcdrq.=" where 
-                            userfield $ufield AND $chan AND disposition='ANSWERED' AND
-                            date_part('year',calldate) = '$month[1]' AND
-                            date_part('month',calldate) = '$month[0]'";
+    $avgcdrq.=" where calldate >= $datestart AND calldate < $dateend AND disposition='ANSWERED' AND
+                            userfield $ufield AND ($chan)";
     if ($TMS_USER != 1) {
       $avgcdrq.=" AND " . $clogacl;
     }
@@ -62,6 +70,7 @@
                           order by year,month";
   
   $avgcdr=pg_query($db,$avgcdrq);
+//print "AVG :&nbsp;" . $avgcdrq . ";<P>";
   $monavg=pg_fetch_row($avgcdr);
 
   if (($type != "6") && ($type != "5") && ($type != "2") && ($type != "9")) {
@@ -82,8 +91,7 @@
     }
     $getcdrq.=" where 
                               userfield != '' AND $chan AND astdb.value = 1 AND
-                              date_part('year',calldate) = '$month[1]' AND
-                              date_part('month',calldate) = '$month[0]'$exceptions";
+                              calldate >= " . $datestart . " AND calldate < " . $dateend . $exceptions;
 
     if ($TMS_USER != 1) {
       $getcdrq.=" AND " . $clogacl;
@@ -99,8 +107,7 @@
                             from cdr 
                                      LEFT OUTER JOIN trunkcost ON (cdr.uniqueid = trunkcost.uniqueid) where 
                               userfield " . $ufield . " AND
-                              date_part('year',calldate) = '$month[1]' AND
-                              date_part('month',calldate) = '$month[0]'
+                              calldate >= " . $datestart . " AND calldate < " . $dateend . "
                             group by userfield,disposition
                             order by $morder";
   } else if ($type == "5") {
@@ -116,8 +123,7 @@
                             from cdr left outer join users on (dst = name) 
                                      LEFT OUTER JOIN trunkcost ON (cdr.uniqueid = trunkcost.uniqueid) where
                               userfield != '' AND $chan AND
-                              date_part('year',calldate) = '$month[1]' AND
-                              date_part('month',calldate) = '$month[0]'$exceptions
+                              calldate >= " . $datestart . " AND calldate < " . $dateend . $exceptions . "
                             group by disposition,dst,fullname
                             order by $morder";
   } else if (($type == "9") || ($type == "2")) {
@@ -134,12 +140,11 @@
                                      left outer join users on (cdr.accountcode = name)
                                      LEFT OUTER JOIN trunkcost ON (cdr.uniqueid = trunkcost.uniqueid) where                                     
                               userfield != '' AND $chan AND
-                              date_part('year',calldate) = '$month[1]' AND
-                              date_part('month',calldate) = '$month[0]'$exceptions
+                              calldate >= " . $datestart . " AND calldate < " . $dateend . $exceptions . "
                             group by cdr.accountcode,disposition,fullname
                             order by $morder";
   }
-//  print $getcdrq . "<BR>\n";
+//  print $getcdrq . ";<P>\n";
   $getcdr=pg_query($db,$getcdrq);
   if ($_POST['print'] < 2) {
 
