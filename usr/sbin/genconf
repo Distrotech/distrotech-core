@@ -10476,6 +10476,7 @@ sub printcrontab() {
 #    printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","1-23","*","/usr/bin/vacuumdb -U pgsql -h 127.0.0.1 -d asterisk -t users -t astdb");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","/usr/bin/vacuumdb -azfU pgsql -h 127.0.0.1");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","/usr/bin/mysql_dbmaint");
+    printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","(sync ;echo 3 > /proc/sys/vm/drop_caches)");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","1-23","*","/usr/sbin/tmsupdate");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","1-6","/usr/sbin/tmsupdate 1");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","0","/usr/sbin/tmsupdate 365");
@@ -13841,11 +13842,13 @@ __EOB__
 #noload => codec_speex.so
 #noload => app_fax.so
 
-if ( -e "/usr/lib/asterisk/modules-1.8/codec_g723.so") {
+if (( -e "/usr/lib/asterisk/modules-1.8/codec_g723.so") ||
+    ( -e "/usr/lib/asterisk/modules-10/codec_g723.so")) {
   print AM ";Load g723\nload => codec_g723.so\n\n";
 }
 
-if ( -e "/usr/lib/asterisk/modules-1.8/codec_g729.so") {
+if (( -e "/usr/lib/asterisk/modules-1.8/codec_g729.so")  ||
+    ( -e "/usr/lib/asterisk/modules-10/codec_g729.so")) {
   print AM ";Load g729\nload => codec_g729.so\n\n";
 }
 
@@ -14027,7 +14030,8 @@ if ( -d "/etc/openssl/voipca") {
   print SC "tlsenable=no\n";
 }
 
-if ( -e "/usr/lib/asterisk/modules-1.8/codec_g729.so") {
+if (( -e "/usr/lib/asterisk/modules-1.8/codec_g729.so")  ||
+    ( -e "/usr/lib/asterisk/modules-10/codec_g729.so")) {
   print SC "allow=g729\n";
 }
 
@@ -14036,7 +14040,8 @@ print SC "allow=speex\n";
 print SC "allow=ilbc\n";
 print SC "allow=g726\n";
 
-if ( -e "/usr/lib/asterisk/modules-1.8/codec_g723.so") {
+if (( -e "/usr/lib/asterisk/modules-1.8/codec_g723.so") ||
+    ( -e "/usr/lib/asterisk/modules-10/codec_g723.so")) {
   print SC "allow=g723.1\n";
 }
 
@@ -14268,11 +14273,13 @@ iaxmaxthreadcount=512
 rtcachefriends=yes
 __EOF__
 
-if ( -e "/usr/lib/asterisk/modules-1.8/codec_g723.so") {
+if (( -e "/usr/lib/asterisk/modules-1.8/codec_g723.so") ||
+    ( -e "/usr/lib/asterisk/modules-10/codec_g723.so")) {
   print IC "allow=g723.1\n";
 }
 
-if ( -e "/usr/lib/asterisk/modules-1.8/codec_g729.so") {
+if (( -e "/usr/lib/asterisk/modules-1.8/codec_g729.so")  ||
+    ( -e "/usr/lib/asterisk/modules-10/codec_g729.so")) {
   print IC "allow=g729\n";
 } else {
   print IC "allow=gsm\n";
