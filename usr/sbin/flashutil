@@ -279,11 +279,11 @@ Check_Grub() {
 Make_Bootetc() {
   cd ${1}
 
-  dd if=/dev/zero of=install/core/etc bs=1M count=6
+  dd if=/dev/zero of=install/core/etc bs=1M count=6 > /dev/null 2>&1
   ELOOP=`/sbin/losetup -f`
   ELOOP=`readlink -f ${ELOOP}`
   /sbin/losetup ${ELOOP} install/core/etc
-  /sbin/mkfs.ext4 -L bootetc -i 1024 ${ELOOP}
+  /sbin/mkfs.ext4 -L bootetc -i 1024 ${ELOOP} > /dev/null 2>&1
 
   if [ ! -d mnt/floppy ] && [ -e mnt/floppy ];then
     rm -rf mnt/floppy
@@ -338,7 +338,7 @@ EOF
     sleep 2
   done;
 
-  e2fsck -Dfy ${ELOOP}
+  e2fsck -Dfy ${ELOOP} > /dev/null 2>&1
   sleep 2
   /sbin/losetup -d ${ELOOP}
   gzip -f -9 install/core/etc
@@ -541,7 +541,7 @@ Load_Flash() {
         fi;
       done
 
-      dd if=/dev/zero of=${FLASH} bs=16M count=230
+      dd if=/dev/zero of=${FLASH} bs=16M count=230 > /dev/null 2>&1
       Make_GPT ${FLASH} loop
       MKFS=1;
      else
@@ -1141,10 +1141,10 @@ EOF
   umount ${1}/mnt/initrd
   while [ -d ${1}/mnt/initrd/lost+found ];do
     sleep 2
-    umount ${1}/mnt/initrd
+    umount ${1}/mnt/initrd > /dev/null 2>&1
   done;
-  e2fsck -Dfy ${ILOOP}
-  dd if=${1}/tmp/initrd |gzip -c9 > ${1}/boot/initrd-install
+  e2fsck -Dfy ${ILOOP} > /dev/null 2>&1
+  (dd if=${1}/tmp/initrd |gzip -c9 > ${1}/boot/initrd-install) > /dev/null 2>&1
 
   mount ${ILOOP} ${1}/mnt/initrd
   mkbootimg_cfg ${1} ${2}-install dvd > ${1}/mnt/initrd/linuxrc
@@ -1153,10 +1153,10 @@ EOF
   umount ${1}/mnt/initrd
   while [ -d ${1}/mnt/initrd/lost+found ];do
     sleep 2
-    umount ${1}/mnt/initrd
+    umount ${1}/mnt/initrd > /dev/null 2>&1
   done;
-  e2fsck -Dfy ${ILOOP}
-  dd if=${1}/tmp/initrd |gzip -c9 > ${1}/boot/initrd-install-dvd
+  e2fsck -Dfy ${ILOOP} > /dev/null 2>&1
+  (dd if=${1}/tmp/initrd |gzip -c9 > ${1}/boot/initrd-install-dvd) > /dev/null 2>&1
 
   mount ${ILOOP} ${1}/mnt/initrd
   mkbootimg_cfg ${1} ${2}-install loop > ${1}/mnt/initrd/linuxrc
@@ -1165,10 +1165,10 @@ EOF
   umount ${1}/mnt/initrd
   while [ -d ${1}/mnt/initrd/lost+found ];do
     sleep 2
-    umount ${1}/mnt/initrd
+    umount ${1}/mnt/initrd > /dev/null 2>&1
   done;
-  e2fsck -Dfy ${ILOOP}
-  dd if=${1}/tmp/initrd |gzip -c9 > ${1}/boot/initrd-install-loop
+  e2fsck -Dfy ${ILOOP} > /dev/null 2>&1
+  (dd if=${1}/tmp/initrd |gzip -c9 > ${1}/boot/initrd-install-loop) > /dev/null 2>&1
 
   sleep 2
   losetup -d ${ILOOP}
@@ -1508,25 +1508,6 @@ Remote_Upgrade() {
     Sync_Remote ${1}
     return $?
   fi;
-}
-
-Vbox_Upgrade() {
-  if [ ${RES} != 0 ] && [ -e /dev/flash/upgrade ];then
-    Mount_Flash
-    RES=$?
-    if [ ${RES} ];then
-      Local_Upgrade ${KERNEL}
-    fi;
-    RES=$?
-   elif [ ${RES} != 0 ];then
-    Load_Flash std 0
-    Local_Upgrade ${KERNEL}
-    RES=$?
-   else
-    Remote_Upgrade ${1}
-    RES=$?
-  fi;
-  return ${RES}
 }
 
 Show_Help() {
@@ -2191,9 +2172,8 @@ if [ "${1}" == "iso" ];then
         exit 255
       fi;
     fi;
+    Clean_Init
   fi;
-
-  Clean_Init
 
   eval `cat /etc/netsentry-version`
 
@@ -2203,14 +2183,7 @@ if [ "${1}" == "iso" ];then
     UPKERN=${KERNEL}
   fi;
 
-  if [ -d /mnt/update/mnt/dev/lost+found ] && [ "`pidof rsync`" ];then
-    SERV=127.0.0.1
-    Sync_Remote ${UPKERN}
-    exit $?
-   elif [ -d /mnt/update/mnt/dev/lost+found ];then
-    echo "Rsync daemon not running ??"
-    exit 255;
-   elif [ -d /var/spool/rsync/programs ] && [ -d ${CORE}/install/core ];then
+  if [ -d /var/spool/rsync/programs ] && [ -d ${CORE}/install/core ];then
     echo "Sync Anti Virus / Upgrade"
     rsync ${ROPT_LOC} -u --include=/update --include=/avirus --exclude=/avirus/clamav-* --exclude=/*/.* --exclude=/* /var/spool/ / ${CORE}/install/
     Tar_Kernel ${CORE} ${UPKERN}
@@ -2226,24 +2199,37 @@ if [ "${1}" == "iso" ];then
    elif [ -d /var/spool/rsync/programs ];then
     echo "Local copy not seeded ??"
     exit 255;
+   elif [ "`pidof rsync`" ];then
+    SERV=127.0.0.1
+    Sync_Remote ${UPKERN}
+    exit $?
    else
-    RES=0;
     if [ "${3}" ];then
       SERV=${3}
-     else
-      if [ "${RSERV}" ];then
-        SERV=${RSERV}
-      fi;
+     elif [ "${RSERV}" ];then
+      SERV=${RSERV}
+    fi;
+
+    rsync -az --contimeout=20 rsync://${SERV}/updates/ / > /dev/null 2>&1
+    RES=$?
+    if [ ${RES} != 0 ] && [ "${SERV}" != "127.0.0.1" ];then
+      SERV=127.0.0.1
       rsync -az --contimeout=20 rsync://${SERV}/updates/ / > /dev/null 2>&1
-      RES=$? 
-      if [ ${RES} != 0 ] && [ "${SERV}" != "127.0.0.1" ];then
-        SERV=127.0.0.1
-        rsync -az --contimeout=20 rsync://${SERV}/updates/ / > /dev/null 2>&1
+      RES=$?
+    fi;
+    if [ ${RES} != 0 ] && [ -e /dev/flash/upgrade ];then
+      Mount_Flash
+      RES=$?
+      if [ ${RES} ];then
+        Local_Upgrade ${KERNEL}
         RES=$?
       fi;
-    fi
-    if [ ${RES} == 0 ];then
-      Vbox_Upgrade ${UPKERN}
+     elif [ ${RES} != 0 ];then
+      Load_Flash std 0
+      Local_Upgrade ${KERNEL}
+      RES=$?
+     else
+      Remote_Upgrade ${UPKERN}
       RES=$?
     fi;
   fi;
