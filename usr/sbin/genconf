@@ -10476,7 +10476,7 @@ sub printcrontab() {
 #    printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","1-23","*","/usr/bin/vacuumdb -U pgsql -h 127.0.0.1 -d asterisk -t users -t astdb");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","/usr/bin/vacuumdb -azfU pgsql -h 127.0.0.1");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","/usr/bin/mysql_dbmaint");
-    printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","(sync ;echo 3 > /proc/sys/vm/drop_caches)");
+    printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","3","*","(sync ;echo 3 > /proc/sys/vm/drop_caches)");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","1-23","*","/usr/sbin/tmsupdate");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","1-6","/usr/sbin/tmsupdate 1");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","0","/usr/sbin/tmsupdate 365");
