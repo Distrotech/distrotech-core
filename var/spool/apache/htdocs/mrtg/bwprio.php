@@ -30,7 +30,7 @@
               "STACK:medpoolr#0000FF:Med Priority",
               "STACK:highpoolr#FF00FF:High Priority");
 
-  $ret=rrd_graph("bw-".$gname.".png", $opts, count($opts));
+  $ret=rrd_graph("/var/spool/apache/htdocs/mrtg/bw-".$gname.".png", $opts);
   header("Content-type: image/png");
 
   $imin=imagecreatefrompng("bw-".$gname.".png");

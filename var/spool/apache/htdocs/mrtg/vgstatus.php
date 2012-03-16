@@ -20,7 +20,7 @@
               "LINE1:iuse#0000FF:Inuse",
               "LINE1:fault#008000:Faulty");
 
-  $ret=rrd_graph("vgsm.png", $opts, count($opts));
+  $ret=rrd_graph("/var/spool/apache/htdocs/mrtg/vgsm.png", $opts);
   header("Content-type: image/png");
 
   $imin=imagecreatefrompng("vgsm.png");

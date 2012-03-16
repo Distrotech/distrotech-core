@@ -37,7 +37,7 @@
                "LINE1:r" . $val . $color[$idx] . ":" . $val);
   }
 
-  $ret=rrd_graph("violations.png",$opts,count($opts));
+  $ret=rrd_graph("violations.png",$opts);
   header("Content-type: image/png");
 
   $imin=imagecreatefrompng("violations.png");

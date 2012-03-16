@@ -42,7 +42,7 @@ function graph_do($period) {
                "PRINT:r" . $val . ":LAST:%.2lf");
   }
 
-  $ret=rrd_graph("../mrtg/violations-" . $pername[$period] . ".png", $opts, count($opts));
+  $ret=rrd_graph("/var/spool/apache/htdocs/mrtg/violations-" . $pername[$period] . ".png", $opts);
   print rrd_error();
 
   print "<IMG SRC=\"/mrtg/violations-" . $pername[$period] . ".png\" ALT=\"Daily Graph\" VSPACE=10 ALIGN=TOP><BR>";

@@ -27,7 +27,7 @@ function graph_do($name,$max,$period) {
               "PRINT:iuse:AVERAGE:%.1lf",
               "PRINT:iuse:LAST:%.1lf");
 
-  $ret=rrd_graph("../mrtg/gsm-" . $pername[$period] . ".png", $opts, count($opts));
+  $ret=rrd_graph("/var/spool/apache/htdocs/mrtg/gsm-" . $pername[$period] . ".png", $opts);
   print "<IMG SRC=\"/mrtg/gsm-" . $pername[$period] . ".png\" ALT=\"Daily Graph\" VSPACE=10 ALIGN=TOP><BR>";
   print "<TABLE CELLPADDING=0 CELLSPACING=0>";
   for($i=0;$i<2;$i++) {

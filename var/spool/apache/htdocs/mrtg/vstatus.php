@@ -5,12 +5,10 @@
   if ($time == "") {
     $time="86400";
   }
-  $opts=array();
-
-  array_push($opts,"-a","PNG","--start","-".$time);
+  $opts=array("-a","PNG","--start","-".$time);
 
   if ($time2) {
-  array_push($opts,"--end","-".($time-$time2));
+    array_push($opts,"--end","-".($time-$time2));
   }
 
   if ($max != "") {
@@ -24,7 +22,7 @@
               "LINE1:concur#0000FF:Concurrent",
               "LINE1:cpm#008000:Calls/Min");
 
-  $ret=rrd_graph("voip" . $type . ".png", $opts, count($opts));
+  $ret=rrd_graph("/var/spool/apache/htdocs/mrtg/voip" . $type . ".png", $opts);
   header("Content-type: image/png");
 
   $imin=imagecreatefrompng("voip" . $type . ".png");

@@ -28,7 +28,8 @@ function graph_do($name,$max,$period,$classi) {
               "PRINT:ccur:AVERAGE:%.2lf",
               "PRINT:ccur:LAST:%.2lf");
 
-  $ret=rrd_graph("../mrtg/voip-" . $pername[$period] . ".png", $opts, count($opts));
+  $ret=rrd_graph("/var/spool/apache/htdocs/mrtg/voip-" . $pername[$period] . ".png", $opts);
+
   print "<IMG SRC=\"/mrtg/voip-" . $pername[$period] . ".png\" ALT=\"Daily Graph\" VSPACE=10 ALIGN=TOP><BR>";
   print "<TABLE CELLPADDING=0 CELLSPACING=0>";
   for($i=0;$i<2;$i++) {

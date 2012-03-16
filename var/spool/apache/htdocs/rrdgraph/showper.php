@@ -36,7 +36,7 @@ function graph_do($name,$max,$period) {
               "PRINT:highpoolr:AVERAGE:%.2lf",
               "PRINT:highpool:LAST:%.2lf");
 
-  $ret=rrd_graph("../mrtg/bw-" . $name . "-" . $pername[$period] . ".png", $opts, count($opts));
+  $ret=rrd_graph("/var/spool/apache/htdocs/mrtg/mrtg/bw-" . $name . "-" . $pername[$period] . ".png", $opts);
   print "<IMG SRC=\"/mrtg/bw-" . $name . "-" . $pername[$period] . ".png\" ALT=\"Daily Graph\" VSPACE=10 ALIGN=TOP><BR>";
   print "<TABLE CELLPADDING=0 CELLSPACING=0>";
   for($i=0;$i<3;$i++) {
