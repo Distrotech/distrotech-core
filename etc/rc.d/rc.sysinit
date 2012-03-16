@@ -234,13 +234,34 @@ if [ -e /etc/.install ];then
   fi;
 
   #Run File System Check On All Devices
+
   fsck -TCAa
   RES=$?
-  if (( ${RES} >= 2 )) && (( ${RES} != 32 ));then
-    echo "FILE SYSTEM ERROR"
-    if [ ${RES} == 2 ];then
-      echo "REBOOT REQUIRED"
+  if [ ${RES} == 2 ];then
+    echo "REBOOT REQUIRED"
+    reboot -fn
+   elif [ ${RES} == 8 ] || [ ${RES} == 128 ];then
+    ROOTDEV=`grub-probe -t device /`
+    MNTRRW=0
+    if [ "${ROOTDEV}" ];then
+      fsck -TCa ${ROOTDEV}
+      if (( $? <  2));then
+        mount -n ${ROOTDEV} / -o remount,rw
+        if [ $? == 0 ];then
+          echo "/ (${ROOTDEV}) has been remounted read/write"
+          MNTRRW=1;
+        fi;
+      fi;
     fi;
+    echo "A problem was detected please login and fix !!"
+    sulogin
+    if [ ${MNTRRW} == 1 ];then
+      sync
+      mount -n ${ROOTDEV} / -o remount,ro
+    fi;
+    reboot -fn
+   elif (( ${RES} > 2 )) && [ ${RES} != 32 ];then
+    echo "FILE SYSTEM ERROR"
     halt -fn
   fi;
 
@@ -249,9 +270,6 @@ if [ -e /etc/.install ];then
 
   #Remount Root Device Read Write
   mount -n -o remount,rw /
-  if [ ! -d /run/udev ];then
-    mkdir -p /run/udev
-  fi;
 
   #Mount ext3 as ext4
 #  if [ "`grep -w ext3 /etc/fstab`" ];then
@@ -261,7 +279,9 @@ if [ -e /etc/.install ];then
 #    rm /tmp/fstab.ext4
 #  fi
 
-  rm /etc/mtab
+  if [ -e /etc/mtab ];then
+    rm /etc/mtab
+  fi;
   touch /etc/mtab
   mount / -f
 
@@ -347,6 +367,9 @@ if [ -e /etc/.install ];then
 
   #Start UDEVD
   if [ -x /libexec/udev/udevd ];then
+    if [ ! -d /run/udev ];then
+      mkdir -p /run/udev
+    fi;
     /libexec/udev/udevd --daemon
   fi;
 
