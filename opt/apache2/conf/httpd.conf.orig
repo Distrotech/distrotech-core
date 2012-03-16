@@ -41,7 +41,6 @@ LoadModule proxy_ftp_module		modules/mod_proxy_ftp.so
 LoadModule proxy_http_module		modules/mod_proxy_http.so
 LoadModule python_module		modules/mod_python.so
 LoadModule rewrite_module		modules/mod_rewrite.so
-LoadModule ruby_module			modules/mod_ruby.so
 LoadModule setenvif_module		modules/mod_setenvif.so
 LoadModule speling_module		modules/mod_speling.so
 LoadModule ssl_module			modules/mod_ssl.so
@@ -168,15 +167,33 @@ LogFormat "%{Referer}i -> %U" referer
 LogFormat "%{User-agent}i" agent
 LogLevel notice
 MIMEMagicFile /opt/apache2/conf/magic
-ServerLimit 512
-MaxClients 512
+<IfModule prefork.c>
+  ServerLimit          1024
+  StartServers           20
+  MinSpareServers        50
+  MaxSpareServers       100
+  MaxClients           1024
+  MaxRequestsPerChild   256
+</IfModule>
+<IfModule worker.c>
+  ServerLimit           128
+  ThreadLimit            64
+  StartServers           40
+  MaxClients           4096
+  MinSpareThreads        32
+  MaxSpareThreads       384
+  ThreadsPerChild        64
+  MaxRequestsPerChild   256
+</IfModule>
 MaxKeepAliveRequests 0
 MaxRequestsPerChild 0
-MaxSpareServers 10
-MinSpareServers 5
-PerlModule ModPerl::RegistryPrefork
-PerlModule ModPerl::PerlRun
-PerlModule ModPerl::Registry
+<IfModule mod_perl.c>
+  <IfModule prefork.c>
+    PerlModule ModPerl::RegistryPrefork
+  </IfModule>
+  PerlModule ModPerl::PerlRun
+  PerlModule ModPerl::Registry
+</IfModule>
 PidFile /var/run/httpd.pid
 ProxyRequests Off
 #SetEnv proxy-nokeepalive 1
@@ -184,8 +201,10 @@ ProxyRequests Off
 ProxyPassInterpolateEnv On
 AllowCONNECT 443 666
 ReadmeName README
-RubyRequire apache/ruby-run
-RubyRequire apache/erb-run
+<IfModule mod_ruby.c>
+  RubyRequire apache/ruby-run
+  RubyRequire apache/erb-run
+</IfModule>
 ScoreBoardFile /var/run/httpd.scoreboard
 ServerName LOCAL_SERVER_NAME
 ServerSignature On
@@ -241,10 +260,12 @@ User www
     order deny,allow
     deny from all
   </Limit>
-  <Files ~ "\.erb">
-    SetHandler ruby-object
-    RubyHandler Apache::ERbRun.instance
-  </Files>
+  <IfModule mod_ruby.c>
+    <Files ~ "\.erb">
+      SetHandler ruby-object
+      RubyHandler Apache::ERbRun.instance
+    </Files>
+  </IfModule>
 </Directory>
 
 <DirectoryMatch "^/var/spool/apache/htdocs/(cshop|ccadmin|ticket)">
@@ -379,8 +400,10 @@ User www
 
 <LocationMatch "^/(cgi-perl|cgi-bin/.*\.pl)">
   SetHandler perl-script
-  PerlResponseHandler ModPerl::PerlRun
-  PerlOptions +ParseHeaders +GlobalRequest
+  <IfModule mod_perl.c>
+    PerlResponseHandler ModPerl::PerlRun
+    PerlOptions +ParseHeaders +GlobalRequest
+  </IfModule>
 </LocationMatch>
 
 <Directory /var/spool/apache/htdocs/viewsvn>
@@ -419,16 +442,20 @@ User www
   require valid-user
 </Location>
 
-<LocationMatch "^/(cgi-bin/.*\.rbx|cgi-bin/.*\.rb)">
-  AddHandler ruby-object .rbx
-  AddHandler ruby-object .rb
-  SetHandler ruby-object
-  RubyHandler Apache::RubyRun.instance
-</LocationMatch>
+<IfModule mod_ruby.c>
+  <LocationMatch "^/(cgi-bin/.*\.rbx|cgi-bin/.*\.rb)">
+    AddHandler ruby-object .rbx
+    AddHandler ruby-object .rb
+    SetHandler ruby-object
+    RubyHandler Apache::RubyRun.instance
+  </LocationMatch>
+</IfModule>
 
 <Location /perl>
   SetHandler perl-script
-  PerlResponseHandler ModPerl::Registry
+  <IfModule mod_perl.c>
+    PerlResponseHandler ModPerl::Registry
+  </IfModule>
   Order allow,deny
   Allow from all
 </Location>
@@ -459,8 +486,10 @@ User www
 
 <Location /perl-status>
   SetHandler modperl
-  PerlResponseHandler Apache2::Status
-  PerlOptions -ParseHeaders -GlobalRequest
+  <IfModule mod_perl.c>
+    PerlResponseHandler Apache2::Status
+    PerlOptions -ParseHeaders -GlobalRequest
+  </IfModule>
   Order deny,allow
   Deny from all
   Allow from all
@@ -648,24 +677,6 @@ RewriteCond %{HTTP_HOST}   ^([^.]*).*$
 RewriteCond %1             ^(callshop)|(voip)$
 RewriteCond %{REQUEST_URI} ^/auth
 RewriteRule ^/auth/(.*) /var/spool/apache/htdocs/cshop/$1 [L,T=application/x-httpd-php]
-
-#VOIP billing engine must be https://
-RewriteCond %{HTTP_HOST}   ^([^.]*).*$
-RewriteCond %1             ^(client)|(portal)$
-RewriteCond ${lowercase:%{HTTPS}}	^off$
-RewriteRule ^/(.*)$ https://%{HTTP_HOST}:666/$1 [R,L]
-
-#VOIP billing engine rewrite
-RewriteCond %{HTTP_HOST}   ^([^.]*).*$
-RewriteCond %1             ^(client)|(portal)$
-RewriteCond %{REQUEST_URI} !^/(client)|(spe-img)|(images)|(login.php)|(main_style.css)|(spe-main_style.css)
-RewriteRule ^/(.*) /var/spool/apache/htdocs/cshop/client/$1 [L,T=application/x-httpd-php]
-
-#VOIP billing engine rewrite /auth
-RewriteCond %{HTTP_HOST}   ^([^.]*).*$
-RewriteCond %1             ^(client)|(portal)$
-RewriteCond %{REQUEST_URI} ^/auth
-RewriteRule ^/auth/(.*) /var/spool/apache/htdocs/cshop/client/$1 [L,T=application/x-httpd-php]
 
 #(horde)|(mail)|(webmail).* Horde Webmail
 RewriteCond ${lowercase:%{HTTP_HOST}}   ^([^.]*).*$
