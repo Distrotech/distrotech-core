@@ -13082,8 +13082,14 @@ sub printmrtg() {
   print MC "LoadMibs: /usr/share/snmp/mibs/SQUID-MIB.txt\n";
   print MC "LogFormat: rrdtool\n\n";
 
-  for($cnt=1;$cnt <= int($val);$cnt++) {
-    $val2 = $sess->get("ifDescr." . "$cnt");
+  $ifcnt=0;
+  $idx=1;
+  while(($ifcnt < int($val)) && ($idx < 100)) {
+    $val2 = $sess->get("ifDescr." . "$idx");
+    if ($val2 ne "") {
+      $ifcnt++;
+    }
+
     $linknum=chop($val2);
     if ((($val2 eq "ppp") && ($linknum <= 10)) || ((index($val2,"ppp") eq -1) && (index($val2,"imq") eq -1))) {
       if (($val2 eq "lo") || ($val2 . $linknum eq  "lo")) {
@@ -13098,7 +13104,7 @@ sub printmrtg() {
         @idata[0]=join(" ",split(/_/,@idata[0]));
       }
 
-      $speed=$sess->get("ifSpeed." . "$cnt");
+      $speed=$sess->get("ifSpeed." . "$idx");
       if (index($val2,"ppp") ne -1) {
         @idata[3]=$val2;
         @idata[1]="Dynamicaly Assigned";
@@ -13127,7 +13133,7 @@ sub printmrtg() {
       }
       if (@idata[0] ne "") {
         print MC <<__EOB__;
-Target[int-$val2]: $cnt:public\@localhost:
+Target[int-$val2]: $idx:public\@localhost:
 SetEnv[int-$val2]: MRTG_INT_DESCR="@idata[3]"
 MaxBytes[int-$val2]: $speed2
 AbsMax[int-$val2]: $speedmax
@@ -13146,6 +13152,7 @@ PageTop[int-$val2]: <H1>Traffic Data For @idata[0]</H1>
 __EOB__
       }
     }
+    $idx++;
   }
 
   $maxswap=$sess->get(".1.3.6.1.4.1.2021.4.3.0");
