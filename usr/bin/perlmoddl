@@ -1,0 +1,90 @@
+#!/usr/bin/perl
+
+use CPAN;
+use Cwd;
+use File::Spec::Functions;
+require LWP::Simple;
+use File::Find;
+use Module::Metadata;
+use Archive::Tar;
+
+_list_all_mods();
+
+sub _get_mod {
+  my $modinf=CPAN::Shell->expand( "Module", $_[0]);
+  if (!defined $modinf) {
+    return;
+  }
+  my $path=$modinf->cpan_file;
+  my $file = substr($path, rindex( $path, '/' ) + 1);
+  my $store_path = catfile( cwd(), $file );
+
+  if (-e $store_path) {
+    return $store_path;
+  }
+
+  $path=join "/", qw(authors id), $path;
+  foreach my $site ( @{ $CPAN::Config->{urllist}}) {
+    my $fetch_path = join "/", $site, $path;
+    last if LWP::Simple::getstore( $fetch_path, $store_path );
+  }
+  if (-e $store_path) {
+    return $store_path;
+  }
+}
+
+
+sub _generator {
+  my @files = ();
+
+  sub {
+    push @files,File::Spec->canonpath( $File::Find::name )
+    if m/\A\w+\.pm\z/
+  },
+  sub {
+    \@files
+  },
+}
+
+sub _list_all_mods {
+  my @build = ();
+  my $args = shift;
+  INC: foreach my $inc ( @INC ) {
+    my( $wanted, $reporter ) = _generator();
+    find( { wanted => $wanted }, $inc );
+     FILE: foreach my $file ( @{ $reporter->() } ) {
+       my $info = Module::Metadata->new_from_file( $file );
+       my $module_name = $info->name;
+
+       next FILE unless defined $module_name;
+       $modfile = _get_mod($module_name);
+
+       next FILE unless defined $modfile;
+       if (! defined $modules{$modfile}) {
+         $modules{$modfile}=[()];
+       }
+       push @{$modules{$modfile}}, $module_name;
+     } 
+  }
+  mkinfo(%modules);
+}
+
+
+sub mkinfo {
+  my (%modules)=@_;
+  open(FMOD,">modules.info");
+  for $bfile ( keys %modules ) {
+    open(MINF,">$bfile.info");
+    $shrtmod="";
+    foreach $module (@{ $modules{$bfile}}) {
+      if (($shrtmod == "") || (length($shrtmod) > length($module))) {
+        $shrtmod=$module;
+      }
+      print MINF "$module\n";
+    }
+    close(MINF);
+    $file=substr($bfile,rindex($bfile, "/")+1);
+    printf FMOD "%-50s%s\n",$file,$shrtmod; 
+  }
+  close(FMOD);
+}
