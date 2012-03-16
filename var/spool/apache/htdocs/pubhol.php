@@ -27,13 +27,14 @@ if ((ldap_count_entries($ds,$sr) == 1) || ($PHP_AUTH_USER == "admin")) {
 
 $rcol=1;
 if (!isset($bgroup)) {
-  pg_query($db,"insert INTO officehours (dayrange,monthday,month,year,pubhol,description,starttime,stoptime,bgroup) SELECT DISTINCT dayrange,monthday,month,year,pubhol,description,starttime,stoptime,value from officehours left outer join astdb on (key='BGRP') where (bgroup is null OR bgroup='') AND (SELECT count(*) = 0 from officehours WHERE bgroup=value) AND value is not null and value !=''");
   print "<TR CLASS=list-color" . (($rcol % 2 )+1) . "><TH COLSPAN=2 CLASS=heading-body>" . _("Select Group") . "</TH></TR>\n";
+  pg_query($db,"insert INTO officehours (dayrange,monthday,month,year,pubhol,description,starttime,stoptime,bgroup) SELECT DISTINCT dayrange,monthday,month,year,pubhol,description,starttime,stoptime,value from officehours left outer join astdb on (key='BGRP') where (bgroup is null OR bgroup='') AND (SELECT count(*) = 0 from officehours WHERE bgroup=value) AND value is not null and value !=''");
   $rcol++;
-  print "<TR CLASS=list-color" . (($rcol % 2 )+1) . "><TD WIDTH=50%>" . _("Group") . "</TD>";
+  print "<TR CLASS=list-color" . (($rcol % 2 )+1) . "><TD WIDTH=50%>" . _("Group") . "</TD>\n";
   $rcol++;
   $grpsql=pg_query($db,"SELECT DISTINCT value FROM astdb WHERE key='BGRP' AND value IS NOT NULL AND value != ''");
-  print "<SELECT NAME=bgroup>";
+  print "<TD>";
+  print "<SELECT NAME=bgroup>\n";
   print "<OPTION VALUE=\"\">Default</OPTION>\n";
   for($gcnt=0;$gcnt < pg_num_rows($grpsql);$gcnt++) {
     $r=pg_fetch_array($grpsql,$gcnt);
@@ -286,4 +287,3 @@ if ($_POST['print'] != "1") {
 %>
 </FORM>
 </TABLE>
-
