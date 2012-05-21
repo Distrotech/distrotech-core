@@ -538,9 +538,9 @@ if (isset($saved)) {
       for($sub=1;$sub<=count($conf[$key]);$sub++) {
         print "    <TR CLASS=list-color" . (($col % 2) + 1)  . ">\n      <TH COLSPAN=2 CLASS=heading-body2>";
         if ($key == "IP_ADDR") {
-          print "<DIV ID=\"ETH:" . $sub . "\">Interface eth" . $conf["INT_IFACE"][$sub] . " (" . $conf["INT_NAME"][$sub] . ")</DIV>";
+          print "<DIV ID=\"ETH:" . $sub . "\">Interface " . $conf["INT_IFACE"][$sub] . " (" . $conf["INT_NAME"][$sub] . ")</DIV>";
         } else if ($key == "VLAN") {
-          print "<DIV ID=\"VLAN:" . $sub . "\">VLAN Interface eth" . $conf["INT_PARV"][$sub] . "." . $conf["VLAN"][$sub] . " (" . $conf["INT_NAMEV"][$sub] . ")</DIV>";
+          print "<DIV ID=\"VLAN:" . $sub . "\">VLAN Interface " . $conf["INT_PARV"][$sub] . "." . $conf["VLAN"][$sub] . " (" . $conf["INT_NAMEV"][$sub] . ")</DIV>";
           $vlist[$conf["VLAN"][$sub]]=$conf["INT_NAMEV"][$sub];
         } else if ($key == "ALIAS") {
           print "<DIV ID=\"ALIAS:" . $sub . "\">Alias Interface " . $conf["ALIAS"][$sub] . " (" . $conf["INT_NAMEA"][$sub] . ")</DIV>";
@@ -572,7 +572,7 @@ if (isset($saved)) {
         print "<SELECT NAME=\"MDM_CONN\">\n";
         print "        <OPTION VALUE=\"\">None</OPTION>\n";
         for($icnt=1;$icnt<=count($phyint);$icnt++) {
-          $int="eth" . $phyint[$icnt];
+          $int=$phyint[$icnt];
           print "        <OPTION VALUE=\"" . $int . "\"";
           if ($conf["FWALL_EXT"] == $int) {
             print " SELECTED";
@@ -580,7 +580,7 @@ if (isset($saved)) {
           print ">" . $conf["INT_NAME"][$icnt] . " (" . $int . ")</OPTION>\n";
         }
         for($icnt=1;$icnt<=count($vlanint);$icnt++) {
-          $int="eth" . $conf["INT_PARV"][$icnt] . "." . $vlanint[$icnt];
+          $int=$conf["INT_PARV"][$icnt] . "." . $vlanint[$icnt];
           print "        <OPTION VALUE=\"" . $int . "\"";
           if ($conf["FWALL_EXT"] == $int) {
             print " SELECTED";

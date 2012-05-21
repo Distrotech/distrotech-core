@@ -25,38 +25,12 @@ $x509cmd{'Division'}="OU";
 $x509cmd{'Name'}="CN";
 $x509cmd{'Email'}="EMAIL";
 
-if ( -e "/var/run/netsentry-config" ) {
-  open(NC,"/var/run/netsentry-config");
-  while(<NC>) {
-    chop $_;
-    $epid=$_;
-  }
-  close(NC);
-  if ( -d "/proc/$epid") {
-    exit;
-  }
-}
+use Fcntl qw(:flock);
 
-while( -e "/var/run/netsentry-config" ) {
-  if ( ! -d "/proc/$epid") {
-    unlink("/var/run/netsentry-config");
-    sleep 3;
-  } else {
-    sleep 3;
-    if ( -e "/var/run/netsentry-config" ) {
-      open(NC,"/var/run/netsentry-config");
-      while(<NC>) {
-        chop $_;
-        $epid=$_;
-      }
-      close(NC);
-    }
-  }
-}
+open($lockfh, ">>", "/var/run/netsentry-config") or die "Cannot open lock file $!";
+flock($lockfh, LOCK_EX | LOCK_NB) or die "Cannot obtain lock $!";
+print $lockfh $$;
 
-open(NC,">/var/run/netsentry-config");
-print NC $$;
-close(NC);
 open(NC,">/var/run/netsentry-update");
 print NC $$;
 close(NC);
@@ -73,6 +47,7 @@ use DBI;
 use NetAddr::IP;
 use Dahdi;
 use Dahdi::Span;
+use URI::Escape;
 
 #$encoded = encode_base64('');
 #$decoded = decode_base64($encoded);
@@ -106,7 +81,7 @@ while(<CF>) {
     if (@words[0] eq "Interface") {
       shift @words;
       $ishostip{@words[1]}=@words[3];
-      if (@words[3] =~ m/^eth([A-Z]$)|^eth([A-Z])\.([0-9]+$)/) {
+      if (@words[3] =~ m/^([a-zA-Z0-9\_]+$)|^([a-zA-Z0-9]+)\.([0-9]+$)/) {
         if ($1 ne "") {
           if ($phiface eq "") {
             $phiface=1;
@@ -122,7 +97,8 @@ while(<CF>) {
           print SV "INT_MAC\[" . $phiface . "\]=\"" . @words[8]  . "\";\n";
           print SV "INT_GW\[" . $phiface . "\]=\"" . @words[9]  . "\";\n";
           print SV "INT_NAME\[" . $phiface . "\]=\"" . @words[0]  . "\";\n";
-          print SV "INT_IFACE\[" . $phiface . "\]=\"" . $1 . "\";\n";
+          print SV "INT_IFACE\[" . $phiface . "\]=\"" . @words[3] . "\";\n";
+          push(@pints,@words[3]);
         } else {
           if ($vliface eq "") {
             $vliface=1;
@@ -139,7 +115,7 @@ while(<CF>) {
           print SV "INT_BWOUTV\[" . $vliface . "\]=\"" . @words[7]  . "\";\n";
           print SV "INT_GWV\[" . $vliface . "\]=\"" . @words[9]  . "\";\n";
           print SV "INT_NAMEV\[" . $vliface . "\]=\"" . @words[0]  . "\";\n";
-          print SV "INT_PARV\[" . $vliface . "\]=\"" . $2  . "\";\n";
+          print SV "INT_PARV\[" . $vliface . "\]=\"" . $2 . "\";\n";
         }
       } elsif (@words[3] =~ m/^(eth[ABCD0-9\.]+:[0-9])$/) {
         $aiface=$1;
@@ -188,6 +164,12 @@ while(<CF>) {
         $baseint=substr(@words[3],0,index(@words[3],":"));
         $ifalias{$baseint}.="@words[1]:@words[2]:" . getnw(@words[2],@words[1]) . ":" . getbc(@words[2],@words[1]) . " ";
       }
+
+      if (@words[3] =~ m/^([a-zA-Z0-9]+)\_([0-9]+$)/) {
+        if (($2 > 0) && ($2 <= 3)) {
+          push(@{$bss{$1}}, $2);
+        }
+      }
     } elsif (@words[0] eq "SysConf") {
       shift @words;
       $scmd=shift @words;
@@ -220,9 +202,23 @@ while(<CF>) {
       push(@genroute,@words[0]);
     } elsif (@words[0] eq "WiFi") {
       shift @words;
+      $wliface=@words[0];
+      shift @words;
       $rdata=join("\|",@words);
-      $wificard{@words[0]}=join(" ",split(/_/,$rdata));
-      push(@wificards,@words[0]);
+      $wificard{$wliface}=join(" ",split(/_/,$rdata));
+      if ($wliface =~ m/^([a-zA-Z0-9]+$)|^([a-zA-Z0-9]+)$/) {
+        push(@wificards,$wliface);
+      }
+      if (@words[2] eq "Hotspot") {
+        @idata=split(/\|/,$interface{$wliface});
+        if (@idata[2] < 30) {
+          push(@hotspots,$wliface);
+          @ipwqu=split(/\./,getnw(@idata[2],@idata[1]));
+          @ipwqu[3]++;
+          @idata[1]=join(".",@ipwqu);
+          $interface{$wliface}=join("|",@idata);
+        }
+      }
     } elsif (@words[0] eq "GenRoute") {
       shift @words;
       $rdata=join("\|",@words);
@@ -852,9 +848,6 @@ __EOB__
       $radauport=@words[1];
     } elsif (@words[0] eq "AccPort") {
       $radacport=@words[1];
-    } elsif (@words[0] eq "Hotspot") {
-      $hspotrange=@words[1];
-      $hspotint=@words[2];
     } elsif ((@words[0] eq "Wireless") || (@words[0] eq "PPPoE")){
       $wirelessrange=@words[1];
       $wirenonat=@words[2];
@@ -1349,6 +1342,7 @@ if ($sysconfig{'Type'} eq "full") {
   &printchilli();
   &printovpnconf();
   &printippool();
+  &printhostapd();
 }
 
 if ( -e "/tmp/.firstconfig" ) {
@@ -3636,6 +3630,7 @@ __EOB__
     print RM "    rm /var/run/dovecot-sogo/master.pid\n";
     print RM "  fi;\n\n";
     print RM "  /usr/sbin/dovecot-wrap sogo\n";
+    print RM "  /usr/sbin/safe_sogo\n";
     print RM "fi;\n";
   } else {
     print RM "\n\nfi;\n\n\nif [ ! \"`/bin/pidof popper`\" ] && [ \"\$1\" != \"sendmail\" ];then\n";
@@ -3648,9 +3643,9 @@ __EOB__
       print RM "  /usr/sbin/popper @idata[1]:995 -l 2 -f /etc/popper.conf\n";
       print RM "  /usr/sbin/popper @idata[1]:110 -l 1 -f /etc/popper.conf\n";
     }
+    print RM "  /usr/sbin/safe_sogo\n";
     print RM "fi;\n";
   }
-  print RM "\n/usr/sbin/safe_sogo\n";
   close(RM); 
 }
 
@@ -3701,26 +3696,41 @@ sub printrcppp(){
         chmod(0600,"pppup.ppp$lcnt");
 	$pppdev="ppp" . $lcnt;
         print PUE "#!/bin/bash\n\n";
-        print PUE "sleep 2\n";
-        print PUE "if [ ! \"`/sbin/ip addr show ppp$lcnt |grep UP`\" ];then\n";
+#        print PUE "if [ \"\${1}\" == \"nolock\" ];then\n";
+#        print PUE "  rm /var/lock/ppp-@ldata[0]\n";
+#        print PUE "fi\n";
+        print PUE "\n";
+        print PUE "(flock -w 20 10 || exit\n";
+#        print PUE "if [ -e /var/run/ppp$lcnt.pid ];then\n";
+#        print PUE "  PID=`cat /var/run/ppp$lcnt.pid`\n";
+#        print PUE "  if [ \"\${PID}\" ] && [ ! -d /proc/\${PID} ];then\n";
+#        print PUE "    /usr/bin/kill -9 \${PID}\n";
+#        print PUE "    sleep 3\n";
+#        print PUE "  fi\n";
+#        print PUE "fi\n";
         chop $ppptun{$pppdev};
 	@ppptdat=split(/ /,$ppptun{$pppdev});
         foreach $ppptdev (@ppptdat) {
-          print PUE "  /sbin/ip tun del " . $ppptdev  . "\n";
+          print PUE "\n/sbin/ip tun del " . $ppptdev;
         }
-        print PUE "  if [ -e /var/run/ppp$lcnt.pid ];then\n";
-        print PUE "    /usr/bin/kill -9 `cat /var/run/ppp$lcnt.pid`\n";
-        print PUE "    /usr/bin/sleep 5\n";
-        print PUE "  fi\n";
-        print PUE "  /bin/ps axww |grep \"unit $lcnt\" |awk '{printf \"kill -9 %s;sleep 2\\n\",\$1}' |sh\n";
-        print PUE "  rm /var/log/pppd.log.$lcnt\n";
-        print PUE "  date > /var/log/pppd.log.$lcnt\n";
-        print PUE "  /usr/sbin/pppd sync plugin rp-pppoe.so @ldata[6] unit $lcnt logfile /var/log/pppd.log.$lcnt mru $mdmconf{'MTU'} mtu $mdmconf{'MTU'} linkname @ldata[0] user @ldata[1] ipparam @ldata[0] nodefaultroute noauth persist nomultilink$servname nodetach";
+        print PUE "\n";
+        if (@ldata[6] ne $sysconf{'Internal'}) {
+          print PUE "if [ -d /sys/class/net/ethDSL.$lcnt ];then\n";
+          print PUE "  /sbin/ip link delete ethDSL.$lcnt\n";
+          print PUE "fi\n\n";
+          print PUE "/sbin/ip link add link @ldata[6] name ethDSL.$lcnt type macvlan\n";
+          print PUE "/sbin/ip link set dev ethDSL.$lcnt up\n\n";
+          $dslint="ethDSL." . $lcnt;
+        } else {
+          $dslint=@ldata[6];
+        }
+        print PUE "date > /var/log/pppd.log.$lcnt\n";
+        print PUE "/usr/sbin/pppd sync plugin rp-pppoe.so $dslint unit $lcnt logfile /var/log/pppd.log.$lcnt mru $mdmconf{'MTU'} mtu $mdmconf{'MTU'} linkname @ldata[0] user @ldata[1] ipparam @ldata[0] nodefaultroute noauth persist nomultilink$servname nodetach";
         if (@ldata[8] ne "") {
           print PUE " endpoint IP:@ldata[8]";
         }
         print PUE " &\n";
-        print PUE "fi;\n";
+        print PUE ") 10>/var/lock/ppp$lcnt.lock\n";
         close(PUE);
 
         print RP<<__EOB__;
@@ -3731,7 +3741,7 @@ while [ ! "`/sbin/ip route list 0/0 table 90 2> /dev/null`" ] && [ "\${GWCHK}" !
   GWCHK="\${GWCHK}X";
 done;
 
-if [ "\${GWCHK}" = "XXXXXXXXXX" ];then
+#if [ "\${GWCHK}" == "XXXXX" ];then
 __EOB__
 #  if ($sysconf{'External'} eq "Dialup") {
 #    print RP "  /usr/bin/killall -9 pppd\n";
@@ -3739,18 +3749,12 @@ __EOB__
 #    print RP "  rm /var/racoon/racoon.sock\n";
 #  }
 print RP<<__EOB__;
-  if [ -e /var/run/netsentry-pppup ];then
-    rm /var/run/netsentry-pppup
-  fi;
-  exit;
-fi;
+#  exit;
+#fi;
 
 #Starting Up @ldata[0] Link
-if [ ! "`/sbin/ip addr show ppp$lcnt |grep UP`" ];then
-  if [ ! -e /var/run/ppp-reroute ];then
-    touch /var/run/ppp-reroute
-  fi;
-  /etc/ifconf/pppup.ppp$lcnt
+if [ ! -d /sys/class/net/ppp$lcnt ];then
+  /etc/ifconf/pppup.ppp$lcnt &
  else
   #Become Default If There Is No Default
   DEST=`/sbin/ip addr show dev ppp$lcnt |tail -1 |awk '\$3 == "peer" {print \$4}' |cut -d/ -f1`
@@ -3770,7 +3774,7 @@ __EOB__
   sub startlinktest(){
     local($defgw)=@_;
     if ($defgw eq "ppp0") {
-      $defgwip="\`/sbin/ip addr show dev ethB |tail -1 |awk '\$3 == \"peer\" {print \$4}' |cut -d/ -f1\`";
+      $defgwip="\`/sbin/ip addr show dev ppp0 |tail -1 |awk '\$3 == \"peer\" {print \$4}' |cut -d/ -f1\`";
     } else {
       $defgwip=$sysconf{'Nexthop'};
     }
@@ -3778,7 +3782,7 @@ __EOB__
       print RP <<__EOB__;
 #Become Default If Possible
 CURDEF=`/sbin/ip route list 0/0 table 90 |awk '{print \$5}'`
-if [ "`/sbin/ip link show $defgw`" ] && [ "\$CURDEF" != "$defgw" ];then
+if [ -d /sys/class/net/$defgw ] && [ "\$CURDEF" != "$defgw" ];then
   DEST=$defgwip
   if [ "\$DEST" ];then
     /sbin/ip route del 0/0 table 90;
@@ -3839,6 +3843,7 @@ __EOB__
   print RP "#!/bin/bash\n\n";
 
       print RP<<__EOB__;
+(flock -w 20 10 || exit
 #Kill Any Zombie Dialup Links
 CHATPID=`/bin/pidof chat`
 if [ "\$CHATPID" ];then
@@ -3846,23 +3851,11 @@ if [ "\$CHATPID" ];then
   exit
 fi;
 
+__EOB__
+  
 #Kill Any IP Up Scripts Still Running
 #ps ax |grep "/etc/ppp/ip-up" |grep -v grep |awk '{printf "kill -9 %s\\n",\$1}' |sh
 
-#Lock The Script
-if [ -e /var/run/netsentry-pppup ];then
-  PID=`tail -1 /var/run/netsentry-pppup`
-  if [ -d /proc/\$PID ];then
-    exit
-   else
-    echo \$\$ > /var/run/netsentry-pppup
-  fi;
- else
-  echo \$\$ > /var/run/netsentry-pppup
-fi;
-
-__EOB__
-  
 #  if ($mdmconf{'LinkTest'} ne "") {
 #    @ipdat=split(/\./,$mdmconf{'LinkTest'});
 #    print RP "LTEST=\"\@$mdmconf{'LinkTest'} @ipdat[3].@ipdat[2].@ipdat[1].@ipdat[0].in-addr.arpa PTR IN +tries=5 +short\"\n\n";
@@ -3873,14 +3866,9 @@ __EOB__
     &startlinktest("ppp0");
     print RP<<__EOB__;
 #Starting Primary Link
-if [ ! "`/sbin/ip addr show ppp0 |grep UP`" ];then
-  if [ ! -e /var/run/ppp-reroute ];then
-    touch /var/run/ppp-reroute
-  fi;
-  /etc/ifconf/pppup.ppp0
-  /usr/sbin/servconfig
- else
-  /usr/sbin/servconfig
+/usr/sbin/servconfig
+if [ ! -d /sys/class/net/ppp0 ];then
+  /etc/ifconf/pppup.ppp0 &
 fi;
 
 __EOB__
@@ -3894,22 +3882,29 @@ __EOB__
   print PU3G "#!/bin/bash\n\n";
 
   if (($mdmconf{'Connection'} eq "3G") && ($sysconf{'External'} eq "Dialup")) {
-    print PU3G "exit\n";
+    print PU3G "sleep 5\n";
+    print PU3G "exec /etc/ifconf/pppup.ppp0 \$\@\n";
   } else {
-    print PU3G "sleep 3\n";
+#    print PU3G "if [ \"\${1}\" == \"nolock\" ];then\n";
+#    print PU3G "  rm /var/lock/ppp-main\n";
+#    print PU3G "fi\n\n";
+    print PU3G "(flock -w 20 10 || exit\n";
+#    print PU3G "if [ -e /var/run/ppp10.pid ];then\n";
+#    print PU3G "  PID=`cat /var/run/ppp10.pid`\n";
+#    print PU3G "  if [ \"\${PID}\" ] && [ -d /proc/\${PID} ];then\n";
+#    print PU3G "    kill -9 \${PID}\n";
+#    print PU3G "    sleep 3\n";
+#    print PU3G "  fi\n";
+#    print PU3G "fi\n\n";
+    print PU3G "sleep 5\n\n";
     print PU3G "if [ ! -e /dev/gsmmodem ] && [ -e /dev/tts/GSN0 ];then\n";
     print PU3G "  ln -s /dev/tts/GSM0 /dev/gsmmodem\n";
-    print PU3G "fi\n";
-    print PU3G "if [ -e /dev/gsmmodem ] && [ ! \"`/sbin/ip addr show ppp10 |grep UP`\" ];then\n";
-    print PU3G "  if [ -e /var/run/ppp10.pid ];then\n";
-    print PU3G "    kill `cat /var/run/ppp10.pid`\n";
-    print PU3G "    sleep 5\n";
-    print PU3G "  fi;\n";
-    print PU3G "  /bin/ps axww |grep \"unit 10\" |awk '{printf \"kill -9 %s;sleep 2\\n\",\$1}' |sh\n";
-    print PU3G "  rm /var/log/pppd.log.3g\n";
-    print PU3G "  date > /var/log/pppd.log.3g\n";
-    print PU3G "  /usr/sbin/pppd /dev/gsmmodem connect \"/usr/sbin/chat -v -f /etc/ppp/diald.3g\" maxfail 5 unit 10 logfile /var/log/pppd.log.3g linkname 3g ipparam 3g nodefaultroute noauth persist nomultilink nodetach usepeerdns &\n";
-    print PU3G "fi;\n";
+    print PU3G " elif [ ! -e /dev/gsmmodem ];then\n";
+    print PU3G "  exit -1\n";
+    print PU3G "fi;\n\n";
+    print PU3G "date > /var/log/pppd.log.3g\n";
+    print PU3G "exec /usr/sbin/pppd /dev/gsmmodem connect \"/usr/sbin/chat -v -f /etc/ppp/diald.3g\" lock maxfail 5 unit 10 logfile /var/log/pppd.log.3g linkname 3g ipparam 3g nodefaultroute noauth persist nomultilink nodetach usepeerdns &\n";
+    print PU3G ") 10>/var/lock/ppp10.lock\n";
   }
   close(PU3G);
 
@@ -3917,19 +3912,22 @@ __EOB__
   chmod(0600,"pppup.ppp0");
 
   print PU "#!/bin/bash\n\n";
-  print PU "sleep 2\n";
-  print PU "if [ ! \"`/sbin/ip addr show ppp0 |grep UP`\" ];then\n";
-  print PU "  if [ -e /var/run/ppp0.pid ];then\n";
-  print PU "    /usr/bin/kill -9 `cat /var/run/ppp0.pid`\n";
-  print PU "    /usr/bin/sleep 5\n";
-  print PU "  fi\n";
-  print PU "  /bin/ps axww |grep \"unit 0\" |awk '{printf \"kill -9 %s;sleep 2\\n\",\$1}' |sh\n";
-
+#  print PU "if [ \"\${1}\" == \"nolock\" ];then\n";
+#  print PU "  rm /var/lock/ppp-main\n";
+#  print PU "fi\n\n";
+  print PU "(flock -w 20 10 || exit\n";
+#  print PU "if [ -e /var/run/ppp0.pid ];then\n";
+#  print PU "  PID=`cat /var/run/ppp0.pid`\n";
+#  print PU "  if [ \"\${PID}\" ] && [ ! -d /proc/\${PID} ];then\n";
+#  print PU "    /usr/bin/kill -9 \${PID}\n";
+#  print PU "    sleep 3\n";
+#  print PU "  fi\n";
+#  print PU "fi\n\n";
 
   chop $ppptun{'ppp0'};
   @ppptdat=split(/ /,$ppptun{'ppp0'});
   foreach $ppptdev (@ppptdat) {
-    print PU "  /sbin/ip tun del " . $ppptdev  . "\n";
+    print PU "\n/sbin/ip tun del " . $ppptdev;
   }
 
   if (($mdmconf{'Connection'} eq "ADSL") && ($sysconf{'External'} eq "Dialup")) {
@@ -3943,9 +3941,20 @@ __EOB__
         $servname=" rp_pppoe_service \"$service\" rp_pppoe_ac \"$server\"";
       }
     }
-    print PU "  rm /var/log/pppd.log.0\n";
-    print PU "  date > /var/log/pppd.log.0\n";
-    print PU "  /usr/sbin/pppd sync plugin rp-pppoe.so $mdmconf{'ComPort'} unit 0 logfile /var/log/pppd.log.0 linkname main user $mdmconf{'Username'} nodefaultroute noauth persist nomultilink usepeerdns$servname nodetach &\n";
+
+    if ($mdmconf{'ComPort'} ne $sysconf{'Internal'}) {
+      print PU "if [ -d /sys/class/net/ethDSL.0 ];then\n";
+      print PU "  /sbin/ip link delete ethDSL.0\n";
+      print PU "fi\n\n";
+      print PU "/sbin/ip link add link $mdmconf{'ComPort'} name ethDSL.0 type macvlan\n";
+      print PU "/sbin/ip link set dev ethDSL.0 up\n\n";
+      $dslint="ethDSL.0";
+    } else {
+      $dslint=$mdmconf{'ComPort'};
+    }
+
+    print PU "date > /var/log/pppd.log.0\n";
+    print PU "exec /usr/sbin/pppd sync plugin rp-pppoe.so $dslint unit 0 logfile /var/log/pppd.log.0 linkname main user $mdmconf{'Username'} nodefaultroute noauth persist nomultilink usepeerdns$servname nodetach &\n";
     &startexadsl();
   } elsif (($mdmconf{'Connection'} eq "3GIPW") && ($sysconf{'External'} eq "Dialup")) {
     $mdmconf{'ComPort'}="/dev/tts/IPW0";
@@ -3957,9 +3966,8 @@ __EOB__
       $mdmconf{'ComPort'}="/dev/tts/IPW" . $usbport;
     }
 
-    print PU "  rm /var/log/pppd.log.0\n";
-    print PU "  date > /var/log/pppd.log.0\n";
-    print PU "  /usr/sbin/pppd $mdmconf{'ComPort'} connect \"/usr/sbin/chat -v -f /etc/ppp/diald.scr\" unit 0 logfile /var/log/pppd.log.0 mru $mdmconf{'MTU'} mtu $mdmconf{'MTU'} linkname main user $mdmconf{'Username'} defaultroute noauth persist nomultilink usepeerdns nodetach &\n";
+    print PU "date > /var/log/pppd.log.0\n";
+    print PU "exec /usr/sbin/pppd $mdmconf{'ComPort'} connect \"/usr/sbin/chat -v -f /etc/ppp/diald.scr\" lock unit 0 logfile /var/log/pppd.log.0 mru $mdmconf{'MTU'} mtu $mdmconf{'MTU'} linkname main user $mdmconf{'Username'} defaultroute noauth persist nomultilink usepeerdns nodetach &\n";
     &startexadsl();
   } elsif (($mdmconf{'Connection'} eq "3G") && ($sysconf{'External'} eq "Dialup")) {
     $mdmconf{'ComPort'}="/dev/gsmmodem";
@@ -3971,9 +3979,8 @@ __EOB__
       $mdmconf{'ComPort'}="/dev/tts/GSM" . $usbport;
     }
 
-    print PU "  rm /var/log/pppd.log.0\n";
-    print PU "  date > /var/log/pppd.log.0\n";
-    print PU "  /usr/sbin/pppd $mdmconf{'ComPort'} connect \"/usr/sbin/chat -v -f /etc/ppp/diald.scr\" unit 0 logfile /var/log/pppd.log.0 mru $mdmconf{'MTU'} mtu $mdmconf{'MTU'} linkname main defaultroute noauth persist nomultilink usepeerdns nodetach &\n";
+    print PU "date > /var/log/pppd.log.0\n";
+    print PU "exec /usr/sbin/pppd $mdmconf{'ComPort'} connect \"/usr/sbin/chat -v -f /etc/ppp/diald.scr\" lock unit 0 logfile /var/log/pppd.log.0 mru $mdmconf{'MTU'} mtu $mdmconf{'MTU'} linkname main defaultroute noauth persist nomultilink usepeerdns nodetach &\n";
     &startexadsl();
 
   } elsif (($mdmconf{'Connection'} eq "Dialup") && ($sysconf{'External'} eq "Dialup")) {
@@ -3988,14 +3995,13 @@ __EOB__
       $mdmconf{'ComPort'}=$cportmap{$mdmconf{'ComPort'}};
     }
 
-    print PU "  rm /var/log/pppd.log.0\n";
-    print PU "  date > /var/log/pppd.log.0\n";
-    print PU "  /usr/sbin/pppd " . $mdmconf{'ComPort'} . " " . $mdmconf{'Speed'} . " " . $mdmconf{'Address'} . ":" . $mdmconf{'Gateway'} . " user $mdmconf{'Username'} $mdmconf{'FlowControl'} ipcp-accept-local passive demand idle $mdmconf{'IdleTimeout'} unit 0 logfile /var/log/pppd.log.0 mru $mdmconf{'MTU'} mtu $mdmconf{'MTU'} linkname main defaultroute noauth persist nomultilink usepeerdns nodetach &\n";
+    print PU "date > /var/log/pppd.log.0\n";
+    print PU "exec /usr/sbin/pppd " . $mdmconf{'ComPort'} . " " . $mdmconf{'Speed'} . " " . $mdmconf{'Address'} . ":" . $mdmconf{'Gateway'} . " user $mdmconf{'Username'} $mdmconf{'FlowControl'} ipcp-accept-local passive demand idle $mdmconf{'IdleTimeout'} unit 0 logfile /var/log/pppd.log.0 mru $mdmconf{'MTU'} mtu $mdmconf{'MTU'} linkname main defaultroute noauth persist nomultilink usepeerdns nodetach &\n";
 
 
 #    } elsif ($mdmconf{'ComPort'} eq "CAPI") {
 #      print RP "\n#Starting Link\n";
-#      print RP "/usr/sbin/pppd sync plugin capiplugin /dev/null number $mdmconf{'Number'} $mdmconf{'Address'}:$mdmconf{'Gateway'} ipcp-accept-local noauth defaultroute";
+#      print RP "exec /usr/sbin/pppd sync plugin capiplugin /dev/null number $mdmconf{'Number'} $mdmconf{'Address'}:$mdmconf{'Gateway'} ipcp-accept-local noauth defaultroute";
 #    }
   } elsif ($sysconf{'External'} ne "Dialup") {
     &startexadsl();
@@ -4004,15 +4010,14 @@ __EOB__
     print RP "#PPP Not Required On This System\n";
     print RP "/usr/sbin/servconfig\n";
   }
-
-  print PU "fi;\n";
+  print PU ") 10>/var/lock/ppp0.lock &\n";
   close(PU);
 
-  print RP<<__EOF__;
-
+#  print RP<<__EOF__;
+#
 #Status Changed
-if [ -e /var/run/ppp-reroute ];then
-  #Flush Routes And Conntrack
+#if [ -e /var/run/ppp-reroute ];then
+#  #Flush Routes And Conntrack
 #  sleep 15
 #  /sbin/ip route flush cache
 #  /usr/sbin/conntrack -F
@@ -4032,21 +4037,18 @@ if [ -e /var/run/ppp-reroute ];then
 #  /usr/sbin/racoon
 #  sleep 3
 #  /sbin/ip tun ls |grep -E "gtun[0-9]+:" |awk -F: '{print "/sbin/ip tun del "\$1}' |sh
-  rm /var/run/ppp-reroute
-fi;
+#  rm /var/run/ppp-reroute
+#fi;
+
+  print RP<<__EOF__;
 
 #Check And Restart GRE Tunnels
 /etc/rc.d/rc.tunnels
 
-if [ -e /var/run/netsentry-pppup ];then
-  rm /var/run/netsentry-pppup
-fi;
-
-
+) 10>/var/run/netsentry-pppup
+rm /var/run/netsentry-pppup
 __EOF__
 
-
-  print RP "\n";
   close(RP);
 }
 
@@ -4149,7 +4151,7 @@ if [ \$? != 0 ] || [ -e /tmp/tun_@tdat[0] ];then
   SR=\$?
 fi
 
-if [ "\${SR}" == "1" ] && [ -d /proc/sys/net/ipv4/neigh/@tdat[3] ];then
+if [ "\${SR}" == "1" ] && [ -d /sys/class/net/@tdat[3] ];then
   if [ -e /tmp/tun_@tdat[0] ];then
     rm /tmp/tun_@tdat[0]
   fi;
@@ -5196,31 +5198,11 @@ BROADCAST="$bcaddr";
 NETWORK="$nw";
 FIREWALL=INTERNAL;
 __EOI__
-
-  if ($wificard{'lite'} ne "") {
-    @wifidat=split(/\|/,$wificard{'lite'});
-    if (@wifidat[3] eq "") {
-      @wifidat[3]="off";
-    }
-    print IFUP<<__EOI__;
-ESSID="@wifidat[1]";
-NAME="Netsentry Lite";
-KEY=@wifidat[2];
-AP=any;
-MODE=Managed;
-CHANNEL=@wifidat[3];
-POWER=auto;
-RATE=auto;
-__EOI__
-  }
   close(IFUP);
 
 
   print IF "#Using Dynamic Addressing\n";
   print IF "echo 1 > /proc/sys/net/ipv4/ip_dynaddr\n\n";
-
-  print IF "#Enable IP Forwarding\n";
-  print IF "echo 1 > /proc/sys/net/ipv4/ip_forward\n\n";
 
   if (($mdmconf{'Connection'} eq "ADSL") || ($mdmconf{'Connection'} eq "3G") || ($mdmconf{'Connection'} eq "3GIPW")){
     $suint="lo";
@@ -5286,13 +5268,14 @@ __EOB__
  
   print FW "if [ \"\$1\" == \"startup\" ];then\n";
   print FW "  /etc/rc.d/rc.firewall2 startup\n";
-  print FW "  if [ -e /tmp/pppup/ext.ip-up ];then\n";
-  print FW "    for link in /tmp/pppup/ext.ip-up /tmp/pppup/ppp*.ip-up ;do\n";
-  print FW "      if [ -x \$link ];then\n";
-  print FW "        \$link\n";
-  print FW "      fi;\n";
-  print FW "    done;\n";
+  print FW "  if [ -x /tmp/pppup/ext.ip-up ];then\n";
+  print FW "    /tmp/pppup/ext.ip-up\n";
   print FW "  fi;\n";
+  print FW "  for link in /tmp/pppup/ppp[1-9].ip-up ;do\n";
+  print FW "    if [ -x \$link ] && [ -d /sys/class/net/\${link:11:4} ];then\n";
+  print FW "      \$link\n";
+  print FW "    fi;\n";
+  print FW "  done;\n";
   print FW "fi;\n\n";
 
   print FW "if [ -x /etc/firewall.local ];then\n";
@@ -5327,20 +5310,12 @@ sub printtables() {
 
 
   if ($sysconf{'Bridge'} ne "") {
-    print IF "#Configure Bridge\n";
-    print IF "/usr/sbin/brctl addbr $sysconf{'Internal'} > /dev/null 2>&1\n\n#Add Members\n(";
     @brint=split(/ /,$sysconf{'Bridge'});
     $brcnt=0;
     foreach $bint (@brint) {
-      if ($brcnt > 0) {
-        print IF "\n";
-      }
-      print IF "/sbin/ip link set $bint up\n";
-      print IF "/usr/sbin/brctl addif $sysconf{'Internal'} $bint";
+      $brinf{$bint}=$sysconf{'Internal'};
       $brcnt++;
     }
-    print IF ") > /dev/null 2>&1\n";
-    print IF "/usr/sbin/brctl stp $sysconf{'Internal'} on > /dev/null 2>&1\n\n";
   }
 
   foreach $vlan (@vlanids) {
@@ -5404,6 +5379,9 @@ NETMASK="@idata[2]";
 BROADCAST="$bcaddr";
 NETWORK="$nw";
 __EOI__
+      if ($brinf{$ifnme} ne "") {
+        print IFUP "BRIDGE=\"" . $brinf{$ifnme} . "\";\n";
+      }
       if ($sysconf{'External'} eq $ifnme) {
         print IFUP "DEFAULT=\"$sysconf{'Nexthop'}\";\n";
       }
@@ -5429,39 +5407,33 @@ __EOI__
         }
       } else {
           print IFUP "FIREWALL=\"INTERNAL\";\n";
-          print IFUP "FORWARD=0;\n";
+          print IFUP "FORWARD=1;\n";
       }
       if ($wificard{@idata[3]} ne "") {
         @wifidat=split(/\|/,$wificard{@idata[3]});
-        if (@wifidat[3] eq "") {
-          @wifidat[3]="off";
-        }
-        if (@wifidat[4] eq "") {
-          @wifidat[4]="any";
-          $mode="Master";
+        if (@wifidat[2] eq "Ad-Hoc") {
+          print IFUP "WEPKEY=@wifidat[6]\n";
+          print IFUP "ESSID=@idata[0];\n";
+          print IFUP "CHILLI=0;\n";
+        } elsif (@wifidat[2] eq "Hotspot") {
+          print IFUP "CHILLI=1;\n";
         } else {
-          $mode="Managed";
+          print IFUP "CHILLI=0;\n";
         }
-        if (@wifidat[6] eq "") {
-          @wifidat[6]="auto";
+
+        if (@wifidat[5] eq "") {
+          @wifidat[5]="auto";
         } else {
-          @wifidat[6] .="mW";
+          @wifidat[5] .="mW";
         }
-        if (@wifidat[7] eq "") {
-          @wifidat[7]="auto";
-        } else {
-          @wifidat[7] .="M auto";
-        }
+
         print IFUP <<__EOI__;
-ESSID="@wifidat[1]";
-NAME="@wifidat[2]";
-KEY=@wifidat[3];
-AP=@wifidat[4];
-MODE=$mode;
-CHANNEL=@wifidat[5];
-POWER=@wifidat[6];
-RATE="@wifidat[7]";
+TXPOWER=@wifidat[5];
+CHANNEL=@wifidat[4];
+REGDOM=@wifidat[3];
 __EOI__
+      } else {
+        print IFUP "CHILLI=0;\n";
       }
 
       if (($iface eq $mdmconf{'ComPort'}) && ($mdmconf{'Connection'} eq "ADSL") && ($sysconf{'External'} eq "Dialup")) {
@@ -5596,9 +5568,6 @@ __EOB__
   $imqmax=($tcctl{'Ingress'}/8)*1024;
   $imqmaxo=($tcctl{'Egress'}/8)*1024;
 
-
-  print IF "#Enable IP Forwarding\n";
-  print IF "echo 1 > /proc/sys/net/ipv4/ip_forward\n\n";
 
   if (($mdmconf{'Connection'} eq "ADSL") || ($sysconf{'External'} eq "Dialup") || ($mdmconf{'Connection'} eq "3G") || ($mdmconf{'Connection'} eq "3GIPW")) {
     print IF "#Using Dynamic Addressing\n";
@@ -5785,6 +5754,7 @@ if ($sysconf{'External'} eq $sysconf{'Internal'}) {
 /sbin/iptables -t nat -N NATMAPI
 /sbin/iptables -t nat -N NATMAPO
 /sbin/iptables -t nat -N MANGLE
+/sbin/iptables -t nat -N SYSNAT
 
 /sbin/iptables -t nat -A PREROUTING -j SIPMAP
 /sbin/iptables -t nat -A PREROUTING -j NATMAPI
@@ -5878,27 +5848,27 @@ _EOB_
   fi; 
 
   #Flush Tables
-  /sbin/iptables -F EXTIN
-  /sbin/iptables -F EXTOUT
-  /sbin/iptables -t nat -F EXTNAT
-  /sbin/iptables -t mangle -F SYSTOS
-  /sbin/iptables -t mangle -F NOSYSTOS
-  /sbin/iptables -t mangle -F LOCALTOS
-#  /sbin/iptables -t mangle -F VPN
-#  /sbin/iptables -F VPNLIN
-#  /sbin/iptables -F VPNLOUT
   /sbin/iptables -F LOCALIN
   /sbin/iptables -F LOCALOUT
   /sbin/iptables -F SBSRULESI
   /sbin/iptables -F SBSRULESO
   /sbin/iptables -F LOCALFWD
+  /sbin/iptables -F GWOUT
+  /sbin/iptables -A GWOUT -j ACCEPT \${INT_OUT}
+  /sbin/iptables -F GWIN
+  /sbin/iptables -A GWIN -j ACCEPT \${INT_IN}
+  /sbin/iptables -t nat -F EXTNAT
+  /sbin/iptables -t nat -F NATOUT
+  /sbin/iptables -t nat -A NATOUT -j \${NATCMD} \${INT_OUT}
   /sbin/iptables -t nat -F LOCALPROXY
   /sbin/iptables -t nat -F NOFWDNAT
   /sbin/iptables -t nat -F NOPPPNAT
   /sbin/iptables -t nat -F EXTPROXY
+  /sbin/iptables -t mangle -F SYSTOS
+  /sbin/iptables -t mangle -F NOSYSTOS
+  /sbin/iptables -t mangle -F LOCALTOS
   /sbin/iptables -t mangle -F LOCALIN
   /sbin/iptables -t mangle -F LOCALOUT
-#  /sbin/iptables -F PROXYFWD
 
 __EOB__
 
@@ -5955,9 +5925,7 @@ if [ \"\$1\" == "startup" ];then
   /sbin/iptables -N VPNFWD
   /sbin/iptables -N OVPNFWD
   /sbin/iptables -N DNSFWD
-  /sbin/iptables -N EXTIN
   /sbin/iptables -N TARPIT
-  /sbin/iptables -N EXTOUT
   /sbin/iptables -N DEFIN
   /sbin/iptables -N DEFOUT
 #  /sbin/iptables -N VPNLIN
@@ -5967,11 +5935,18 @@ if [ \"\$1\" == "startup" ];then
   /sbin/iptables -N LOCALOUT
   /sbin/iptables -N SBSRULESO
   /sbin/iptables -N LOCALFWD
+  /sbin/iptables -N SYSFWD
   /sbin/iptables -N WANFWD
   /sbin/iptables -N PPPIN
   /sbin/iptables -N PPPOUT
   /sbin/iptables -N PPPFWD
 #  /sbin/iptables -N PROXYFWD
+  /sbin/iptables -N WEBACCESSI
+  /sbin/iptables -N WEBACCESSO
+  /sbin/iptables -N HOTSPOTI
+  /sbin/iptables -N HOTSPOTO
+  /sbin/iptables -N GWOUT
+  /sbin/iptables -N GWIN
 
   /sbin/iptables -t nat -N SIPLB
   /sbin/iptables -t nat -N SIPMAP
@@ -5980,8 +5955,6 @@ if [ \"\$1\" == "startup" ];then
   /sbin/iptables -t nat -N NATMAPI
   /sbin/iptables -t nat -N NATMAPO
   /sbin/iptables -t nat -N WEBACCESS
-  /sbin/iptables -N WEBACCESSI
-  /sbin/iptables -N WEBACCESSO
   /sbin/iptables -t nat -N PROXYBYPASS
   /sbin/iptables -t nat -N TXPROXY
   /sbin/iptables -t nat -N NONAT
@@ -5991,6 +5964,8 @@ if [ \"\$1\" == "startup" ];then
   /sbin/iptables -t nat -N DMZNAT
   /sbin/iptables -t nat -N VPNWEB
   /sbin/iptables -t nat -N EXTNAT
+  /sbin/iptables -t nat -N SYSNAT
+  /sbin/iptables -t nat -N NATOUT
   /sbin/iptables -t nat -N MANGLE
   /sbin/iptables -t nat -N DEFPROXY
   /sbin/iptables -t nat -N MANGLEPROXY
@@ -6097,6 +6072,8 @@ fi;
 /sbin/iptables -t nat -F WEBACCESS
 /sbin/iptables -F WEBACCESSI
 /sbin/iptables -F WEBACCESSO
+/sbin/iptables -F HOTSPOTI
+/sbin/iptables -F HOTSPOTO
 /sbin/iptables -t nat -F TXPROXY
 /sbin/iptables -t nat -F NONAT
 /sbin/iptables -t nat -F VPNNAT
@@ -6299,6 +6276,7 @@ print FW <<__EOB__;
 /sbin/iptables -t nat -A POSTROUTING -j NONAT
 /sbin/iptables -t nat -A POSTROUTING -j VPNNAT
 /sbin/iptables -t nat -A POSTROUTING -j DMZNAT
+/sbin/iptables -t nat -A POSTROUTING -j SYSNAT
 /sbin/iptables -t nat -A POSTROUTING -j EXTNAT
 /sbin/iptables -t nat -A OUTPUT -j SIPLB
 
@@ -6491,6 +6469,31 @@ __EOB__
 /sbin/iptables -A OUTPUT -j VPNCOUT
 
 __EOB__
+
+  print FW "#Hotspot Access Drop Packets That Dont Match\n";
+  print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p udp -d $localip/32 --dport 53\n";
+  print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 53\n";
+  print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 80\n";
+  print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 443\n";
+  print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 666\n";
+
+  foreach $hspot (@hotspots) {
+    @idata=split(/\|/,$interface{$hspot});
+    $nwaddr=getnw(@idata[2], @idata[1]);
+    print FW "/sbin/iptables -A INPUT -j HOTSPOTI -i tun+ -s $nwaddr/@idata[2] -m state --state NEW,ESTABLISHED\n";
+    print FW "/sbin/iptables -A OUTPUT -j ACCEPT -o tun+ -d $nwaddr/@idata[2] -m state --state ESTABLISHED\n";
+    print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d @idata[1]/32 --dport 3990\n";
+    print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p udp -d @idata[1]/32 --dport 67:68\n";
+    print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d @idata[1]/32 --dport 3129\n";
+    print FW "/sbin/iptables -A LOOPOUT -j ACCEPT -s @idata[1]/32 -d @idata[1]/32 -p udp --dport $radacport -m state --state NEW,ESTABLISHED\n";
+    print FW "/sbin/iptables -A LOOPOUT -j ACCEPT -s @idata[1]/32 -d $localip/32 -p udp --dport $radacport -m state --state NEW,ESTABLISHED\n";
+  }
+
+  if (@hotspots) {
+    print FW "/sbin/iptables -A INPUT -j DENY -i tun+\n"; 
+    print FW "/sbin/iptables -A OUTPUT -j DENY -o tun+\n";
+  }
+
   if (index($sysconf{'Internal'},":") ne "-1") {
     $ethint=substr($sysconf{'Internal'},0,4);
   } else {
@@ -6566,42 +6569,18 @@ if ($sysconf{'L2TPNet'} ne "") {
 __EOB__
 }
 
-if ($hspotrange ne "") {
-    print FW<<__EOB__;
-#Hotspot Connections
-/sbin/iptables -A TXPROXY -p tcp -t nat -j REDIRECT --to-port 3129 -i tun0 -s $hspotrange
-
-__EOB__
-}
-
   print FW<<__EOB__;
 #Protect The Loopback Interface
-/sbin/iptables -A INPUT -j DENY -i lo -s ! 127.0.0.0/8
-/sbin/iptables -A INPUT -j DENY -i ! lo -s 127.0.0.0/8
-/sbin/iptables -A OUTPUT -j DENY -o lo -d ! 127.0.0.0/8
-/sbin/iptables -A OUTPUT -j DENY -o ! lo -d 127.0.0.0/8
+/sbin/iptables -A INPUT -j DENY -i lo ! -s 127.0.0.0/8
+/sbin/iptables -A INPUT -j DENY ! -i lo -s 127.0.0.0/8
+/sbin/iptables -A OUTPUT -j DENY -o lo ! -d 127.0.0.0/8
+/sbin/iptables -A OUTPUT -j DENY ! -o lo -d 127.0.0.0/8
 
 #Protect All Interface's
 __EOB__
-  if ($sysconf{'External'} ne "Dialup") {
-    $ethext=$sysconf{'External'};
-    @idata=split(/\|/,$interface{$ethext});
-    $extip="\$EXT_IP";
-#    $extip="@idata[1]/32";
-    if (index($sysconf{'External'},"\:") ne "-1") {
-      $ethext=substr($sysconf{'External'},0,4);
-    } else {
-      $ethext=$sysconf{'External'};
-    }
-    $rin="\$INT_IN";
-    $rout="\$INT_OUT";
-#   $rin="-i $ethext ";
-#   $rout="-o $ethext ";
-  } else {
-    $extip="\$EXT_IP";
-    $rin="\$INT_IN";
-    $rout="\$INT_OUT";
-  }
+  $extip="\$EXT_IP";
+  $rin="\$INT_IN";
+  $rout="\$INT_OUT";
 
    if ($sysconf{'Bridge'} ne "") {
      print FW "/sbin/iptables -A FORWARD -j ACCEPT -i " . $sysconf{'Internal'} . " -o " . $sysconf{'Internal'}  . "\n";
@@ -6624,32 +6603,33 @@ __EOB__
 #   print FW "/sbin/iptables -A FORWARD -j ACCEPT -p tcp --tcp-flags SYN,RST RST -m length --length 40\n";
 #   print FW "/sbin/iptables -A FORWARD -j ACCEPT -p tcp --tcp-flags SYN,FIN FIN -m length --length 40\n";
 #   print FW "/sbin/iptables -A FORWARD -j ACCEPT -p tcp -m length --length 40\n";
+   print FW "/sbin/iptables -A FORWARD -j SYSFWD\n";
    print FW "/sbin/iptables -A FORWARD -j LOCALFWD\n";
    print FW "/sbin/iptables -A FORWARD -j VPNFWD -m state --state NEW\n\n";
 
-   print FWP "  #NAT ICMP Ping And Errors / Redirect (Type 3/11/5)\n";
-   print FWP "  /sbin/iptables -A EXTNAT -t nat -j $nat -p icmp --icmp-type echo-reply -m state --state NEW,ESTABLISHED\n";
-   print FWP "  /sbin/iptables -A EXTNAT -t nat -j $nat -p icmp --icmp-type echo-request -m state --state NEW,ESTABLISHED\n\n";
-   print FWP "  /sbin/iptables -A EXTNAT -t nat -j $nat -p icmp --icmp-type redirect -m state --state NEW,ESTABLISHED\n\n";
+   print FW "#NAT ICMP Ping And Errors / Redirect (Type 3/11/5)\n";
+   print FW "/sbin/iptables -A SYSNAT -t nat -j NATOUT -p icmp --icmp-type echo-reply\n";
+   print FW "/sbin/iptables -A SYSNAT -t nat -j NATOUT -p icmp --icmp-type echo-request\n";
+   print FW "/sbin/iptables -A SYSNAT -t nat -j NATOUT -p icmp --icmp-type redirect\n\n";
 
    if ($sysconf{'PrimaryDns'} ne "" ) { 
-     print FWP "  #NAT Access To Specified Primary Domain Server\n";
-     print FWP "  /sbin/iptables -A EXTNAT -j $nat -t nat $rout-p udp $sfnew --sport 1024:65535 -d $sysconf{'PrimaryDns'} --dport 53\n";
-     print FWP "  /sbin/iptables -A EXTNAT -j $nat -t nat $rout-p udp $sfnew --sport 53 -d $sysconf{'PrimaryDns'} --dport 53\n";
-     print FWP "  /sbin/iptables -A EXTNAT -j $nat -t nat $rout-p tcp $sfnew --sport 1024:65535 -d $sysconf{'PrimaryDns'} --dport 53\n\n";
+     print FW "#NAT Access To Specified Primary Domain Server\n";
+     print FW "/sbin/iptables -A SYSNAT -t nat -j NATOUT -p udp --sport 1024:65535 -d $sysconf{'PrimaryDns'} --dport 53\n";
+     print FW "/sbin/iptables -A SYSNAT -t nat -j NATOUT -p udp --sport 53 -d $sysconf{'PrimaryDns'} --dport 53\n";
+     print FW "/sbin/iptables -A SYSNAT -t nat -j NATOUT -p tcp --sport 1024:65535 -d $sysconf{'PrimaryDns'} --dport 53\n\n";
   }
 
-   if ($sysconf{'SecondaryDns'} ne "" ) { 
-     print FWP "  #NAT Access To Specified Primary Domain Server\n";
-     print FWP "  /sbin/iptables -A EXTNAT -j $nat -t nat $rout-p udp $sfnew --sport 1024:65535 -d $sysconf{'SecondaryDns'} --dport 53\n";
-     print FWP "  /sbin/iptables -A EXTNAT -j $nat -t nat $rout-p udp $sfnew --sport 53 -d $sysconf{'SecondaryDns'} --dport 53\n";
-     print FWP "  /sbin/iptables -A EXTNAT -j $nat -t nat $rout-p tcp $sfnew --sport 1024:65535 -d $sysconf{'SecondaryDns'} --dport 53\n\n";
+  if ($sysconf{'SecondaryDns'} ne "" ) { 
+     print FW "#NAT Access To Specified Primary Domain Server\n";
+     print FW "/sbin/iptables -A SYSNAT -t nat -j NATOUT -p udp --sport 1024:65535 -d $sysconf{'SecondaryDns'} --dport 53\n";
+     print FW "/sbin/iptables -A SYSNAT -t nat -j NATOUT -p udp --sport 53 -d $sysconf{'SecondaryDns'} --dport 53\n";
+     print FW "/sbin/iptables -A SYSNAT -t nat -j NATOUT -p tcp --sport 1024:65535 -d $sysconf{'SecondaryDns'} --dport 53\n\n";
   }
 
-  print FWP "#Allow SIP Out From Server\n";
-  print FWP "/sbin/iptables -A EXTNAT -j $nat -t nat $rout-p udp $sfnew -s $localip/32 -d 0/0 --sport 5000 --dport 1024:65535\n\n";
-  print FWP "/sbin/iptables -A EXTNAT -j $nat -t nat $rout-p udp $sfnew -s $localip/32 -d 0/0 --sport 5060 --dport 1024:65535\n\n";
-  print FWP "/sbin/iptables -A EXTNAT -j $nat -t nat $rout-p tcp $sfnew -s $localip/32 -d 0/0 --sport 5060:5061 --dport 1024:65535\n\n";
+  print FW "#Allow SIP Out From Server\n";
+  print FW "/sbin/iptables -A SYSNAT -t nat -j NATOUT -p udp -s $localip/32 -d 0/0 --sport 5000 --dport 1024:65535\n";
+  print FW "/sbin/iptables -A SYSNAT -t nat -j NATOUT -p udp -s $localip/32 -d 0/0 --sport 5060 --dport 1024:65535\n";
+  print FW "/sbin/iptables -A SYSNAT -t nat -j NATOUT -p tcp -s $localip/32 -d 0/0 --sport 5060:5061 --dport 1024:65535\n\n";
 
 #  $locallan=getnw(@idata[2],@idata[1]);
 #  $localname=join(" ",split(/_/,@idata[0]));
@@ -6667,15 +6647,15 @@ __EOB__
       print FW "/sbin/iptables -A LOOPIN -j ACCEPT -i lo -s @ipdat[1]/32  -d @ipdat[1]/32\n";
       if (@ipdat[2] ne "32") {
         @ipdat[1]=getnw(@ipdat[2],@ipdat[1]);
-        print FW "/sbin/iptables -A INPUT -j DENY -i ! $denint -s @ipdat[1]/@ipdat[2]\n";
-        print FW "/sbin/iptables -A OUTPUT -j DENY -o ! $denint -d @ipdat[1]/@ipdat[2]\n";
+        print FW "/sbin/iptables -A INPUT -j DENY ! -i $denint -s @ipdat[1]/@ipdat[2]\n";
+        print FW "/sbin/iptables -A OUTPUT -j DENY ! -o $denint -d @ipdat[1]/@ipdat[2]\n";
       }
     }
   }
 #  foreach $wan (@wans) {
 #    @wdat=split(/\|/,$routes{$wan});
-#    print FW "/sbin/iptables -A INPUT -j DENY -i ! $ethint  -s @wdat[1]/@wdat[2]\n";
-#    print FW "/sbin/iptables -A OUTPUT -j DENY -o ! $ethint  -d @wdat[1]/@wdat[2]\n";
+#    print FW "/sbin/iptables -A INPUT -j DENY ! -i $ethint  -s @wdat[1]/@wdat[2]\n";
+#    print FW "/sbin/iptables -A OUTPUT -j DENY ! -o $ethint  -d @wdat[1]/@wdat[2]\n";
 #  }
 
 #/sbin/iptables -A INPUT -j ACCEPT -p tcp ! --syn -m state --state ESTABLISHED,RELATED
@@ -6824,14 +6804,6 @@ _EOB_
     print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $ethint -p udp -s $wirelessrange --sport 137:138 -d $bcaddr/32 --dport 137:138\n";
   }
 
-  if ($hspotrange ne "") {
-    @wrdat=split(/\//,$hspotrange);
-    $bcaddr=getbc(@wrdat[1],@wrdat[0]);
-    print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $ethint -p udp -s $hspotrange --sport 137:138 -d $localip/32 --dport 137:138\n";
-    print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $ethint -p udp -s $hspotrange --sport 137:138 -d $bcaddr/32 --dport 137:138\n";
-    print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $ethint -p udp -s $hspotrange --sport 1024:65535 -d $bcaddr/32 --dport 137:138\n";
-    print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $ethint -p udp -s $hspotrange --sport 137:138 -d $bcaddr/32 --dport 137:138\n";
-  }
 
   $intint=$sysconf{'Internal'};
   @iipdat=split(/\|/,$interface{$intint});
@@ -6867,35 +6839,6 @@ _EOB_
     print FW "/sbin/iptables -A OUTPUT -j PPPOUT -o ppp+ -d $wirelessrange\n\n";
   }
 
-  if ($hspotrange ne "") {
-    @wrdat=split(/\//,$hspotrange);
-    @ipwqu=split(/\./,@wrdat[0]);
-    @ipwqu[3]++;
-    $wrstart=join(".",@ipwqu);
-
-    print FW "#Allow Access On Internal Hotspot\n";
-    print FW "/sbin/iptables -A LOOPIN -j ACCEPT -i lo -d $wrstart/32 -s $wrstart/32\n";
-    print FW "/sbin/iptables -A LOOPOUT -j ACCEPT -o lo -s $wrstart/32 -d $wrstart/32\n";
-
-    print FW "#Allow Access Control For Hotspot Range\n";
-    print FW "/sbin/iptables -A INPUT -j PPPIN -i tun0 -s $hspotrange\n";
-    print FW "/sbin/iptables -A INPUT -j PPPIN -i $hspotint -s $hspotrange\n";
-    print FW "/sbin/iptables -A OUTPUT -j PPPOUT -o tun0 -d $hspotrange\n";
-    print FW "/sbin/iptables -A PPPIN -j ACCEPT -i tun0 -s $hspotrange\n";
-    print FW "/sbin/iptables -A PPPIN -j ACCEPT -i $hspotint -s $hspotrange\n";
-    print FW "/sbin/iptables -A PPPOUT -j ACCEPT -o tun0 -d $hspotrange\n\n";
-    print FW "/sbin/iptables -A PPPOUT -j ACCEPT -o $hspotint -d $hspotrange\n\n";
-    print FW "/sbin/iptables -A PPPFWD -j ACCEPT -i tun0 -s $hspotrange\n";
-    print FW "/sbin/iptables -A PPPFWD -j ACCEPT -o tun0 -d $hspotrange\n\n";
-    print FW "/sbin/iptables -A PPPFWD -j ACCEPT -i $hspotint -s $hspotrange\n";
-    print FW "/sbin/iptables -A PPPFWD -j ACCEPT -o $hspotint -d $hspotrange\n\n";
-
-#    if ($wrstart ne "") {
-#      print FW "/sbin/iptables -A PPPIN -j SYSIN -i tun0 -s $wrstart/32\n";
-#      print FW "/sbin/iptables -A PPPOUT -j SYSOUT -o tun0 -d $wrstart/32\n\n";
-#    }
-  }
-
   if ($sysconf{'L2TPNet'} ne "") {
     print FW "\n#Allow Access Control For L2TP Range\n";
     print FW "/sbin/iptables -A INPUT -j PPPIN -i ppp+ -s $sysconf{'L2TPNet'}\n";
@@ -6905,7 +6848,7 @@ _EOB_
   }
 
   print FW "#Access From Interfaces For Web Proxy\n";
-  print FW "/sbin/iptables -A INPUT -j WEBACCESSI  -p tcp -d $localip/32 --dport 80\n";
+  print FW "/sbin/iptables -A INPUT -j WEBACCESSI -p tcp -d $localip/32 --dport 80\n";
   print FW "/sbin/iptables -A OUTPUT -j WEBACCESSO  -p tcp -s $localip/32 --sport 80\n\n";
 
   print FW "#Allow SMB Broadcasts\n";
@@ -7224,15 +7167,15 @@ __EOR__
   print FW "/sbin/iptables -A MCASTOUT -j ACCEPT $sfnew -p udp --sport 520 --dport 520 -d 224.0.0.9\n";
   print FW "/sbin/iptables -A MCASTIN -j ACCEPT $sfnew -p udp --sport 520 --dport 520 -d 224.0.0.9\n\n";
 
-  print FWP "  /sbin/iptables -A EXTIN -j DEFIN $rin -d $extip\n";
-  print FWP "  /sbin/iptables -A EXTIN -j VOIPIN $rin -d $localip -p udp --sport 1024:65535\n\n";
+  print FWP "  /sbin/iptables -A LOCALIN -j DEFIN $rin -d $extip\n";
+  print FWP "  /sbin/iptables -A LOCALIN -j VOIPIN $rin -d $localip -p udp --sport 1024:65535\n\n";
 
-  print FWP "  /sbin/iptables -A EXTOUT -j DEFOUT $rout -s $extip\n";
-  print FWP "  /sbin/iptables -A EXTOUT -j VOIPOUT $rout -s $localip -p udp $sfnew --dport 1024:65535\n\n";
+  print FWP "  /sbin/iptables -A LOCALOUT -j DEFOUT $rout -s $extip\n";
+  print FWP "  /sbin/iptables -A LOCALOUT -j VOIPOUT $rout -s $localip -p udp $sfnew --dport 1024:65535\n\n";
 
   print FW "#Allow Access To STUN Remotely\n";
-  print FWP "  /sbin/iptables -A EXTIN -j ACCEPT $rin-p udp $sfnew -s $locallan/$locallnm --sport 1024:65535 -d $extip --dport 3478:3479\n";
-  print FWP "  /sbin/iptables -A EXTOUT -j ACCEPT $rout-p udp $sfnew -s $extip --sport 3478:3479 -d $extip --dport 10000:65535\n";
+  print FWP "  /sbin/iptables -A LOCALIN -j ACCEPT $rin-p udp $sfnew -s $locallan/$locallnm --sport 1024:65535 -d $extip --dport 3478:3479\n";
+  print FWP "  /sbin/iptables -A LOCALOUT -j ACCEPT $rout-p udp $sfnew -s $extip --sport 3478:3479 -d $extip --dport 10000:65535\n";
 #  print FWP "  /sbin/iptables -A EXTIN -j ACCEPT $rin-p udp $sfold -s $extip --dport 3478:3479 -d $extip --sport 10000:65535\n";
 #  print FWP "  /sbin/iptables -A EXTOUT -j ACCEPT -o $ethint -p udp $sfold -d $locallan/$locallnm --dport 10000:65535 -s $extip --sport 3478:3479\n";
 #  print FWP "  /sbin/iptables -A EXTOUT -j ACCEPT -p udp $sfold -d $extip  --dport 1024:65535 -s $extip --sport 3478:3479\n\n";
@@ -7317,10 +7260,13 @@ __EOR__
 
   print FW "#Allow Remote SMTP Connections\n";
   $mailconf{'Delivery'}=lc($mailconf{'Delivery'});
-  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfnew -d 0/0 --dport 25 --sport 1024:65535\n\n";
+  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfnew -d 0/0 --dport 25 --sport 1024:65535\n";
+  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfnew -d 0/0 --dport 587 --sport 1024:65535\n";
   if ($mailconf{'Delivery'} ne "deffered") {
     print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -s 0/0 --dport 25 --sport 1024:65535\n";
+    print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -s 0/0 --dport 587 --sport 1024:65535\n";
   }
+  print FW "\n";
 
   print FW "#Allow Remote ident Connections\n";
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfnew -d 0/0 --dport 113 --sport 1024:65535\n";
@@ -7887,9 +7833,6 @@ _EOB_
   print FW "/sbin/iptables -A INPUT -j LOCALIN\n";
   print FW "/sbin/iptables -A OUTPUT -j LOCALOUT\n";
 
-  print FW "/sbin/iptables -A INPUT -j EXTIN\n";
-  print FW "/sbin/iptables -A OUTPUT -j EXTOUT\n";
-
 
 #  print FW "/sbin/iptables -A INPUT -j PROXYIN\n";
 #  print FW "/sbin/iptables -A OUTPUT -j PROXYOUT\n\n";
@@ -8140,7 +8083,11 @@ _EOB_
           print FWP "  /sbin/iptables -t mangle -A LOCALOUT -j MARK$proto -m mark --mark 0x102 --set-mark @rdata[13] -o @rdata[9] -d $fwsource{@rdata[7]} --dport @rdata[2] -s @rdata[1] --sport @rdata[3]\n";
           print FWP "  /sbin/iptables -t mangle -A LOCALIN -j MARK$proto -m mark --mark 0x102 --set-mark @rdata[13] $rin-d $dest --dport @rdata[2] -s @rdata[1] --sport @rdata[3]\n";
           print FWP "  /sbin/iptables -t mangle -A LOCALOUT -j MARK$proto -m mark --mark 0x102 --set-mark @rdata[13] $rout-s $dest --sport @rdata[2] -d @rdata[1] --dport @rdata[3]\n";
-          print FWP "  /sbin/iptables -A EXTNAT -j $fwnat -t nat $rout$proto$statein -s $fwsource{@rdata[7]} --sport @rdata[2] -d @rdata[1] --dport @rdata[3]\n";
+          if ($fwnat eq $nat) {
+            print FW "/sbin/iptables -A SYSNAT -j NATOUT -t nat $proto -s $fwsource{@rdata[7]} --sport @rdata[2] -d @rdata[1] --dport @rdata[3]\n";
+          } else {
+            print FWP "  /sbin/iptables -A EXTNAT -j $fwnat -t nat $rout$proto$statein -s $fwsource{@rdata[7]} --sport @rdata[2] -d @rdata[1] --dport @rdata[3]\n";
+          }
           print FWP "  /sbin/iptables -A LOCALTOS -j TOS -t mangle$proto$statein -i @rdata[9] -s $fwsource{@rdata[7]} --sport @rdata[2] -d @rdata[1] --dport @rdata[3] --set-tos @rdata[12]\n"
         }
         print FWP "\n";
@@ -8155,7 +8102,11 @@ _EOB_
           print FWP "  /sbin/iptables -t mangle -A LOCALOUT -j MARK$proto -m mark --mark 0x102 --set-mark @rdata[13] -o @rdata[9] -d $fwsource{@rdata[7]} -s @rdata[1]\n";
           print FWP "  /sbin/iptables -t mangle -A LOCALIN -j MARK$proto -m mark --mark 0x102 --set-mark @rdata[13] $rin-d $dest -s @rdata[1]\n";
           print FWP "  /sbin/iptables -t mangle -A LOCALOUT -j MARK$proto -m mark --mark 0x102 --set-mark @rdata[13] $rout-s $dest -d @rdata[1]\n";
-          print FWP "  /sbin/iptables -A EXTNAT -j $fwnat -t nat $rout$proto$statein -s $fwsource{@rdata[7]} -d @rdata[1]\n";
+          if ($fwnat eq $nat) {
+            print FW "/sbin/iptables -A SYSNAT -j NATOUT -t nat $proto -s $fwsource{@rdata[7]} -d @rdata[1]\n";
+          } else {
+            print FWP "  /sbin/iptables -A EXTNAT -j $fwnat -t nat $rout$proto$statein -s $fwsource{@rdata[7]} -d @rdata[1]\n";
+          }
           print FWP "  /sbin/iptables -A LOCALTOS -j TOS -t mangle$proto$statein -i @rdata[9] -s $fwsource{@rdata[7]} -d @rdata[1] --set-tos @rdata[12]\n"
         }
         print FWP "\n";
@@ -8260,23 +8211,32 @@ _EOB_
 
   foreach $rlink (@radlink) {
     @lidata=split(/\|/,$rlink);
-    print FWP "  #PPP Link @lidata[0]\n";
-    print FWP "  /sbin/iptables -A LOCALFWD -j ACCEPT -i ppp+ \$INT_OUT -s @lidata[1] -d 0/0 -m state --state NEW,ESTABLISHED\n";
-    print FWP "  /sbin/iptables -A LOCALFWD -j ACCEPT \$INT_IN -o ppp+ -d @lidata[1] -s 0/0 -m state --state RELATED,ESTABLISHED\n";
-    print FWP "  /sbin/iptables -A EXTNAT -t nat -j $nat \$INT_OUT -s @lidata[1] -m state --state NEW,ESTABLISHED\n\n";
+    print FW "#PPP Link @lidata[0]\n";
+    print FW "/sbin/iptables -A SYSFWD -j GWOUT -i ppp+ -s @lidata[1] -d 0/0 -m state --state NEW,ESTABLISHED\n";
+    print FW "/sbin/iptables -A SYSFWD -j GWIN -o ppp+ -d @lidata[1] -s 0/0 -m state --state RELATED,ESTABLISHED\n";
+    print FW "/sbin/iptables -A SYSNAT -t nat -j NATOUT -s @lidata[1]\n\n";
   }
 
   if (($wirelessrange ne "")  && ($wirenonat eq "true")) {
-    print FWP "  #PPPoE Connections NAT\n";
-    print FWP "  /sbin/iptables -A EXTNAT -t nat -j $nat \$INT_OUT -s $wirelessrange -m state --state NEW,ESTABLISHED\n\n";
+    print FW "#PPPoE Connections NAT\n";
+    print FW "/sbin/iptables -A SYSNAT -t nat -j NATOUT -s $wirelessrange\n\n";
   } elsif ($wirelessrange ne "") {
-    print FWP "  #PPPoE Connections No NAT\n";
-    print FWP "  /sbin/iptables -A NONAT -t nat -j ACCEPT \$INT_OUT -s $wirelessrange -m state --state NEW,ESTABLISHED\n\n";
+    print FWP "#PPPoE Connections No NAT\n";
+    print FWP "/sbin/iptables -A NONAT -t nat -j ACCEPT -s $wirelessrange -m state --state NEW,ESTABLISHED\n\n";
   }
 
-  if ($hspotrange ne "") {
-    print FWP "  #Hotspot Connections NAT\n";
-    print FWP "  /sbin/iptables -A EXTNAT -t nat -j $nat \$INT_OUT -s $hspotrange -m state --state NEW,ESTABLISHED\n\n";
+
+  if (@hotspots) {
+    print FW "#Hotspot NAT\n";
+    foreach $hspot (@hotspots) {
+      @idata=split(/\|/, $interface{$hspot});
+      $nwaddr=getnw(@idata[2],@idata[1]);
+      print FW "/sbin/iptables -A SYSFWD -j GWOUT -i tun+ -s $nwaddr/@idata[2] -d 0/0 -m state --state NEW,ESTABLISHED\n";
+      print FW "/sbin/iptables -A SYSFWD -j GWIN -o tun+ -d $nwaddr/@idata[2] -s 0/0 -m state --state RELATED,ESTABLISHED\n";
+      print FW "/sbin/iptables -t nat -A SYSNAT -j NATOUT -s $nwaddr/@idata[2]\n";
+      print FW "/sbin/iptables -A TXPROXY -t nat -j REDIRECT -p tcp --to-port 3129 -i @idata[3] -s $nwaddr/@idata[2]\n\n";
+      print FW "/sbin/iptables -A TXPROXY -t nat -j REDIRECT -p tcp --to-port 3129 -i tun+ -s $nwaddr/@idata[2]\n\n";
+    }
   }
 
   print FW "/sbin/iptables -A OUTPUT -j SIPOUT\n";
@@ -8470,19 +8430,19 @@ __EOB__
   print FWP "    /etc/rc.d/rc.mangle \$EXT_IP_ADDR \$DEST_IP \$INT_NAME\n";
   print FWP "  fi;\n\n";
 
-  print FWP "  #Restart NMBD\n";
-  print FWP "  while [ \"`/bin/pidof nmbd`\" ];do\n";
-  print FWP "    killall -9 nmbd;\n";
-  print FWP "    sleep 1;\n";
-  print FWP "  done\n\n";
-  print FWP "  /usr/sbin/nmbd -D;\n";
+#  print FWP "  #Restart NMBD\n";
+#  print FWP "  while [ \"`/bin/pidof nmbd`\" ];do\n";
+#  print FWP "    killall -9 nmbd;\n";
+#  print FWP "    sleep 1;\n";
+#  print FWP "  done\n\n";
+#  print FWP "  /usr/sbin/nmbd -D;\n";
 
   print FWP "  if [ \"\$1\" != \"startup\" ]  && [ \"\$4\" != \"hotplug\" ];then\n"; 
   print FWP "    #Check And Restart GRE Tunnels\n";
   print FWP "    /sbin/ip tun ls |grep -E \"gtun[0-9]+:\" |awk -F: '{print \"/sbin/ip tun del \"\$1}' |sh > /dev/null 2>&1\n";
   print FWP "    /etc/rc.d/rc.tunnels\n";
-  print FWP "    /usr/sbin/conntrack -F\n";
-  print FWP "    /usr/sbin/conntrack -F expectation\n";
+  print FWP "    (/usr/sbin/conntrack -F\n";
+  print FWP "    /usr/sbin/conntrack -F expect) >/dev/null 2>&1\n";
   print FWP "    /sbin/ip route flush cache\n";
   print FWP "  fi;\n\n";
 
@@ -8653,12 +8613,12 @@ __EOS__
     print FWP "  /usr/bin/nsupdate /tmp/dnsup.\$6.ppp\n";
   }
 
-  print FWP "  #Restart NMBD\n";
-  print FWP "  while [ \"`/bin/pidof nmbd`\" ];do\n";
-  print FWP "    killall -9 nmbd;\n";
-  print FWP "    sleep 1;\n";
-  print FWP "  done\n\n";
-  print FWP "  /usr/sbin/nmbd -D;\n";
+#  print FWP "  #Restart NMBD\n";
+#  print FWP "  while [ \"`/bin/pidof nmbd`\" ];do\n";
+#  print FWP "    killall -9 nmbd;\n";
+#  print FWP "    sleep 1;\n";
+#  print FWP "  done\n\n";
+#  print FWP "  /usr/sbin/nmbd -D;\n";
   
   print FWP "  #Run Local Mangle Script\n";
   print FWP "  if [ -x \"/etc/ppp/mangle/\$6\" ];then\n";
@@ -8894,13 +8854,14 @@ __EOF__
 
   print FW "if [ \"\$1\" == \"startup\" ];then\n";
   print FW "  /etc/rc.d/rc.firewall2 startup\n";
-  print FW "  if [ -e /tmp/pppup/ext.ip-up ];then\n";
-  print FW "    for link in /tmp/pppup/ext.ip-up /tmp/pppup/ppp*.ip-up ;do\n";
-  print FW "      if [ -x \$link ];then\n";
-  print FW "        \$link\n";
-  print FW "      fi;\n";
-  print FW "    done;\n";
+  print FW "  if [ -x /tmp/pppup/ext.ip-up ];then\n";
+  print FW "    /tmp/pppup/ext.ip-up\n";
   print FW "  fi;\n";
+  print FW "  for link in /tmp/pppup/ppp[1-9].ip-up ;do\n";
+  print FW "    if [ -x \$link ] && [ -d /sys/class/net/\${link:11:4} ];then\n";
+  print FW "      \$link\n";
+  print FW "    fi;\n";
+  print FW "  done;\n";
   print FW "fi;\n\n";
 
   print FW "if [ -x /etc/firewall.local ];then\n";
@@ -9957,7 +9918,7 @@ if (! -d "/etc/samba") {
   print SMB "        idmap config * : backend      = ldap\n";
   print SMB "        idmap config * : range        = 524288-589824\n";
   print SMB "        idmap config * : ldap_url     = ldaps://" . $ldapserv{'Server'} . "\n";
-  print SMB "        idmap config * : ldap_base_dn = " . $vsuf . "\n";
+  print SMB "        idmap config * : ldap_base_dn = ou=idmap," . $vsuf . "\n";
   print SMB "        idmap config * : ldap_user_dn = " . $ldapserv{'Login'} . "\n";
 
   if ($smboption{'Winbind'} eq "") {
@@ -10771,9 +10732,6 @@ __EOB__
 if ( ! $dnsall ) {
   if ($wirelessrange != "") {
         print DNS "               $wirelessrange;\n";
-  }
-  if ($hspotrange != "") {
-        print DNS "               $hspotrange;\n";
   }
   if ($sysconf{'VPNNet'} != "") {
       print DNS "               $sysconf{'VPNNet'};\n";
@@ -12355,7 +12313,7 @@ Known Web Bug Servers = msgtag.com
 Language Strings = %report-dir%/languages.conf
 Local Postmaster = postmaster
 Lock Type = flock
-Lockfile Dir = /var/run
+Lockfile Dir = /var/lock/mailscanner
 Log Dangerous HTML Tags = no
 Log MCP = no
 Log Non Spam = yes
@@ -12507,7 +12465,8 @@ Stored Bad Filename Message Report = %report-dir%/stored.filename.message.txt
 Stored Size Message Report        = %report-dir%/stored.size.message.txt
 Stored Virus Message Report        = %report-dir%/stored.virus.message.txt
 Syslog Facility = mail
-TNEF Expander = /opt/MailScanner/bin/tnef --maxsize=100000000
+TNEF Expander = internal
+#/opt/MailScanner/bin/tnef --maxsize=100000000
 TNEF Timeout = 120
 Treat Invalid Watermarks With No Sender as Spam = nothing
 Unrar Command = /usr/bin/unrar
@@ -12752,6 +12711,18 @@ client $localip {
 
 
 __EOB__
+
+  foreach $hspot (@hotspots) {
+  @rcdat=split(/\|/,$interface{$hspot});
+print RC<<__EOB__;
+client @rcdat[1] {
+       secret      = $radssecret
+       shortname   = internal
+       nastype     = other
+}
+
+__EOB__
+  }
 
   foreach $radent (@radclient) {
   @rcdat=split(/\|/,$radent);
@@ -14688,8 +14659,8 @@ sub printzapata() {
       } elsif (@sdrow[0] eq "crc4") {
         $t1val="f";
         $brival="f";
-        @sdrow[1]=@sdrow[1]?"t":"f";
         $wrcrc4=@sdrow[1]?"CRC4":"NCRC4";
+        @sdrow[1]=@sdrow[1]?"t":"f";
       } elsif (@sdrow[0] eq "framing") {
         $t1val=(@sdrow[1] eq "cas")?"d4":"esf";
         $brival="ccs";
@@ -15875,33 +15846,34 @@ sub printetcshadow() {
 
 
 sub printchilli() {
-  open(CSC,">chilli.conf");
-  open(CUS,">chilli-up");
-  open(CWC,">chilli.php");
+  if ($dnsconf{'Hostname'}) {
+    $fqdn="$dnsconf{'Hostname'}.$dnsconf{'Domain'}";
+  } else {
+    $fqdn=$dnsconf{'Domain'}
+  }
 
-  if (($hspotint ne "") && ($hspotrange ne "")) {
-    if ($dnsconf{'Hostname'}) {
-      $fqdn="$dnsconf{'Hostname'}.$dnsconf{'Domain'}";
-    } else {
-      $fqdn=$dnsconf{'Domain'}
-    }
-    $ethint=$sysconf{'Internal'};
-    @idata=split(/\|/,$interface{$ethint});
+  $ethint=$sysconf{'Internal'};
+  @idata=split(/\|/,$interface{$ethint});
+  $salt=md5_hex($fqdn . $interface{$ethint} . $sysconfig{'Serial'});
 
-    @wrdat=split(/\//,$hspotrange);
-    @ipwqu=split(/\./,@wrdat[0]);
-    @ipwqu[3]++;
-    $wrstart=join(".",@ipwqu);
+  foreach $hspot (@hotspots) {
+    open(CSC,">chilli-conf.$hspot");
+    open(CUS,">chilli-up.$hspot");
+    @ihdata=split(/\|/,$interface{$hspot});
+    $nwaddr=&getnw(@ihdata[2],@ihdata[1]);
 
-
-    $salt=md5_hex($fqdn . $wrstart . $hspotrange . $hspotint . $sysconfig{'Serial'});
-
+    $uam=uri_escape("http://@ihdata[1]:3990");
     print CSC <<__EOF__;
-radiusserver1 127.0.0.1
-radiusauthport 1645
-radiusacctport 1646
+dhcpif $hspot
+net $nwaddr/@ihdata[2]
+pidfile /var/run/chilli.$hspot
+radiuslisten @ihdata[1]
+radiusnasid $fqdn
+radiusserver1 $ihdata[1]
+radiusserver2 $idata[1]
+radiusauthport $radauport
+radiusacctport $radacport
 radiussecret $radssecret
-dhcpif $hspotint
 uamserver https://$fqdn/hotspot
 uamallowed 192.168.0.0/16
 uamallowed 172.16.0.0/12
@@ -15909,23 +15881,28 @@ uamallowed 10.0.0.0/8
 dns1 @idata[1]
 domain $dnsconf{'Domain'}
 uamsecret $salt
-ipup /usr/bin/chilli-up
-net $hspotrange
+eapolenable
+ipup /etc/chilli/$hspot.up
 __EOF__
 
-    print CUS<<__EOF__;
+  if (-e "/var/spool/apache/htdocs/hotspot/user.php" ) {
+    print CSC "uamhomepage http://$fqdn/hotspot/user.php?uam_url=$uam\n";
+  }
+
+  print CUS<<__EOF__;
 #!/bin/bash
 
-/sbin/ip route add $hspotrange dev tun0 src $wrstart table Link
+/sbin/ip route add $nwaddr/@ihdata[2] dev \${1} src \${2} table Link
 __EOF__
+    close(CSC);
+    close(CUS);
+  }
 
-    print CWC<<__EOF__;
+  open(CWC,">chilli.php");
+  print CWC<<__EOF__;
 <?php
 define('HOTSPOT_NAME', 'dns Telecom Hotspot');
 \$lg = 'en';
-define('UAMIP', '$wrstart');
-define('UAMPORT', '3990');
-define('UAM_URL', 'http://' . UAMIP . ':' . UAMPORT);
 define('BASE_URL', 'https://$fqdn/hotspot/');
 define('LOGINPATH', BASE_URL);
 define('ENABLE_LOGIN_COOKIE', true);
@@ -15934,11 +15911,7 @@ define('UAMSECRET', '$salt');
 define('USERPASSWORD', true);
 ?>
 __EOF__
-
-  }
-close(CSC);
-close(CUS);
-close(CWC);
+  close(CWC);
 }
 
 
@@ -16294,6 +16267,119 @@ __EOF__
   }
 }
 
+sub printhostapd() {
+  sub wifikeyconf {
+    local($fd,$mode,$type,$key) = @_;
+
+    if ($mode eq "Hotspot") {
+      $type="None";
+    }
+
+    if ($type eq "EAP") {
+      print $fd "ieee8021x=1\n";
+      if ($key ne "") {
+        print $fd "wpa_key_mgmt=WPA-EAP-SHA256 WPA-EAP WPA-PSK-SHA256 WPA-PSK\n";
+        print $fd "wpa_passphrase=$key\n";
+      } else {
+        print $fd "wpa_key_mgmt=WPA-EAP-SHA256 WPA-EAP\n";
+      }
+      print $fd "wpa_pairwise=TKIP CCMP\n";
+      print $fd "wep_key_len_broadcast=13\n";
+      print $fd "wep_key_len_unicast=13\n";
+      print $fd "wep_rekey_period=300\n";
+      print $fd "wpa=3\n";
+    } elsif ($type eq "WPA") {
+      print $fd "wpa_key_mgmt=WPA-PSK-SHA256 WPA-PSK\n";
+      print $fd "wpa_pairwise=TKIP CCMP\n";
+      print $fd "wpa_passphrase=$key\n";
+      print $fd "wpa=3\n";
+    } else { 
+      print $fd "wpa=0\n";
+    }
+  }
+
+  @wmodes=("a","b","g","g","g");
+  if ($sysconf{'Bridge'} ne "") {
+    @brint=split(/ /,$sysconf{'Bridge'});
+    foreach $bint (@brint) {
+      $brinf{$bint}=$sysconf{'Internal'};
+    }
+  }
+  foreach $iface (@wificards) {
+    next if (($iface eq $sysconf{'External'}) || (($sysconf{'Bridge'} ne "") && ($iface eq $sysconf{'Internal'})));
+
+    @wifidat=split(/\|/,$wificard{$iface});
+    next if ((@wifidat[2] ne "AP") && (@wifidat[2] ne "Hotspot"));
+
+    open(WLIF,">hostapd.$iface");
+
+    print WLIF "driver=nl80211\n";
+    print WLIF "country_code=@wifidat[3]\n";
+    print WLIF "ieee80211d=1\n";
+    print WLIF "ctrl_interface=/var/run/hostapd\n";
+
+    if ($dnsconf{'Hostname'}) {
+      $fqdn="$dnsconf{'Hostname'}.$dnsconf{'Domain'}";
+    } else {
+      $fqdn=$dnsconf{'Domain'}
+    }
+    $ethint=$sysconf{'Internal'};
+    @idata=split(/\|/,$interface{$ethint});
+
+    print WLIF "own_ip_addr=@idata[1]\n";
+    print WLIF "auth_server_addr=127.0.0.1\n";
+    print WLIF "auth_server_port=$radauport\n";
+    print WLIF "auth_server_shared_secret=$radssecret\n";
+    print WLIF "acct_server_addr=127.0.0.1\n";
+    print WLIF "acct_server_port=$radacport\n";
+    print WLIF "acct_server_shared_secret=$radssecret\n";
+    print WLIF "radius_retry_primary_interval=600\n";
+
+    if (@wmodes[@wifidat[0]] =~ m/^[ang]$/) {
+      print WLIF "wmm_enabled=1\n";
+    } else {
+      print WLIF "wmm_enabled=0\n";
+    }
+
+#    if (@wifidat[0] > 2) {
+#      print WLIF "ieee80211n=1\n";
+#      print WLIF "require_ht=0\n";
+#      if (@wifidat[0] > 3) {
+#        print WLIF "require_ht=1\n";
+#      } else {
+#        print WLIF "require_ht=0\n";
+#      }
+#    } else {
+#      print WLIF "ieee80211n=0\n";
+#      print WLIF "require_ht=0\n";
+#    }
+
+    print WLIF "interface=$iface\n";
+    if ($brinf{$iface} ne "") {
+      print WLIF "bridge=" . $brinf{$iface} . "\n";
+    }
+    print WLIF "auth_algs=3\n";
+    print WLIF "channel=@wifidat[4]\n";
+    print WLIF "hw_mode=@wmodes[@wifidat[0]]\n";
+    @idata=split(/\|/, $interface{$iface});
+    $ssid=join(" ",split(/_/,@idata[0]));
+    print WLIF "\nssid=$ssid\n";
+
+    wifikeyconf(WLIF, @wifidat[2], @wifidat[1], @wifidat[6]);
+
+    foreach $bssid (@{$bss{$iface}}) {
+      $bssid=$iface . "_" . $bssid;
+      @wifidat=split(/\|/,$wificard{$bssid});
+      print WLIF "\nbss=$bssid\n";
+      @idata=split(/\|/, $interface{$bssid});
+      $ssid=join(" ",split(/_/,@idata[0]));
+      print WLIF "ssid=$ssid\n";
+      wifikeyconf(WLIF, @wifidat[2], @wifidat[1], @wifidat[6]);
+    }
+    close(WLIF);
+  }
+}
+
 #sub getsn() {
 #  local($maskbits)=@_;
 #  if ($maskbits >= 24) {
@@ -16315,4 +16401,6 @@ __EOF__
 #  return "$snout.$snm$eq";
 #}
 
+flock($lockfh, LOCK_UN);
+close($lockfh);
 unlink("/var/run/netsentry-config");

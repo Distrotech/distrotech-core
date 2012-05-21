@@ -23,21 +23,12 @@ if ($qlink[$matches[1]] != "") {
 
 if (($_POST['vboxlogoff'] == $sessid) && ($_POST['vboxlogoff'] != "")) {
   session_regenerate_id(TRUE);
-  unset($_SESSION['resellerid']);
   $_SESSION=array();
   $_SESSION['auth']=true;
-  $_SESSION['reload']=false;
   session_write_close();
   header("Location: " . $_SERVER['SCRIPT_URL']);
   exit;
-} else if ((!isset($_SESSION['auth'])) || ($_SESSION['auth'])) {
-  $_SESSION['auth']=false;
-  header( "WWW-Authenticate: Basic realm=\"Call Shop Admin Login\"");
-  header( "HTTP/1.0 401 Unauthorized");
-  print "<link rel=stylesheet type=text/css href=/netsentry.php>";
-  print "<CENTER><H1>You Need To Be A Authorised User";
-  exit;
-} else if (((!$_SESSION['auth']) && (!isset($_SESSION['resellerid']))) || ($_SESSION['reload'])) {
+} else if (((isset($_SESSION['auth'])) && (!$_SESSION['auth']) && (!isset($_SESSION['resellerid']))) || ($_SESSION['reload'])) {
   $pos=strpos($_SERVER['PHP_AUTH_USER'],"@");
   if ($pos > 0) {
     $owner=substr($_SERVER['PHP_AUTH_USER'],strpos($_SERVER['PHP_AUTH_USER'],"@")+1);
@@ -55,7 +46,7 @@ if (($_POST['vboxlogoff'] == $sessid) && ($_POST['vboxlogoff'] != "")) {
   $ruser=pg_query($db,$plupq);
   $num=pg_num_rows($ruser);
  
- if ($num > 0) {
+  if ($num > 0) {
     $r = pg_fetch_row($ruser,0);
     $_SESSION['resellerid']=$r[1];
     $_SESSION['realmid']=$r[2];
@@ -114,6 +105,18 @@ if (($_POST['vboxlogoff'] == $sessid) && ($_POST['vboxlogoff'] != "")) {
   } else {
     $_SESSION['auth']=true;
   }
+}
+
+if ((!isset($_SESSION['auth'])) || ($_SESSION['auth'])) {
+  session_regenerate_id(TRUE);
+  $_SESSION=array();
+  $_SESSION['auth']=false;
+  session_write_close();
+  header( "WWW-Authenticate: Basic realm=\"Call Shop Admin Login\"");
+  header( "HTTP/1.0 401 Unauthorized");
+  print "<link rel=stylesheet type=text/css href=/netsentry.php>";
+  print "<CENTER><H1>You Need To Be A Authorised User";
+  exit;
 }
 
 if (isset($_COOKIE[session_name()])) {

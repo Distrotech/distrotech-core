@@ -3,13 +3,22 @@
 PATH=/usr/local/sbin:/usr/sbin:/sbin:/usr/local/bin:/usr/bin:/bin:/usr/X11R6/bin:/opt/sophos/bin
 export PATH
 
-if [ "${2}" == "rename" ];then
-  NINT=`ifrename -i ${1}`
+if [ ! "${1}" ];then
+  exit;
 fi;
 
-if [ "${NINT}" != "" ];then
-  INT=${NINT}
- else
+if [ "${1}" == "ppp0" ];then
+  for ppplnk in /tmp/pppup/ppp[1-9].ip-up;do
+    if [ -x ${ppplnk} ] && [ -d /sys/class/net/${ppplnk:11:4} ];then
+      ${ppplnk}
+    fi;
+  done;
+  exit;
+fi;
+
+INT=`ifrename -i ${1}`
+
+if [ ! "${INT}" ];then
   INT=${1}
 fi;
 
@@ -19,28 +28,57 @@ fi
 
 eval `cat /etc/ifconf/ifup.${INT}`
 
-if [ "${INT}" == "eth0" ] && [ "`grep eth0 /proc/net/wireless`" ] && \
-   [ -e /etc/ifconf/ifwl.eth0 ] && [ -e /etc/.networksentry-lite ];then
-  eval `cat /etc/ifconf/ifwl.eth0`
-fi;
-
 #Set Address On Interface
 /sbin/ip addr flush dev ${IFNAME}
-/sbin/ip addr add ${ADDRESS}/${NETMASK} dev ${IFNAME} broadcast ${BROADCAST} > /dev/null 2>&1
+if [ "${CHILLI}" == "0" ];then
+  /sbin/ip addr add ${ADDRESS}/${NETMASK} dev ${IFNAME} broadcast ${BROADCAST} > /dev/null 2>&1
+fi;
 
 #Configure MTU
 if [ "$MTU" ];then
   /sbin/ip link set dev ${IFNAME} mtu ${MTU}
 fi;
 
-#Bring Up Interface
-sleep 1
-/sbin/ip link set ${IFNAME} up
+if [ -d /sys/class/net/${IFNAME}/wireless ];then
+  if [ -e /etc/hostapd/${IFNAME}.conf ];then
+    if [ -e /var/run/hostapd.${IFNAME}.pid ];then
+      kill -9 `cat /var/run/hostapd.${IFNAME}.pid`
+    fi
+    (MACADDR=`cat /sys/class/net/${INT}/address`
+    MACADDR=`/usr/sbin/macmask ${MACADDR} 2`
+    /sbin/ip link set dev ${INT} address ${MACADDR}
+    /sbin/ip link set dev ${IFNAME} up) >/dev/null 2>&1
+    (/sbin/iwconfig ${IFNAME} txpower ${POWER}
+    /usr/sbin/hostapd -P /var/run/hostapd.${IFNAME}.pid -B /etc/hostapd/${IFNAME}.conf
+    killall -1 dhcpd) >/dev/null 2>&1
+   elif [ "$ESSID" ] && [ "$CHANNEL" ];then
+    (/sbin/iwconfig ${IFNAME} channel ${CHANNEL}
+    /sbin/iwconfig ${IFNAME} txpower ${POWER}
+    /sbin/iwconfig ${IFNAME} essid "${ESSID}"
+    /sbin/iwconfig ${IFNAME} name "${NAME}"
+    /sbin/iwconfig ${IFNAME} key ${KEY}
+    /sbin/iwconfig ${IFNAME} ap ${AP}
+    /sbin/iwconfig ${IFNAME} mode ${MODE}
+    /sbin/iwconfig ${IFNAME} rate ${RATE}) > /dev/null 2>&1
+    /sbin/ip link set ${IFNAME} up
+   else
+    /sbin/ip link set ${IFNAME} up
+  fi;
+ else
+  /sbin/ip link set ${IFNAME} up
+fi;
 
-#Setup Routing For Network Not To SNAT Address Space
-if [ ${NETWORK} != "0.0.0.0" ] && [ ${NETMASK} != "32" ];then
-#  /sbin/ip route add ${NETWORK}/${NETMASK} src ${ADDRESS} dev ${IFNAME} table Ipsec > /dev/null 2>&1
-  /sbin/ip route add ${NETWORK}/${NETMASK} src ${ADDRESS} dev ${IFNAME} scope link table 80 > /dev/null 2>&1
+if [ -s /etc/chilli/${IFNAME}.conf ] && [ "${CHILLI}" == "1" ];then
+  if [ -e /var/run/chilli.${IFNAME} ];then
+    kill -9 `cat /var/run/chilli.${IFNAME}`
+  fi
+  /usr/sbin/chilli -c /etc/chilli/${IFNAME}.conf
+ else
+  #Setup Routing For Network Not To SNAT Address Space
+  if [ ${NETWORK} != "0.0.0.0" ] && [ ${NETMASK} != "32" ];then
+#   /sbin/ip route add ${NETWORK}/${NETMASK} src ${ADDRESS} dev ${IFNAME} table Ipsec > /dev/null 2>&1
+    /sbin/ip route add ${NETWORK}/${NETMASK} src ${ADDRESS} dev ${IFNAME} scope link table 80 > /dev/null 2>&1
+  fi;
 fi;
 
 #Setup Static Routes
@@ -74,25 +112,6 @@ fi;
 #Set Route Path Filtering
 if [ "$RP_FIL" ];then
   echo ${RP_FIL} > /proc/sys/net/ipv4/conf/$IFNAME/rp_filter
-fi;
-
-
-if [ -e /etc/hostapd/${IFNAME}.conf ];then
-  /sbin/ip link set dev ${IFNAME} up >/dev/null 2>&1
-  (/usr/sbin/hostapd -d /etc/hostapd/${IFNAME}.conf &) >/dev/null 2>&1
-  killall -1 dhcpd
- else
-  #Configure Wireless Extensions
-  if [ "$ESSID" ] && [ "$CHANNEL" ];then
-    /sbin/iwconfig ${IFNAME} essid "${ESSID}" > /dev/null 2>&1
-    /sbin/iwconfig ${IFNAME} channel ${CHANNEL} > /dev/null 2>&1
-    /sbin/iwconfig ${IFNAME} name "${NAME}" > /dev/null 2>&1
-    /sbin/iwconfig ${IFNAME} key ${KEY} > /dev/null 2>&1
-    /sbin/iwconfig ${IFNAME} ap ${AP} > /dev/null 2>&1
-    /sbin/iwconfig ${IFNAME} mode ${MODE} > /dev/null 2>&1
-    /sbin/iwconfig ${IFNAME} txpower ${POWER} > /dev/null 2>&1
-    /sbin/iwconfig ${IFNAME} rate ${RATE} > /dev/null 2>&1
-  fi;
 fi;
 
 #Run Bandwidth Manager Scripts
@@ -148,12 +167,12 @@ if [ "$FORWARD" == "1" ];then
 fi;
 
 #Bring Up PPP Links
-#for pppl in $PPPLINKS;do
-#  ip link show ppp$pppl > /dev/null 2>&1
-#  if [ $? != 0 ];then 
-#    /etc/ifconf/pppup.ppp$pppl;
-#  fi;
-#done;
+for pppl in $PPPLINKS;do
+  ip link show ppp$pppl > /dev/null 2>&1
+  if [ $? != 0 ];then 
+    /etc/ifconf/pppup.ppp$pppl;
+  fi;
+done;
 
 if [ "$FIREWALL" == "EXTERNAL" ];then
   if [ "$DEFAULT" ];then
@@ -175,4 +194,15 @@ if [ "$FIREWALL" == "EXTERNAL" ];then
   sleep 2;
   (/sbin/ip route del 0/0 table 90;
   /sbin/ip route add 0/0 via ${DEFAULT} table 90) > /dev/null 2>&1
+fi;
+
+#Bridge control
+if [ "${BRIDGE}" ];then
+  if [ ! -d /proc/sys/net/ipv4/neigh/${BRIDGE} ];then
+   (brctl addbr ${BRIDGE}
+    brctl setfd ${BRIDGE} 0
+    brctl stp ${BRIDGE} on) > /dev/null 2>&1
+  fi;
+  sleep 5
+  brctl addif ${BRIDGE} ${IFNAME} > /dev/null  2>&1
 fi;

@@ -15,6 +15,8 @@ if [ "${2}" ];then
   SERV=${RSERV}
 fi
 
+/sbin/iptables -I DEFOUT -j ACCEPT -p tcp --dport 873
+
 rsync -az --contimeout=20 rsync://${SERV}/updates/ / > /dev/null 2>&1
 RES=$?
 if [ ${RES} != 0 ] && [ "${SERV}" != "127.0.0.1" ];then
@@ -31,6 +33,8 @@ fi;
 
 flashutil upgrade ${UPKERN} ${SERV}
 RES=$?
+
+/sbin/iptables -D DEFOUT -j ACCEPT -p tcp --dport 873
 
 exit ${RES}
 

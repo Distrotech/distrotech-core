@@ -20,9 +20,6 @@ if [ ! -e /etc/.networksentry-lite ];then
   fi;
   touch /var/log/radutmp
   /usr/sbin/radiusd > /dev/null 2>&1
-  if [ -s /etc/chilli.conf ];then
-    /usr/sbin/chilli &
-  fi
   if [ -s /etc/openvpn/openvpn.conf ];then
     if [ ! -e /etc/openvpn/serverdh.pem ];then
       (/usr/bin/openssl dhparam -5 -out /etc/openvpn/serverdh.pem 1024

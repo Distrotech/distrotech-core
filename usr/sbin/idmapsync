@@ -33,9 +33,6 @@ if (@ARGV[0] ne "") {
 
 $mesg = $ldap->search(base=>"ou=Idmap",filter =>$filter,
                       attrs=>['uidNumber','objectClass',"sambaSID"],sizelimit=>250,timelimit=>600);
-$ldap->unbind;
-$ldap = Net::LDAPS->new($host,port=>"636",verify => 'none',timeout => "10");
-$ldap->bind($binddn,password => $password);
 
 while ($entry=$mesg->shift_entry) {
   $uid=$entry->get_value("uidNumber");

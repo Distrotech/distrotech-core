@@ -23,6 +23,8 @@ if [ ! "`grep -E "^System Type" /var/spool/apache/htdocs/ns/config/netsentry.con
   cp /var/spool/apache/htdocs/ns/config/netsentry.conf /etc/firewall.conf.last
 fi;
 
+(flock -w 60 10 || exit
+
 cd /var/spool/apache/htdocs/ns/config
 
 
@@ -46,7 +48,7 @@ restartbrid() {
   if [ `pidof sangoma_brid` ];then
     killall -9 sangoma_brid
   fi;
-  exec /usr/sbin/sangoma_brid -bg &
+  /usr/sbin/sangoma_brid -bg &
 }
 
 if [ ! "`lsmod |grep -E "^dummy"`" ] && [ -x /usr/sbin/noroute ];then
@@ -372,17 +374,6 @@ if [ -e gensshauth ] && [ gensshauth -nt /root/.ssh/authorized_keys  ];then
   if [ -x /usr/bin/gensshauth ];then
     /usr/bin/gensshauth > /root/.ssh/authorized_keys
   fi;
-fi;
-
-if [ -e /var/run/netsentry-config ];then
-  PID=`tail -1 /var/run/netsentry-config`
-  if [ -d /proc/$PID ];then
-    exit
-   else
-    echo $$ > /var/run/netsentry-config
-  fi;
- else
-  echo $$ > /var/run/netsentry-config
 fi;
 
 if [ ! -e networksentry-lite ] && [ ! -e /tmp/.firstconfig ] && [ ! -e /etc/.install ];then
@@ -1310,7 +1301,6 @@ for ifconf in ifup.*;do
   fi;
 done;
 
-
 for ifconf in `ls ifbw.* 2>/dev/null` ;do
   if [ ! -e "/etc/ifconf/$ifconf" ];then
     cp $ifconf /etc/ifconf/
@@ -1324,6 +1314,56 @@ for ifconf in `ls ifbw.* 2>/dev/null` ;do
     fi;
   fi;
 done;
+
+if [ ! -d /etc/chilli ];then
+  mkdir /etc/chilli
+fi;
+
+for cconf in `ls chilli-up.* 2>/dev/null`;do
+  if [ ! -e /etc/chilli/${cconf:10}.up ];then
+    cp ${cconf} /etc/chilli/${cconf:10}.up
+    chmod 750 /etc/chilli/${cconf:10}.up
+   elif [ "`diff -u ${cconf} /etc/chilli/${cconf:10}.up`" ];then
+    cp ${cconf} /etc/chilli/${cconf:10}.up
+    chmod 750 /etc/chilli/${cconf:10}.up
+  fi;
+done;
+
+(ls /etc/chilli/*.up |awk -F/ '{printf "if [ ! -e chilli-up.%s ];then rm %s;fi\n",substr($4,1,length($4)-3),$0}' |sh) > /dev/null 2>&1
+
+for cconf in `ls chilli-conf.* 2>/dev/null`;do
+  if [ ! -e /etc/chilli/${cconf:12}.conf ];then
+    cp ${cconf} /etc/chilli/${cconf:12}.conf
+    chmod 400 /etc/chilli/${cconf:12}.conf
+    /usr/sbin/chilli -c /etc/chilli/${cconf:12}.conf
+   elif [ "`diff -u ${cconf} /etc/chilli/${cconf:12}.conf`" ];then
+    cp ${cconf} /etc/chilli/${cconf:12}.conf
+    chmod 400 /etc/chilli/${cconf:12}.conf
+    if [ -e /var/run/chilli.${cconf:12} ];then
+      kill -9 `cat /var/run/chilli.${cconf:12}`
+    fi;
+    /usr/sbin/chilli -c /etc/chilli/${cconf:12}.conf
+  fi;
+done;
+
+(ls /etc/chilli/*.conf |awk -F/ '{printf "if [ ! -e chilli-conf.%s ];then rm %s;fi\n",substr($4,1,length($4)-5),$0}' |sh) > /dev/null 2>&1
+
+for ifconf in `ls hostapd.* 2>/dev/null`;do
+  if [ ! -e /etc/hostapd/${ifconf:8}.conf ];then
+    cp ${ifconf} /etc/hostapd/${ifconf:8}.conf
+    chmod 400 /etc/hostapd/${ifconf:8}.conf
+    /usr/sbin/hostapd -P /var/run/${ifconf}.pid -B /etc/hostapd/${ifconf:8}.conf
+   elif [ "`diff -u ${ifconf} /etc/hostapd/${ifconf:8}.conf`" ];then
+    cp ${ifconf} /etc/hostapd/${ifconf:8}.conf
+    chmod 400 /etc/hostapd/${ifconf:8}.conf
+    if [ -e /var/run/${ifconf}.pid ];then
+      kill -9 `cat /var/run/${ifconf}.pid`
+    fi;
+    /usr/sbin/hostapd -P /var/run/${ifconf}.pid -B /etc/hostapd/${ifconf:8}.conf
+  fi;
+done;
+
+(ls /etc/hostapd/*.conf |awk -F/ '{printf "if [ ! -e hostapd.%s ];then rm %s;fi\n",substr($4,1,length($4)-5),$0}' |sh) > /dev/null 2>&1
 
 for ifconf in `ls pppup.* 2>/dev/null` ;do
   if [ ! -e "/etc/ifconf/$ifconf" ];then
@@ -1343,6 +1383,9 @@ for ethconf in `ls /etc/ifconf`;do
   fi;
 done;
 
+rm hostapd.* > /dev/null 2>&1
+rm chilli-conf.* > /dev/null 2>&1
+rm chilli-up.* > /dev/null 2>&1
 rm ifup.* > /dev/null 2>&1
 rm ifbw.* > /dev/null 2>&1
 rm pppup.* > /dev/null 2>&1
@@ -1949,29 +1992,18 @@ if [ "$DNDIFF" ] && [ ! -e networksentry-lite ];then
   (ls /var/named/*.in-addr.arpa |cut -d/ -f 4 |awk '{print "host -lv "$0}' |sh |grep -v `/usr/bin/hostname -f` |awk '($4 == "NS") {print "server 127.0.0.1\nzone "$1"\nupdate delete "$1" NS "$5"\nshow\n send"}'  |/usr/bin/nsupdate) >/dev/null 2>&1
 fi;
 
-if [ -e chilli.conf ] && [ -e /etc/chilli.conf ];then
-  HOTDIFF=`diff chilli.conf /etc/chilli.conf`
+if [ -e chilli.php ] && [ -e /var/spool/apache/htdocs/hotspot/lib/config.php ];then
+  HOTDIFF=`diff chilli.php /var/spool/apache/htdocs/hotspot/lib/config.php`
  else
-  if [ -e chilli.conf ];then
+  if [ -e chilli.php ];then
     HOTDIFF="NO FILE";
   fi;
 fi;
 
 if [ "$HOTDIFF" ];then
-  CHILPID=`pidof chilli`
-  if [ "${CHILPID}" ];then
-    kill ${CHILPID}
-  fi;
-  cp chilli-up /usr/bin
-  chmod 750 /usr/bin/chilli-up
   cp chilli.php /var/spool/apache/htdocs/hotspot/lib/config.php
   chmod 640 /var/spool/apache/htdocs/hotspot/lib/config.php
   chown www.www /var/spool/apache/htdocs/hotspot/lib/config.php
-  cp chilli.conf /etc/
-  chmod 640 /etc/chilli.conf
-  if [ -s /etc/chilli.conf ];then
-    /usr/sbin/chilli &
-  fi
 fi;
 
 if [ -e sogo.conf ] && [ -e /etc/sogo.conf ];then
@@ -2813,3 +2845,4 @@ fi;
 if [ ! "`/sbin/ip route list 0/0`" ];then
   /sbin/ip route add default via 127.255.255.254 src 127.255.255.253 dev dummy0
 fi;
+) 10>/var/run/netsentry-config

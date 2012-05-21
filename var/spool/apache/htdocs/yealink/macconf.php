@@ -122,6 +122,7 @@ UseOutboundProxy = 0
 SubsribeRegister = 1
 SubsribeMWI = 1
 dialoginfo_callpickup = 1
+Expire = 60
 
 [ DTMF ]
 path = /config/voip/sipAccount0.cfg

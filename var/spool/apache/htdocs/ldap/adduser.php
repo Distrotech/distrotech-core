@@ -49,7 +49,7 @@ $atrib=array("uid","clearPassword","homeDirectory","uidNumber","gidNumber","radi
              "quotaChanged","quotaHomeDir","quotaFileServer","quotaMailSpool","cn","displayName","givenName",
              "sn","shadowMax","shadowWarning","shadowInactive","shadowExpire",
              "dialupAccess","maxAliases","maxMailBoxes","maxWebAliases","accountSuspended","mailRoutingAddress","radiusRealm",
-             "radiusSessionTimeout","radiusIdleTimeout","radiusProfileDN");
+             "radiusSessionTimeout","radiusIdleTimeout","radiusProfileDN","radiusAcctInterimInterval");
 
 if ($ds) {
   if (isset($adduser)) {
@@ -94,9 +94,10 @@ if ($ds) {
       $radiusFramedCompression="Van-Jacobson-TCP-IP";
       $radiusSimultaneousUse="1";
       $radiusRealm="DEFAULT";
-      $radiusPortType="xDSL";
+      $radiusPortType="Wireless-802.11";
       $radiusIdleTimeout="1800";
       $radiusSessionTimeout="86400";
+      $radiusAcctInterimInterval="600";
       $dialupAccess="yes";
     } else {
       $radiusProfileDN="cn=" . $virtzone . ",ou=Vadmin";

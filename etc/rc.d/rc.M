@@ -237,8 +237,8 @@ if [ -e /etc/.install ];then
       /usr/libexec/inetd > /dev/null 2>&1
     fi;
   fi;
-  /usr/sbin/conntrack -F
-  /usr/sbin/conntrack -F expectation
+  (/usr/sbin/conntrack -F
+  /usr/sbin/conntrack -F expect) > /dev/null 2>/dev/null
 
   #Start Linux Call Router
 #  if [ -x /usr/sbin/lcr ];then

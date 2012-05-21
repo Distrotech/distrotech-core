@@ -1,7 +1,9 @@
 - /etc/udev/rules.d
 - /usr/man
 - /usr/etc
-- /opt/MailScanner/etc/reports
+- /opt/MailScanner/etc
+- /opt/MailScanner/etc/rules/spam.whitelist.rules
+- /opt/MailScanner/etc/rules/virus.scanning.rules
 - /etc/wanpipe/wanrouter.rc
 - /opt/apache2/conf/httpd.conf.sogo
 - /usr/GNUstep/Local/Library/Headers
@@ -31,8 +33,6 @@
 - /etc/raddb/proxy.conf
 - /etc/raddb/radiusd.conf
 - /etc/raddb/sql.conf
-- /opt/MailScanner/etc/rules/spam.whitelist.rules
-- /opt/MailScanner/etc/rules/virus.scanning.rules
 - /var/lib/asterisk/agi-bin/phpagi/phpagi.php
 - /var/spool/apache/htdocs/horde/config/horde.php
 - /var/spool/apache/htdocs/horde/kronolith/config/conf.php

@@ -247,6 +247,7 @@ if (!isset($_SESSION['auth'])) {
     $info["radiussimultaneoususe"]="1";
     $info["radiussessiontimeout"]=86400;
     $info["radiusidletimeout"]=1800;
+    $info["radiusAcctInterimInterval"]=600;
     ldap_add($ds,$radrealm,$info);
   }
 
@@ -410,7 +411,7 @@ if (!isset($_SESSION['auth'])) {
 %>
 <TR <%print $bcol[1];%>><TH COLSPAN=2 CLASS=heading-body2><%print _("Check And Reply Extensions");%></TH></TR>
 <TR <%print $bcol[2];%>><TD onmouseover="myHint.show('RP12')" onmouseout="myHint.hide()"><%print _("Add Additional Reply Item");%></TD><TD><INPUT TYPE=TEXT NAME=newrep></TD></TR>  
-<TR <%print $bcol[1];%>><TD onmouseover="myHint.show('RP13')" onmouseout="myHint.hide()"><print _("Add Additional Check Item");%></TD><TD><INPUT TYPE=TEXT NAME=newcheck></TD></TR>  
+<TR <%print $bcol[1];%>><TD onmouseover="myHint.show('RP13')" onmouseout="myHint.hide()"><%print _("Add Additional Check Item");%></TD><TD><INPUT TYPE=TEXT NAME=newcheck></TD></TR>  
 <TR <%print $bcol[2];%>><TH COLSPAN=2>  
   <INPUT TYPE=HIDDEN NAME=radrealm VALUE="<%print $radrealm%>">
   <INPUT TYPE=HIDDEN NAME=newcheckval>

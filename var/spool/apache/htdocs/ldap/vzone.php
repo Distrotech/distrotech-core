@@ -74,10 +74,11 @@ if (($groupedit == _("Delete")) && ($group != "")){
   $addent["radiusFramedIPNetmask"][0]="255.255.255.255";
   $addent["radiusFramedIPAddress"][0]="255.255.255.254";
 
-  $addent["radiusPortType"][0]="xDSL";
+  $addent["radiusPortType"][0]="Wireless-802.11";
   $addent["radiusFramedMTU"][0]="1500";
   $addent["radiusFramedCompression"][0]="Van-Jacobson-TCP-IP";
   $addent["radiusSessionTimeout"][0]="86400";
+  $addent["radiusAcctInterimInterval"][0]="600";
   $addent["radiusIdleTimeout"][0]="1800";
   $addent["radiusSimultaneousUse"][0]="1";
 

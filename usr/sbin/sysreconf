@@ -28,6 +28,11 @@ fi;
 echo -n "" > /tmp/netsentry.conf
 
 INT_NAME[1]="Internal";
+if [ -d /sys/class/net/ethA ] && [ -d /sys/class/net/wlanA ] && [ -e /etc/.install ];then
+  INT_IFACE[1]="br0";
+ else
+  INT_IFACE[1]="ethA";
+fi;
 
 X509_C="ZA";
 X509_ST="Gauteng";
@@ -41,8 +46,8 @@ DOM_ADS="";
 OSLEVEL="65";
 DTYPE="USER";
 DEL_DNS="0";
-FWALL_INT="ethA";
-FWALL_EXT="ethA";
+FWALL_INT="${INT_IFACE[1]}";
+FWALL_EXT="${INT_IFACE[1]}";
 MDM_PORT="Com1";
 MDM_SPEED="38400";
 MDM_FLW="crtscts";
@@ -73,17 +78,48 @@ if [ "$1" ];then
   fi;
 fi;
 
-if [ ! "${INT_IFACE[1]}" ];then
-  INT_IFACE[1]="A";
-fi;
-if [ ! "${INT_IFACE[2]}" ];then
-  INT_IFACE[2]="B";
-fi;
-if [ ! "${INT_IFACE[3]}" ];then
-  INT_IFACE[3]="C";
-fi;
-if [ ! "${INT_IFACE[4]}" ];then
-  INT_IFACE[4]="D";
+#Add detected interfaces to install and Bridge wlan0/eth0
+if [ -e /etc/.install ];then
+  if [ -d /sys/class/net/ethA ] && [ -d /sys/class/net/wlanA ];then
+    if [ ! -d /sys/class/net/br0 ];then
+      brctl addbr br0
+      brctl addif br0 ethA
+      brctl addif br0 wlanA
+      brctl stp br0 on
+      ip link set br0 up
+    fi;
+    INT_NAME[1]="Internal";
+    INT_IFACE[1]=br0
+    BRIDGE="wlanA ethA"
+    cnt=2
+   else
+    cnt=1
+  fi;
+
+  for iface in /sys/class/net/eth[0-9A-Z] /sys/class/net/wlan[0-9A-Z];do
+    if [ -e $iface/device ] && [ ! "${INT_IFACE[${cnt}]}" ];then
+      if [ -d $iface/wireless ];then
+        if [ "${iface:15}" == "wlanA" ];then
+          INT_NAME[$cnt]="WiFi_EAP";
+         else
+          INT_NAME[$cnt]="WiFi${iface:19}_EAP";
+        fi;
+       else
+        INT_NAME[$cnt]="Int${iface:18}";
+      fi;
+      INT_IFACE[$cnt]="${iface:15}";
+    fi;
+    if [ "${INT_NAME[$cnt]}" ];then
+      let cnt++;
+    fi;
+  done
+  if [ -e /sys/class/net/wlanA ];then
+    INT_NAME[$cnt]="WiFi_WPA";
+    INT_IFACE[$cnt]="wlanA_1";
+    BRIDGE="${BRIDGE} wlanA_1";
+  fi;
+  FWALL_INT="${INT_IFACE[1]}";
+  FWALL_EXT="${INT_IFACE[1]}";
 fi;
 
 MAX_IF=${#INT_IFACE[@]};
@@ -103,7 +139,12 @@ for ((cnt=1;$cnt <= $MAX_IF;cnt=$cnt+1));do
   if [ ! "${INT_NAME[$cnt]}" ];then
     INT_NAME[$cnt]="Int${INT_IFACE[$cnt]}";
   fi;
-  INT_MAC[$cnt]=`ip -f inet -f inet -o link |grep -E "^[0-9]+: eth[0-9A-Za-z]+:" |awk '{printf "%s?%s\n",$2,$11}' |grep eth${INT_IFACE[$cnt]} |cut -d? -f2 |tr a-z A-Z`
+  if [ "${INT_IFACE[$cnt]}" ] && [ -d /sys/class/net/${INT_IFACE[$cnt]} ] && \
+     [ ! -d /sys/class/net/${INT_IFACE[$cnt]}/bridge ] && [ ! -d /sys/class/net/${INT_IFACE[$cnt]}/wireless ];then 
+    INT_MAC[$cnt]=`cat /sys/class/net/${INT_IFACE[$cnt]}/address |tr a-z A-Z`
+   elif [ ! -d /sys/class/net/${INT_IFACE[$cnt]}/wireless ];then
+    INT_MAC[$cnt]="00:00:00:00:00:00";
+  fi
 done
 
 Config_INT() {
@@ -183,7 +224,7 @@ __EOF__
         IP_SDHCPV[$vcnt]="-"
         IP_EDHCPV[$vcnt]="-"
       fi;
-      echo "IP Interface ${INT_NAMEV[$vcnt]} ${IP_ADDRV[$vcnt]} ${SN_ADDRV[$vcnt]} eth${INT_PARV[$cnt]}.${VLAN[$vcnt]} ${IP_SDHCPV[$vcnt]} ${IP_EDHCPV[$vcnt]}   00:00:00:00:00:00" >> /tmp/netsentry.conf
+      echo "IP Interface ${INT_NAMEV[$vcnt]} ${IP_ADDRV[$vcnt]} ${SN_ADDRV[$vcnt]} ${INT_PARV[$cnt]}.${VLAN[$vcnt]} ${IP_SDHCPV[$vcnt]} ${IP_EDHCPV[$vcnt]}   00:00:00:00:00:00" >> /tmp/netsentry.conf
     fi;
   done
 }
@@ -281,7 +322,7 @@ if [ ! "$1" ];then
         IP_SDHCP[$cnt]="-"
         IP_EDHCP[$cnt]="-"
       fi;
-      echo "IP Interface ${INT_NAME[$cnt]} ${IP_ADDR[$cnt]} ${SN_ADDR[$cnt]} eth${INT_IFACE[$cnt]} ${IP_SDHCP[$cnt]} ${IP_EDHCP[$cnt]}   ${INT_MAC[$cnt]}" >> /tmp/netsentry.conf
+      echo "IP Interface ${INT_NAME[$cnt]} ${IP_ADDR[$cnt]} ${SN_ADDR[$cnt]} ${INT_IFACE[$cnt]} ${IP_SDHCP[$cnt]} ${IP_EDHCP[$cnt]}   ${INT_MAC[$cnt]}" >> /tmp/netsentry.conf
     fi;
     if [ "$cnt" == "$VLAN_PHY" ] && [ "${INT_MAC[$VLAN_PHY]}" ];then
       Config_INT;
@@ -369,13 +410,13 @@ EOF
   MAX_NET=${#INT_IFACE[@]};
   for ((cnt=1;$cnt <= $MAX_NET;cnt=$cnt+1));do 
     if [ "${INT_MAC[$cnt]}" != "" ];then
-      echo "IP Interface ${INT_NAME[$cnt]} ${IP_ADDR[$cnt]} ${SN_ADDR[$cnt]} eth${INT_IFACE[$cnt]} ${IP_SDHCP[$cnt]} ${IP_EDHCP[$cnt]} ${INT_BWIN[$cnt]} ${INT_BWOUT[$cnt]} ${INT_MAC[$cnt]} ${INT_GW[$cnt]}" >> /tmp/netsentry.conf
+      echo "IP Interface ${INT_NAME[$cnt]} ${IP_ADDR[$cnt]} ${SN_ADDR[$cnt]} ${INT_IFACE[$cnt]} ${IP_SDHCP[$cnt]} ${IP_EDHCP[$cnt]} ${INT_BWIN[$cnt]} ${INT_BWOUT[$cnt]} ${INT_MAC[$cnt]} ${INT_GW[$cnt]}" >> /tmp/netsentry.conf
     fi;
   done;
   MAX_VLAN=${#VLAN[@]};
   for ((cnt=1;$cnt <= $MAX_VLAN;cnt=$cnt+1));do 
     if [ "${VLAN[1]}" ];then
-      echo "IP Interface ${INT_NAMEV[$cnt]} ${IP_ADDRV[$cnt]} ${SN_ADDRV[$cnt]} eth${INT_PARV[$cnt]}.${VLAN[$cnt]} ${IP_SDHCPV[$cnt]} ${IP_EDHCPV[$cnt]} ${INT_BWINV[$cnt]} ${INT_BWOUTV[$cnt]} 00:00:00:00:00:00 ${INT_GWV[$cnt]}" >> /tmp/netsentry.conf
+      echo "IP Interface ${INT_NAMEV[$cnt]} ${IP_ADDRV[$cnt]} ${SN_ADDRV[$cnt]} ${INT_PARV[$cnt]}.${VLAN[$cnt]} ${IP_SDHCPV[$cnt]} ${IP_EDHCPV[$cnt]} ${INT_BWINV[$cnt]} ${INT_BWOUTV[$cnt]} 00:00:00:00:00:00 ${INT_GWV[$cnt]}" >> /tmp/netsentry.conf
     fi;
   done;
   MAX_ALIAS=${#ALIAS[@]};
@@ -384,6 +425,16 @@ EOF
       echo "IP Interface ${INT_NAMEA[$cnt]} ${IP_ADDRA[$cnt]} ${SN_ADDRA[$cnt]} ${ALIAS[$cnt]} - -   00:00:00:00:00:00 " >> /tmp/netsentry.conf
     fi;
   done;
+
+  if [ -e /sys/class/net/wlanA ] && [ -e /etc/.install ];then
+    PSK=`uuidgen |cut -d- -f1,2`
+    (cat << EOF
+IP WiFi wlanA 2 EAP AP ZA 5 100 
+IP WiFi wlanA_1 2 WPA AP ZA 5 100 ${PSK}
+EOF
+) >> /tmp/netsentry.conf
+  fi;
+
   if [ "$DOMC" = "0" ];then
     echo "FileServer Controler U S" >> /tmp/netsentry.conf
   fi;
@@ -396,6 +447,9 @@ EOF
   fi;
 fi;
 
+if [ -e /etc/.install ] && [ "${BRIDGE}" ];then
+  echo "IP SysConf Bridge ${BRIDGE}" >> /tmp/netsentry.conf
+fi;
 if [ "$DNS_SERV1" ];then
   echo "IP SysConf PrimaryDns $DNS_SERV1" >> /tmp/netsentry.conf
 fi;
@@ -449,6 +503,7 @@ if [ ! "$NB_NAME" ];then
 fi;
 
 sed -e "s/IP SysConf External .*/IP SysConf External $FWALL_EXT/" \
+    -e "s/IP SysConf Internal .*/IP SysConf Internal $FWALL_INT/" \
     -e "s/DNS Hostname .*/DNS Hostname $HN_ADDR/" \
     -e "s/DNS Domain .*/DNS Domain $DOM_ADDR/" \
     -e "s/FileServer Config netbios name = .*/FileServer Config netbios name = $NB_NAME/" \
@@ -567,7 +622,7 @@ EOF
 ) > /tmp/netsentry-sysvars
 
 if [ -e /etc/.install ];then
-  /sbin/ip addr add dev ethA $IP_ADDR/$SN_ADDR >/dev/null 2>&1
+  /sbin/ip addr add dev ${INT_IFACE[1]} $IP_ADDR/$SN_ADDR >/dev/null 2>&1
   /usr/bin/hostname $HN_ADDR >/dev/null 2>&1
   /bin/domainname $DOM_ADDR >/dev/null 2>&1
 

@@ -1,12 +1,17 @@
 #!/bin/bash
 
-if [ "${1}" ] && [ ! -e /dev/gsmmodem ];then
+(flock -w 20 10 || exit
+if [ "${1}" ] && [ ! -r /dev/gsmmodem ];then
   /usr/bin/modemtest ${1}
   RES=$?
-  if [ ${RES} == 0 ];then
-    /etc/ifconf/pppup.ppp3g
+  if [ "${RES}" == 0 ];then
+    if [ -e /var/lock/LCK..gsmmodem ];then
+      rm /var/lock/LCK..gsmmodem
+    fi;
+    /etc/ifconf/pppup.ppp3g nolock &
   fi;
   exit ${RES}
  else
   exit -1
 fi;
+) 10>/var/lock/gsmmodem

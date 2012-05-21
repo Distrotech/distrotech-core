@@ -365,6 +365,7 @@ Sync_Update() {
   if [ ! -d ${1}/mnt/update ];then
     mkdir -p ${1}/mnt/update
   fi;
+
   if [ "${2}" ];then
     mount ${2} ${1}/mnt/update
    else
@@ -373,6 +374,12 @@ Sync_Update() {
 
   if [ $? != 0 ] || [ ! -e ${1}/mnt/update/lost+found ];then
     return 255
+  fi;
+
+  if [ "${3}" == "clean" ];then
+    for deldir in boot lib mnt pkgs var;do
+      rm -rf ${1}/mnt/update/${deldir}
+    done
   fi;
 
   if [ ! -d ${1}/mnt/update/pkgs ];then
@@ -455,7 +462,7 @@ Update_Flash() {
   RERR=$?
   if [ ${RERR} == 0 ];then
     if [ -e /dev/flash/upgrade ];then
-      Sync_Update ${MNTP}
+      Sync_Update ${MNTP} /dev/flash/upgrade
     fi;
     if [ ! -d ${CORE}/install ];then
       Make_Bootetc ${MNTP}
@@ -1841,13 +1848,8 @@ EOF
 Sync_Remote() {
   RERR=0
 
-  if [ -e /etc/asterisk/version.10 ];then
-    ast_repo="asterisk-10";
-    ast_ver="10";
-   else
-    ast_repo="asterisk";
-    ast_ver="1.8";
-  fi;
+  ast_repo="asterisk-10";
+  ast_ver="10";
 
   if [ -d ${CORE}/install/core ];then
     echo "vbox /"
@@ -2255,6 +2257,13 @@ if [ "${1}" == "iso" ];then
   mk_initrd ${1} ${2}
  elif [ "${1}" == "grub2" ];then
   Grub_Local ${2}
+ elif [ "${1}" == "cleansync" ];then
+  Clean_Init
+  Load_Flash
+  if [ -e /dev/flash/upgrade ];then
+    Sync_Update ${MNTP} /dev/flash/upgrade clean
+  fi;
+  Umount_Flash
  elif [ "${1}" == "mount" ] && [ ! -d ${MNTP}/lost+found ];then
   Clean_Init
   Load_Flash

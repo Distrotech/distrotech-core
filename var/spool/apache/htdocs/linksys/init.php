@@ -96,7 +96,11 @@ $uports=pg_query($db,$getports);
 if ((pg_num_rows($uports) <= 0) && ($mac != "") && ($autoadd[$spaver] == "1")) {
   $loadnew=FALSE;
   for($cexten=0;$cexten < $maxline;$cexten++) {
-    if (createexten($mac,"LINKSYS","","","") > 0) {
+    $newexten=createexten($mac,"LINKSYS","","",""); 
+    if ($newexten != "") {
+      if (($spaver == "3102") && ($cexten > 0)) {
+	pg_query($db,"UPDATE users set callerid=name,fromuser=name,context='ddi',sendrpid='yes' where name='" . $newexten . "'");
+      }
       $loadnew=TRUE;
     }
   }
@@ -219,6 +223,12 @@ print "<flat-profile>\n";
 for ($lcnt=1;$lcnt <= $maxline;$lcnt++) {
 //extremely high
 %>
+<Use_Auth_ID_<%print $lcnt;%>_>No
+	</Use_Auth_ID_<%print $lcnt;%>_>
+<Restrict_Source_IP_<%print $lcnt;%>_>Yes
+	</Restrict_Source_IP_<%print $lcnt;%>_>
+<Auth_Resync-Reboot_<%print $lcnt;%>_>No
+	</Auth_Resync-Reboot_<%print $lcnt;%>_>No
 <Network_Jitter_Level_<%print $lcnt;%>_>low
 	</Network_Jitter_Level_<%print $lcnt;%>_>
 <Jitter_Buffer_Adjustment_<%print $lcnt;%>_>disable
@@ -328,6 +338,53 @@ for($port=$pstart;$port < $pstart+$pmax;$port++) {
 <Preferred_Codec_<%print $port+1%>_><%print $codec[$pcodec] . "\n";%>
 	</Preferred_Codec_<%print $port+1%>_>
 <%
+  }
+
+  if (($spaver == "3102") && ($port > 0)) {%>
+<VoIP_User_1_Auth_ID_2_><%print $exten . "\n";%>
+	</VoIP_User_1_Auth_ID_2_>
+<VoIP_User_1_Password_2_><%print $passwd . "\n";%>
+	</VoIP_User_1_Password_2_>
+<VoIP_User_1_DP_2_>2
+	</VoIP_User_1_DP_2_>
+<Dial_Plan_1_<%print $port+1%>_>(S0&lt;:<%print $exten%>&gt;)
+	</Dial_Plan_1_<%print $port+1%>_>
+<PSTN_PIN_Digit_Timeout_2_>0
+	</PSTN_PIN_Digit_Timeout_2_>
+<VoIP_PIN_Digit_Timeout_2_>0
+	</VoIP_PIN_Digit_Timeout_2_>
+<VoIP_Caller_Auth_Method_<%print $port+1%>_>HTTP Digest
+	</VoIP_Caller_Auth_Method_<%print $port+1%>_>
+<One_Stage_Dialing_<%print $port+1%>_>Yes
+	</One_Stage_Dialing_<%print $port+1%>_>
+<VoIP_Caller_Default_DP_<%print $port+1%>_>2
+	</VoIP_Caller_Default_DP_<%print $port+1%>_>
+<Line_1_VoIP_Caller_DP_<%print $port+1%>_>2
+	</Line_1_VoIP_Caller_DP_<%print $port+1%>_>
+<Line_1_Fallback_DP_<%print $port+1%>_>2
+	</Line_1_Fallback_DP_<%print $port+1%>_>
+<VoIP-To-PSTN_Gateway_Enable_<%print $port+1%>_>Yes
+	</VoIP-To-PSTN_Gateway_Enable_<%print $port+1%>_>
+<PSTN-To-VoIP_Gateway_Enable_<%print $port+1%>_>yes
+	</PSTN-To-VoIP_Gateway_Enable_<%print $port+1%>_>
+<PSTN_Caller_Auth_Method_<%print $port+1%>_>None
+	</PSTN_Caller_Auth_Method_<%print $port+1%>_>
+<PSTN_Ring_Thru_Line_1_<%print $port+1%>_>No
+	</PSTN_Ring_Thru_Line_1_<%print $port+1%>_>
+<PSTN_Caller_Default_DP_<%print $port+1%>_>1
+	</PSTN_Caller_Default_DP_<%print $port+1%>_>
+<PSTN_Answer_Delay_<%print $port+1%>_>0
+	</PSTN_Answer_Delay_<%print $port+1%>_>
+<VoIP_Answer_Delay_<%print $port+1%>_>0
+	</VoIP_Answer_Delay_<%print $port+1%>_>
+<PSTN_Ring_Thru_Delay_<%print $port+1%>_>1
+	</PSTN_Ring_Thru_Delay_<%print $port+1%>_>
+<Ringer_Impedance_<%print $port+1%>_>Synthesized (Poland,S.Africa,Slovenia)
+	</Ringer_Impedance_<%print $port+1%>_>
+<Off_Hook_While_Calling_VoIP_<%print $port+1%>_>Yes
+	</Off_Hook_While_Calling_VoIP_<%print $port+1%>_>
+<FXO_Port_Impedance_<%print $port+1%>_>220+820||120nF
+	</FXO_Port_Impedance_<%print $port+1%>_><%
   }
 }
 

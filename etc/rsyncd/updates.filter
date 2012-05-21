@@ -1,4 +1,8 @@
 + /usr
++ /usr/bin
++ /usr/bin/bc
++ /usr/bin/xorriso
+- /usr/bin/*
 + /usr/sbin
 + /usr/sbin/flashutil
 + /usr/sbin/vbox_upgrade
@@ -7,6 +11,9 @@
 + /usr/sbin/mkfstab
 + /usr/sbin/genconf
 + /usr/sbin/servconfig
++ /usr/sbin/dosfsck
++ /usr/sbin/parted
++ /usr/sbin/mkdosfs
 - /usr/sbin/*
 - /usr/*
 + /etc

@@ -33,17 +33,18 @@ ACTION=="add", ENV{ID_BUS}=="usb", ENV{ID_USB_DRIVER}=="usb-storage", RUN+="load
 LABEL="local_block_end"
 
 SUBSYSTEM!="tty", GOTO="local_tty_end"
-KERNEL=="ttyUSB[0-9]*", ENV{ID_USB_DRIVER}=="option", PROGRAM=="gsmmodem /dev/%k", SYMLINK:="gsmmodem"
+KERNEL=="ttyUSB[0-9]*", ENV{ID_USB_DRIVER}=="option", ACTION=="add", PROGRAM=="gsmmodem /dev/%k", SYMLINK:="gsmmodem"
 KERNEL=="ttyUSB[0-9]*", ATTRS{idVendor}=="0bc3", NAME="ttyIPW%n", SYMLINK="tts/IPW%n"
 LABEL="local_tty_end"
 
 SUBSYSTEM!="net", GOTO="local_net_end"
-ACTION=="add|change", SUBSYSTEM=="net", KERNEL=="eth[0-9]", RUN+="/usr/sbin/ifcfg $name rename"
-ACTION=="add|change", SUBSYSTEM=="net", KERNEL=="eth[A-Z]*", RUN+="/usr/sbin/ifcfg $name"
-ACTION=="remove", SUBSYSTEM=="net", KERNEL=="ppp[0-9]", RUN+="/etc/ifconf/pppup.%k"
-ACTION=="remove", SUBSYSTEM=="net", KERNEL=="ppp10", RUN+="/etc/ifconf/pppup.ppp3g"
+ACTION=="add|change", SUBSYSTEM=="net", KERNEL=="*", RUN+="/usr/sbin/ifcfg $name"
+ACTION=="remove", SUBSYSTEM=="net", KERNEL=="ppp[0-9]", RUN+="pppdown %k"
+ACTION=="remove", SUBSYSTEM=="net", KERNEL=="ppp10", RUN+="pppdown ppp3g"
 LABEL="local_net_end"
 
 SUBSYSTEMS!="usb", ACTION!="add", GOTO="xpp_usb_add_end"
 ATTRS{idVendor}=="e4e4", ATTRS{idProduct}=="11[345][01]", RUN+="/etc/hotplug/usb/xpp_fxloader udev $sysfs{idVendor}/$sysfs{idProduct}/$sysfs{bcdDevice}"
 LABEL="xpp_usb_add_end"
+
+KERNEL=="regulatory*", ACTION=="change", SUBSYSTEM=="platform", RUN+="/sbin/crda"

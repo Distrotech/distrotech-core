@@ -287,16 +287,16 @@ if ($phone != "300") {
         }
       }
     }
-  } else {
+  }
+} else {
 %>
-    <fkey idx="0" context=\"1\" perm="R">line</fkey>
-    <fkey idx="1" context=\"1\" perm="R">line</fkey>
+    <fkey idx="0" context="active" label="" perm="">line</fkey>
+    <fkey idx="1" context="active" label="" perm="">line</fkey>
     <fkey idx="2" context=\"1\" perm="R">keyevent F_REDIAL</fkey>
     <fkey idx="3" context=\"1\" perm="R">keyevent F_DIRECTORY_SEARCH</fkey>
     <fkey idx="4" context=\"1\" perm="R">keyevent F_TRANSFER</fkey>
     <fkey idx="5" context=\"1\" perm="R">keyevent F_MUTE</fkey>
 <%
-  }
 }
 %>
   </functionKeys>
