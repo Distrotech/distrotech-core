@@ -153,6 +153,9 @@ if [ "$FIREWALL" == "INTERNAL" ];then
   if [ ! -e /etc/ssh_host_rsa_key ];then
     ssh-keygen -t rsa -f /etc/ssh_host_rsa_key -N "" > /dev/null 2>&1
   fi;
+  if [ ! -e /etc/ssh_host_ecdsa_key ];then
+    ssh-keygen -t ecdsa -f /etc/ssh_host_ecdsa_key -N " > /dev/null 2>&1
+  fi;
   /usr/sbin/sshd > /dev/null 2>&1
 
 #  /etc/rc.d/rc.firewall startup
