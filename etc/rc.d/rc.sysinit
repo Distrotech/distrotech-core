@@ -49,6 +49,8 @@ fi;
 /sbin/ip link set dev dummy0 up
 /sbin/ip route add 127.255.255.252/30 src 127.255.255.253 dev dummy0 scope link table 80) > /dev/null 2>&1
 
+/sbin/ip link set sit0 up
+
 if [ -e /etc/netsentry-version ];then
   eval `cat /etc/netsentry-version`
  else
