@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ulimit -n 4096
+ulimit -n 6416
 
 if [ "$1" ];then
   if [ -e /etc/dovecot/dovecot-$1.conf ];then
