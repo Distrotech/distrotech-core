@@ -154,7 +154,7 @@ if [ "$FIREWALL" == "INTERNAL" ];then
     ssh-keygen -t rsa -f /etc/ssh_host_rsa_key -N "" > /dev/null 2>&1
   fi;
   if [ ! -e /etc/ssh_host_ecdsa_key ];then
-    ssh-keygen -t ecdsa -f /etc/ssh_host_ecdsa_key -N " > /dev/null 2>&1
+    ssh-keygen -t ecdsa -f /etc/ssh_host_ecdsa_key -N "" > /dev/null 2>&1
   fi;
   /usr/sbin/sshd > /dev/null 2>&1
 
@@ -167,7 +167,10 @@ fi;
 
 if [ "$FORWARD" == "1" ];then
   echo 1 > /proc/sys/net/ipv4/ip_forward
+  echo 1 > /proc/sys/net/ipv6/conf/${INT}/forwarding
 fi;
+
+echo 2 > /proc/sys/net/ipv6/conf/${INT}/use_tempaddr;
 
 #Bring Up PPP Links
 for pppl in $PPPLINKS;do
