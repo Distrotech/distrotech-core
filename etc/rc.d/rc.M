@@ -249,7 +249,7 @@ if [ -e /etc/.install ];then
   if [ ! -e /etc/zebra/Quagga.conf ];then
     cp /etc/zebra/Zebra.conf.orig /etc/zebra/Quagga.conf
   fi;
-  (for prog in zebra ripd ospfd bgpd isisd;do
+  (for prog in zebra ripd ripngd ospfd ospf6d babeld bgpd isisd;do
     rm /var/run/$prog.*
     $prog -d
   done;
