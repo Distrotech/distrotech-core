@@ -278,6 +278,9 @@ if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstco
   BPID=`pidof bgpd`
   OPID=`pidof ospfd`
   IPID=`pidof isisd`
+  O6PID=`pidof ospf6d`
+  RNPID=`pidof ripngd`
+  BPID=`pidof babeld`
 
   if [ ! "$ZPID" ];then
     zebra -d
@@ -287,8 +290,20 @@ if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstco
     ospfd -d
     REROUTE=1
   fi;
+  if [ ! "$O6PID" ];then
+    ospf6d -d
+    REROUTE=1
+  fi;
+  if [ ! "$BPID" ];then
+    babeld -d
+    REROUTE=1
+  fi;
   if [ ! "$RPID" ];then
     ripd -d
+    REROUTE=1
+  fi;
+  if [ ! "$RNPID" ];then
+    ripngd -d
     REROUTE=1
   fi;
   if [ ! "$BPID" ];then
