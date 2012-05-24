@@ -119,45 +119,7 @@ if [ -e "/etc/ifconf/ifbw.${INT}" ] && [ ! -e /etc/.networksentry-lite ];then
   sh /etc/ifconf/ifbw.${INT}
 fi;
 
-if [ "$FIREWALL" == "INTERNAL" ];then
-  #Startup DNS Server
-  if [ ! -e /etc/rndc.key ];then
-    /usr/sbin/rndc-confgen -a > /dev/null 2>&1
-  fi;
-  #Start DNS As Soon As Posible
-  if [ ! "`/bin/pidof named`" ];then
-    /usr/sbin/named > /dev/null 2>&1
-  fi;
-
-  if [ ! -e /etc/.install ] && [ ! -e /etc/.firstboot ];then
-    /etc/rc.d/rc.ldap > /dev/null 2>&1
-  fi;
-  
-  #Start NSCD
-  if [ ! -d /var/run/nscd ];then
-    mkdir /var/run/nscd
-  fi;
-  if [ ! -d /var/db/nscd ];then
-    mkdir /var/db/nscd
-  fi;
-  rm /var/run/nscd/* /var/db/nscd/* > /dev/null 2>&1
-#  sleep 2
-#  /usr/sbin/nscd
-
-  if [ ! -e /etc/ssh_host_key ];then
-    ssh-keygen -t rsa1 -f /etc/ssh_host_key -N "" > /dev/null 2>&1
-  fi;
-  if [ ! -e /etc/ssh_host_dsa_key ];then
-    ssh-keygen -t dsa -f /etc/ssh_host_dsa_key -N "" > /dev/null 2>&1
-  fi;
-  if [ ! -e /etc/ssh_host_rsa_key ];then
-    ssh-keygen -t rsa -f /etc/ssh_host_rsa_key -N "" > /dev/null 2>&1
-  fi;
-  if [ ! -e /etc/ssh_host_ecdsa_key ];then
-    ssh-keygen -t ecdsa -f /etc/ssh_host_ecdsa_key -N "" > /dev/null 2>&1
-  fi;
-  /usr/sbin/sshd > /dev/null 2>&1
-
+if [ "${FIREWALL}" == "INTERNAL" ];then
 #  /etc/rc.d/rc.firewall startup
 #  killall pppd
 
@@ -167,10 +129,14 @@ fi;
 
 if [ "$FORWARD" == "1" ];then
   echo 1 > /proc/sys/net/ipv4/ip_forward
-  echo 1 > /proc/sys/net/ipv6/conf/${INT}/forwarding
+  if [ -d /proc/sys/net/ipv6/conf/${INT} ];then
+    echo 1 > /proc/sys/net/ipv6/conf/${INT}/forwarding
+  fi;
 fi;
 
-echo 2 > /proc/sys/net/ipv6/conf/${INT}/use_tempaddr;
+if [ -d /proc/sys/net/ipv6/conf/${INT} ];then
+  echo 2 > /proc/sys/net/ipv6/conf/${INT}/use_tempaddr;
+fi;
 
 #Bring Up PPP Links
 for pppl in $PPPLINKS;do

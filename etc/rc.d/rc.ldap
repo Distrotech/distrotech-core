@@ -95,13 +95,28 @@ fi;
 #Set the ldap NSS conf
 diff /etc/nsswitch.conf.ldap /etc/nsswitch.conf > /dev/null 2>&1
 if [ $? != 0 ];then
-  /usr/sbin/socktest 127.0.0.1 389 >/dev/null 2>&1
-  if [ $? == 0 ];then
+  STRET=1
+  while [ ${STRET} != 0 ] && [ "${NSSTRY}" != "XXXXXX" ];do
+    /usr/sbin/socktest 127.0.0.1 389 >/dev/null 2>&1
+    STRET=$?
+    sleep 2;
+    NSTRY=${NSTRY}X;
+  done;
+  if [ ${STRET} == 0 ];then
     if [ -e /etc/nsswitch.conf.boot ] && [ -e /etc/nsswitch.conf.ldap ];then
       if [ ! -e /etc/nsswitch.conf.local ];then
         cp /etc/nsswitch.conf.ldap /etc/nsswitch.conf
        else
         cp /etc/nsswitch.conf.local /etc/nsswitch.conf
+        #Start NSCD
+        if [ ! -d /var/run/nscd ];then
+          mkdir /var/run/nscd
+        fi;
+        if [ ! -d /var/db/nscd ];then
+          mkdir /var/db/nscd
+        fi;
+        rm /var/run/nscd/* /var/db/nscd/* > /dev/null 2>&1
+        /usr/sbin/nscd
       fi;
     fi;
   fi;

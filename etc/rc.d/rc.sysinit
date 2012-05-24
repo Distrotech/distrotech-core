@@ -17,7 +17,7 @@
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-PATH=/sbin:/usr/sbin:/bin:/usr/bin
+export PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/libexec
 
 LKERNEL=`/usr/bin/uname -r`
 
@@ -335,6 +335,30 @@ if [ -e /etc/.install ];then
     ln -s /proc/self/fd /dev
   fi;
 
+  #Startup DNS Server
+  if [ ! -e /etc/rndc.key ];then
+    /usr/sbin/rndc-confgen -a > /dev/null 2>&1
+  fi;
+  (/usr/sbin/named > /dev/null 2>&1) &
+
+  #Start LDAP
+  (/etc/rc.d/rc.ldap > /dev/null 2>&1) &
+
+  #Start SSHD
+  if [ ! -e /etc/ssh_host_key ];then
+    ssh-keygen -t rsa1 -f /etc/ssh_host_key -N "" > /dev/null 2>&1
+  fi;
+  if [ ! -e /etc/ssh_host_dsa_key ];then
+    ssh-keygen -t dsa -f /etc/ssh_host_dsa_key -N "" > /dev/null 2>&1
+  fi;
+  if [ ! -e /etc/ssh_host_rsa_key ];then
+    ssh-keygen -t rsa -f /etc/ssh_host_rsa_key -N "" > /dev/null 2>&1
+  fi;
+  if [ ! -e /etc/ssh_host_ecdsa_key ];then
+    ssh-keygen -t ecdsa -f /etc/ssh_host_ecdsa_key -N "" > /dev/null 2>&1
+  fi;
+  /usr/sbin/sshd > /dev/null 2>&1
+ 
   #Start up firewall
   /etc/rc.d/rc.firewall startup
 
@@ -723,7 +747,7 @@ if [ ! -e /etc/.install ];then
   if [ ! -e /var/state/dhcp/dhcpd.leases ];then
     touch /var/state/dhcp/dhcpd.leases
   fi;
-  /usr/sbin/dhcpd > /dev/null 2>&1
+  (/usr/sbin/dhcpd > /dev/null 2>&1) &
 
   #Start SNMP
   /usr/sbin/snmpd -c /etc/snmpd.conf

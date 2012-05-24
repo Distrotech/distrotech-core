@@ -17,20 +17,7 @@
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#Set the ldap NSS conf
-diff /etc/nsswitch.conf.ldap /etc/nsswitch.conf > /dev/null 2>&1
-if [ $? != 0 ];then
-  /usr/sbin/socktest 127.0.0.1 389 > /dev/null 2>&1
-  if [ $? == 0 ];then
-    if [ -e /etc/nsswitch.conf.boot ] && [ -e /etc/nsswitch.conf.ldap ];then
-      if [ ! -e /etc/nsswitch.conf.local ];then
-        cp /etc/nsswitch.conf.ldap /etc/nsswitch.conf
-       else
-        cp /etc/nsswitch.conf.local /etc/nsswitch.conf
-      fi;
-    fi;
-  fi;
-fi
+export PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
 #ACPI Deamon
 /usr/sbin/acpid > /dev/null 2>&1
@@ -214,16 +201,6 @@ if [ -e /etc/.install ];then
   if [ -e /root/crontab ];then
     /usr/bin/crontab /root/crontab -u root
   fi;
-  while [ "`pidof named`" ];do
-    rndc stop
-    if [ $? != 0 ];then
-      killall -9 named
-    fi;
-    sleep 1
-  done
-  killall -9 named > /dev/null 2>&1
-  sleep 1
-  named
   killall -9 squid > /dev/null 2>&1
   /usr/sbin/clamupdate >/dev/null 2>&1 &
   if [ -e /etc/no-ip2.conf ];then
