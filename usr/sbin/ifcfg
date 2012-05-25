@@ -29,7 +29,7 @@ fi
 eval `cat /etc/ifconf/ifup.${INT}`
 
 #Set Address On Interface
-/sbin/ip addr flush dev ${IFNAME}
+/sbin/ip -4 addr flush dev ${IFNAME}
 if [ "${CHILLI}" == "0" ];then
   /sbin/ip addr add ${ADDRESS}/${NETMASK} dev ${IFNAME} broadcast ${BROADCAST} > /dev/null 2>&1
 fi;
