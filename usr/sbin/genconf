@@ -2154,7 +2154,7 @@ if [ ! -e /etc/apache/sogo.conf ];then
 fi;
 
 if [ ! -d /opt/apache2 ];then
-  sed -e "s/^Listen.*:80.*/Listen @idata[1]:80/"  \\
+  sed -e "s/^Listen 0.0.0.0:80.*/Listen @idata[1]:80/"  \\
       -e "s/^Listen 80.*/Listen @idata[1]:80/" \\
       -e "s/AuthLDAPUrl ldap:\\/\\/127.0.0.1/AuthLDAPUrl ldap:\\/\\/$ldapserv{'Server'}/" \\
       -e "s/AuthLDAPBindDN uid=admin,ou=Users/AuthLDAPBindDN $ldapserv{'Login'}/" \\
@@ -2164,7 +2164,7 @@ if [ ! -d /opt/apache2 ];then
       -e "s/LOCAL_SERVER_NAME/$fqdn/" /etc/apache/httpd.conf.orig | grep -vE "(^#)" >  /tmp/httpd.conf
   HCDIFF=`diff /tmp/httpd.conf /etc/apache/httpd.conf`
  else
-  sed -e "s/^Listen.*:80.*/Listen @idata[1]:80/"  \\
+  sed -e "s/^Listen 0.0.0.0:80.*/Listen @idata[1]:80/"  \\
       -e "s/^Listen 80.*/Listen @idata[1]:80/" \\
       -e "s/AuthLDAPUrl ldap:\\/\\/127.0.0.1/AuthLDAPUrl ldap:\\/\\/$ldapserv{'Server'}/" \\
       -e "s/AuthLDAPBindDN uid=admin,ou=Users/AuthLDAPBindDN $ldapserv{'Login'}/" \\
@@ -2199,16 +2199,13 @@ if [ "\$HCDIFF" ] && [ ! -e /etc/.install ] && [ ! -e /etc/.cdrom ];then
     tflag=x\$tflag;
   done
 
-
   while [ "`pidof httpd`" ] && [ "\$tflag" != "xxxxxxxxx" ];do 
-    killall httpd
+    for htpid in `pidof httpd`;do
+      kill -9 ${htpid};
+    done
     sleep 1;
     tflag=x\$tflag;
   done
-
-  if [ "`pidof httpd`" ];then
-    killall -9 httpd
-  fi;
 
   if [ -e /var/run/httpd.pid ];then
     rm /var/run/httpd.pid
@@ -10568,6 +10565,9 @@ __EOB__
 
   print DNS<<__EOB__;
 options {
+        listen-on-v6 {
+               any;
+        };
         directory "/var/named";
 	notify yes;
 };
@@ -10605,9 +10605,17 @@ controls {
         allow {
                 127.0.0.1;
         };
+        inet ::1 port 953
+        allow {
+                ::1;
+        };
         inet 127.0.0.2 port 953
         allow {
                 127.0.0.2;
+        };
+        inet ::127.0.0.2 port 953
+        allow {
+                ::127.0.0.2;
         };
 };
 
@@ -10808,6 +10816,7 @@ foreach $wanl (@wans){
     }
     print DNS<<__EOB__;
                127.0.0.1/32;
+               ::1/128;
 __EOB__
   }
 
@@ -11009,6 +11018,8 @@ __EOB__
 
   printf ZONE ("%-25s%s IN     %-5s %s\n","loopback",$dnsconf{'DefaultTTL'},"A","127.0.0.1");
   printf ZONE ("%-25s%s IN     %-5s %s\n","loopback2",$dnsconf{'DefaultTTL'},"A","127.0.0.2");
+  printf ZONE ("%-25s%s IN     %-5s %s\n","loopback",$dnsconf{'DefaultTTL'},"AAAA","::1");
+  printf ZONE ("%-25s%s IN     %-5s %s\n","loopback2",$dnsconf{'DefaultTTL'},"AAAA","::127.0.0.2");
 
   printf ZONE ("%-25s%s IN     %-5s 0 1 4569 %s.\n","_iax._udp",$dnsconf{'DefaultTTL'},"SRV",$fqdn);
   printf ZONE ("%-25s%s IN     %-5s 0 1 5060 %s.\n","_sip._udp",$dnsconf{'DefaultTTL'},"SRV",$fqdn);
@@ -11021,10 +11032,14 @@ __EOB__
   print DUP "update add callshop.$dnsconf{'Domain'}. $dnsconf{'DefaultTTL'} CNAME $fqdn.\n";
   print DUP "update add ticket.$dnsconf{'Domain'}. $dnsconf{'DefaultTTL'} CNAME $fqdn.\n";
   print DUP "update add voip.$dnsconf{'Domain'}. $dnsconf{'DefaultTTL'} CNAME $fqdn.\n";
-#  print DUP "update delete loopback A\n";
-#  print DUP "update delete loopback2 A\n";
-#  print DUP "update add loopback $dnsconf{'DefaultTTL'} A 127.0.0.1\n";
-#  print DUP "update add loopback2 $dnsconf{'DefaultTTL'} A 127.0.0.2\n";
+  print DUP "update delete loopback.$dnsconf{'Domain'}. A\n";
+  print DUP "update delete loopback2.$dnsconf{'Domain'}. A\n";
+  print DUP "update delete loopback.$dnsconf{'Domain'}. AAAA\n";
+  print DUP "update delete loopback2.$dnsconf{'Domain'}. AAAA\n";
+  print DUP "update add loopback.$dnsconf{'Domain'}. $dnsconf{'DefaultTTL'} A 127.0.0.1\n";
+  print DUP "update add loopback2.$dnsconf{'Domain'}. $dnsconf{'DefaultTTL'} A 127.0.0.2\n";
+  print DUP "update add loopback.$dnsconf{'Domain'}. $dnsconf{'DefaultTTL'} AAAA ::1\n";
+  print DUP "update add loopback2.$dnsconf{'Domain'}. $dnsconf{'DefaultTTL'} AAAA ::127.0.0.2\n";
 
   foreach $idns (@intdns) {
     @words=split(/\|/,$idns);
@@ -11146,6 +11161,7 @@ print DNS<<__EOB__;
               notify yes;
               also-notify {
                      127.0.0.1;
+                     ::1;
               };
               file "0.0.127.in-addr.arpa";
               check-names ignore;
@@ -11186,6 +11202,7 @@ foreach $intslave (@ihosted) {
               file "$intslave";
               also-notify {
                      127.0.0.1;
+                     ::1;
               };
               allow-update {
                      key $intslave;
@@ -11367,6 +11384,7 @@ __EOB__
               notify yes;
               file "domain.ext";
               allow-transfer {
+                        ::127.0.0.2;
                         127.0.0.2;$extmasts
 $txout              };
               allow-update {
@@ -11392,9 +11410,11 @@ __EOB__
               file "$hdom";
               also-notify {
                      127.0.0.1;
+                     ::1;
               };
               allow-transfer {
                         127.0.0.1/32;
+                        ::1/128;
 $txout
               };
 __EOB__
@@ -11466,6 +11486,8 @@ sub printdhcp(){
 
   open(DHCP,">dhcpd.conf");
   chmod(0600,"dhcpd.conf");
+  open(DHCP6,">dhcpd6.conf");
+  chmod(0600,"dhcpd6.conf");
 
   if ($sysconf{'PrimaryWins'} ne "") {
     $wins="option netbios-name-servers $sysconf{'PrimaryWins'}";
@@ -11509,6 +11531,21 @@ option nortel_ipt "Nortel-i2004-A,@iipdat[1]:5000,1,10;@iipdat[1]:5000,1,10.";
 
 __EOL__
 
+print DHCP6<<__EOL__;
+option wpad-url code 252 = text;
+option tftp-cisco-server-name code 150 = ip-address;
+option polycom-vlanid code 251 = unsigned integer 16;
+option yealink-url code 250 = string;
+
+option domain-name "$dnsconf{'Domain'}";
+option nis-domain "$dnsconf{'Domain'}";
+option domain-name-servers $dns;
+option wpad-url "http://$fqdn/proxy.pac";
+option tftp-server-name "http://$fqdn";
+option time-offset 7200;
+
+__EOL__
+
 
 if ($sysconf{'DHCPLease'} eq "") {
   $sysconf{'DHCPLease'}=43200;
@@ -11525,6 +11562,12 @@ max-lease-time $sysconf{'DHCPMaxLease'};
 
 $wins
 __EOL__
+print DHCP6<<__EOL__;
+ddns-update-style interim;
+
+default-lease-time $sysconf{'DHCPLease'};
+max-lease-time $sysconf{'DHCPMaxLease'};
+__EOL__
 
 #if ($sysconf{'NTPServer'}) {
 #  print DHCP "option ntp-servers $fqdn;\n\n";
@@ -11536,6 +11579,7 @@ foreach $iface (@ints){
     if ((@idata[0] eq "Phones") && ($dhcpvid != "")) {
       $dhcpvid=substr(@idata[3],index(@idata[3],".")+1);
       print DHCP "option polycom-vlanid " . $dhcpvid . ";\n";
+      print DHCP6 "option polycom-vlanid " . $dhcpvid . ";\n";
     }
     $snmask=getsn(@idata[2]);
     $nwaddr=getnw(@idata[2],@idata[1]);
@@ -11637,8 +11681,27 @@ subnet $nwaddr netmask $snmask {
   option tftp-cisco-server-name @idata[1];
 }
 __EOL__
+print DHCP6<<__EOL__;
+
+#@idata[0]
+subnet6 $nwaddr netmask $snmask { 
+  authoritative;
+  range @idata[4] @idata[5];
+  option ntp-servers @idata[1];
+  option domain-name-servers $dnssrv;
+  option tftp-server-name "$tftpserv";$yeahelp
+  option tftp-cisco-server-name @idata[1];
+}
+__EOL__
     } else {
 print DHCP<<__EOL__;
+
+#@idata[0]
+subnet $nwaddr netmask $snmask { 
+  not authoritative;
+}
+__EOL__
+print DHCP6<<__EOL__;
 
 #@idata[0]
 subnet $nwaddr netmask $snmask { 
@@ -11708,8 +11771,23 @@ subnet $nwaddr netmask $snmask {
   option broadcast-address $bcaddr;
 }
 __EOL__
+  print DHCP6<<__EOL__;
+
+#@idata[0] Wan Link
+subnet6 $nwaddr netmask $snmask { 
+  authoritative;
+  range @idata[5] @idata[6];
+}
+__EOL__
   } else {
   print DHCP<<__EOL__;
+
+#@idata[0]
+subnet $nwaddr netmask $snmask { 
+  not authoritative;
+}
+__EOL__
+  print DHCP6<<__EOL__;
 
 #@idata[0]
 subnet $nwaddr netmask $snmask { 
@@ -11731,6 +11809,15 @@ host @hdata[0] {
   option tftp-server-name "$fqdn";
   filename "pxelinux.0";
 __EOL__
+  print DHCP6<<__EOL__;
+
+host @hdata[0] {
+  hardware ethernet @hdata[2];
+  fixed-address @hdata[1];
+  option host-name "@hdata[0]";
+  option tftp-server-name "$fqdn";
+  filename "pxelinux.0";
+__EOL__
   $bpfile="";
   if ( -e "@hdata[0].cmp") {
     $bpfile="@hdata[0].cmp";
@@ -11743,8 +11830,12 @@ __EOL__
   }
   if ($bpfile ne "") {
     print DHCP "  filename \"" . $bpfile . "\";\n";
+    print DHCP6 "  filename \"" . $bpfile . "\";\n";
   }
   print DHCP<<__EOL__;
+}
+__EOL__
+  print DHCP6<<__EOL__;
 }
 __EOL__
   }
@@ -11759,14 +11850,27 @@ host $dnsconf{'Hostname'} {
   fixed-address @idata[1];
 }
 __EOL__
+  print DHCP6<<__EOL__;
+
+host $dnsconf{'Hostname'} {
+  hardware ethernet @idata[8];
+  fixed-address @idata[1];
+}
+__EOL__
 
 
-  if (1){
-
+  if (1) {
     if ($dnsconf{'DynKey'} ne "") {
       $tsigint=encode_base64($dnsconf{'DynKey'});
       chop $tsigint;
       print DHCP<<__EOB__;
+
+key $dnsconf{'Domain'} {
+        algorithm hmac-md5;
+        secret $tsigint;
+};
+__EOB__
+      print DHCP6<<__EOB__;
 
 key $dnsconf{'Domain'} {
         algorithm hmac-md5;
@@ -11782,8 +11886,20 @@ zone $dnsconf{'Domain'}. {
   primary $intipa;$dnsdhcpkey
 }
 __EOL__
+      print DHCP6<<__EOL__;
+
+zone $dnsconf{'Domain'}. {
+  primary $intipa;$dnsdhcpkey
+}
+__EOL__
     } elsif ($sysconf{'PrimaryDns'} ne "") {
       print DHCP<<__EOL__;
+
+zone $dnsconf{'Domain'}. {
+  primary $sysconf{'PrimaryDns'};$dnsdhcpkey
+}
+__EOL__
+      print DHCP6<<__EOL__;
 
 zone $dnsconf{'Domain'}. {
   primary $sysconf{'PrimaryDns'};$dnsdhcpkey
@@ -11797,9 +11913,21 @@ zone $dnsconf{'Domain'}. {
   primary $primdns;$dnsdhcpkey
 }
 __EOL__
+      print DHCP6<<__EOL__;
+
+zone $dnsconf{'Domain'}. {
+  primary $primdns;$dnsdhcpkey
+}
+__EOL__
     }
     foreach $cclass (@revs) {
       print DHCP<<__EOL__;
+
+zone $cclass. {
+  primary $intduip{$cclass};$dnsdhcpkey
+}
+__EOL__
+      print DHCP6<<__EOL__;
 
 zone $cclass. {
   primary $intduip{$cclass};$dnsdhcpkey
@@ -11816,7 +11944,16 @@ if ( -e "/etc/dhcpd.conf.local") {
   close(DHLOC);
 }
 
+if ( -e "/etc/dhcpd6.conf.local") {
+  open(DHLOC,"/etc/dhcpd6.conf.local");
+  while(<DHLOC>) {
+    print DHCP6 $_;
+  }
+  close(DHLOC);
+}
+
 close(DHCP);
+close(DHCP6);
 }
 
 
@@ -11963,7 +12100,6 @@ OSTYPE(linux)dnl
 divert(0)dnl
 VERSIONID(\`\$Id: Network Sentry Config,2007/09/13 Greg Nietsky Exp \$')
 
-
 define(\`STATUS_FILE',\`/var/db/sendmail.statistics')dnl
 define(\`confFORWARD_PATH',\`\$z/.forward.\$w+\$h:\$z/.forward+\$h:\$z/.forward.\$w:\$z/.forward')dnl
 define(\`confMAX_HEADERS_LENGTH', \`32768')dnl
@@ -11985,6 +12121,9 @@ FEATURE(`local_no_masquerade')
 FEATURE(`limited_masquerade')
 FEATURE(`masquerade_envelope')
 FEATURE(`masquerade_entire_domain')
+FEATURE(`no_default_msa', `dnl')dnl
+DAEMON_OPTIONS(`Port=587, M=E, Name=MSA, Family=inet6')dnl
+DAEMON_OPTIONS(`Port=smtp,Name=MTA, Family=inet6')dnl
 __EOB__
 
 #FEATURE(`virtusertable',`ldap:-1 -k (&(objectClass=inetLocalMailRecipient)(mailLocalAddress=%0)) -v mailRoutingAddress')dnl
@@ -12703,6 +12842,12 @@ client 127.0.0.1 {
 	nastype     = other
 }
 
+client ::1 {
+	secret      = $radssecret
+	shortname   = localhost
+	nastype     = other
+}
+
 client $localip {
        secret      = $radssecret
        shortname   = internal
@@ -12786,11 +12931,20 @@ foreach $radent (@radrealm) {
     @rrdat[3]="";
   }
 
+  if (index(@rrdat[1],"::1") ne "-1") {
+    @rrdat[1]="LOCAL";
+    @rrdat[5]="";
+    @rrdat[3]="";
+  }
+
   if (index(@rrdat[2],"127.0.0.1") ne "-1") {
     @rrdat[2]="LOCAL";
   }
 
-  
+  if (index(@rrdat[2],"::1") ne "-1") {
+    @rrdat[2]="LOCAL";
+  }
+
 print RR<<__EOB__;
 realm @rrdat[0] {
        type        = radius
@@ -13323,7 +13477,7 @@ SYSFILES="var/spool/apache/htdocs/ns/config/netsentry.conf \\
           var/lib/asterisk/astdb etc/asterisk/ivrmenu.conf \\
           etc/asterisk/local.conf root/slapd.local etc/sogo_ad.conf \\
           etc/asterisk/iaxtel.conf etc/asterisk/capi.conf \\
-          etc/asound.state etc/zebra/Zebra.conf etc/dhcp.conf.local \\
+          etc/asound.state etc/zebra/Zebra.conf etc/dhcp.conf.local etc/dhcp6.conf.local \\
           etc/ipsec.d/cacerts/cacert.pem /etc/ppp/mangle /etc/dyndnsconf \\
           etc/rc.d/rc.mangle etc/ipsec.secrets etc/*.local \\
           etc/asterisk/pgsql.local etc/asterisk/pgsql.access etc/dns.master"
