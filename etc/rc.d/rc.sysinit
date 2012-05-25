@@ -335,15 +335,6 @@ if [ -e /etc/.install ];then
     ln -s /proc/self/fd /dev
   fi;
 
-  #Startup DNS Server
-  if [ ! -e /etc/rndc.key ];then
-    /usr/sbin/rndc-confgen -a > /dev/null 2>&1
-  fi;
-  (/usr/sbin/named > /dev/null 2>&1) &
-
-  #Start LDAP
-  (/etc/rc.d/rc.ldap > /dev/null 2>&1) &
-
   #Start SSHD
   if [ ! -e /etc/ssh_host_key ];then
     ssh-keygen -t rsa1 -f /etc/ssh_host_key -N "" > /dev/null 2>&1
@@ -360,7 +351,7 @@ if [ -e /etc/.install ];then
   /usr/sbin/sshd > /dev/null 2>&1
  
   #Start up firewall
-  /etc/rc.d/rc.firewall startup
+  /etc/rc.d/rc.firewall startup > /dev/null 2>&1
 
   #Setup LCR
   if [ -e /dev/mISDNtimer ] && [ -x /usr/sbin/lcr ];then
@@ -400,9 +391,6 @@ if [ -e /etc/.install ];then
   if [ -e /etc/shutdownpid ];then
     rm /etc/shutdownpid
   fi;
-
-  #Dns Server
-  rm /var/named/*.jnl > /dev/null 2>&1
 
   #File Server
   if [ ! -d /var/lock/LCK..tts ];then
@@ -736,6 +724,12 @@ if [ ! -e /etc/.install ];then
 
   #Dump Tasks When Out Of Memory
   echo 1 > /proc/sys/vm/oom_dump_tasks
+
+  #Startup DNS Server
+  if [ ! -e /etc/rndc.key ];then
+    /usr/sbin/rndc-confgen -a > /dev/null 2>&1
+  fi;
+  (/usr/sbin/named > /dev/null 2>&1) &
 
   #Start DHCP As Soon As Posible
   if [ -e /etc/dhcpd.leases ];then

@@ -19,6 +19,9 @@
 
 export PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
+#Start LDAP
+(/etc/rc.d/rc.ldap > /dev/null 2>&1) &
+
 #ACPI Deamon
 /usr/sbin/acpid > /dev/null 2>&1
 
