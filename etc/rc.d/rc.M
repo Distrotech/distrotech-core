@@ -19,15 +19,8 @@
 
 export PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
-#Start LDAP
-(/etc/rc.d/rc.ldap > /dev/null 2>&1) &
-
 #ACPI Deamon
 /usr/sbin/acpid > /dev/null 2>&1
-
-if [ -x /etc/rc.d/rc.network ];then
-  /etc/rc.d/rc.network
-fi;
 
 if [ -e /etc/.install ];then
   /usr/bin/setsid /sbin/agetty 38400 tty8 linux &
@@ -37,19 +30,18 @@ if [ -e /etc/.install ];then
   clear
   init 6
  else
-  #Run RPC Portmap
-  portmap
+  #Start LDAP
+  /etc/rc.d/rc.ldap > /dev/null 2>&1
 
-  #Start RPC
-  echo 262144 > /proc/sys/net/core/rmem_default
-  echo 262144 > /proc/sys/net/core/rmem_max
-  chown 99 /var/lib/nfs
-  chown -R 99 /var/lib/nfs/sm
-  chown -R 99 /var/lib/nfs/sm.bak
-  /usr/sbin/rpc.idmapd
-  /usr/sbin/rpc.statd -p 32765 -o 32766
-  /usr/sbin/rpc.mountd -p 32767
-  /usr/sbin/rpc.nfsd -p 2049 32
+  if [ -x /etc/rc.d/rc.network ];then
+    /etc/rc.d/rc.network
+  fi;
+
+  if [ -x /etc/rc.d/rc.nfs.local ];then
+    /etc/rc.d/rc.nfs.local
+   elif [ -x /etc/rc.d/rc.nfs ];then
+    /etc/rc.d/rc.nfs
+  fi;
 
   #Mount Remote File Blocks
   if [ -x /etc/rc.d/rc.mount ];then
