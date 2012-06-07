@@ -34,14 +34,9 @@ if [ ! -e /dev/console ];then
 fi;
 
 if [ ! -d /dev/pts ];then
-  mkdir /dev/pts
+  (mkdir /dev/pts
+  mount -t devpts none /dev/pts) > /dev/null 2>&1
 fi;
-mount -t devpts none /dev/pts > /dev/null 2>&1
-
-if [ ! -d /dev/shm ];then
-  mkdir /dev/shm
-fi;
-mount -t tmpfs none /dev/shm > /dev/null 2>&1
 
 #Bring Up Loopback Device
 /sbin/ip addr add 127.0.0.1/8 dev lo
@@ -153,7 +148,7 @@ if [ -e /etc/.install ];then
   chown nobody.nogroup /var/log/squid
   chown root.clamav /var/spool/mailscanner
 
-  touch /var/state/dhcp/dhcpd.leases /var/state/dhcp/dhcpd6.leases
+  touch /var/state/dhcp/dhcpd.leases
 
   ln -s /install/icons/* /var/spool/apache/icons/
 
@@ -185,16 +180,12 @@ if [ -e /etc/.install ];then
     ssh-keygen -t rsa1 -f /etc/ssh_host_key -N "" > /dev/null 2>&1
     ssh-keygen -t dsa -f /etc/ssh_host_dsa_key -N "" > /dev/null 2>&1
     ssh-keygen -t rsa -f /etc/ssh_host_rsa_key -N "" > /dev/null 2>&1
-    ssh-keygen -t ecdsa -f /etc/ssh_host_ecdsa_key -N "" > /dev/null 2>&1
     /usr/sbin/sshd > /dev/null 2>&1
   fi;
 
   /usr/sbin/syslogd &
   /usr/sbin/klogd -c 1 &
  else
-  #Set file-max
-  echo 1228800 > /proc/sys/fs/file-max
-
   #Load IMQ Devices And Netfilter
   (/sbin/modprobe imq numdevs=16
   /sbin/modprobe lp) >/dev/null 2>&1
@@ -357,7 +348,7 @@ if [ -e /etc/.install ];then
   if [ ! -e /etc/ssh_host_ecdsa_key ];then
     ssh-keygen -t ecdsa -f /etc/ssh_host_ecdsa_key -N "" > /dev/null 2>&1
   fi;
-  (/usr/sbin/sshd > /dev/null 2>&1) &
+  /usr/sbin/sshd > /dev/null 2>&1
  
   #Start up firewall
   /etc/rc.d/rc.firewall startup > /dev/null 2>&1
@@ -647,6 +638,7 @@ EOF
   done;
 fi;
 
+
 #Fire Up Device Discovery And Initilise Devices
 if [ -x /libexec/udev/udevd ];then
   (/bin/udevadm trigger
@@ -730,10 +722,8 @@ if [ ! -e /etc/.install ];then
   #Turn Off TCP Window Scaling (for broken firewalls)\
   echo 0 > /proc/sys/net/ipv4/tcp_window_scaling
 
-  #Dump Tasks When Out Of Memory set overcommit to swap + 80% of ram
+  #Dump Tasks When Out Of Memory
   echo 1 > /proc/sys/vm/oom_dump_tasks
-  echo 2 > /proc/sys/vm/overcommit_memory
-  echo 100 > /proc/sys/vm/overcommit_ratio
 
   #Startup DNS Server
   if [ ! -e /etc/rndc.key ];then
@@ -742,10 +732,15 @@ if [ ! -e /etc/.install ];then
   (/usr/sbin/named > /dev/null 2>&1) &
 
   #Start DHCP As Soon As Posible
+  if [ -e /etc/dhcpd.leases ];then
+    mv /etc/dhcpd.leases* /var/state/dhcp
+  fi;
   if [ ! -d /var/state/dhcp ];then
     mkdir -p /var/state/dhcp
   fi;
-  touch /var/state/dhcp/dhcpd.leases /var/state/dhcp/dhcpd6.leases
+  if [ ! -e /var/state/dhcp/dhcpd.leases ];then
+    touch /var/state/dhcp/dhcpd.leases
+  fi;
   (/usr/sbin/dhcpd > /dev/null 2>&1) &
 
   #Start SNMP

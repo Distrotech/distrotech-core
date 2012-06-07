@@ -78,8 +78,6 @@
  *
  */
 
-include "session.inc";
-
 define('INC_DIR', 'lib/');
 
 require_once(INC_DIR . 'config.php');
@@ -149,6 +147,22 @@ $js_args .= "'" . (empty($_GET['timeleft']) ? '' : $_GET['timeleft']) . "',";
 $js_args .= "'" . LOGINPATH . '?res=popup3';
 $js_args .= empty($_GET['uamip']) ? '' : '&uamip=' . $_GET['uamip'];
 $js_args .= empty($_GET['uamport']) ? "'" : '&uamport=' . $_GET['uamport'] . "'";
+
+// If we want to store the cookie, compose and set it...
+if (isset($_GET['save_login']) && $_GET['save_login'] == 'on' ) {
+	$str = $_GET['uid'] . '|' . $_GET['pwd'];
+	$expire = time() + 315360000;						// expires in 10 years...
+	setcookie('login', $str, $expire, '/', $_SERVER['HTTP_HOST'], true);
+}
+
+if ( isset($_COOKIE['login']) ) {
+	$arr = explode('|', $_COOKIE['login']);
+	$username = $arr[0];
+	$password = $arr[1];
+} else {
+	$username = '';
+	$password = '';
+}
 
 // new concept: just use methods of class "actions"
 $a = new actions();

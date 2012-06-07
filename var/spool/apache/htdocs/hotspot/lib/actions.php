@@ -54,7 +54,7 @@ EOT;
 	function already() {
 		$this->head();
 		echo '<p class="msg">'._t('already', HOTSPOT_NAME).'</p>';
-		echo '<p class="act"><a href="' . $_SESSION['uam_url'] . "/logoff\" onclick=\"popUpWindow('','GLS','270','325',0,0,0,0);closeGLP();\">"._t('logout').'</a></p>';
+		echo '<p class="act"><a href="'.UAM_URL."/logoff\" onclick=\"popUpWindow('','GLS','272','262',0,0,0,0);closeGLP();\">"._t('logout').'</a></p>';
 		$this->foot();
 	}
 
@@ -62,7 +62,7 @@ EOT;
 	function error() {
 		$this->head();
 		echo '<p class="msg">'._t('loginfailed', HOTSPOT_NAME).'</p>';
-		echo '<p class="act"><a href="' . $_SESSION['uam_url'] . '/prelogin">'._t('login').'</a></p>';
+		echo '<p class="act"><a href="'.UAM_URL.'/prelogin">'._t('login').'</a></p>';
 		echo '<p class="box">'._t('chillispotonly').'</p>';
 		$this->foot();
 	}
@@ -88,7 +88,7 @@ EOT;
 		else
 			$query = '?username='.$_GET['uid'].'&response='.$response.'&userurl='.urlencode($_GET['userurl']);
 
-		header('Location: ' . $_SESSION['uam_url'] . '/logon'.$query);
+		header('Location: '.UAM_URL.'/logon'.$query);
 		$this->head();
 		echo '<p class="msg">'._t('loggingin').'</p>';
 		$this->foot();
@@ -98,7 +98,7 @@ EOT;
 	function logoff () {
 		$this->head();
 		echo '<p class="msg">'._t('loggedoff').'</p>';
-		echo '<p class="act"><a href="' . $_SESSION['uam_url'] . '/prelogin">'._t('login').'</a></p>';
+		echo '<p class="act"><a href="'.UAM_URL.'/prelogin">'._t('login').'</a></p>';
 		$this->foot();
 	}
 
@@ -113,7 +113,7 @@ EOT;
 
 	function success() {
 		global $js_args;
-		if ( ( ! empty($_GET['userurl']) ) && ( ereg($_SESSION['uam_url'], $_GET['userurl']) == 0 ) && ( ereg(BASE_URL, $_GET['userurl']) == 0 ) ) {
+		if ( ( ! empty($_GET['userurl']) ) && ( ereg(UAM_URL, $_GET['userurl']) == 0 ) && ( ereg(BASE_URL, $_GET['userurl']) == 0 ) ) {
 			$userurl = $_GET['userurl'];
 		} else {
 			$userurl = '';
@@ -128,7 +128,7 @@ EOT;
 
 		$this->head();
 		echo '<p class="msg">'._t('welcome').'</p>';
-		echo '<p class="act"><a href="' . $_SESSION['uam_url'] . '/logoff">'._t('logout').'</a></p>';
+		echo '<p class="act"><a href="'.UAM_URL.'/logoff">'._t('logout').'</a></p>';
 		echo '<div id="stat"></div>';
 		$this->foot();
 	}
@@ -149,7 +149,7 @@ EOT;
 
 		$this->head();
 		echo '<p class="msg">'._t('loggedinto', HOTSPOT_NAME).'</p>';
-		echo '<p class="act"><a href="' . $_SESSION['uam_url'] . '/logoff">'._t('logout').'</a></p>';
+		echo '<p class="act"><a href="'.UAM_URL.'/logoff">'._t('logout').'</a></p>';
 		echo '<div id="stat"></div>';
 		$this->foot();
 	}
@@ -158,7 +158,7 @@ EOT;
 	function popup3() {
 		$this->head();
 		echo '<p class="msg">'._t('loggedout', HOTSPOT_NAME).'</p>';
-		echo '<p class="act"><a href="' . $_SESSION['uam_url'] . '/prelogin">'._t('login').'</a></p>';
+		echo '<p class="act"><a href="'.UAM_URL.'/prelogin">'._t('login').'</a></p>';
 		$this->foot();
 	}
 }

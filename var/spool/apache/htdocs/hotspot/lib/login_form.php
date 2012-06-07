@@ -8,20 +8,20 @@
 <tbody>
 <tr>
 	<td class="form_label"><?=_t('labelLogin')?></td>
-	<td><input class="form_input" type="text" name="uid" size="20" maxlength="255" value="<?=$_SESSION['username']?>"></td>
+	<td><input class="form_input" type="text" name="uid" size="20" maxlength="255" value="<?=$username?>"></td>
 </tr>
 <tr>
 	<td class="form_label"><?=_t('labelPassword')?></td>
-	<td><input class="form_input" type="password" name="pwd" size="20" maxlength="255" value="<?=$_SESSION['password']?>"></td>
+	<td><input class="form_input" type="password" name="pwd" size="20" maxlength="255" value="<?=$password?>"></td>
 </tr>
 <? if (ENABLE_LOGIN_COOKIE): ?>
 <tr>
 	<td>&nbsp;</td>
-	<td><input class="form_check" type="checkbox" name="save_login"<% if ($_SESSION['save_login']) { print " CHECKED";};%>><?=_t('rememberlogin')?></td>
+	<td><input class="form_check" type="checkbox" name="save_login"><?=_t('rememberlogin')?></td>
 </tr>
 <? endif; ?>
 <tr>
-	<td class="form_submit" colspan="2"><input type="submit" name="login" value="<?=_t('login')?>" onclick="popUpWindow('<?=LOGINPATH?>?res=popup1&uamip=<?=$_SESSION['uamip']?>&uamport=<?=$_SESSION['uamport']?>','GLS','270','325',0,0,0,0)"></td>
+	<td class="form_submit" colspan="2"><input type="submit" name="login" value="<?=_t('login')?>" onclick="popUpWindow('<?=LOGINPATH?>?res=popup1&uamip=<?=UAMIP?>&uamport=<?=UAMPORT?>','GLS','272','262',0,0,0,0)"></td>
 </tr>
 </tbody>
 </table>

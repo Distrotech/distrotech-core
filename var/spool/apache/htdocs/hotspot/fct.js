@@ -53,7 +53,7 @@ function success(url,userurl) {
 		doTime();
 		self.location = url;
 	} else {
-		popUpWindow(url,'GLS','270','325',0,0,0,0);
+		popUpWindow(url,'GLS','272','262',0,0,0,0);
 
 		if ( userurl != '' ) {
 			GLP.opener.location = userurl;
@@ -70,7 +70,7 @@ function success(url,userurl) {
 function failed() {
 	document.f.uid.focus();
 	if (self.name != 'GLS') {
-		popUpWindow('','GLS','270','325',0,0,0,0);	// GLS means "GoLoginStatus"
+		popUpWindow('','GLS','272','262',0,0,0,0);	// GLS means "GoLoginStatus"
 		closeGLP();
 	}
 }
