@@ -57,6 +57,7 @@ fi;
 
 if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstconfig ];then
   if [ ! "`pidof dhcpd`" ];then
+    touch /var/state/dhcp/dhcpd.leases /var/state/dhcp/dhcpd6.leases
     /usr/sbin/dhcpd > /dev/null 2>&1
   fi;
 
@@ -161,13 +162,13 @@ if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstco
           killall -9 winbindd
         fi;
       fi;
-      /etc/rc.d/rc.ldap > /dev/null 2>&1
       LDS="";
-      while [ ! "`pidof slapd`" ] && [ "${LDS}" != "XXXXX" ];do
+      while [ "`pidof slapd`" ] && [ "${LDS}" != "XXXXX" ];do
+        killall -9 slapd
         sleep 1
-        /etc/rc.d/rc.ldap > /dev/null 2>&1
         LDS=${LDS}X
       done;
+      /etc/rc.d/rc.ldap > /dev/null 2>&1
       killall -9 ldapsearch > /dev/null 2>&1
     fi;
     rm /tmp/ldaps.out
@@ -615,6 +616,7 @@ EOF
       chown nobody.nogroup /var/spool/samba/ftp/welcome.txt
     fi
 
+    touch /var/state/dhcp/dhcpd.leases /var/state/dhcp/dhcpd6.leases
     /usr/sbin/dhcpd > /dev/null 2>&1
 #    /etc/rc.d/rc.hfax > /dev/null 2>&1
     /usr/sbin/lpd > /dev/null 2>&1
@@ -2170,6 +2172,7 @@ if [ "$DHFDIFF" ];then
   chmod 640 /etc/dhcpd.conf
   chown root.root /etc/dhcpd.conf
   kill -9 `cat /var/run/dhcpd.pid` > /dev/null 2>&1
+  touch /var/state/dhcp/dhcpd.leases /var/state/dhcp/dhcpd6.leases
   /usr/sbin/dhcpd > /dev/null 2>&1
  else
   touch /etc/dhcpd.conf
