@@ -2293,7 +2293,7 @@ moduleload refint.la
 moduleload rwm.la
 
 loglevel 0
-threads 128
+#threads 128
 idletimeout 30
 timelimit 180
 sizelimit 1000
@@ -11561,6 +11561,17 @@ default-lease-time $sysconf{'DHCPLease'};
 max-lease-time $sysconf{'DHCPMaxLease'};
 
 $wins
+
+#Dummy0
+subnet 127.255.255.252 netmask 255.255.255.252 {
+  not authoritative;
+}
+
+#No IP
+subnet 0.0.0.0 netmask 255.255.255.255 {
+  not authoritative;
+}
+
 __EOL__
 print DHCP6<<__EOL__;
 ddns-update-style interim;
@@ -11693,7 +11704,7 @@ subnet6 $nwaddr netmask $snmask {
   option tftp-cisco-server-name @idata[1];
 }
 __EOL__
-    } else {
+    } elsif ($nwaddr ne "0.0.0.0"){
 print DHCP<<__EOL__;
 
 #@idata[0]
@@ -11779,7 +11790,7 @@ subnet6 $nwaddr netmask $snmask {
   range @idata[5] @idata[6];
 }
 __EOL__
-  } else {
+  } elsif ($nwaddr ne "0.0.0.0") {
   print DHCP<<__EOL__;
 
 #@idata[0]
@@ -13538,7 +13549,7 @@ if ( $ldapbackup eq "true") {
   print BUS "#Backup LDAP Database\n";
   print BUS "echo $fcnt LDAP Database\n";
   print BUS "/bin/touch /tmp/ldap.bak.gz\n/bin/chmod 600 /tmp/ldap.bak.gz\n";
-  print BUS "/usr/sbin/slapcat -b \"\"|grep -vE \"(^ )|(::.*[a-zA-Z0-9]\$)\" |/usr/bin/gzip -c > /tmp/ldap.bak.gz\n";
+  print BUS "/usr/sbin/slapcat -b \"\"|grep -vE \"(^ |^structuralObjectClass|^entryUUID|^creatorsName|^modifiersName|^createTimestamp|^modifyTimestamp|^entryCSN)|(::.*[a-zA-Z0-9]\$)\" |/usr/bin/gzip -c > /tmp/ldap.bak.gz\n";
   print BUS "/usr/bin/tar \$TAROPT \${TAPE} tmp/ldap.bak.gz 2>&1\n"; 
   print BUS "/bin/rm /tmp/ldap.bak.gz\n\n";
   $fcnt++;
@@ -14384,7 +14395,7 @@ sub printastiax() {
 print IC<<__EOF__;
 [general]
 bindport=4569
-bindaddr=$localip
+;bindaddr=$localip
 ;tos=none
 bandwidth=low
 dbuser=asterisk
@@ -15174,7 +15185,7 @@ __EOB__
         case when (zapline is not null and zapline != '0') then zapline else '' end as channel from users 
       left outer join features on (exten=name) 
       left outer join astdb as lpre on (lpre.family='LocalPrefix' AND lpre.key=substring(name,1,2))
-    where lpre.value=1 and length(name) = 4 and zapline is not null and zapline != '0' ORDER BY name";
+    where lpre.value='1' and length(name) = 4 and zapline is not null and zapline != '0' ORDER BY name";
 
   $getzap=$dbh->prepare($zapchanq);
   $getzap->execute;
@@ -15423,7 +15434,7 @@ __EOB__
   $chans="";
   $zapspanq="SELECT zapline,case when (zapproto is null) then 'fxoks' else 
                 case when (substr(zapproto,1,3) = 'fxo') then 'fxo'||substr(zapproto,5) else zapproto end end 
-           from features where zapline != 0 and zapline is not null order by zapline";
+           from features where zapline != '0' and zapline is not null order by zapline";
 
   $getzap=$dbh->prepare($zapspanq);
   $getzap->execute;
@@ -15489,8 +15500,8 @@ __EOF__
 ;Extensions
 __EOF__
 
-  $blfquery="SELECT CASE WHEN (zapline > 0) THEN 'exten => '||exten||',hint,Zap/'||zapline 
-               WHEN (iaxline > 0) THEN 'exten => '||exten||',hint,IAX2/'||exten ELSE 'exten => '||exten||',hint,SIP/'||exten END 
+  $blfquery="SELECT CASE WHEN (zapline > '0') THEN 'exten => '||exten||',hint,Zap/'||zapline 
+               WHEN (iaxline > '0') THEN 'exten => '||exten||',hint,IAX2/'||exten ELSE 'exten => '||exten||',hint,SIP/'||exten END 
              FROM features where length(exten)=4 ORDER BY exten";
 
 #  $blfquery="SELECT CASE WHEN (zapuser.value > 0) THEN 'exten => '||name||',hint,SLA:Zap/'||zapuser.value WHEN (iaxuser.value > 0) THEN 'exten => '||name||',hint,SLA:IAX2/'||name ELSE 'exten => '||name||',hint,SLA:SIP/'||name END FROM users left outer join astdb as iaxuser on (iaxuser.family=name AND iaxuser.key='IAXLine') left outer join astdb as zapuser on (zapuser.family=name AND zapuser.key='ZAPLine') left outer join astdb as h323user on (h323user.family=name AND h323user.key='H323Line') where length(name)=4 ORDER BY name";
@@ -15665,7 +15676,7 @@ sub printgnugkh323() {
       $addast->execute;
     }
   }
-  $getlpre=$dbh->prepare("select lpad(trunkprefix,7,'0') from trunk where h323reggk = '" . $h323gkid . "' AND (protocol != 'OH323' OR h323gkid='" . $h323gwid . "')");
+  $getlpre=$dbh->prepare("select lpad(CAST(trunkprefix AS varchar),7,'0') from trunk where h323reggk = '" . $h323gkid . "' AND (protocol != 'OH323' OR h323gkid='" . $h323gwid . "')");
   $getlpre->execute;
   while(@rowpre=$getlpre->fetchrow_array) {
     if (@rowpre[0] ne "") {
@@ -15788,10 +15799,10 @@ Host=$sqlvoipserv
 Database=asterisk
 Username=asterisk
 Password=$sqlvoippass
-ConfigQuery=SELECT DISTINCT ON (gkid) 'RasSrv::GWRewriteE164',h323gkid AS gkid,CASE WHEN (trunk.h323gkid='$h323gwid' AND h323outprefix = '' AND trunkprefix >= 0) THEN 'out='||lpad(trunkprefix,7,'0')||'='||trunk.h323prefix WHEN (trunk.h323gkid='$h323gwid' AND trunkprefix is null AND h323outprefix != '') THEN 'in=.='||trunk.h323outprefix||'.' WHEN (trunk.h323gkid='$h323gwid' AND h323outprefix != '' AND trunkprefix >= 0) THEN 'out='||lpad(trunkprefix,7,'0')||'='||trunk.h323prefix||';in=.='||h323outprefix ELSE 'out='||lpad(trunkprefix,7,'0')||'='||trunk.h323prefix END AS rule from trunk  where h323reggk='%1' AND (h323outprefix != '' OR trunkprefix >= 0) AND protocol = 'OH323' order by gkid,rule DESC;
-#PermanentEndpointsQuery=SELECT providerip,port,h323gkid,CASE WHEN trunkprefix >= 0 THEN CASE WHEN h323aprefix > '' THEN lpad(trunkprefix,7,'0')||','||h323aprefix ELSE lpad(trunkprefix,7,'0') END ELSE h323aprefix END from trunk where h323gkid !='' AND h323reggk = '%1' AND protocol = 'OH323'
-NeighborsQuery=SELECT h323gkid,ipaddr,'1719',CASE WHEN (trunkprefix > 0 ) THEN lpad(trunkprefix,7,0) ELSE '*' END,NULL,NULL from users left outer join trunk using (h323gkid) where h323neighbor = 't' AND h323gkid != '%1'
-rewriteE164Query=SELECT lpad(trunkprefix,7,'0'),'090'||lpad(trunkprefix,7,'0') from trunk where protocol != 'OH323'  AND h323reggk = '%1'
+ConfigQuery=SELECT DISTINCT ON (gkid) 'RasSrv::GWRewriteE164',h323gkid AS gkid,CASE WHEN (trunk.h323gkid='$h323gwid' AND h323outprefix = '' AND trunkprefix >= 0) THEN 'out='||lpad(CAST(trunkprefix AS varchar),7,'0')||'='||trunk.h323prefix WHEN (trunk.h323gkid='$h323gwid' AND trunkprefix is null AND h323outprefix != '') THEN 'in=.='||trunk.h323outprefix||'.' WHEN (trunk.h323gkid='$h323gwid' AND h323outprefix != '' AND trunkprefix >= 0) THEN 'out='||lpad(CAST(trunkprefix AS varchar),7,'0')||'='||trunk.h323prefix||';in=.='||h323outprefix ELSE 'out='||lpad(CAST(trunkprefix AS varchar),7,'0')||'='||trunk.h323prefix END AS rule from trunk  where h323reggk='%1' AND (h323outprefix != '' OR trunkprefix >= 0) AND protocol = 'OH323' order by gkid,rule DESC;
+#PermanentEndpointsQuery=SELECT providerip,port,h323gkid,CASE WHEN trunkprefix >= 0 THEN CASE WHEN h323aprefix > '' THEN lpad(CAST(trunkprefix AS varchar),7,'0')||','||h323aprefix ELSE lpad(CAST(trunkprefix AS varchar),7,'0') END ELSE h323aprefix END from trunk where h323gkid !='' AND h323reggk = '%1' AND protocol = 'OH323'
+NeighborsQuery=SELECT h323gkid,ipaddr,'1719',CASE WHEN (trunkprefix > 0 ) THEN lpad(CAST(trunkprefix AS varchar),7,0) ELSE '*' END,NULL,NULL from users left outer join trunk using (h323gkid) where h323neighbor = 't' AND h323gkid != '%1'
+rewriteE164Query=SELECT lpad(CAST(trunkprefix AS varchar),7,'0'),'090'||lpad(CAST(trunkprefix AS varchar),7,'0') from trunk where protocol != 'OH323'  AND h323reggk = '%1'
 
 [RasSrv::RRQFeatures]
 AcceptGatewayPrefixes=0
