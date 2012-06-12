@@ -28,7 +28,7 @@ include "auth.inc";
   <TH COLSPAN=4 CLASS=heading-body><%print _("User Available State")%></TH>
 </TR><TR CLASS=list-color1>
 <%
-$ustateq="SELECT '    <TD CLASS=option-'||CASE WHEN (cdnd = 1) THEN 'red' ELSE 'green' END ||'>'||name||' ('||fullname||')</TD>\n' from 
+$ustateq="SELECT '    <TD CLASS=option-'||CASE WHEN (cdnd = '1') THEN 'red' ELSE 'green' END ||'>'||name||' ('||fullname||')</TD>\n' from 
 users 
   LEFT OUTER JOIN astdb AS lpre ON (substr(name,1,2) = lpre.key AND lpre.family='LocalPrefix')  
   LEFT OUTER JOIN features ON (exten=users.name)  
