@@ -43,7 +43,7 @@ for($cnt=0;$cnt < pg_num_rows($allmemq);$cnt++) {
 
 
 $qnme['All']="All Queues";
-$qnameq="SELECT name,description||' ('||name||')',count(case when (penalty <= 0) then 1 else null end) as inactive,
+$qnameq="SELECT name,description||' ('||name||')',count(case when (CAST(penalty AS INT) <= 0) then 1 else null end) as inactive,
            count(case when (paused != 0) then paused else null end) as paused
  FROM queue_table LEFT OUTER JOIN queue_members ON (name=queue_name) ";
 if ($SUPER_USER != 1) {

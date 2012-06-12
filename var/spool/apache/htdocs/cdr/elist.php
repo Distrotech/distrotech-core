@@ -34,7 +34,7 @@ if ($SUPER_USER != 1) {
  $cclistq.=" LEFT OUTER JOIN astdb AS bgrp ON (bgrp.family=name AND bgrp.key='BGRP')";
 }
 
-$cclistq.=" WHERE astdb.value=1";
+$cclistq.=" WHERE astdb.value='1'";
 if ($dgroup != "") {
   $cclistq.=" AND dgroup='" . $dgroup . "'";
 }

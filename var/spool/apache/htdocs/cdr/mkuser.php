@@ -109,7 +109,7 @@ if ((isset($_POST['pbxupdate'])) && ($_POST['exten'] == "") && (($_POST['prefix'
   if ($SUPER_USER != 1) {
     $curextq.=" LEFT OUTER JOIN astdb AS bgrp ON (name=bgrp.family AND bgrp.key='BGRP')";
   }
-  $curextq.=" WHERE length(name) = 4 AND astdb.family = 'LocalPrefix' AND astdb.value=1";
+  $curextq.=" WHERE length(name) = 4 AND astdb.family = 'LocalPrefix' AND astdb.value='1'";
   if ($SUPER_USER != 1) {
     $curextq.=" AND " . $clogacl;
   }

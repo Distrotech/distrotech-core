@@ -181,7 +181,7 @@ if (isset($queue)) {
     $oweight=$weight;
     if ((!strpos($channel,"/")) && ($olagent == "")) {
       $origchan=$channel;
-      $linetype=pg_query($db,"SELECT CASE WHEN (zapline > 0) THEN 'DAHDI/'||zapline ELSE 
+      $linetype=pg_query($db,"SELECT CASE WHEN (CAST(zapline AS INT) > 0) THEN 'DAHDI/'||zapline ELSE 
                                        CASE WHEN (iaxline = '1') THEN 'IAX2/'||name ELSE 'SIP/'||name
                                        END 
                                      END
@@ -224,7 +224,7 @@ if (isset($queue)) {
   print "<TR CLASS=list-color1>";
   print "<TH CLASS=heading-body2 WIDTH=100>" . _("Active")  . "</TH><TH CLASS=heading-body2>" . _("Agent") . "</TH><TH CLASS=heading-body2>" . _("Channel") . "</TH><TH CLASS=heading-body2>" . _("Perm.") . "<TH CLASS=heading-body2>" . _("Weight") . "</TH><TH CLASS=heading-body2>" . _("Ignore Busy Status") . "</TH>";
   print "</TR>";
-  $getagentq="SELECT penalty > 0 as active,CASE WHEN (users.uniqueid is not null) THEN users.fullname ELSE 'Unknown User' END as agent,
+  $getagentq="SELECT CAST(penalty AS INT) > 0 as active,CASE WHEN (users.uniqueid is not null) THEN users.fullname ELSE 'Unknown User' END as agent,
                      interface as channel,CASE WHEN (penalty is not null) THEN defpenalty ELSE '" . $dqpenalty. "' END as weight,
                      CASE WHEN (name is not null) THEN name ELSE interface END, callinuse,paused > 0 
                    from queue_members left outer join features ON (zapline=substr(interface,7)) 

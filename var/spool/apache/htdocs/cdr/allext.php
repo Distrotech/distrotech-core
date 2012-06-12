@@ -68,8 +68,7 @@
     }
     $avgcdrq.=" group by year,month
                           order by year,month";
-  
-  $avgcdr=pg_query($db,$avgcdrq);
+    $avgcdr=pg_query($db,$avgcdrq);
 //print "AVG :&nbsp;" . $avgcdrq . ";<P>";
   $monavg=pg_fetch_row($avgcdr);
 
@@ -90,7 +89,7 @@
       $getcdrq.=" LEFT OUTER JOIN astdb AS bgrp ON (bgrp.family=name AND bgrp.key='BGRP')";
     }
     $getcdrq.=" where 
-                              userfield != '' AND $chan AND astdb.value = 1 AND
+                              userfield != '' AND $chan AND astdb.value = '1' AND
                               calldate >= " . $datestart . " AND calldate < " . $dateend . $exceptions;
 
     if ($TMS_USER != 1) {
