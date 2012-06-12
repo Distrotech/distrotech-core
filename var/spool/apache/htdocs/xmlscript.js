@@ -51,7 +51,7 @@ function getrawxml(domobj) {
   var xmlpara = new Array();
   var xmlid = new Array();
 
-  var xmlout="<?xml version=\""+domobj.xmlVersion+"\" encoding=\""+domobj.xmlEncoding+"\"?>\n<"+root.nodeName+">\n";
+  var xmlout="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<"+root.nodeName+">\n";
   if (root.nodeValue) {
     xmlout+="    "+root.nodeValue+"\n";
   }
