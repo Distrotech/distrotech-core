@@ -2863,4 +2863,7 @@ fi;
 if [ ! "`/sbin/ip route list 0/0`" ];then
   /sbin/ip route add default via 127.255.255.254 src 127.255.255.253 dev dummy0
 fi;
+
+#Unlock incase its been forked
+flock -u 10
 ) 10>/var/run/netsentry-config
