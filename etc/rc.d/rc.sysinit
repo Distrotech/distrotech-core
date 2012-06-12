@@ -357,7 +357,7 @@ if [ -e /etc/.install ];then
   if [ ! -e /etc/ssh_host_ecdsa_key ];then
     ssh-keygen -t ecdsa -f /etc/ssh_host_ecdsa_key -N "" > /dev/null 2>&1
   fi;
-  (/usr/sbin/sshd > /dev/null 2>&1) &
+  (ulimit -n 65535;/usr/sbin/sshd > /dev/null 2>&1) &
  
   #Start up firewall
   /etc/rc.d/rc.firewall startup > /dev/null 2>&1
@@ -732,21 +732,21 @@ if [ ! -e /etc/.install ];then
 
   #Dump Tasks When Out Of Memory set overcommit to swap + 80% of ram
   echo 1 > /proc/sys/vm/oom_dump_tasks
-  echo 2 > /proc/sys/vm/overcommit_memory
+  echo 0 > /proc/sys/vm/overcommit_memory
   echo 100 > /proc/sys/vm/overcommit_ratio
 
   #Startup DNS Server
   if [ ! -e /etc/rndc.key ];then
     /usr/sbin/rndc-confgen -a > /dev/null 2>&1
   fi;
-  (/usr/sbin/named > /dev/null 2>&1) &
+  (ulimit -n 65535;/usr/sbin/named > /dev/null 2>&1) &
 
   #Start DHCP As Soon As Posible
   if [ ! -d /var/state/dhcp ];then
     mkdir -p /var/state/dhcp
   fi;
   touch /var/state/dhcp/dhcpd.leases /var/state/dhcp/dhcpd6.leases
-  (/usr/sbin/dhcpd > /dev/null 2>&1) &
+  (ulimit -n 65535;/usr/sbin/dhcpd > /dev/null 2>&1) &
 
   #Start SNMP
   /usr/sbin/snmpd -c /etc/snmpd.conf

@@ -204,9 +204,9 @@ if [ -e /etc/.install ];then
   #Start Super Daemon
   if [ ! "`pidof inetd`" ];then
     if [ -x /usr/sbin/inetd ];then
-      /usr/sbin/inetd > /dev/null 2>&1
+      (ulimit -n 65535;/usr/sbin/inetd) > /dev/null 2>&1
      else
-      /usr/libexec/inetd > /dev/null 2>&1
+      (ulimit -n 65535;/usr/libexec/inetd) > /dev/null 2>&1
     fi;
   fi;
   (/usr/sbin/conntrack -F
