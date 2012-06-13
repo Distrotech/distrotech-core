@@ -10971,7 +10971,7 @@ __EOB__
   print DUP "update delete wpad.$dnsconf{'Domain'}\. CNAME\n";
   print DUP "update delete pabx.$dnsconf{'Domain'}\. CNAME\n";
   print DUP "update delete voip.$dnsconf{'Domain'}\. CNAME\n";
-  print DUP "update delete callshop.$dnsconf{'Domain'}\. CNAME\n";
+#  print DUP "update delete callshop.$dnsconf{'Domain'}\. CNAME\n";
   print DUP "update delete ticket.$dnsconf{'Domain'}\. CNAME\n";
 
   push(@adsdpre,"_msdcs");
@@ -11029,7 +11029,7 @@ __EOB__
 
   print DUP "update add wpad.$dnsconf{'Domain'}. $dnsconf{'DefaultTTL'} CNAME $fqdn.\n";
   print DUP "update add pabx.$dnsconf{'Domain'}. $dnsconf{'DefaultTTL'} CNAME $fqdn.\n";
-  print DUP "update add callshop.$dnsconf{'Domain'}. $dnsconf{'DefaultTTL'} CNAME $fqdn.\n";
+#  print DUP "update add callshop.$dnsconf{'Domain'}. $dnsconf{'DefaultTTL'} CNAME $fqdn.\n";
   print DUP "update add ticket.$dnsconf{'Domain'}. $dnsconf{'DefaultTTL'} CNAME $fqdn.\n";
   print DUP "update add voip.$dnsconf{'Domain'}. $dnsconf{'DefaultTTL'} CNAME $fqdn.\n";
   print DUP "update delete loopback.$dnsconf{'Domain'}. A\n";
