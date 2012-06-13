@@ -130,8 +130,8 @@ EOF
   tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/squid.tbz > /dev/null 2>&1
   tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/sogo.tbz > /dev/null 2>&1
   tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/dbadmin.tbz > /dev/null 2>&1
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/mysql.tbz > /dev/null 2>&1
-  tar -C ${INST_BASE} -xzf /install/pkgs/horde.tgz > /dev/null 2>&1
+  tar -C ${INST_BASE} -xJf /install/pkgs/mysql.xz > /dev/null 2>&1
+//  tar -C ${INST_BASE} -xzf /install/pkgs/horde.tgz > /dev/null 2>&1
   tar -C ${INST_BASE}/var/spool/apache/htdocs/phpmanual --use-compress-program=bunzip2 -xf /install/pkgs/php_manual_en.tar.bz2 > /dev/null 2>&1
   tar -C ${INST_BASE}/var/spool/apache/htdocs/mysqlmanual -xzf /install/pkgs/mysql-manual.tgz > /dev/null 2>&1
   chmod 750 ${INST_BASE}/var/spool/apache/htdocs/userguides/script/genimg.sh
