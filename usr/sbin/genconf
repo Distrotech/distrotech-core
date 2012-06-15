@@ -1606,6 +1606,7 @@ hosts:          files
 passwd:		files
 shadow:		files
 group:		files
+automount:	files
 EOF
 ) > /etc/nsswitch.conf
  else
@@ -1614,6 +1615,7 @@ hosts:          files
 passwd:		files
 shadow:		files
 group:		files
+automount:	files
 EOF
 ) > /etc/nsswitch.conf.boot
   (cat << EOF
@@ -1621,6 +1623,7 @@ hosts:          files dns ldap
 passwd:		files ldap
 shadow:		files ldap
 group:		files ldap
+automount:	files
 EOF
 ) > /etc/nsswitch.conf.ldap
   if [ ! -e /etc/nsswitch.conf.local ];then
@@ -1691,6 +1694,7 @@ hosts:          files
 passwd:		files
 shadow:		files
 group:		files
+automount:	files
 EOF
 ) > /etc/nsswitch.conf
  else
@@ -1699,6 +1703,7 @@ hosts:          files
 passwd:		files
 shadow:		files
 group:		files
+automount:	files
 EOF
 ) > /etc/nsswitch.conf.boot
   (cat << EOF
@@ -1706,6 +1711,7 @@ hosts:          files dns ldap wins
 passwd:		files ldap winbind
 shadow:		files ldap
 group:		files ldap winbind
+automount:	files
 EOF
 ) > /etc/nsswitch.conf.ldap
 
@@ -10042,8 +10048,25 @@ __EOB__
         force user = admin
         valid users = $usergrp
         guest ok = No
+
 __EOB__
     }
+
+    if ( -e "/root/torrent") {
+      print SMB<<__EOB__;
+[TORRENTS]
+        comment = Wharez baby wharez !!!!
+        path = /root/torrent
+        read only = Yes
+        create mask = 0664
+        directory mask = 0775
+        force user = admin
+        valid users = $usergrp
+        guest ok = No
+
+__EOB__
+    }
+
     print SMB<<__EOB__;
 [MAILSCANNER]
 	comment = Files Used By Mailscanner
@@ -13009,7 +13032,7 @@ if [ ! -d /var/run/autofs ];then
 fi;
 
 #Start Automounter
-automount -t 180 
+/usr/sbin/automount
 
 #Bind Mounts
 __EOB__
