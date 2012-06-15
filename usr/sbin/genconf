@@ -13000,8 +13000,16 @@ fi;
 #Allow CD To Be Ejected
 echo 0 > /proc/sys/dev/cdrom/lock
 
+if [ ! -d /mnt/autofs ];then
+  mkdir /mnt/autofs
+fi;
+
+if [ ! -d /var/run/autofs ];then
+  mkdir /var/run/autofs
+fi;
+
 #Start Automounter
-automount -t 180 /mnt/autofs file /etc/autofs.conf
+automount -t 180 
 
 #Bind Mounts
 __EOB__
