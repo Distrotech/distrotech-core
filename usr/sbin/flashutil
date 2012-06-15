@@ -658,7 +658,7 @@ Remote_Sync() {
     rsync ${ROPT} --delete --exclude=/dev/* --exclude=/sys/* --exclude=/proc/* --exclude=/lost+found --include=/boot/grub/background.jpg \
                --exclude=/lib/modules/* --exclude=/boot/vmlinuz-install --exclude=/boot/System.map-install  --exclude=/boot/initrd-install* \
                --exclude=/boot/grub/* --exclude=/mnt/install/* --exclude=/etc/mtab --exclude=/etc/fstab --exclude=/install/avirus/* \
-               --exclude=/mnt/update/*  --exclude=/install/avirus/* --exclude=/install/update/* --exclude=/install/core/* \
+               --exclude=/mnt/update/*  --exclude=/install/update/* --exclude=/install/core/* \
                --exclude=/install/tools/* --exclude=/lib/firmware/* --exclude=/install/netsentry-version rsync://${SERV}/install/ ${1}/
     RERR=$?
     echo
@@ -705,7 +705,7 @@ Remote_Sync() {
           echo "Install Kernel (Firmware ${KVER})"
           rsync ${ROPT_LOC} /var/spool/rsync/kernuser/kernel-${KVER}-install/ ${1}/
           echo "Install Anti Virus / Updates"
-          rsync ${ROPT_LOC} -u --include=/update --include=/avirus --exclude=/avirus/clamav-* --exclude=/*/.* --exclude=/* /var/spool/ / ${1}/install/
+          rsync ${ROPT_LOC} -u --delete --include=/update --include=/avirus --exclude=/avirus/clamav-* --exclude=/*/.* --exclude=/* /var/spool/ / ${1}/install/
           echo
         fi;
         for kmod in `ls ${1}/lib/modules`;do
@@ -1860,7 +1860,7 @@ Sync_Remote() {
     rsync ${UROPT_LOC} --filter=". /etc/rsyncd/share.filter" ${CORE}/install/tools/ /var/spool/samba/share
     echo;echo
     echo "avirus /var/spool/avirus"
-    rsync ${UROPT_LOC} --filter=". /etc/rsyncd/avirus.filter" ${CORE}/install/avirus/ /var/spool/avirus
+    rsync ${UROPT_LOC} --delete --filter=". /etc/rsyncd/avirus.filter" ${CORE}/install/avirus/ /var/spool/avirus
     echo;echo
     echo "update /var/spool/update"
     rsync ${UROPT_LOC} ${CORE}/install/update/* /var/spool/update
@@ -2135,7 +2135,7 @@ if [ "${1}" == "iso" ];then
       RET=$?
      else
       echo "Sync Anti Virus / Upgrade"
-      rsync ${ROPT_LOC} -u --include=/update --include=/avirus --exclude=/avirus/clamav-* --exclude=/*/.* --exclude=/* /var/spool/ / ${CORE}/install/
+      rsync ${ROPT_LOC} -u --delete --include=/update --include=/avirus --exclude=/avirus/clamav-* --exclude=/*/.* --exclude=/* /var/spool/ / ${CORE}/install/
     fi;
     Tar_Kernel ${CORE} ${2}
     Make_Bootetc ${CORE}
@@ -2187,7 +2187,7 @@ if [ "${1}" == "iso" ];then
 
   if [ -d /var/spool/rsync/programs ] && [ -d ${CORE}/install/core ];then
     echo "Sync Anti Virus / Upgrade"
-    rsync ${ROPT_LOC} -u --include=/update --include=/avirus --exclude=/avirus/clamav-* --exclude=/*/.* --exclude=/* /var/spool/ / ${CORE}/install/
+    rsync ${ROPT_LOC} -u --delete --include=/update --include=/avirus --exclude=/avirus/clamav-* --exclude=/*/.* --exclude=/* /var/spool/ / ${CORE}/install/
     Tar_Kernel ${CORE} ${UPKERN}
     Make_Bootetc ${CORE}
     if [ -f ${BASE}/flash.hdd ];then
