@@ -222,7 +222,7 @@ if (($alias != "") && ($aliasedit == "Modify")){
   } else {
 %>
 <SCRIPT>
-  alert("<%print _("Changes To Public Mail Boxes Are Not Realtime\nChanges Made  May Only Reflect On The Hour");%>\n");
+  alert("<%print _("Changes To Public Mail Boxes Are Not Realtime \\nChanges Made May Only Reflect On The Hour");%>\n");
 </SCRIPT>
 <%
     $mbinfo=explode(":",$info[0]["description"][0]);
