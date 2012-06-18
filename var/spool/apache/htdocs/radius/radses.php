@@ -39,7 +39,7 @@
                              NASPortType,to_char(acctstarttime,'YY-MM-DD HH24:MI:SS'),CalledStationId,CallingStationId,
                              to_char(NOW()-AcctStartTime,'HH24:MI:SS') AS Tonline,
                              AcctUniqueID
-                      FROM radacct WHERE AcctStartTime != 0 AND AcctStopTime is NULL $ulimit
+                      FROM radacct WHERE AcctStartTime IS NOT NULL AND AcctStopTime is NULL $ulimit
                       ORDER BY Tonline";
 
   $query=pg_query($db,$queryq); 

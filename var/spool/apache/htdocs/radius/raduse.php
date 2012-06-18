@@ -67,13 +67,19 @@
                       SUM(AcctInputOctets),count(acctsessionid),
                       SUM(AcctOutputOctets) AS BYTESOUT ,SUM(AcctSessionTime) AS TONLINE,
                       AVG(AcctSessionTime),SUM(AcctOutputOctets+AcctInputOctets)
-                      FROM radacct WHERE AcctStartTime != 0 AND AcctStopTime != 0 AND
+                      FROM radacct WHERE AcctStartTime IS NOT NULL AND AcctStopTime IS NOT NULL AND
                            date_part('month',AcctStartTime) = $month AND date_part('Year',AcctStopTime) = $year$ulimit
                       GROUP BY UserName,realm 
                       ORDER BY $sort"; 
   $query=pg_query($queryq);
 
 %>
+<FORM NAME=openrdata METHOD=POST onsubmit="ajaxsubmit(this.name);return false;">
+<INPUT TYPE=HIDDEN NAME=disppage VALUE="<%print $_SESSION['disppage']%>">
+<INPUT TYPE=HIDDEN NAME=username>
+<INPUT TYPE=HIDDEN NAME=year>
+<INPUT TYPE=HIDDEN NAME=month>
+<INPUT TYPE=HIDDEN NAME=day>
 <CENTER>
 <TABLE WIDTH=90% cellspacing=0 cellpadding=0>
 <TR CLASS=list-color2><TH CLASS=heading-body COLSPAN=7>Select User</TH></TR>
@@ -115,13 +121,14 @@
     } else {
       $fqun=$user;
     }
-    $uinfo="<FONT SIZE=1><A HREF=javascript:openraddata('" . urlencode($fqun) . "','" . urlencode($year) . "','" . urlencode($month) . "','0')>" . $user;
+    $uname = urlencode($fqun);
+    $uinfo="<FONT SIZE=1><A HREF=javascript:openraddata('" . $uname . "','" . urlencode($year) . "','" . urlencode($month) . "','0')>" . $user;
     if ($realm != "") {
       $uinfo.=" (" . $realm . ")";
     }
-    $uinfo.="</A> <A HREF=/radius/cgraph.php?username=" . urlencode($user . "@" . $realm). "&month=" . urlencode($month) . "&year=" . urlencode($year) . " TARGET=_blank>C</A>";
-    $uinfo=$uinfo . "/<A HREF=/radius/tgraph.php?username=" . urlencode($user . "@" . $realm). "&month=" . urlencode($month) . "&year=" . urlencode($year) . " TARGET=_blank>t</A>";
-    $uinfo=$uinfo . "/<A HREF=/radius/tgraph.php?username=" . urlencode($user . "@" . $realm). "&month=" . urlencode($month) . "&year=" . urlencode($year) . " TARGET=_blank>T</A>";
+    $uinfo.="</A> <A HREF=/radius/cgraph.php?username=" . $uname . "&month=" . urlencode($month) . "&year=" . urlencode($year) . " TARGET=_blank>C</A>";
+    $uinfo=$uinfo . "/<A HREF=/radius/tgraph.php?username=" . $uname . "&month=" . urlencode($month) . "&year=" . urlencode($year) . " TARGET=_blank>t</A>";
+    $uinfo=$uinfo . "/<A HREF=/radius/tgraph.php?username=" . $uname . "&month=" . urlencode($month) . "&year=" . urlencode($year) . " TARGET=_blank>T</A>";
     print "<TR CLASS=" . $rowcol[$rcolsel] . "><TD>" . $uinfo  . "</TD><TD><FONT SIZE=1>" . $sescount . "</TD>" .
           "</TD><TD ALIGN=MIDDLE><FONT SIZE=1>" . $timeol . "</TD><TD ALIGN=MIDDLE><FONT SIZE=1>" . $avgtime . "</TD>" .
           "<TD ALIGN=RIGHT><FONT SIZE=1>";
@@ -131,10 +138,4 @@
 
 %>
 </TABLE>
-<FORM NAME=openrdata METHOD=post>
-<INPUT TYPE=HIDDEN NAME=username>
-<INPUT TYPE=HIDDEN NAME=year>
-<INPUT TYPE=HIDDEN NAME=month>
-<INPUT TYPE=HIDDEN NAME=day>
 </FORM>
-

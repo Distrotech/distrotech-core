@@ -71,7 +71,7 @@
                              AcctSessionTime,AcctInputOctets,AcctOutputOctets,
                              CalledStationId,CallingStationId,AcctTerminateCause,ServiceType,
                              FramedProtocol,FramedIPAddress,connectinfo_start,connectinfo_stop
-                           FROM radacct WHERE AcctStartTime != 0 AND AcctStopTime != 0 AND
+                           FROM radacct WHERE AcctStartTime IS NOT NULL AND AcctStopTime IS NOT NULL AND
                            date_part('month',AcctStartTime) = $month AND date_part('Year',AcctStopTime) = $year$ulimit AND
                            date_part('day',AcctStopTime) = $day
                       ORDER BY AcctStartTime"; 

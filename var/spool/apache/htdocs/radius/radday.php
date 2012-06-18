@@ -64,15 +64,25 @@
   $queryq="SELECT date_part('day',AcctStopTime) AS Day,COUNT(RadAcctId) AS SESCOUNT ,SUM(AcctInputOctets) AS BYTESIN ,
                       SUM(AcctOutputOctets) AS BYTESOUT ,SUM(AcctSessionTime) AS TONLINE,
                       AVG(AcctSessionTime),SUM(AcctOutputOctets+AcctInputOctets)
-                      FROM radacct WHERE AcctStartTime != 0 AND AcctStopTime != 0 AND
+                      FROM radacct WHERE AcctStartTime IS NOT NULL AND AcctStopTime IS NOT NULL AND
                            date_part('month',AcctStartTime) = $month AND date_part('Year',AcctStopTime) = $year$ulimit
                       GROUP BY Day
                       ORDER BY Day"; 
 
   $query=pg_query($queryq);
+%>
+<FORM NAME=openrdata METHOD=post>
+<INPUT TYPE=HIDDEN NAME=disppage>
+<INPUT TYPE=HIDDEN NAME=username>
+<INPUT TYPE=HIDDEN NAME=year>
+<INPUT TYPE=HIDDEN NAME=month>
+<INPUT TYPE=HIDDEN NAME=day>
 
-  print "<CENTER>\n<TABLE WIDTH=90% cellspacing=0 cellpadding=0>\n";
-  print "<TR CLASS=list-color2><TH CLASS=heading-body COLSPAN=7>Daily Usage For " . $unme . " (" . $year . "/" . $month . ")</TH></TR>";
+<CENTER>
+<TABLE WIDTH=90% cellspacing=0 cellpadding=0>
+<TR CLASS=list-color2><TH CLASS=heading-body COLSPAN=7>
+<%
+  print "Daily Usage For " . $unme . " (" . $year . "/" . $month . ")</TH></TR>";
   print "<TR CLASS=list-color1><TH CLASS=heading-body2>Day</TH><TH CLASS=heading-body2>Conn.</TH>" .
         "<TH CLASS=heading-body2>Time<BR>Online</TH><TH CLASS=heading-body2>Avg.<BR>Time/Ses</TH><TH CLASS=heading-body2>In</TH><TH CLASS=heading-body2>Out</TH>" .
         "<TH CLASS=heading-body2>Total</TH></TR>\n";
@@ -107,9 +117,5 @@
   print "</TABLE>\n";
 
 %>
-<FORM NAME=openrdata METHOD=post>
-<INPUT TYPE=HIDDEN NAME=username>
-<INPUT TYPE=HIDDEN NAME=year>
-<INPUT TYPE=HIDDEN NAME=month>
-<INPUT TYPE=HIDDEN NAME=day>
 </FORM>
+

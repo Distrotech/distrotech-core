@@ -201,17 +201,16 @@ function gbytes($bytes)
   $dist=$max/20;
 
   imagestring($gra,$font,$xtop+imagefontwidth($font),$ytop+50,ghours(round($max)),$text_color);
-  for($cnt=10;$cnt < 200;$cnt=$cnt+10)
-    {
+  for($cnt=10;$cnt < 200;$cnt=$cnt+10) {
       imageline($gra,$xtop+50,$ytop+50+$cnt,$xtop+670,$ytop+$cnt+50,$text_color);
       imagestring($gra,$font,$xtop+imagefontwidth($font),$ytop+50+$cnt,ghours(round($max-($dist*($cnt/10)))),$text_color);
-    }
+  }
 
-  for($cnt=20;$cnt < 620;$cnt=$cnt+20)
-    {
+  for($cnt=20;$cnt < 620;$cnt=$cnt+20) {
       imageline($gra,$xtop+50+$cnt,$ytop+50,$xtop+50+$cnt,$ytop+250,$text_color);
       imagestring($gra,$font,$xtop+50+$cnt-20,$ytop+250+10,$cnt/20,$text_color);
-    }
+  }
+
   imagestring($gra,$font,$xtop+50+600,$ytop+260,"31",$text_color);
 
   ImagePng($gra);
