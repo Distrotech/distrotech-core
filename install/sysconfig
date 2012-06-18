@@ -81,7 +81,7 @@ EOF
   tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/ldapmail.tbz > /dev/null 2>&1
 
   /usr/bin/dialog --backtitle "$BT" --title "Radius Server's" --infobox "Installing Free Radius Server" 7 35
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/freeradius.tbz > /dev/null 2>&1
+  tar -C ${INST_BASE} -xJf /install/pkgs/freeradius.txz > /dev/null 2>&1
 
   /usr/bin/dialog --backtitle "$BT" --title "Samba / KRB" --infobox "Installing KRB And Samba V3 File Server" 7 35
   tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/samba-krb.tbz > /dev/null 2>&1

@@ -2091,6 +2091,9 @@ if [ "$RPDIFF" ] || [ "$RCCDIFF" ] || [ "$RCDIFF" ];then
     if [ -e /var/log/radutmp ];then
       rm /var/log/radutmp
     fi;
+    if [ ! -e /etc/raddb/certs/dh ];then
+      /usr/bin/openssl dhparam -5 -out /etc/raddb/certs/dh
+    fi;
     /usr/sbin/radiusd > /dev/null 2>&1
   fi;
  else

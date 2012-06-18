@@ -19,6 +19,9 @@ if [ ! -e /etc/.networksentry-lite ];then
     rm /var/log/radutmp
   fi;
   touch /var/log/radutmp
+  if [ ! -e /etc/raddb/certs/dh ];then
+    /usr/bin/openssl dhparam -5 -out /etc/raddb/certs/dh
+  fi;
   /usr/sbin/radiusd > /dev/null 2>&1
   if [ -s /etc/openvpn/openvpn.conf ];then
     if [ ! -e /etc/openvpn/serverdh.pem ];then
