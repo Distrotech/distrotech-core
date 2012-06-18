@@ -99,16 +99,21 @@ function GregJAX(name) {
       if (outputdiv != null) {
         outputdiv.innerHTML=this.ajax.responseText;
         this.onsubmitset=setajaxsubmit(divid);
-        var scripts = outputdiv.getElementsByTagName('script');
-        for (var i=0;i<scripts.length;i++) {
-          eval(scripts[i].innerHTML);
-        }
+
         if (blanket != null) {
-	  if (ajaxhttp[divid].clearblanket)
+	  if (ajaxhttp[divid].clearblanket) {
   	    blanket.style.visibility = 'hidden';
+          }
           blanket.style.cursor='default';
         }
         outputdiv.style.cursor='default';
+
+        var scripts = outputdiv.getElementsByTagName('script');
+        for (var i=0;i<scripts.length;i++) {
+          scripts[i].innerHTML.replace(/\r?\n/g, "\\n");
+	  var LoadScript = new Function(scripts[i].innerHTML);
+          LoadScript();
+        }
       }
     }
 
