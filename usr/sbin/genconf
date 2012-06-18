@@ -6478,7 +6478,12 @@ __EOB__
   print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 53\n";
   print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 80\n";
   print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 443\n";
-  print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 666\n";
+  print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 22\n";
+  print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 25\n";
+  print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 110\n";
+  print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 143\n";
+  print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 995\n";
+  print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 993\n";
 
   foreach $hspot (@hotspots) {
     @idata=split(/\|/,$interface{$hspot});
@@ -9382,6 +9387,11 @@ foreach $wnode (@wans) {
   if ($defacl) {
     push(@paccess,"$ifnw/$ifsnm");
   }
+}
+
+foreach $hspot (@hotspots) {
+  @ipdat=split(/\|/,$interface{$hspot});
+  push(@paccess,@ipdat[1] . "/" . @ipdat[2]);  
 }
 
 if ($proxyconf{'CacheSize'} < 8) {
