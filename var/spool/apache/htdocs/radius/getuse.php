@@ -30,8 +30,8 @@
   $curmon=$curyear . "," . $curtime[4];
 
 %>
-<CENTER>
 <FORM METHOD=POST NAME=raduse onsubmit="ajaxsubmit(this.name);return false">
+<CENTER>
 <TABLE WIDTH=90% CELLSPACING=0 CELLPADDING=0>
 <INPUT TYPE=HIDDEN NAME=disppage VALUE="radius/raduse.php">
 <TR CLASS=list-color2><TH CLASS=heading-body COLSPAN=2>Display User Usage</TH></TR>

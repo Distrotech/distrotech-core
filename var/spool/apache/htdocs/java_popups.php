@@ -356,7 +356,7 @@ function openraddata(username,year,month,day) {
   document.openrdata.year.value=year;
   document.openrdata.month.value=month;
   document.openrdata.day.value=day;
-  document.openrdata.submit();
+  ajaxsubmit('openrdata');
 }
 function openreception() {
   document.loadpage.mmap.value='799';
