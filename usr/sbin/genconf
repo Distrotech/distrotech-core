@@ -5702,7 +5702,7 @@ if [ "\$0" == "/etc/ppp/ip-up" ];then
       (echo "#\!/bin/bash";echo;echo "\$0 \$\@") > /tmp/pppup/ext.ip-up
       chmod 700 /tmp/pppup/ext.ip-up
     fi;
-    /etc/ifconf/ipv6to4 \${1} \${EXT_IP_ADDR}
+    /etc/ifconf/ipv6to4 \${1} \${EXT_IP_ADDR} &
   fi;
 fi;
 
