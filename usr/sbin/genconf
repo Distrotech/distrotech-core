@@ -11789,7 +11789,8 @@ foreach $iface (@ints){
     @idata=split(/\|/,$interface{$iface});
     if ($i6addr{@idata[3]} ne "") {
       @i6data=split(/\|/,$i6addr{@idata[3]});
-      print DHCP6<<__EOL__;
+      if ((@i6data[4] ne "") && (@i6data[5] ne "")) {
+        print DHCP6<<__EOL__;
 
 #@idata[0]
 subnet6 @i6data[1]::/@i6data[3] { 
@@ -11802,6 +11803,14 @@ subnet6 @i6data[1]::/@i6data[3] {
   option tftp-cisco-server-name @idata[1];
 }
 __EOL__
+      } elsif ($i6addr{@idata[3]} ne "") {
+        print DHCP6<<__EOL__;
+
+#@idata[0]
+subnet6 @i6data[1]::/@i6data[3] { 
+  not authoritative;
+__EOL__
+      }
     }
   }
 }
