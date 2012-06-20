@@ -1227,6 +1227,16 @@ if ($repmaster eq "") {
 
 close(CF);
 
+if ( -e "/etc/ipv6.conf" ) {
+  open(I6, "/etc/ipv6.conf");
+  while(<I6>) {
+    chop $_;
+    ($i6int)=split(/\|/,$_);
+    $i6addr{$i6int}=$_;
+  }
+  close(I6);
+}
+
 if ($sysconfig{'Type'} ne "") {
   open(CF,">netsentry.conf");
   chmod(0600,"netsentry.conf");
@@ -1343,6 +1353,7 @@ if ($sysconfig{'Type'} eq "full") {
   &printovpnconf();
   &printippool();
   &printhostapd();
+  &printradvd();
 }
 
 if ( -e "/tmp/.firstconfig" ) {
@@ -6478,6 +6489,8 @@ __EOB__
   print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 53\n";
   print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 80\n";
   print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 443\n";
+  print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 666\n";
+  print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 443\n";
   print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 22\n";
   print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 25\n";
   print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 110\n";
@@ -10597,6 +10610,7 @@ key $dnsconf{'Domain'} $tsigint
 __EOB__
 
   print DNS<<__EOB__;
+include "/etc/rndc.key";
 options {
         listen-on-v6 {
                any;
@@ -10769,6 +10783,10 @@ __EOB__
         print DNS "               $nwaddr/@iipdat[2];\n";
       }
     }
+    if ($i6addr{$iface} ne "") {
+      @i6dat = split(/\|/,$i6addr{$iface});
+      print DNS "               @i6dat[1]::/@i6dat[3];\n";
+    }
   }
 if ( ! $dnsall ) {
   if ($wirelessrange != "") {
@@ -10900,6 +10918,7 @@ print DNS<<__EOB__;
               notify yes;
               file "$classc";
               allow-update {
+                     key rndc-key;
                      $intupsrc;
               };
               check-names ignore;
@@ -11045,6 +11064,12 @@ __EOB__
     }
     print DUP "update add $dnsconf{'Domain'}. $dnsconf{'DefaultTTL'} A @iipdat[1]\n";
   }
+  if ($i6addr{$iiface} ne "") {
+    @i6dat=split(/\|/,$i6addr{$iiface});
+    print DUP "update delete $fqdn. AAAA\n";
+    print DUP "update add $fqdn. $dnsconf{'DefaultTTL'} AAAA @i6dat[1]@i6dat[2]\n";
+  }
+
   printf ZONE ("%-25s%s IN     %-5s %s\n","localhost",$dnsconf{'DefaultTTL'},"CNAME","loopback.$dnsconf{'Domain'}.");
 #  print DUP "update delete localhost CNAME\n";
 #  print DUP "update add localhost $dnsconf{'DefaultTTL'} CNAME loopback\n";
@@ -11136,6 +11161,7 @@ print DNS<<__EOB__;
               notify yes;
               file "$dnsconf{'Domain'}";
               allow-update {
+                     key rndc-key;
                      $intupsrc;
               };
               check-names ignore;
@@ -11149,6 +11175,7 @@ __EOB__
               file "domain.dyn";
               allow-update {
                      $intupsrc;
+                     key rndc-key;
                      key $dnsconf{'DynZone'};
               };
               check-names ignore;
@@ -11239,6 +11266,7 @@ foreach $intslave (@ihosted) {
               };
               allow-update {
                      key $intslave;
+                     key rndc-key;
                      key $dnsconf{'Domain'};
               };
 __EOB__
@@ -11421,6 +11449,7 @@ __EOB__
                         127.0.0.2;$extmasts
 $txout              };
               allow-update {
+                        key rndc-key;
                         key $dnsconf{'Domain'};
               };
               check-names ignore;
@@ -11456,6 +11485,7 @@ __EOB__
   print DNS<<__EOB__;
               allow-update {
                         key $hdom;
+                        key rndc-key;
                         key $dnsconf{'Domain'};
               };
               check-names ignore;
@@ -11572,7 +11602,6 @@ option yealink-url code 250 = string;
 
 option domain-name "$dnsconf{'Domain'}";
 option nis-domain "$dnsconf{'Domain'}";
-option domain-name-servers $dns;
 option wpad-url "http://$fqdn/proxy.pac";
 option tftp-server-name "http://$fqdn";
 option time-offset 7200;
@@ -11589,6 +11618,14 @@ if ($sysconf{'DHCPMaxLease'} eq "") {
 
 print DHCP<<__EOL__;
 ddns-update-style interim;
+ddns-updates on;
+ddns-domainname "$dnsconf{'Domain'}";
+ddns-rev-domainname "in-addr.arpa";
+allow client-updates;
+update-conflict-detection false;
+update-optimization false;
+allow leasequery;
+include "/etc/rndc.key";
 
 default-lease-time $sysconf{'DHCPLease'};
 max-lease-time $sysconf{'DHCPMaxLease'};
@@ -11608,10 +11645,20 @@ subnet 0.0.0.0 netmask 255.255.255.255 {
 __EOL__
 print DHCP6<<__EOL__;
 ddns-update-style interim;
+ddns-updates on;
+ddns-domainname "$dnsconf{'Domain'}";
+ddns-rev-domainname "ip6.arpa";
+allow client-updates;
 
+update-conflict-detection false;
+update-optimization false;
+allow leasequery;
+include "/etc/rndc.key";
 default-lease-time $sysconf{'DHCPLease'};
 max-lease-time $sysconf{'DHCPMaxLease'};
+
 __EOL__
+#ddns-hostname = binary-to-ascii(10, 8, "-", leased-address);
 
 #if ($sysconf{'NTPServer'}) {
 #  print DHCP "option ntp-servers $fqdn;\n\n";
@@ -11725,27 +11772,8 @@ subnet $nwaddr netmask $snmask {
   option tftp-cisco-server-name @idata[1];
 }
 __EOL__
-print DHCP6<<__EOL__;
-
-#@idata[0]
-subnet6 $nwaddr netmask $snmask { 
-  authoritative;
-  range @idata[4] @idata[5];
-  option ntp-servers @idata[1];
-  option domain-name-servers $dnssrv;
-  option tftp-server-name "$tftpserv";$yeahelp
-  option tftp-cisco-server-name @idata[1];
-}
-__EOL__
     } elsif ($nwaddr ne "0.0.0.0"){
 print DHCP<<__EOL__;
-
-#@idata[0]
-subnet $nwaddr netmask $snmask { 
-  not authoritative;
-}
-__EOL__
-print DHCP6<<__EOL__;
 
 #@idata[0]
 subnet $nwaddr netmask $snmask { 
@@ -11756,6 +11784,28 @@ __EOL__
   }
 }
 
+
+foreach $iface (@ints){
+  if (index($iface,":") eq "-1") {
+    @idata=split(/\|/,$interface{$iface});
+    if ($i6addr{@idata[3]} ne "") {
+      @i6data=split(/\|/,$i6addr{@idata[3]});
+      print DHCP6<<__EOL__;
+
+#@idata[0]
+subnet6 @i6data[1]::/@i6data[3] { 
+  authoritative;
+  range6 @i6data[1]::100 @i6data[1]::FE:FFFF:FFFF;
+  option dhcp6.name-servers @i6data[1]@i6data[2];
+  option ntp-servers $fqdn;
+  option tftp-server-name "$tftpserv";
+  option yealink-url "http://$fqdn";
+  option tftp-cisco-server-name @idata[1];
+}
+__EOL__
+    }
+  }
+}
 
 $ethint=$sysconf{'Internal'};
 @idata=split(/\|/,$interface{$ethint});
@@ -11853,15 +11903,15 @@ host @hdata[0] {
   option tftp-server-name "$fqdn";
   filename "pxelinux.0";
 __EOL__
-  print DHCP6<<__EOL__;
-
-host @hdata[0] {
-  hardware ethernet @hdata[2];
-  fixed-address @hdata[1];
-  option host-name "@hdata[0]";
-  option tftp-server-name "$fqdn";
-  filename "pxelinux.0";
-__EOL__
+#  print DHCP6<<__EOL__;
+#
+#host @hdata[0] {
+#  hardware ethernet @hdata[2];
+#  fixed-address @hdata[1];
+#  option host-name "@hdata[0]";
+#  option tftp-server-name "$fqdn";
+#  filename "pxelinux.0";
+#__EOL__
   $bpfile="";
   if ( -e "@hdata[0].cmp") {
     $bpfile="@hdata[0].cmp";
@@ -11874,14 +11924,14 @@ __EOL__
   }
   if ($bpfile ne "") {
     print DHCP "  filename \"" . $bpfile . "\";\n";
-    print DHCP6 "  filename \"" . $bpfile . "\";\n";
+#    print DHCP6 "  filename \"" . $bpfile . "\";\n";
   }
   print DHCP<<__EOL__;
 }
 __EOL__
-  print DHCP6<<__EOL__;
-}
-__EOL__
+#  print DHCP6<<__EOL__;
+#}
+#__EOL__
   }
 }
 
@@ -11894,73 +11944,57 @@ host $dnsconf{'Hostname'} {
   fixed-address @idata[1];
 }
 __EOL__
-  print DHCP6<<__EOL__;
-
-host $dnsconf{'Hostname'} {
-  hardware ethernet @idata[8];
-  fixed-address @idata[1];
-}
-__EOL__
-
+#  print DHCP6<<__EOL__;
+#
+#host $dnsconf{'Hostname'} {
+#  hardware ethernet @idata[8];
+#  fixed-address @idata[1];
+#}
+#__EOL__
 
   if (1) {
-    if ($dnsconf{'DynKey'} ne "") {
-      $tsigint=encode_base64($dnsconf{'DynKey'});
-      chop $tsigint;
-      print DHCP<<__EOB__;
-
-key $dnsconf{'Domain'} {
-        algorithm hmac-md5;
-        secret $tsigint;
-};
-__EOB__
-      print DHCP6<<__EOB__;
-
-key $dnsconf{'Domain'} {
-        algorithm hmac-md5;
-        secret $tsigint;
-};
-__EOB__
-      $dnsdhcpkey="\n  key $dnsconf{'Domain'};";
-    }
+    $dnsdhcpkey="\n  key rndc-key;";
     if (($dnsconf{'Auth'} ne "false") && (@iipdat[1] ne "") && ($intipa ne "")) {
+      $ddnsauth="  primary 127.0.0.1;$dnsdhcpkey";
       print DHCP<<__EOL__;
 
 zone $dnsconf{'Domain'}. {
-  primary $intipa;$dnsdhcpkey
+$ddnsauth
 }
 __EOL__
       print DHCP6<<__EOL__;
 
 zone $dnsconf{'Domain'}. {
-  primary $intipa;$dnsdhcpkey
+$ddnsauth
 }
 __EOL__
     } elsif ($sysconf{'PrimaryDns'} ne "") {
+      $ddnsauth="  primary $sysconf{'PrimaryDns'};$dnsdhcpkey";
       print DHCP<<__EOL__;
 
 zone $dnsconf{'Domain'}. {
-  primary $sysconf{'PrimaryDns'};$dnsdhcpkey
+$ddnsauth
 }
 __EOL__
       print DHCP6<<__EOL__;
 
 zone $dnsconf{'Domain'}. {
-  primary $sysconf{'PrimaryDns'};$dnsdhcpkey
+$ddnsauth
 }
 __EOL__
     } elsif ($allowtx{$dnsconf{'Domain'}}) {
       $primdns=substr($allowtx{$dnsconf{'Domain'}},1);
+      $ddnsauth="  primary $primdns;$dnsdhcpkey";
       print DHCP<<__EOL__;
 
 zone $dnsconf{'Domain'}. {
-  primary $primdns;$dnsdhcpkey
+$ddnsauth
 }
 __EOL__
       print DHCP6<<__EOL__;
 
 zone $dnsconf{'Domain'}. {
-  primary $primdns;$dnsdhcpkey
+$ddnsauth
 }
 __EOL__
     }
@@ -11968,13 +12002,8 @@ __EOL__
       print DHCP<<__EOL__;
 
 zone $cclass. {
-  primary $intduip{$cclass};$dnsdhcpkey
-}
-__EOL__
-      print DHCP6<<__EOL__;
-
-zone $cclass. {
-  primary $intduip{$cclass};$dnsdhcpkey
+  primary 127.0.0.1;
+  key rndc-key;
 }
 __EOL__
     }
@@ -16099,6 +16128,7 @@ __EOF__
 #!/bin/bash
 
 /sbin/ip route add $nwaddr/@ihdata[2] dev \${1} src \${2} table Link
+/sbin/ip addr add ::\${2}/96 dev sit0
 __EOF__
     close(CSC);
     close(CUS);
@@ -16141,6 +16171,7 @@ proto tcp-server
 keepalive 10 60
 script-security 2
 daemon
+up /etc/openvpn/updev
 client-connect /etc/openvpn/client-connect
 client-disconnect /etc/openvpn/client-disconnect
 __EOF__
@@ -16606,6 +16637,75 @@ sub printhostapd() {
 #  }
 #  return "$snout.$snm$eq";
 #}
+
+sub printradvd {
+  open(RADVD,">radvd.conf");
+  open(SIX24,">ipv6to4");
+
+  print SIX24 <<__EOB__;
+#!/bin/bash
+
+i6prefix=\$(printf '%02x%02x:%02x%02x\\n' \$(echo \${2} | sed 's/\\./ /g'))
+if [ -d /sys/class/net/sit1 ];then
+  /sbin/ip tunnel change sit1 local \${2}
+  /sbin/ip link set dev sit1 down
+ else
+  /sbin/ip tunnel add sit1 mode sit remote 192.88.99.1 local \${2}
+fi;
+
+/sbin/ip link set dev sit1 up
+ /sbin/ip -6 route add ::/0 via fe80::\${i6prefix} dev sit1
+
+/sbin/ip addr add 2002:\${i6prefix}::1/64 dev \${1} > /dev/null 2>&1
+
+if [ -x /etc/ifconf/ipv6to4.conf ];then
+  /etc/ifconf/ipv6to4.conf \${i6prefix} > /dev/null 2>&1
+fi;
+
+killall -HUP radvd;
+sleep 3;
+if [ ! "`pidof radvd`" ];then
+  radvd;
+fi;
+sleep 10;
+killall -HUP hostapd
+__EOB__
+
+  $cnt=1;
+  foreach $iface (@ints) {
+    @idata = split(/\|/,$interface{$iface});
+    if (((@idata[1] ne "0.0.0.0") && (@idata[2] ne "32") && ($sysconf{'External'} ne $iface)) || ($i6addr{$iface} ne "")) {
+      print SIX24 "/sbin/ip addr add 2002:\${i6prefix}:${cnt}::1/64 dev " .  $iface . " >/dev/null 2>&1\n";
+      print RADVD <<__EOB__;
+interface $iface {
+	AdvSendAdvert on;
+	AdvManagedFlag on;
+	AdvOtherConfigFlag on;
+	prefix 0:0:0:${cnt}::/64 {
+		AdvOnLink on;
+		AdvAutonomous on;
+		AdvRouterAddr off;
+		Base6to4Interface ethB;
+#		AdvValidLifetime 300;
+#		AdvPreferredLifetime 120;
+	};
+__EOB__
+      if ($i6addr{$iface} ne "") {
+        @i6dat = split(/\|/,$i6addr{$iface});
+        print RADVD <<__EOB__;
+	prefix @i6dat[1]::/@i6dat[3] {
+		AdvOnLink on;
+		AdvAutonomous off;
+		AdvRouterAddr off;
+	};
+__EOB__
+      }
+      print RADVD "};\n\n";
+      $cnt++;
+    }
+  }
+  close(RADVD);
+}
 
 flock($lockfh, LOCK_UN);
 close($lockfh);

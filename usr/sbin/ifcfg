@@ -32,6 +32,7 @@ eval `cat /etc/ifconf/ifup.${INT}`
 /sbin/ip -4 addr flush dev ${IFNAME}
 if [ "${CHILLI}" == "0" ];then
   /sbin/ip addr add ${ADDRESS}/${NETMASK} dev ${IFNAME} broadcast ${BROADCAST} > /dev/null 2>&1
+  /sbin/ip addr add ::${ADDRESS}/96 dev sit0 > /dev/null 2>&1
 fi;
 
 #Configure MTU
@@ -91,7 +92,7 @@ fi;
 #Setup Alias Addresses
 if [ "$ALIASES" ];then
   for alias in ${ALIASES};do
-    echo $alias |awk -F: -v INT=${IFNAME} '{printf "/sbin/ip addr add %s/%s dev %s broadcast %s\n",$1,$2,INT,$4}'|sh > /dev/null 2>&1
+    echo $alias |awk -F: -v INT=${IFNAME} '{printf "/sbin/ip addr add %s/%s dev %s broadcast %s;/sbin/ip addr add ::%s/96 dev sit0\n",$1,$2,INT,$4,$1}'|sh > /dev/null 2>&1
     echo $alias |awk -F: -v INT=${IFNAME} '{printf "/sbin/ip route add %s/%s src %s dev %s table Ipsec\n",$3,$2,$1,INT}'|sh > /dev/null 2>&1
     echo $alias |awk -F: -v INT=${IFNAME} '{printf "/sbin/ip route add %s/%s src %s dev %s table 80\n",$3,$2,$1,INT}'|sh > /dev/null 2>&1
   done;
@@ -129,6 +130,7 @@ fi;
 
 if [ "$FORWARD" == "1" ];then
   echo 1 > /proc/sys/net/ipv4/ip_forward
+  echo 1 > /proc/sys/net/ipv6/conf/all/forwarding
   if [ -d /proc/sys/net/ipv6/conf/${INT} ];then
     echo 1 > /proc/sys/net/ipv6/conf/${INT}/forwarding
   fi;

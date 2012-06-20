@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [ -e /etc/ipv6.conf ];then
+  /bin/cat /etc/ipv6.conf  |awk -F\| '{printf "ip -6 addr add %s%s/%s dev %s\n",$2,$3,$4,$1}' |sh
+fi;
+
+if [ -e /etc/radvd.conf ];then
+  /usr/sbin/radvd
+fi;

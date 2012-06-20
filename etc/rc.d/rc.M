@@ -39,6 +39,10 @@ if [ -e /etc/.install ];then
     /etc/rc.d/rc.nfs
   fi;
 
+  if [ -x /etc/rc.d/rc.ipv6 ];then
+    /etc/rc.d/rc.ipv6
+  fi;
+
   if [ -x /etc/rc.d/rc.network ];then
     /etc/rc.d/rc.network
   fi;
