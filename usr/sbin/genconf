@@ -5686,7 +5686,14 @@ if [ "\$4" ];then
   fi;
 fi;
 
+NATCMD="SNAT --to-source \$EXT_IP_ADDR";
 if [ "\$0" == "/etc/ppp/ip-up" ];then
+  /usr/bin/hostaddr \$EXT_IP_ADDR \$INT_NAME
+  if [ ! "\$6" ] && [ "\${1}" == "ppp0" ];then
+    /sbin/ip route del 0/0 table 90
+    /sbin/ip route add \$DEST_IP src \$EXT_IP_ADDR dev \$INT_NAME scope link table 90
+    /sbin/ip route add 0/0 via \$DEST_IP src \$EXT_IP_ADDR dev \$INT_NAME table 90
+  fi;
   if [ "\$6" == "" ];then
     if [ ! -d /tmp/pppup ];then
       mkdir /tmp/pppup
@@ -5695,16 +5702,8 @@ if [ "\$0" == "/etc/ppp/ip-up" ];then
       (echo "#\!/bin/bash";echo;echo "\$0 \$\@") > /tmp/pppup/ext.ip-up
       chmod 700 /tmp/pppup/ext.ip-up
     fi;
+    /etc/ifconf/ipv6to4 \${1} \${EXT_IP_ADDR}
   fi;
-  NATCMD="SNAT --to-source \$EXT_IP_ADDR";
-  /usr/bin/hostaddr \$EXT_IP_ADDR \$INT_NAME
-  if [ ! "\$6" ] && [ "\${1}" == "ppp0" ];then
-    /sbin/ip route del 0/0 table 90
-    /sbin/ip route add \$DEST_IP src \$EXT_IP_ADDR dev \$INT_NAME scope link table 90
-    /sbin/ip route add 0/0 via \$DEST_IP src \$EXT_IP_ADDR dev \$INT_NAME table 90
-  fi;
- else
-  NATCMD="SNAT --to-source \$EXT_IP_ADDR";
 fi;
 
 if [ "\$6" == "3g" ];then
@@ -11795,7 +11794,7 @@ foreach $iface (@ints){
 #@idata[0]
 subnet6 @i6data[1]::/@i6data[3] { 
   authoritative;
-  range6 @i6data[1]::100 @i6data[1]::FE:FFFF:FFFF;
+  range6 @i6data[1]::@i6data[4] @i6data[1]::@i6data[5];
   option dhcp6.name-servers @i6data[1]@i6data[2];
   option ntp-servers $fqdn;
   option tftp-server-name "$tftpserv";
