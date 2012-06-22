@@ -8848,12 +8848,13 @@ __EOS__
     }
     $lcnt++;
   }
-
-  if ($lcnt eq "0") {
-    print FWD "if [ \"\$6\"  == \"pppoe\" ];then\n";
-  } else {
-    print FWD " elif [ \"\$6\"  == \"pppoe\" ];then\n";
-  }
+  print FWD "if [ ! \"\${6}\" ];then\n";
+print FWD<<__EOB__;
+  i6prefix=\$(printf '%02x%02x:%02x%02x\\n' \$(echo \${4} | sed 's/\\./ /g'))
+  /sbin/ip addr del 2002:\${i6prefix}::1/64 dev \${1} > /dev/null 2>&1
+  /etc/ifconf/ipv6to4.addr del \${i6prefix}
+__EOB__
+  print FWD " elif [ \"\$6\"  == \"pppoe\" ];then\n";
 
   @pppoeint=split(/\|/,$interface{$wirelessint});
   $pppoelan=getnw(@pppoeint[2],@pppoeint[1]);
