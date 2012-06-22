@@ -139,7 +139,7 @@ EOF
 #      chroot ${INST_BASE} /var/spool/apache/htdocs/userguides/script/genimg.sh
 
   /usr/bin/dialog --backtitle "$BT" --title "Polycom Phone Firmware" --infobox "Installing Polycom Phone Firmware" 7 35
-  tar -C ${INST_BASE}/var/spool/apache/htdocs/polycom --use-compress-program=bunzip2 -xf /install/pkgs/polyfirm.tbz > /dev/null 2>&1
+  tar -C ${INST_BASE}/var/spool/apache/htdocs/polycom -xJf /install/pkgs/polyfirm.txz > /dev/null 2>&1
   chmod 770 ${INST_BASE}/var/spool/apache/htdocs/polycom/logs
 
   /usr/bin/dialog --backtitle "$BT" --title "Snom Phone Firmware" --infobox "Installing Snom Phone Firmware" 7 35
