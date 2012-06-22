@@ -5704,6 +5704,7 @@ if [ "\$0" == "/etc/ppp/ip-up" ];then
     fi;
     /etc/ifconf/ipv6to4 \${1} \${EXT_IP_ADDR} &
   fi;
+  /sbin/ip addr add ::\${EXT_IP_ADDR}/96 dev sit0 > /dev/null 2>&1
 fi;
 
 if [ "\$6" == "3g" ];then
@@ -5960,6 +5961,7 @@ if [ \"\$1\" == "startup" ];then
   /sbin/iptables -N HOTSPOTO
   /sbin/iptables -N GWOUT
   /sbin/iptables -N GWIN
+  /sbin/iptables -N IP6RD
 
   /sbin/iptables -t nat -N SIPLB
   /sbin/iptables -t nat -N SIPMAP
@@ -6077,6 +6079,7 @@ fi;
 /sbin/iptables -F TARPIT
 /sbin/iptables -F DEFIN
 /sbin/iptables -F DEFOUT
+/sbin/iptables -F IP6RD
 
 /sbin/iptables -t nat -F PREROUTING
 /sbin/iptables -t nat -F POSTROUTING
@@ -6155,6 +6158,10 @@ __EOB__
 #Activate ICMP Chain
 /sbin/iptables -A INPUT -j ICMP -p icmp
 /sbin/iptables -A OUTPUT -j ICMP -p icmp
+
+#Activate IP6RD Chain
+/sbin/iptables -A INPUT -j IP6RD -p 41 -s 192.88.99.1
+/sbin/iptables -A OUTPUT -j IP6RD -p 41 -d 192.88.99.1
 
 /sbin/iptables -A VOIPIN -j ACCEPT -p udp $sfnew --dport 5000
 /sbin/iptables -A VOIPIN -j ACCEPT -p udp $sfnew --dport 5060
@@ -7477,10 +7484,19 @@ __EOR__
       print FW "#SIP For @idata[1]\n";
 #      print FW "/sbin/iptables -I SIPOUT -j ACCEPT -p udp -o $fint -m state --state NEW,ESTABLISHED --sport 10000:20000 -s @idata[1]/32 --dport 1024:65535\n";
 #      print FW "/sbin/iptables -I SIPIN -j ACCEPT -p udp -i $fint -m state --state NEW,ESTABLISHED --dport 10000:20000 -d @idata[1]/32 --sport 1024:65535\n";
+
       print FW "/sbin/iptables -I SIPOUT -j ACCEPT -p udp -o $fint -m state --state NEW,RELATED,ESTABLISHED --sport 10000:20000 -s $localip/32 --dport 1024:65535\n";
       print FW "/sbin/iptables -I SIPOUT -j ACCEPT -p udp -o $fint -m state --state NEW,ESTABLISHED --sport 5000 -s $localip/32 --dport 1024:65535\n";
       print FW "/sbin/iptables -I SIPOUT -j ACCEPT -p udp -o $fint -m state --state NEW,ESTABLISHED --sport 5060 -s $localip/32 --dport 1024:65535\n";
       print FW "/sbin/iptables -I SIPOUT -j ACCEPT -p tcp -o $fint -m state --state NEW,ESTABLISHED --sport 5060:5061 -s $localip/32 --dport 1024:65535\n";
+
+      if ($fint ne $sysconf{'Internal'}) {
+        print FW "/sbin/iptables -I SIPOUT -j ACCEPT -p udp -o $fint -m state --state NEW,RELATED,ESTABLISHED --sport 10000:20000 -s @idata[1]/32 --dport 1024:65535\n";
+        print FW "/sbin/iptables -I SIPOUT -j ACCEPT -p udp -o $fint -m state --state NEW,ESTABLISHED --sport 5000 -s @idata[1]/32 --dport 1024:65535\n";
+        print FW "/sbin/iptables -I SIPOUT -j ACCEPT -p udp -o $fint -m state --state NEW,ESTABLISHED --sport 5060 -s @idata[1]/32 --dport 1024:65535\n";
+        print FW "/sbin/iptables -I SIPOUT -j ACCEPT -p tcp -o $fint -m state --state NEW,ESTABLISHED --sport 5060:5061 -s @idata[1]/32 --dport 1024:65535\n";
+     }
+
       print FW "/sbin/iptables -I SIPIN -j VOIPIN -p udp -i $fint --sport 1024:65535 -d $localip/32\n";
     }
 #    print FW "#Flush VPN Table\n";
@@ -11809,6 +11825,7 @@ __EOL__
 #@idata[0]
 subnet6 @i6data[1]::/@i6data[3] { 
   not authoritative;
+}
 __EOL__
       }
     }
@@ -14195,13 +14212,23 @@ sub printastsip() {
   @eidat=split(/\|/,$interface{$lint});
   $localip=@eidat[1];
 
+  print SC "[general]\n";
+
+  foreach $iface (@ints) {
+    @idata = split(/\|/,$interface{$iface});
+    if ((@idata[1] ne "0.0.0.0") && (@idata[2] ne "32") && 
+        ($iface ne $sysconf{'External'}) && ($iface ne $mdmconf{'ComPort'})) {
+#      print SC "localnet=@idata[1]/@idata[2]\n";
+    }
+  }
+
 print SC<<__EOF__;
-[general]
 context=ddi
 port=5060
 srvlookup=yes
-bindaddr=$localip
-localnet=0.0.0.0/0
+#externaddr=$localip
+bindaddr=::
+tcpbindaddr=::
 dbuser=asterisk
 dbpass=$sqlvoippass
 dbhost=$sqlvoipserv
@@ -14224,7 +14251,6 @@ mohinterpret=default
 mohsuggest=default
 encryption=try
 tcpenable=yes
-tcpbindaddr=$localip
 transport=udp,tcp,tls
 t38pt_udptl=yes,redundancy
 callcounter=yes
@@ -14243,7 +14269,7 @@ if ( -d "/etc/openssl/voipca") {
   print SC "tlsprivatekey=/etc/openssl/voipca/private/serverkey.pem\n";
   print SC "tlscapath=/etc/openssl/voipca/cacerts\n";
   print SC "tlsenable=yes\n";
-  print SC "tlsbindaddr=$localip:5061\n";
+  print SC "tlsbindaddr=[::]:5061\n";
 #  print SC "tlsdontverifyserver=no\n";
 #  print SC "tlsverifyclient=yes\n";
 #  print SC "tlsclientmethod=tlsv1\n";
@@ -14473,7 +14499,7 @@ sub printastiax() {
 print IC<<__EOF__;
 [general]
 bindport=4569
-;bindaddr=$localip
+bindaddr=0.0.0.0
 ;tos=none
 bandwidth=low
 dbuser=asterisk
@@ -15623,7 +15649,7 @@ ooh323.conf");
   print OHC<<__EOF__;
 [general]
 port=1721   
-bindaddr=$localip
+bindaddr=::
 tos=lowdelay 
 amaflags = default
 ;accountcode=h3230101
@@ -16649,6 +16675,7 @@ sub printhostapd() {
 sub printradvd {
   open(RADVD,">radvd.conf");
   open(SIX24,">ipv6to4");
+  open(SIX24A,">ipv6to4.addr");
 
   print SIX24 <<__EOB__;
 #!/bin/bash
@@ -16677,33 +16704,66 @@ if [ ! "`pidof radvd`" ];then
 fi;
 sleep 10;
 killall -HUP hostapd
+
+/sbin/iptables -F IP6RD
+/sbin/iptables -I IP6RD -j ACCEPT -i \${1} -d \${2}
+/sbin/iptables -I IP6RD -j ACCEPT -o \${1} -s \${2}
+
+/etc/ifconf/ipv6to4.addr add \${i6prefix}
 __EOB__
+
+  print SIX24A <<__EOB__;
+#!/bin/bash
+
+__EOB__
+
+  if ($sysconf{'External'} eq "Dialup") {
+    $extint="ppp0";
+  } elsif ($sysconf{'External'} ne $sysconf{'Internal'}) {
+    $extint=$sysconf{'External'};
+  } else {
+    $extint="";
+  }
 
   $cnt=1;
   foreach $iface (@ints) {
     @idata = split(/\|/,$interface{$iface});
-    if (((@idata[1] ne "0.0.0.0") && (@idata[2] ne "32") && ($sysconf{'External'} ne $iface)) || ($i6addr{$iface} ne "")) {
-      print SIX24 "/sbin/ip addr add 2002:\${i6prefix}:${cnt}::1/64 dev " .  $iface . " >/dev/null 2>&1\n";
+    if ((( ! -e "/etc/chilli/$iface.conf") && (@idata[1] ne "0.0.0.0") && (@idata[2] ne "32") && ($sysconf{'External'} ne $iface)) || ($i6addr{$iface} ne "")) {
+#      print SIX24 "/sbin/ip addr add 2002:\${i6prefix}:${cnt}::1/64 dev " .  $iface . " >/dev/null 2>&1\n";
+      print SIX24A "/sbin/ip addr \${1} 2002:\${2}:${cnt}::1/64 dev " .  $iface . " >/dev/null 2>&1\n";
+      if ($i6addr{$iface} ne "") {
+        @i6dat = split(/\|/,$i6addr{$iface});
+        if ((@i6dat[4] ne "") && (@i6dat[5] ne "")) {
+          $radvman="on";
+        } else {
+          $radvman="off";
+        }
+      } else {
+          $radvman="off";
+      }
       print RADVD <<__EOB__;
 interface $iface {
 	AdvSendAdvert on;
-	AdvManagedFlag on;
-	AdvOtherConfigFlag on;
+	AdvManagedFlag $radvman;
+	AdvOtherConfigFlag $radvman;
+__EOB__
+        if ($extint ne "") {
+          print RADVD <<__EOB__;
 	prefix 0:0:0:${cnt}::/64 {
 		AdvOnLink on;
 		AdvAutonomous on;
 		AdvRouterAddr off;
-		Base6to4Interface ethB;
+		Base6to4Interface $extint;
 #		AdvValidLifetime 300;
 #		AdvPreferredLifetime 120;
 	};
 __EOB__
+      }
       if ($i6addr{$iface} ne "") {
-        @i6dat = split(/\|/,$i6addr{$iface});
         print RADVD <<__EOB__;
 	prefix @i6dat[1]::/@i6dat[3] {
 		AdvOnLink on;
-		AdvAutonomous off;
+		AdvAutonomous on;
 		AdvRouterAddr off;
 	};
 __EOB__
@@ -16713,6 +16773,8 @@ __EOB__
     }
   }
   close(RADVD);
+  close(SIX24);
+  close(SIX24A);
 }
 
 flock($lockfh, LOCK_UN);

@@ -2170,15 +2170,78 @@ if [ -e dhcpd.conf ] && [ -e /etc/dhcpd.conf ];then
   fi;
 fi;
 
-if [ "$DHFDIFF" ];then
-  cp -p dhcpd.conf /etc/dhcpd.conf
-  chmod 640 /etc/dhcpd.conf
-  chown root.root /etc/dhcpd.conf
-  kill -9 `cat /var/run/dhcpd.pid` > /dev/null 2>&1
-  touch /var/state/dhcp/dhcpd.leases /var/state/dhcp/dhcpd6.leases
-  /usr/sbin/dhcpd > /dev/null 2>&1
+if [ -e dhcpd6.conf ] && [ -e /etc/dhcpd6.conf ];then 
+  DHFDIFF6=`diff dhcpd6.conf /etc/dhcpd6.conf`
  else
-  touch /etc/dhcpd.conf
+  if [ -e dhcpd6.conf ];then 
+    DHFDIFF6="NO FILE";
+  fi;
+fi;
+
+if [ "$DHFDIFF" ] || [ "$DHFDIFF6" ];then
+  cp -p dhcpd.conf /etc/dhcpd.conf
+  cp -p dhcpd6.conf /etc/dhcpd6.conf
+  chmod 640 /etc/dhcpd.conf /etc/dhcpd6.conf
+  chown root.root /etc/dhcpd.conf /etc/dhcpd6.conf
+  touch /var/state/dhcp/dhcpd.leases /var/state/dhcp/dhcpd6.leases
+  kill -9 `cat /var/run/dhcpd.pid` > /dev/null 2>&1
+  kill -9 `cat /var/run/dhcpd6.pid` > /dev/null 2>&1
+  /usr/sbin/dhcpd > /dev/null 2>&1
+  /usr/sbin/dhcpd -6 -cf /etc/dhcpd6.conf > /dev/null 2>&1
+ else
+  touch /etc/dhcpd.conf /etc/dhcpd6.conf
+fi;
+
+if [ -e radvd.conf ] && [ -e /etc/radvd.conf ];then 
+  RADVDDIFF=`diff radvd.conf /etc/radvd.conf`
+ else
+  if [ -e radvd.conf ];then 
+    RADVDDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$RADVDDIFF" ];then
+  cp -p radvd.conf /etc/radvd.conf
+  chmod 640 /etc/radvd.conf
+  chown root.root /etc/radvd.conf
+  killall radvd
+  KSTOP=
+  while [ `pidof radvd` ] && [ "$KSTOP" != "XXXXXXX" ];do
+    killall radvd
+    sleep 1
+    KSTOP=${KSTOP}X
+  done;
+  radvd
+  sleep 10;
+  killall -HUP hostapd
+fi;
+
+if [ -e ipv6to4 ] && [ -e /etc/ifconf/ipv6to4 ];then 
+  SIX24DIFF=`diff ipv6to4 /etc/ifconf/ipv6to4`
+ else
+  if [ -e ipv6to4 ];then 
+    SIX24DIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$SIX24DIFF" ];then
+  cp -p ipv6to4 /etc/ifconf/ipv6to4
+  chmod 7500 /etc/ifconf/ipv6to4
+  chown root.root /etc/ifconf/ipv6to4
+fi;
+
+if [ -e ipv6to4.addr ] && [ -e /etc/ifconf/ipv6to4.addr ];then 
+  SIX24DIFFA=`diff ipv6to4.addr /etc/ifconf/ipv6to4.addr`
+ else
+  if [ -e ipv6to4.addr ];then 
+    SIX24DIFFA="NO FILE";
+  fi;
+fi;
+
+if [ "$SIX24DIFFA" ];then
+  cp -p ipv6to4.addr /etc/ifconf/ipv6to4.addr
+  chmod 7500 /etc/ifconf/ipv6to4.addr
+  chown root.root /etc/ifconf/ipv6to4.addr
 fi;
 
 if [ ! -e /etc/.cdrom ];then
