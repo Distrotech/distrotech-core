@@ -48,6 +48,7 @@ use NetAddr::IP;
 use Dahdi;
 use Dahdi::Span;
 use URI::Escape;
+use POSIX;
 
 #$encoded = encode_base64('');
 #$decoded = decode_base64($encoded);
@@ -1231,8 +1232,31 @@ if ( -e "/etc/ipv6.conf" ) {
   open(I6, "/etc/ipv6.conf");
   while(<I6>) {
     chop $_;
-    ($i6int)=split(/\|/,$_);
-    $i6addr{$i6int}=$_;
+    @i6int=split(/\|/,$_);
+    $i6addr{$i6int[0]}=$_;
+    $i6ipaddr=@i6int[1] . @i6int[2];
+    $_=@i6int[1];
+    @i6words=split(/:/,$i6ipaddr);
+    @rev6=();
+    foreach $i6word (@i6words) {
+      if ($i6word eq "") {
+        for($pcnt=@i6words; $pcnt <= 8;$pcnt++) {
+          push(@rev6, "0.0.0.0");
+        }
+      } else {
+        $word=sprintf("%04x", hex($i6word));
+        @byte=split(//, $word);
+        push(@rev6, @byte[3] . "." . @byte[2] . "." . @byte[1] . "." . @byte[0]);
+      }
+    }
+    $i6rev="";
+    $offset=floor((128 - @i6int[3]) / 16);
+    $shift = ((($offset * 16) - @i6int[3]) % 4) * 2;
+    for($word=7-$offset; $word >= 0;$word--) {
+      $i6rev .= @rev6[$word] . ".";
+    }
+    $i6rev=substr($i6rev,$shift,length($i6rev)) . "ip6.arpa";
+    push(@ip6rev, $i6rev);
   }
   close(I6);
 }
@@ -3627,7 +3651,7 @@ __EOB__
     print RM "if [ ! -e /etc/dovecot/dovecot-sogo.conf ] || [ /etc/dovecot/dovecot.conf -nt /etc/dovecot/dovecot-sogo.conf ];then\n";
     print RM "  sed -e \"s/^[ \\t]*ssl_listen.*\$/#/\" \\\n";
     print RM "      -e \"s/^\\([ \\t]*listen = \\).*/\\1127.0.0.1:286/\" \\\n";
-    print RM "      -e \"s/^\\([ \\t]*address = \\).*/\\1127.0.0.1/\" \\\n";
+    print RM "      -e \"s/^\\([ \\t]*address = \\).*/\\1127.0.0.1,::1/\" \\\n";
     print RM "      -e \"s/^\\([ \\t]*port = \\)143/\\1286/\" \\\n";
     print RM "      -e \"s/^\\([ \\t]*port = \\)993/\\11986/\" \\\n";
     print RM "      -e \"s/^\\([ \\t]*args = session=yes cache_key=\\\%u\\).*/\\1 sogo-\%Ls/\" \\\n";
@@ -6160,8 +6184,8 @@ __EOB__
 /sbin/iptables -A OUTPUT -j ICMP -p icmp
 
 #Activate IP6RD Chain
-/sbin/iptables -A INPUT -j IP6RD -p 41 -s 192.88.99.1
-/sbin/iptables -A OUTPUT -j IP6RD -p 41 -d 192.88.99.1
+/sbin/iptables -A INPUT -j IP6RD -p 41
+/sbin/iptables -A OUTPUT -j IP6RD -p 41
 
 /sbin/iptables -A VOIPIN -j ACCEPT -p udp $sfnew --dport 5000
 /sbin/iptables -A VOIPIN -j ACCEPT -p udp $sfnew --dport 5060
@@ -8372,10 +8396,6 @@ __EOB__
       $fqdn=$dnsconf{'Domain'}
     }
 
-  if ($dnsconf{'DynServ'} ne "127.0.0.2") {
-    $localsrv="\nlocal \$EXT_IP_ADDR";
-  }
-
 print FWP<<__EOB__;
 
   FWD_DNS=`echo \$EXT_IP_ADDR |awk -F. '{print "dig "\$4"."\$3"."\$2"."\$1".in-addr.arpa PTR +short +time=3 +tries=1"}' |sh |head -1`
@@ -8413,13 +8433,16 @@ print FWP<<__EOB__;
           /etc/rc.d/rc.mail sendmail
       fi;
     fi;
+    i6prefix=\$(printf '%02x%02x:%02x%02x\\n' \$(echo \${EXT_IP_ADDR} | sed 's/\\./ /g'))
 
 (cat <<EOF
-server $dnsconf{'DynServ'}$localsrv
+server $dnsconf{'DynServ'}
 key $dnsconf{'DynZone'} $smartkey
 zone $dnsconf{'DynZone'}
 update delete $dnsconf{'DynZone'}. A
+update delete $dnsconf{'DynZone'}. AAAA
 update add $dnsconf{'DynZone'}. 180 A \$EXT_IP_ADDR
+update add $dnsconf{'DynZone'}. 180 AAAA 2002:\${i6prefix}::1
 $delrec
 send
 EOF
@@ -8848,10 +8871,13 @@ __EOS__
     }
     $lcnt++;
   }
-  print FWD "if [ ! \"\${6}\" ];then\n";
 print FWD<<__EOB__;
+/sbin/ip addr del ::\${4}/96 dev sit0 > /dev/null 2>&1
+
+if [ ! \"\${6}\" ];then
   i6prefix=\$(printf '%02x%02x:%02x%02x\\n' \$(echo \${4} | sed 's/\\./ /g'))
   /sbin/ip addr del 2002:\${i6prefix}::1/64 dev \${1} > /dev/null 2>&1
+  /sbin/ip addr del 2002:\${i6prefix}:FFFF::1/16 dev sit0 > /dev/null 2>&1
   /etc/ifconf/ipv6to4.addr del \${i6prefix}
 __EOB__
   print FWD " elif [ \"\$6\"  == \"pppoe\" ];then\n";
@@ -10745,7 +10771,11 @@ __EOB__
   @eipdat=split(/\|/,$interface{$extint});
 
   %isrev="";
-  @revs=();
+  if (@ip6rev) {
+    @revs=@ip6rev;
+  } else {
+    @revs=();
+  }
   @orevs=();
 
   if ($dnsall) {
@@ -11978,61 +12008,70 @@ __EOL__
 #}
 #__EOL__
 
-  if (1) {
-    $dnsdhcpkey="\n  key rndc-key;";
-    if (($dnsconf{'Auth'} ne "false") && (@iipdat[1] ne "") && ($intipa ne "")) {
-      $ddnsauth="  primary 127.0.0.1;$dnsdhcpkey";
-      print DHCP<<__EOL__;
+  $dnsdhcpkey="\n  key rndc-key;";
+  if (($dnsconf{'Auth'} ne "false") && (@iipdat[1] ne "") && ($intipa ne "")) {
+    $ddnsauth="  primary 127.0.0.1;$dnsdhcpkey";
+    print DHCP<<__EOL__;
 
 zone $dnsconf{'Domain'}. {
 $ddnsauth
 }
 __EOL__
-      print DHCP6<<__EOL__;
+    print DHCP6<<__EOL__;
 
 zone $dnsconf{'Domain'}. {
 $ddnsauth
 }
 __EOL__
-    } elsif ($sysconf{'PrimaryDns'} ne "") {
-      $ddnsauth="  primary $sysconf{'PrimaryDns'};$dnsdhcpkey";
-      print DHCP<<__EOL__;
+  } elsif ($sysconf{'PrimaryDns'} ne "") {
+    $ddnsauth="  primary $sysconf{'PrimaryDns'};$dnsdhcpkey";
+    print DHCP<<__EOL__;
 
 zone $dnsconf{'Domain'}. {
 $ddnsauth
 }
 __EOL__
-      print DHCP6<<__EOL__;
+    print DHCP6<<__EOL__;
 
 zone $dnsconf{'Domain'}. {
 $ddnsauth
 }
 __EOL__
-    } elsif ($allowtx{$dnsconf{'Domain'}}) {
-      $primdns=substr($allowtx{$dnsconf{'Domain'}},1);
-      $ddnsauth="  primary $primdns;$dnsdhcpkey";
-      print DHCP<<__EOL__;
+  } elsif ($allowtx{$dnsconf{'Domain'}}) {
+    $primdns=substr($allowtx{$dnsconf{'Domain'}},1);
+    $ddnsauth="  primary $primdns;$dnsdhcpkey";
+    print DHCP<<__EOL__;
 
 zone $dnsconf{'Domain'}. {
 $ddnsauth
 }
 __EOL__
-      print DHCP6<<__EOL__;
+  print DHCP6<<__EOL__;
 
 zone $dnsconf{'Domain'}. {
 $ddnsauth
 }
 __EOL__
-    }
-    foreach $cclass (@revs) {
-      print DHCP<<__EOL__;
+}
+
+foreach $cclass (@revs) {
+  print DHCP<<__EOL__;
 
 zone $cclass. {
   primary 127.0.0.1;
   key rndc-key;
 }
 __EOL__
-    }
+}
+
+foreach $cclass (@ip6rev) {
+  print DHCP6<<__EOL__;
+
+zone $cclass. {
+  primary 127.0.0.1;
+  key rndc-key;
+}
+__EOL__
 }
 
 if ( -e "/etc/dhcpd.conf.local") {
@@ -12935,24 +12974,26 @@ sub printradclient() {
   $localip=@eidat[1];
 
   print RC<<__EOB__;
-client 127.0.0.1 {
+client localhost-v4 {
+	ipaddr      = 127.0.0.1
+	proto       = *
 	secret      = $radssecret
-	shortname   = localhost
 	nastype     = other
 }
 
-client ::1 {
+client localhost-v6 {
+	ipv6addr    = ::1
+	proto       = *
 	secret      = $radssecret
-	shortname   = localhost
 	nastype     = other
 }
 
-client $localip {
-       secret      = $radssecret
-       shortname   = internal
-       nastype     = other
+client localip-v4 {
+	ipaddr      = $localip
+	proto       = *
+	secret      = $radssecret
+	nastype     = other
 }
-
 
 __EOB__
 
@@ -12960,9 +13001,10 @@ __EOB__
   @rcdat=split(/\|/,$interface{$hspot});
 print RC<<__EOB__;
 client @rcdat[1] {
-       secret      = $radssecret
-       shortname   = internal
-       nastype     = other
+	secret      = $radssecret       
+	proto       = *
+	shortname   = internal
+	nastype     = other
 }
 
 __EOB__
@@ -12973,6 +13015,7 @@ __EOB__
 print RC<<__EOB__;
 client @rcdat[0] {
 	secret      = @rcdat[1]
+	proto       = *
 	shortname   = @rcdat[2]
 	nastype     = other
 }
@@ -13184,6 +13227,10 @@ sub printfaxstart() {
   $lint=$sysconf{'Internal'};
   @eidat=split(/\|/,$interface{$lint});
   $localip=@eidat[1];
+  if ($i6addr{$lint} ne "") {
+    @ei6dat=split(/\|/,$i6addr{$lint});
+    $local6ip="[" . @ei6dat[1] . @ei6dat[2] . "]";
+  }
 
   open(FS,">rc.hfax");
   chmod(0600,"rc.hfax");
@@ -15632,6 +15679,10 @@ sub printasth323() {
   $lint=$sysconf{'Internal'};
   @eidat=split(/\|/,$interface{$lint});
   $localip=@eidat[1];
+  if ($i6addr{$lint} ne "") {
+    @ei6dat=split(/\|/,$i6addr{$lint});
+    $local6ip=@ei6dat[1] . @ei6dat[2];
+  }
 
   if ($h323number eq "") {
     $h323gwid=$dnsconf{'Hostname'};
@@ -15650,7 +15701,7 @@ ooh323.conf");
   print OHC<<__EOF__;
 [general]
 port=1721   
-bindaddr=::
+;bindaddr=::
 tos=lowdelay 
 amaflags = default
 ;accountcode=h3230101
@@ -15734,7 +15785,7 @@ sub printgnugkh323() {
     if ($iface ne $sysconf{'Internal'}) {
       @idata=split(/\|/,$interface{$iface});
       if ((@idata[1] ne "0.0.0.0") && ($hlindone{@idata[1]} eq "")) {
-        $hlinkip.="," . @idata[1];
+        $hlinkip.=",::" . @idata[1];
         $hlindone{@idata[1]}=1;
       }
     }
@@ -15802,17 +15853,32 @@ sub printgnugkh323() {
     $addast->execute;
   }
 
+if ($i6addr{$ethint}) {
+  @i6dat=split(/\|/, $i6addr{$ethint});
+  $localip6=@i6dat[1] . @i6dat[2];
+  $intsigip = $localip;
+#  $intsigip = "[" . $localip6 . "]";
+} else {
+  $localip6=$localip;
+  $intsigip = $localip;
+}
+
+#Home=::$localip$hlinkip,::1,::127.0.0.1
+#Bind=$intsigip
+
 print HC<<__EOF__;
 [Gatekeeper::Main]
 Fourtytwo=42
+EnableIPv6=1
 TimeToLive=90
 Name=$h323gkid
-Home=$localip$hlinkip,127.0.0.1
 TimestampFormat=ISO8601
 
 [GkStatus::Auth]
 rule=explicit
 127.0.0.1=yes
+::1=yes
+$localip6=yes
 
 [RoutedMode]
 GKRouted=$gkrouted
@@ -15845,6 +15911,7 @@ InternalNetwork=$locallan/$intnm
 192.168.0.0/16=H245ROUTED,ROUTED,PROXY
 172.16.0.0/12=H245ROUTED,ROUTED,PROXY
 10.0.0.0/8=H245ROUTED,ROUTED,PROXY
+::/0=H245ROUTED,ROUTED,PROXY
 
 [RoutingPolicy]
 default=explicit,internal,neighbor,parent,catchall
@@ -15859,8 +15926,8 @@ SQLAuth=sufficient;ARQ,LRQ,RRQ
 default=deny;RRQ,ARQ,LRQ
 
 [RasSrv::RRQAuth]
-$h323gwid=sigip:$localip:1721
-t38modem=sigip:$localip:1722
+$h323gwid=sigip:$intsigip:1721
+t38modem=sigip::$intsigip:1722
 
 [SQLPasswordAuth]
 Driver=PostgreSQL
@@ -15906,7 +15973,7 @@ Username=asterisk
 Password=$sqlvoippass
 ConfigQuery=SELECT DISTINCT ON (gkid) 'RasSrv::GWRewriteE164',h323gkid AS gkid,CASE WHEN (trunk.h323gkid='$h323gwid' AND h323outprefix = '' AND trunkprefix >= 0) THEN 'out='||lpad(CAST(trunkprefix AS varchar),7,'0')||'='||trunk.h323prefix WHEN (trunk.h323gkid='$h323gwid' AND trunkprefix is null AND h323outprefix != '') THEN 'in=.='||trunk.h323outprefix||'.' WHEN (trunk.h323gkid='$h323gwid' AND h323outprefix != '' AND trunkprefix >= 0) THEN 'out='||lpad(CAST(trunkprefix AS varchar),7,'0')||'='||trunk.h323prefix||';in=.='||h323outprefix ELSE 'out='||lpad(CAST(trunkprefix AS varchar),7,'0')||'='||trunk.h323prefix END AS rule from trunk  where h323reggk='%1' AND (h323outprefix != '' OR trunkprefix >= 0) AND protocol = 'OH323' order by gkid,rule DESC;
 #PermanentEndpointsQuery=SELECT providerip,port,h323gkid,CASE WHEN trunkprefix >= 0 THEN CASE WHEN h323aprefix > '' THEN lpad(CAST(trunkprefix AS varchar),7,'0')||','||h323aprefix ELSE lpad(CAST(trunkprefix AS varchar),7,'0') END ELSE h323aprefix END from trunk where h323gkid !='' AND h323reggk = '%1' AND protocol = 'OH323'
-NeighborsQuery=SELECT h323gkid,ipaddr,'1719',CASE WHEN (trunkprefix > 0 ) THEN lpad(CAST(trunkprefix AS varchar),7,0) ELSE '*' END,NULL,NULL from users left outer join trunk using (h323gkid) where h323neighbor = 't' AND h323gkid != '%1'
+NeighborsQuery=SELECT h323gkid,ipaddr,'1719',CASE WHEN (trunkprefix > 0 ) THEN lpad(CAST(trunkprefix AS varchar),7,'0') ELSE '*' END,NULL,NULL from users left outer join trunk using (h323gkid) where h323neighbor = 't' AND h323gkid != '%1'
 rewriteE164Query=SELECT lpad(CAST(trunkprefix AS varchar),7,'0'),'090'||lpad(CAST(trunkprefix AS varchar),7,'0') from trunk where protocol != 'OH323'  AND h323reggk = '%1'
 
 [RasSrv::RRQFeatures]
@@ -16690,13 +16757,10 @@ if [ -d /sys/class/net/sit1 ];then
 fi;
 
 /sbin/ip link set dev sit1 up
- /sbin/ip -6 route add ::/0 via fe80::\${i6prefix} dev sit1
+/sbin/ip -6 route add ::/0 via fe80::\${i6prefix} dev sit1
 
 /sbin/ip addr add 2002:\${i6prefix}::1/64 dev \${1} > /dev/null 2>&1
-
-if [ -x /etc/ifconf/ipv6to4.conf ];then
-  /etc/ifconf/ipv6to4.conf \${i6prefix} > /dev/null 2>&1
-fi;
+/sbin/ip addr add 2002:\${i6prefix}:FFFF::1/16 dev sit0 > /dev/null 2>&1
 
 killall -HUP radvd;
 sleep 3;

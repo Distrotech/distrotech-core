@@ -54,8 +54,6 @@ mount -t tmpfs none /dev/shm > /dev/null 2>&1
 /sbin/ip link set dev dummy0 up
 /sbin/ip route add 127.255.255.252/30 src 127.255.255.253 dev dummy0 scope link table 80) > /dev/null 2>&1
 
-/sbin/ip link set sit0 up
-
 if [ -e /etc/netsentry-version ];then
   eval `cat /etc/netsentry-version`
  else
@@ -192,6 +190,8 @@ if [ -e /etc/.install ];then
   /usr/sbin/syslogd &
   /usr/sbin/klogd -c 1 &
  else
+  /sbin/ip link set sit0 up
+
   #Set file-max
   echo 1228800 > /proc/sys/fs/file-max
 
@@ -749,7 +749,7 @@ if [ ! -e /etc/.install ];then
   (ulimit -n 65535;/usr/sbin/dhcpd > /dev/null 2>&1) &
 
   #Start SNMP
-  /usr/sbin/snmpd -c /etc/snmpd.conf
+  /usr/sbin/snmpd -c /etc/snmpd.conf UDP:161 UDP6:161
 
   #Load Dummy Sound Card And Set Up Any Found Cards
   if [ -d /lib/modules/${LKERNEL}/kernel/sound/ ];then
