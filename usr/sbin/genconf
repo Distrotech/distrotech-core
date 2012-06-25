@@ -9475,7 +9475,7 @@ if ( -d "/usr/share/squid/errors/en") {
 }
 
 print SC<<__EOB__;
-tcp_outgoing_address 0.0.0.0
+tcp_outgoing_address [::]
 hosts_file /etc/hosts
 cache_swap_low  80
 cache_swap_high 90
