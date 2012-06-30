@@ -20,6 +20,9 @@
 
 include_once "auth.inc";
 
+$getdata="SELECT distinct ivr,officehours from ivrconf";
+$qgetdata=pg_query($db,$getdata);
+
 %>
 
 <CENTER>
@@ -48,7 +51,13 @@ for($i=0;$i<$dnum;$i++){
 <TD><INPUT TYPE=TEXT NAME=newivr></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD>Office Hours</TD><TD><INPUT TYPE=CHECKBOX NAME=officehours CHECKED></TD>  
+  <TD>Service Time</TD><TD><SELECT NAME=hours>
+     <OPTION VALUE="">Not Specified</OPTION>
+     <OPTION VALUE=1 SELECTED>Office Hours</OPTION>
+     <OPTION VALUE=2>After Hours</OPTION>
+     <OPTION VALUE=3>Public Holiday</OPTION>
+     </SELECT>
+  </TD>  
 </TR>
 <TR CLASS=list-color2>
   <TD ALIGN=MIDDLE COLSPAN=2>
