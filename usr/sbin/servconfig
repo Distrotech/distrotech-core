@@ -59,6 +59,18 @@ if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstco
   if [ ! "`pidof dhcpd`" ];then
     touch /var/state/dhcp/dhcpd.leases /var/state/dhcp/dhcpd6.leases
     /usr/sbin/dhcpd > /dev/null 2>&1
+    /usr/sbin/dhcpd -6 -cf /etc/dhcpd6.conf > /dev/null 2>&1
+   else
+    for dhcp in dhcpd dhcpd6;do
+      dhpid=`cat /var/run/${dhcp}.pid`
+      if [ ! -d  /proc/${dhpid} ] || [ "`readlink /proc/${dhpid}/exe`" != "/usr/sbin/dhcpd" ];then 
+        if [ "${dhcp}" == "dhcpd6" ];then
+          /usr/sbin/dhcpd -6 -cf /etc/dhcpd6.conf
+        else
+          /usr/sbin/dhcpd
+        fi;
+      fi;
+    done
   fi;
 
   if [ ! "`pidof named`" ];then
