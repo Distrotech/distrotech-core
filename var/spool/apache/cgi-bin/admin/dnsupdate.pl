@@ -57,16 +57,22 @@ if ($defttl eq "") {
 if ($form_data{'domain'} eq "internal") {
   $server="127.0.0.1";
   $cfsecret=$internalkey;
-  $domain=$internal;
+  if ($form_data{'otherdns'} ne "") {
+    $domain=$form_data{'otherdns'};
+  } else {
+    $domain=$internal;
+  }
+  $domkey=$internal;
 } elsif ($form_data{'domain'} eq "external") {
   $server="127.0.0.2"; 
   $domain=$internal;
   $cfsecret=$internalkey;
+  $domkey=$domain;
 } elsif ($form_data{'domain'} eq "smart") {
   $cfsecret=$smartkey;
   $domain=$smartzone;
   $server="127.0.0.1";
-#  $server=$smartserver; 
+  $domkey=$domain;
 } elsif ($form_data{'domain'} eq "reverse") {
   $server="127.0.0.1";
   $cfsecret=$internalkey;
@@ -85,6 +91,7 @@ if ($form_data{'domain'} eq "internal") {
 } else {
   $domain=$form_data{'otherdns'};
   $server="127.0.0.2"; 
+  $domkey=$domain;
 }
 
 $dnssec=encode_base64($cfsecret);
@@ -114,12 +121,12 @@ if ($form_data{'save'} eq "Update Zone") {
   print NSU "server $server\n";
   print NSU "local $server\n";
   if ($form_data{'domain'} eq "reverse") {
-    print NSU "zone $form_data{'otherdns'}\n"; 
+    print NSU "zone $form_data{'otherdns'}\n";
     print NSU "key $internal $dnssec\n";
     $domain=$form_data{'otherdns'};
   } else {
-    print NSU "zone $domain\n"; 
-    print NSU "key $domain $dnssec\n";
+    print NSU "zone $domain\n";
+    print NSU "key $domkey $dnssec\n";
   }
   for($cnt=1;$cnt<= $form_data{'rowcount'};$cnt++) {
     $val="delr$cnt";
@@ -153,7 +160,7 @@ if ($form_data{'save'} eq "Update Zone") {
       chop($newrec);
       $form_data{'record'}=$newrec;
       $form_data{'type'}="NAPTR";
-    }elsif ($form_data{'type'} ne "A") {
+    } elsif (($form_data{'type'} ne "A") && ($form_data{'type'} ne "AAAA")) {
       $form_data{'value'}="$form_data{'value'}.";
     }
     if ($form_data{'record'} eq "") {
@@ -389,6 +396,7 @@ print <<__EOH__;
     <TD onmouseover=myHint.show('DNS12') ONMOUSEOUT=myHint.hide()>
       <select NAME=type>";
         <OPTION VALUE=A>A
+        <OPTION VALUE=AAAA>AAAA
         <OPTION VALUE=CNAME>CNAME
         <OPTION VALUE=DNAME>DNAME
         <OPTION VALUE=MX>MX (Priority)
