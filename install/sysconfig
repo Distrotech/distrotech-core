@@ -87,7 +87,7 @@ EOF
   tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/samba-krb.tbz > /dev/null 2>&1
 
   /usr/bin/dialog --backtitle "$BT" --title "Asterisk" --infobox "Installing Asterisk PBX Software" 7 35
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/asterisk.tar.bz2 > /dev/null 2>&1
+  tar -C ${INST_BASE} -xJf /install/pkgs/asterisk.txz > /dev/null 2>&1
 
   /usr/bin/dialog --backtitle "$BT" --title "Frontpage" --infobox "Installing Frotpage Extentions" 7 35
   tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/fp-v5.0.tbz > /dev/null 2>&1
