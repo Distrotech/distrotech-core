@@ -238,7 +238,7 @@ SELECT starttime,uniqueid,sessiontime,case when (substr(calledstation,1,2)='27')
   } else if ($type == "0") {
     $chan="(cdr.dstchannel ~ '" . $trunkchan . "')";
   } else if ($type == "5") {
-    $chan="((channel ~ '^Zap/[0-9]+-' OR channel ~ '^DAHDI/[0-9]+-'
+    $chan="((channel ~ '^Zap/[0-9]+-' OR channel ~ '^DAHDI/[0-9]+-' OR
             channel ~ '^mISDN/[0-9]+-' ) AND
             dst ~ '(^[0-9]{4}$)|(^799$)|(^5[0-9]{2}$)')"; 
   } else {
