@@ -66,16 +66,24 @@ if ($_SESSION['auser'] == 1) {
   $users["Add Reseller"]="javascript:addagent(\'t\')";
   $users["Add Operator"]="javascript:addagent(\'f\')";
   $users["Edit Reseller/Operator"]=openpage("users","editagent.php");
+
+  $virtual["Create Company"]=openpage("virtual","mkvirt.php");
+  $virtual["Edit Company"]=openpage("virtual","getvirt.php");
+  $virtual["Credit Pools"]=openpage("virtual","editpool.php");
+  $virtual["Manage Nodes"]=openpage("virtual","editsite.php");
+  $main['Virtual PBX']="include:virtual";
  
   $reports["Reseller Report"]=openpage("reports","mendrep.php");
 //  $reports["Detailed Report"]=openpage("reports","getbill.php");
 //  $reports["Users Report"]=openpage("reports","getusrreport.php");
   $reports["Daily Report"]=openpage("reports","getdlyrep.php");
+  $reports["Account Registrations"]="javascript:opencsexten(\'SIP\')";
 
   $main["Reports"]="include:reports";
 
 
   array_push($menu,"users");
+  array_push($menu,"virtual");
   array_push($menu,"credit");
   array_push($menu,"reports");
 }

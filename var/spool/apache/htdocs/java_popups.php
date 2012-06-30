@@ -287,6 +287,14 @@ function voipacedit(number) {
   ajaxsubmit('editac');
 //  document.editac.submit();
 }
+function voipvcedit(number) {
+  document.editvc.number.value=number;
+  ajaxsubmit('editvc');
+}
+function voipvcroute(account) {
+  document.editvsite.account.value=account;
+  ajaxsubmit('editvsite');
+}
 function voipddiedit(number,ddi) {
   document.editac.newddi.value=prompt("Number To Dial : ",ddi);
   if (document.editac.newddi.value != null) {
