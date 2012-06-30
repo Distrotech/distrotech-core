@@ -3886,6 +3886,7 @@ __EOB__
 CHATPID=`/bin/pidof chat`
 if [ "\$CHATPID" ];then
   ps ax |grep chat |awk '\$3 == "Z" {print "killall pppd;sleep 5;killall -9 pppd"}' |sh
+  flock -u 10
   exit
 fi;
 
@@ -4083,6 +4084,7 @@ __EOB__
 #Check And Restart GRE Tunnels
 /etc/rc.d/rc.tunnels
 
+flock -u 10
 ) 10>/var/run/netsentry-pppup
 rm /var/run/netsentry-pppup
 __EOF__
@@ -7912,6 +7914,7 @@ _EOB_
     $adsdc=lc($adsdc);
     $dcfqdn=$adsdc . "." . lc($smboption{'ADSRealm'});
 
+    $dcipaddr="";
     if ($hosts{$adsdc} ne "") {
       ($dcnme,$dcipaddr)=split(/\|/,$hosts{$adsdc});
     } elsif ($hosts{$dcfqdn} ne "") {
@@ -8648,6 +8651,11 @@ __EOS__
   /sbin/iptables -t mangle -A MANGLEF\${FILID} -j TOS -o \$DEF_GW -m tos ! --tos 0 --set-tos 0 -m mark ! --mark 0x0 ! -d \$EXT_IP_ADDR
   /sbin/iptables -t mangle -A MANGLEP\${FILID} -j TOS ! -i ppp+ -m tos ! --tos 0 --set-tos 0 -m mark ! --mark 0x0 ! -d \$EXT_IP_ADDR
 
+__EOS__
+    if (@adslldat[8]) { 
+      print FWP "  /sbin/ip route add @adslldat[8]/32 via \${DEST_IP} src \${EXT_IP_ADDR} dev \${INT_NAME} table Link\n\n";
+    }
+    print FWP<<__EOS__;
   (cat <<EOF
 server $dnsconf{'DynServ'}
 key $dnsconf{'DynZone'} $smartkey
@@ -16771,17 +16779,19 @@ fi;
 
 /sbin/ip link set dev sit1 up
 /sbin/ip -6 route add ::/0 via fe80::\${i6prefix} dev sit1
-
+/sbin/ip route add 0/0 proto 41 dev \${2} table Static
 /sbin/ip addr add 2002:\${i6prefix}::1/64 dev \${1} > /dev/null 2>&1
 /sbin/ip addr add 2002:\${i6prefix}::1/16 dev sit0 > /dev/null 2>&1
 
 killall -HUP radvd;
 sleep 3;
-if [ ! "`pidof radvd`" ];then
+if [ ! "`pidof radvd`" ] && [ -e /etc/radvd.conf ] && [ -s /etc/radvd.conf ];then
   radvd;
 fi;
 sleep 10;
-killall -HUP hostapd
+if [ "`pidof hostapd`" ];then
+  killall -HUP hostapd
+fi;
 
 /sbin/iptables -F IP6RD
 /sbin/iptables -I IP6RD -j ACCEPT -i \${1} -d \${2}

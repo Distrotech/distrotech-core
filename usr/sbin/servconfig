@@ -474,6 +474,7 @@ if [ -e /var/run/netsentry-update ];then
   if [ "$RUNGENCONF" == 1 ];then
     /usr/sbin/genconf
   fi;
+  flock -u 10
   exit
 fi;
 
@@ -510,6 +511,7 @@ fi;
 # if [ "$PPPDIFF" ];then
 #   cp /var/spool/apache/htdocs/ns/config/rc.ppp /etc/rc.d/rc.ppp
 #   killall pppd
+#   flock -u 10
 #   sleep 30
 #   exit
 # fi;
