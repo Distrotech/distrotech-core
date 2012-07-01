@@ -174,6 +174,7 @@ $script = pg_unescape_bytea($script);
 $script = str_replace(array("\n","\"","<",">"), array("\\n","\\\"","\<","\>"), $script);
 
 $data_tb="inputdata_" . $_SESSION['campid'] . "_" . $_SESSION['listid'];
+$c_plugin="plugin_" . $_SESSION['campid'] . "_" . $_SESSION['listid'] . ".inc";
 $datain_tb="contactdata_" . $_SESSION['campid'] . "_" . $_SESSION['listid'];
 
 $testdb=pg_query($db,"SELECT * from information_schema.tables where table_catalog='asterisk' and table_name='" . $data_tb . "'");
@@ -230,6 +231,23 @@ if ($numdata[$_SESSION['nextnum']] != "") {
     } else {
       print "</TR>";
     }%>
+<%
+    if (is_file("/var/spool/apache/htdocs/ccagent/" . $c_plugin)) {
+      include "/var/spool/apache/htdocs/ccagent/" . $c_plugin;%>
+      <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+        <TH CLASS=heading-body2 COLSPAN=4>
+          <%print $plug_t;%>
+        </TH>
+      </TR>
+      <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+        <TD COLSPAN=4>
+            <DIV ID=plugin>
+            <%plug_div();%>
+            </DIV>
+        </TD>
+      </TR><%
+    }
+%>
     <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
       <TH CLASS=heading-body2 COLSPAN=4>
         Contact Script
@@ -375,8 +393,18 @@ if ($numdata[$_SESSION['nextnum']] != "") {
 <INPUT TYPE=HIDDEN NAME=disppage VALUE="<%print $showpage;%>">
 <INPUT TYPE=HIDDEN NAME=nomenu VALUE="<%print $_POST['nomenu'];%>">
 </FORM>
+<%
+if (function_exists("plug_form")) {
+  plug_form();
+}
+%>
 <script language="JavaScript" src="/xmlscript.js" type="text/javascript"></script>
 <SCRIPT>
+<%
+if (function_exists("plug_js")) {
+  plug_js();
+}
+%>
   parser=new DOMParser();
   var xmlDoc = parser.parseFromString("<%print $script;%>",'text/xml');
   loadhtml("script", xmlDoc, false);
