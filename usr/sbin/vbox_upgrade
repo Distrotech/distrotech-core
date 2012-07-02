@@ -35,6 +35,10 @@ if [ -d /usr/lib/asterisk/modules-1.8 ];then
   rm -rf usr/lib/asterisk/modules-1.8
 fi;
 
+if [ -d /usr/lib/asterisk/modules ];then
+  rm -rf usr/lib/asterisk/modules
+fi;
+
 flashutil upgrade ${UPKERN} ${SERV}
 RES=$?
 
