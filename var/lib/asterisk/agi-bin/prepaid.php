@@ -75,7 +75,8 @@ function place_call() {
     if (!is_array($reseller)) {
       if ($reseller == -1){
         if ($noivr == "0") {
-          $status=$agi->stream_file("prepaid/prepaid-auth-fail");
+          $status=$agi->stream_file("your-account");
+          $status=$agi->stream_file("has-been-disconnected");
         } else {
           $agi->exec("Congestion","5");
         }
@@ -125,9 +126,10 @@ function place_call() {
   }
 
   //if it is congested or unavailable play congestion otherwise play noanswer or busy
-  $dialstatus=getagivar("DIALSTATUS","CANCEL");
-  if ($dialstatus  != "ANSWER") {
-    $agi->exec("ResetCDR","v");
+  $dialstatus=getagivar("HANGUPCAUSE","CANCEL");
+  if (($dialstatus != "HANGUP") && ($dialstatus != "") && ($dialstatus != "16")) {
+    //verbose(print_r($dialstatus,TRUE));
+    $agi->exec("ResetCDR","vw");
   }
 
   //hangup the call processing of account will take place in h extension
@@ -223,7 +225,7 @@ function authenticate_call(){
       $username=substr($fpinno,0,8);
       $password=substr($fpinno,8,4);
 
-      $cpresult = odbcquery("SELECT uniqueid from users where secret='" . $password . "' and name='" . $username . "'");
+      $cpresult = odbcquery("SELECT uniqueid from users where password='" . $password . "' and name='" . $username . "'");
       if(!is_array($cpresult)) {
         return -1;
       }
@@ -239,7 +241,7 @@ function authenticate_call(){
 
   //get the available credit on the users account less allocated credit
   $qresult=odbcquery(
-  "SELECT users.credit-(sum(CASE WHEN (NOT cleared AND setuptime < now()) THEN inuse.callocated ELSE 0 END)*100), tariff, activated, count(CASE WHEN (NOT cleared AND setuptime < now()) THEN 1 END), creditcap, simuse+" . $usecnt . "," .
+  "SELECT users.credit-(sum(CASE WHEN (NOT cleared AND setuptime > now()) THEN inuse.callocated ELSE 0 END)*100), tariff, activated, count(CASE WHEN (NOT cleared AND setuptime > now()) THEN 1 END), creditcap, simuse+" . $usecnt . "," .
       "reseller.credit,agentid,buyrate,buyperiod,sellperiod,exchangerate,minperiod ,buyminperiod,usertype,rlevel,rcallocated,owner," .
       "(ivrwarn < users.credit) OR (ivrwarn = 0)  " .
     "FROM users " .
@@ -266,7 +268,7 @@ function authenticate_call(){
   }
 
   //get the currently allocated credit for the reseller
-  $usercount = odbcquery("SELECT sum(CASE WHEN (NOT cleared AND setuptime < now()) THEN inuse.callocated ELSE 0 END) FROM users " .
+  $usercount = odbcquery("SELECT sum(CASE WHEN (NOT cleared AND setuptime > now()) THEN inuse.callocated ELSE 0 END) FROM users " .
            "LEFT OUTER JOIN reseller ON (reseller.id=users.agentid) LEFT OUTER JOIN inuse ON (name=userid)" . 
            "WHERE users.agentid = " . $qresult[7] . " GROUP BY users.agentid");
 
@@ -382,7 +384,6 @@ function authorize_call($tariffcode, $phonenumber, $username, $reseller){
       $freemin[0]=0;
       $freemin[1]=ceil($locmin/$locrate);
       $freemin[2]=$locperiod;
-      $freemin[3]='';
 
       $qresult[0]=$locrate;
       $tariff=$localrate[2];
@@ -422,7 +423,7 @@ function authorize_call($tariffcode, $phonenumber, $username, $reseller){
     }								
 
     //check free minutes packages for user free minutes
-    $freemin=odbcquery("SELECT freemin/simuse,ansperiod,billperiod,package.id FROM  package " .
+    $freemin=odbcquery("SELECT freemin/simuse,ansperiod,billperiod FROM package " .
                     "LEFT OUTER JOIN tariffrate ON (freerate=tariffcode) " .
                     "LEFT OUTER JOIN users ON (userid=users.uniqueid) " .
                   "WHERE rate < (freethreshold - freesfee)  AND rate > 0 AND " .
@@ -454,7 +455,6 @@ function authorize_call($tariffcode, $phonenumber, $username, $reseller){
   $rateinfo["freemin"] = $freemin[0]; //Minutes Available On Package
   $rateinfo["freeans"] = $freemin[1]; //Ans Charge For Package
   $rateinfo["freebill"] = $freemin[2]; //Bill Period For Package
-  $rateinfo["freepid"] = $freemin[3]; //Packageid
   $rateinfo["dialcmd"] = $qresult[6]; // DIAL COMMAND
   if ($qresult[7] != "") {
     $agi->set_callerid("\"" . $qresult[7] . "\"<" . $qresult[7] . ">");
