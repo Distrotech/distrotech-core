@@ -31,6 +31,10 @@ if [ "${1}" ] && [ "${KERNEL}" != "${1}" ];then
   UPKERN=${KERNEL}
 fi;
 
+if [ -d /usr/lib/asterisk/modules-1.8 ];then
+  rm -rf usr/lib/asterisk/modules-1.8
+fi;
+
 flashutil upgrade ${UPKERN} ${SERV}
 RES=$?
 

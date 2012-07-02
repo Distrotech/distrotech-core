@@ -3,3 +3,4 @@
 - /etc/asterisk/astschema.psql.gz
 + /usr/lib/asterisk/modules-10
 - /usr/lib/asterisk/modules*
+- /usr/lib/asterisk/modules-1.8
