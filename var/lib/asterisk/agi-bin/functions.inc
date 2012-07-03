@@ -353,6 +353,13 @@ SET uniquecdrid credit and starttime
 
   //debit user and reclaim the allocated credit
   if ($racredit_used > 0) {
+    $pooluser="SELECT name FROM companysites LEFT OUTER JOIN companysites AS mysite USING (companyid,creditpool) " .
+		 "LEFT OUTER JOIN users ON (companysites.source=name AND users.activated) WHERE mysite.source='" . $username . "'" .
+                 "ORDER BY users.credit DESC LIMIT 1";
+    list($newuser) = odbcquery($pooluser);
+    if ($newuser != "") {
+      $username = $newuser;
+    }
     $QUERY = "UPDATE users SET credit=(credit - $racredit_used) WHERE name='$username'";
     odbcquery($QUERY);
   }
