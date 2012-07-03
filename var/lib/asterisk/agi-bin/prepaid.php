@@ -410,6 +410,9 @@ function authorize_call($tariffcode, $phonenumber, $username, $reseller){
     $gkidq=odbcquery("SELECT h323gkid from users where name='" . $h323gwid . "'");
     $h323gkid=$gkidq[0];
 
+    //Set the cli for the call
+    $clid=$agi->parse_callerid();
+
     //find the shortest prefix in the tariff sheet
     $qresult=odbcquery("SELECT tariffrate.rate,tariffrate.countrycode,tariffrate.subcode,lpad(provider.trunkprefix,7,'0'),removeprefix,tariff.tax,dialcmd," .
          "CASE WHEN (provider.callerid != '') THEN provider.callerid ELSE " .
