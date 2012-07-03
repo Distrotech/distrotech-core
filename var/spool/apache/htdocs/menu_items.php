@@ -63,7 +63,7 @@ function openmmap($menu,$mmapv) {
 
 
 if ($authtype >= 0) {
-  $menu=array("support","tickdep","apps","userssl","adminssl","setup","sslrev","ssl","email","aliases","groups","users","virtdom","inet","vcsvup","vcsvdown","vroute","snomc","zap","voip","radius","vstatus","status","main");
+  $menu=array("support","tickdep","apps","userssl","adminssl","setup","sslrev","ssl","email","aliases","groups","users","virtdom","inet","vcsvup","vcsvdown","callshop","vroute","snomc","zap","voip","radius","vstatus","status","main");
   $main[_("User Applications")]="include:apps";
   $main[_("SSL Certificates")]="include:ssl";
   if (($authtype >= 0) && ($_SESSION['userid'] != "admin")) {
@@ -338,9 +338,10 @@ if ($authtype > 0) {
   $voip[_("CSV Download")]="include:vcsvdown";
   $voip[_("Extension Template")]="/cdr/extenimport.zip";
   $voip[_("Group Access Control")]=openpage("voip","cdr/gauth.php");
-  $voip[_("VOIP Providers")]=openpage("voip","/cdr/h323peer.php");
-  $voip[_("VOIP Neighbours")]=openpage("voip","/cdr/h323neigh.php");
-  $voip[_("Company Routing")]=openpage("voip","/cdr/croute.php");
+  $voip[_("Callshop Setup")]="include:callshop";
+  $callshop[_("VOIP Providers")]=openpage("callshop","/cdr/csprovider.php");
+  $callshop[_("VOIP Gateways")]=openpage("callshop","/cdr/h323peer.php");
+  $callshop[_("VOIP Neighbours")]=openpage("callshop","/cdr/h323neigh.php");
 };
 
 
