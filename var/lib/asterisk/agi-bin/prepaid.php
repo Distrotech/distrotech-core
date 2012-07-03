@@ -401,24 +401,28 @@ function authorize_call($tariffcode, $phonenumber, $username, $reseller){
     $h323gkid=$gkidq[0];
 
     //find the shortest prefix in the tariff sheet
-    $qresult=odbcquery("SELECT rate,countrycode,subcode,lpad(provider.trunkprefix,7,'0'),removeprefix,tax,dialcmd,callerid,trunk.protocol, " .
-                     "trunk.providerip,trunk.h323prefix,trunk.h323gkid,nationalprefix,internationalprefix,nationallen FROM countryprefix LEFT JOIN tariffrate ".
-  	   "USING (countrycode,subcode,trunkprefix) LEFT JOIN provider ON (provider.trunkprefix=tariffrate.trunkprefix) LEFT OUTER JOIN trunk ON (trunk.trunkprefix=provider.trunkprefix AND h323reggk = '$h323gkid') LEFT OUTER JOIN tariff ON (tariff.tariffcode=tariffrate.tariffcode) ".
-           "WHERE ".
-	   "tariffrate.tariffcode='" . $tariffcode . "' AND prefix=SUBSTRING('$phonenumber',1,length(prefix)) ".
-	   "ORDER BY LENGTH(prefix) DESC LIMIT 1");
-
-    //Get the resellers rate information
-    $rresult=odbcquery("SELECT rate,tax,minrate,showtax  " .
-             "FROM countryprefix LEFT JOIN tariffrate " .
-             "USING (countrycode,subcode) ".
-             "LEFT OUTER JOIN tariff ON (tariff.tariffcode=tariffrate.tariffcode) ".
-             "WHERE ".
-	     "tariffrate.tariffcode='" . $reseller["tariff"] . "' AND prefix=SUBSTRING('$phonenumber',1,length(prefix)) ".
-	     "ORDER BY LENGTH(prefix) DESC LIMIT 1");
+    $qresult=odbcquery("SELECT tariffrate.rate,tariffrate.countrycode,tariffrate.subcode,lpad(provider.trunkprefix,7,'0'),removeprefix,tariff.tax,dialcmd," .
+         "CASE WHEN (provider.callerid != '') THEN provider.callerid ELSE " .
+           "CASE WHEN (cc_climap.userid IS NOT NULL) THEN cc_climap.prefix||substr('" . $clid['username'] . "',4+strip) ELSE users.callerid END END," .
+         "trunk.protocol,trunk.providerip,trunk.h323prefix,trunk.h323gkid,rtariffrate.rate,rtariff.tax,rtariff.minrate," .
+         "nationalprefix,internationalprefix,nationallen " .
+      "FROM countryprefix " .
+         "LEFT JOIN tariffrate USING (countrycode,subcode,trunkprefix) " .
+         "LEFT JOIN tariffrate AS rtariffrate USING (countrycode,subcode,trunkprefix) " .
+         "LEFT OUTER JOIN tariff ON (tariff.tariffcode=tariffrate.tariffcode) " .
+         "LEFT OUTER JOIN tariff AS rtariff ON (rtariff.tariffcode=rtariffrate.tariffcode) " .
+         "LEFT JOIN provider ON (provider.trunkprefix=tariffrate.trunkprefix) " .
+         "LEFT OUTER JOIN trunk ON (trunk.trunkprefix=provider.trunkprefix AND h323reggk = '$h323gkid') " .
+         "LEFT OUTER JOIN users ON (users.name='" . $username . "') " .
+         "LEFT OUTER JOIN cc_route ON (cc_route.userid = users.uniqueid AND tariffrate.countrycode = cc_route.countrycode AND tariffrate.subcode = cc_route.subcode AND tariffrate.trunkprefix = cc_route.trunkprefix) " .
+         "LEFT OUTER JOIN cc_climap ON (cc_climap.userid=users.uniqueid AND '" . $clid['username'] . "' ~ match) " .
+       "WHERE rtariffrate.rate IS NOT NULL AND tariffrate.rate >= rtariffrate.rate AND " .
+         "tariffrate.tariffcode='" . $tariffcode . "' AND rtariff.tariffcode='" . $reseller["tariff"] . "' AND " .
+         "countryprefix.prefix=SUBSTRING('" . $phonenumber . "',1,length(countryprefix.prefix)) ".
+       "ORDER BY LENGTH(countryprefix.prefix) DESC,cc_route.trunkprefix=tariffrate.trunkprefix,tariffrate.rate LIMIT 1");
 
     //the reseller has no rate bomb the call
-    if (!is_array($rresult)) {
+    if (!is_array($qresult)) {
       return -1;
     }								
 
@@ -433,8 +437,8 @@ function authorize_call($tariffcode, $phonenumber, $username, $reseller){
                       "ORDER BY activedate LIMIT 1");
     
     //if the resellers minimum rate for this call is more than the users rate make the user pay the min rate
-    if ($rresult[2] > $qresult[0]) {
-      $qresult[0]=$rresult[2];
+    if ($qresult[14] > $qresult[0]) {
+      $qresult[0]=$qresult[14];
     }
   }
   //pass back the callauth array
@@ -449,12 +453,12 @@ function authorize_call($tariffcode, $phonenumber, $username, $reseller){
   $rateinfo["countrycode"]= $qresult[1]; // COUNTRYCODE
   $rateinfo["subcode"]= $qresult[2]; // SUBCODE
   $rateinfo["removeprefix"]= $qresult[4]; // REMOVEPREFIX
-  $rateinfo["nationalprefix"] = $qresult[12]; // National Prefix
-  $rateinfo["internationalprefix"] = $qresult[13]; // International Prefix
-  $rateinfo["nationallen"] = $qresult[14]; // National Len
-  $rateinfo["resellerrate"]= $rresult[0]; // RESELER RATE
+  $rateinfo["nationalprefix"] = $qresult[15]; // National Prefix
+  $rateinfo["internationalprefix"] = $qresult[16]; // International Prefix
+  $rateinfo["nationallen"] = $qresult[17]; // National Len
+  $rateinfo["resellerrate"]= $qresult[12]; // RESELER RATE
   $rateinfo["taxrate"]= $qresult[5]; // TAX RATE
-  $rateinfo["rtaxrate"] = $rresult[1]; // RESELER TAX RATE
+  $rateinfo["rtaxrate"] = $qresult[13]; // RESELER TAX RATE
   $rateinfo["freemin"] = $freemin[0]; //Minutes Available On Package
   $rateinfo["freeans"] = $freemin[1]; //Ans Charge For Package
   $rateinfo["freebill"] = $freemin[2]; //Bill Period For Package
