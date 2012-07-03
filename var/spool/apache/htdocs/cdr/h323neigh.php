@@ -32,7 +32,7 @@ $qgetdata=pg_query($db,"SELECT name,h323gkid,ipaddr FROM users WHERE h323neighbo
 %>
 
 <CENTER>
-<FORM METHOD=POST>
+<FORM METHOD=POST NAME=h323neigh onsubmit="ajaxsubmit(this.name);return false;">
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
 <TR CLASS=list-color2>
   <TH CLASS=heading-body COLSPAN=2><%print _("Asterisk PBX H323 Neighbor Configuration");%></TH>
