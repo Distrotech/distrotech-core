@@ -276,6 +276,13 @@ function authenticate_call(){
     return -1;
   }
 
+  //get the credit available in the pool
+  $creditpool = odbcquery("SELECT sum(users.credit), " .
+                    "sum((SELECT sum(callocated*100) FROM inuse WHERE userid=users.name AND NOT cleared AND setup < now())),sum(simuse) " .
+                            "FROM companysites " .
+                            "LEFT OUTER JOIN companysites AS mysite USING (companyid,creditpool) " .
+                            "LEFT OUTER JOIN users ON (companysites.source=name AND users.activated) WHERE mysite.source='" . $username . "'");
+
   $resellerr=array();
   $resellerr["aloccred"]=$usercount[1];
   $resellerr["tariff"]=$qresult[8];
@@ -293,7 +300,6 @@ function authenticate_call(){
   $usertype = $qresult[14];
   $tariff = $qresult[1];
   $active = $qresult[2];
-  $credit = $qresult[0];
   $linelim = $qresult[4];
 /*
   //if allocated credit is more than the resellers credit determine the ratio 
@@ -316,7 +322,11 @@ function authenticate_call(){
 */
 
   //Divide the credit pool amoungst the available channels
-  $credit = $credit/($simuse*100);
+  if (is_array($creditpool) && ($creditpool[0] > 0)) {
+    $credit=($creditpool[0]-$creditpool[1])/($creditpool[2]*100);
+  } else {
+    $credit = $qresult[0]/($simuse*100);
+  }
 
   //if  this is a callback allow a additional call ??
   if ($cbackuse == 2) {
