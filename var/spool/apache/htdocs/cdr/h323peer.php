@@ -20,20 +20,12 @@
 
 include_once "auth.inc";
 
-if ((isset($pbxupdate)) && ($newkey != "")){
-  pg_query($db,"INSERT INTO provider (name)  VALUES ('$newkey')");
-  $qgetdata=pg_query($db,"SELECT trunkprefix FROM provider WHERE name = '" . $newkey . "' LIMIT 1");
-  $trunkd=pg_fetch_array($qgetdata,$i);
-  $key=$trunkd[0];
-}
-
 if ((isset($pbxdelete)) && ($key != "")){
   pg_query($db,"DELETE FROM provider WHERE trunkprefix='$key'");
   pg_query($db,"DELETE FROM trunk WHERE trunkprefix='$key'");
   $key="";
 
 }
-
 
 if ($key == "") {
   $qgetdata=pg_query($db,"SELECT trunkprefix,name FROM provider ORDER BY name");
@@ -43,12 +35,12 @@ if ($key == "") {
 <FORM METHOD=POST NAME=h323pform onsubmit="ajaxsubmit(this.name);return false;">
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
 <TR CLASS=list-color2>
-  <TH COLSPAN=2 CLASS=heading-body><%print _("Provider Configuration");%></TH>
+  <TH COLSPAN=2 CLASS=heading-body><%print _("Select Voip Provider");%></TH>
 </TR>
 <TR CLASS=list-color1>
 <TD WIDTH=50%><%print _("Select Provider To Edit/Delete");%></TD>
-<TD WIDTH=50%><SELECT NAME=key>
-<OPTION VALUE=""><%print _("Add New Provider Bellow");%></OPTION>
+<TD WIDTH=50%><SELECT NAME=key onchange=this.form.subme.click()>
+<OPTION>Select Gateway Provider</OPTION>
 <%
 $dnum=pg_num_rows($qgetdata);
 for($i=0;$i<$dnum;$i++){
@@ -59,14 +51,8 @@ for($i=0;$i<$dnum;$i++){
 </SELECT>
 </TR>
 <TR CLASS=list-color2>
-<TD><%print _("New Provider");%></TD>
-<TD><INPUT TYPE=TEXT NAME=newkey></TD>
-</TR>
-<TR CLASS=list-color1>
   <TD ALIGN=MIDDLE COLSPAN=2>
-    <INPUT TYPE=RESET>
-    <INPUT TYPE=SUBMIT onclick=this.name='pbxdelete' VALUE="<%print _("Delete Provider");%>">
-    <INPUT TYPE=SUBMIT onclick=this.name='pbxupdate' VALUE="<%print _("Add/Edit Provider");%>">
+    <INPUT TYPE=SUBMIT NAME=subme onclick=this.name='pbxupdate' VALUE="<%print _("Edit Gateways");%>">
   </TD>
 </TR>
 </TABLE>
@@ -93,7 +79,8 @@ for($i=0;$i<$dnum;$i++){
     $protocol="";
   }
   if ((isset($gwselect)) && ($gwid == "")) {
-    pg_query($db,"INSERT INTO trunk (description,providerip,h323gkid,h323reggk,trunkprefix,h323prefix,protocol) VALUES ('$description','$providerip','$h323gkid','$h323reggk','$key','$h323prefix','$protocol')");
+    pg_query($db,"INSERT INTO trunk (description,providerip,h323gkid,h323reggk,trunkprefix,h323prefix,protocol) VALUES " .
+	"('$description','$providerip','$h323gkid','$h323reggk','$key','$h323prefix','$protocol')");
     $description="";
     $providerip="";
     $h323gkid="";
@@ -102,7 +89,8 @@ for($i=0;$i<$dnum;$i++){
     $protocol="";
   }
   if ((isset($gwselect)) && ($gwid != "")) {
-    $gwdataq=pg_query($db,"SELECT description,providerip,h323gkid,h323reggk,h323prefix,protocol FROM trunk where gwid='" . $gwid . "' LIMIT 1");
+    $gwdataq=pg_query($db,"SELECT description,providerip,h323gkid,h323reggk,h323prefix,protocol " .
+	"FROM trunk WHERE gwid='" . $gwid . "' LIMIT 1");
     $getgwdata=pg_fetch_array($gwdataq,0);
     $description=$getgwdata[0];
     $providerip=$getgwdata[1];
@@ -134,7 +122,7 @@ if ($gwid == "") {
 %>
 <TD WIDTH=50%><%print _("Select Gateway To Edit/Delete");%></TD>
 <TD>
-<SELECT NAME=gwid>
+<SELECT NAME=gwid onchange=this.form.subme.click()>
 <OPTION VALUE=""><%print _("Add New Gateway Bellow");%></OPTION>
 <%
 $dnum=pg_num_rows($qgetdata);
@@ -215,7 +203,7 @@ for($i=0;$i<$dnum;$i++){
 <%
   if ($gwid == "") {
     print "<INPUT TYPE=SUBMIT onclick=this.name='gwdelete' VALUE=\"" . _("Delete Gateway") . "\">";
-    print "<INPUT TYPE=SUBMIT onclick=this.name='gwselect' VALUE=\"" . _("Add/Edit Gateway") . "\">";
+    print "<INPUT TYPE=SUBMIT name=subme onclick=this.name='gwselect' VALUE=\"" . _("Add/Edit Gateway") . "\">";
   } else {
     print "<INPUT TYPE=SUBMIT onclick=this.name='gwupdate' VALUE=\"" . _("Save Changes") . "\">";
   }
