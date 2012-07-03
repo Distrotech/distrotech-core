@@ -55,7 +55,6 @@ function odbcquery($sqlquery) {
 function getagivar($variable,$default) {
   global $agi;
   $vresult=$agi->get_variable($variable);
-  verbose(print_r($vresult,TRUE));
   if ($vresult['result'] == 1) {
     $retval=$vresult['data'];
   } else if ($vresult['result'] == "") {
@@ -65,7 +64,6 @@ function getagivar($variable,$default) {
   } else {
     $retval='';
   }
-  //verbose(print_r($retval,TRUE));
   return $retval;
 }
 
@@ -222,7 +220,7 @@ function gsm_call($crouter,$dialednumber,$atimeout) {
     make_gsm_call($dialednumber,$chanid,$timeout);
 /*
     $callstat=get_stats();
-    verbose(print_r($callstat,TRUE));
+    //verbose(print_r($callstat,TRUE));
     if (($callstat[2] != "BUSY") && ($callstat[2] != "ANSWER") && ($callstat[2] != "CANCEL") && ($callstat[2] != "")) {
       odbcquery("UPDATE gsmchannels SET inuse='f',faultcount=faultcount+1,outofservice = now() + (interval '1 second' * 5 ^ faultcount)  WHERE channel='" . $chanid . "' AND router='" . $crouter . "'"); 
       $agi->set_variable("GSMCHAN","");
@@ -366,7 +364,6 @@ SET uniquecdrid credit and starttime
   //resellers credit used
   $credit_used=($racredit_used*$resell["exrate"])/100;
 
-  verbose(print_r($dialstatus,TRUE));
   if ($dialstatus == "ANSWER") {
     //answered non H323 Call
     $QUERY="INSERT INTO call (uniqueid,sessionid,username,calledstation,".
