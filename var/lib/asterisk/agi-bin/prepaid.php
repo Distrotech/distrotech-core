@@ -402,7 +402,7 @@ function authorize_call($tariffcode, $phonenumber, $username, $reseller){
 
     //find the shortest prefix in the tariff sheet
     $qresult=odbcquery("SELECT rate,countrycode,subcode,lpad(provider.trunkprefix,7,'0'),removeprefix,tax,dialcmd,callerid,trunk.protocol, " .
-                     "trunk.providerip,trunk.h323prefix,trunk.h323gkid FROM countryprefix LEFT JOIN tariffrate ".
+                     "trunk.providerip,trunk.h323prefix,trunk.h323gkid,nationalprefix,internationalprefix,nationallen FROM countryprefix LEFT JOIN tariffrate ".
   	   "USING (countrycode,subcode,trunkprefix) LEFT JOIN provider ON (provider.trunkprefix=tariffrate.trunkprefix) LEFT OUTER JOIN trunk ON (trunk.trunkprefix=provider.trunkprefix AND h323reggk = '$h323gkid') LEFT OUTER JOIN tariff ON (tariff.tariffcode=tariffrate.tariffcode) ".
            "WHERE ".
 	   "tariffrate.tariffcode='" . $tariffcode . "' AND prefix=SUBSTRING('$phonenumber',1,length(prefix)) ".
@@ -449,6 +449,9 @@ function authorize_call($tariffcode, $phonenumber, $username, $reseller){
   $rateinfo["countrycode"]= $qresult[1]; // COUNTRYCODE
   $rateinfo["subcode"]= $qresult[2]; // SUBCODE
   $rateinfo["removeprefix"]= $qresult[4]; // REMOVEPREFIX
+  $rateinfo["nationalprefix"] = $qresult[12]; // National Prefix
+  $rateinfo["internationalprefix"] = $qresult[13]; // International Prefix
+  $rateinfo["nationallen"] = $qresult[14]; // National Len
   $rateinfo["resellerrate"]= $rresult[0]; // RESELER RATE
   $rateinfo["taxrate"]= $qresult[5]; // TAX RATE
   $rateinfo["rtaxrate"] = $rresult[1]; // RESELER TAX RATE
@@ -489,13 +492,15 @@ function create_call($callauth,$reseller){
 
   //update the destination by removing the prefix
   if (strncmp($callauth["newdestination"], $callauth["removeprefix"], strlen($callauth["removeprefix"])) == 0) {
-    $callauth["newdestination"]=substr($callauth["newdestination"], strlen($callauth["removeprefix"]));
-  }
-
-  if (substr($callauth["newdestination"],0,2) != "27") {
-    $callauth["newdestination"]="00" . $callauth["newdestination"];
-  } else {
-    $callauth["newdestination"]="0" . substr($callauth["newdestination"],2);
+    /*if its bellow certain len do not append national code*/
+    if (strlen($callauth["newdestination"]) < $callauth["nationallen"]) {
+      $callauth["newdestination"]=substr($callauth["newdestination"], strlen($callauth["removeprefix"]));
+    } else if ($callauth["nationalprefix"] != ""){
+      $callauth["newdestination"]=$callauth["nationalprefix"] . substr($callauth["newdestination"], strlen($callauth["removeprefix"]));
+    }
+  } else if ($callauth["internationalprefix"] != "") {
+    /*apppend international prefix*/
+    $callauth["newdestination"]=$callauth["internationalprefix"]  . $callauth["newdestination"];
   }
 
   //if the rate is less than or equal to 0 and there no free minutes to chew the destination is unreachable
