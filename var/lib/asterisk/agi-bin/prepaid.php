@@ -414,9 +414,11 @@ function authorize_call($tariffcode, $phonenumber, $username, $reseller){
     $clid=$agi->parse_callerid();
 
     //find the shortest prefix in the tariff sheet
-    $qresult=odbcquery("SELECT tariffrate.rate,tariffrate.countrycode,tariffrate.subcode,lpad(provider.trunkprefix,7,'0'),removeprefix,tariff.tax,dialcmd," .
+    $qresult=odbcquery("SELECT tariffrate.rate,tariffrate.countrycode,tariffrate.subcode,lpad(provider.trunkprefix,7,'0')," .
+         "removeprefix,tariff.tax,dialcmd," .
          "CASE WHEN (provider.callerid != '') THEN provider.callerid ELSE " .
-           "CASE WHEN (cc_climap.userid IS NOT NULL) THEN cc_climap.prefix||substr('" . $clid['username'] . "',4+strip) ELSE users.callerid END END," .
+           "CASE WHEN (cc_climap.userid IS NOT NULL) THEN cc_climap.prefix||substr('" . $clid['username'] . "',1+strip) ELSE " .
+             "users.callerid END END," .
          "trunk.protocol,trunk.providerip,trunk.h323prefix,trunk.h323gkid,rtariffrate.rate,rtariff.tax,rtariff.minrate," .
          "nationalprefix,internationalprefix,nationallen " .
       "FROM countryprefix " .
