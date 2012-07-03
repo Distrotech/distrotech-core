@@ -1,6 +1,3 @@
-<CENTER>
-<FORM METHOD=POST NAME=credtx onsubmit="ajaxsubmit(this.name);return false">
-<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <%
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
@@ -23,6 +20,15 @@
 if (! $db) {
   include "/var/spool/apache/htdocs/cshop/auth.inc";
 }
+
+%>
+<CENTER>
+<FORM METHOD=POST NAME=credtx onsubmit="ajaxsubmit(this.name);return false">
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
+<SCRIPT>
+  var creditsearch=new TextComplete(document.credtx.acnum,ldapautodata,'creditxml.php',setautosearchurl,document.credtx,creditsearch);
+</SCRIPT>
+<%
 
 $rlab[0]="Full Name";
 $rlab[1]="Email Address";
@@ -49,7 +55,7 @@ if (isset($_POST['conftx'])) {
     $_SESSION['credit']=$ccred[0];
   }
 
-  $udetail=pg_query("SELECT fullname,id FROM users WHERE name='" . $_SESSION['acnum'] . "'");
+  $udetail=pg_query("SELECT fullname,uniqueid FROM users WHERE name='" . $_SESSION['acnum'] . "'");
   $r=pg_fetch_row($udetail,0);
 
   pg_query("UPDATE reseller SET rcallocated=rcallocated + " . $_SESSION['credit'] . " WHERE id = '" . $_SESSION['resellerid'] . "'");
@@ -106,7 +112,7 @@ if (isset($_POST['conftx'])) {
     }
 %>
     <TR <%print $bcolor[1];%>>    
-    <TD>Account/Card/Phone Number</TD>
+    <TD>Account Name/Number</TD>
     <TD><%print $_SESSION['acnum'];%>
     </TD></TR>
     <TR <%print $bcolor[0];%>>
@@ -148,7 +154,7 @@ if (isset($_POST['conftx'])) {
   <TR>
   <TR <%print $bcolor[$rcnt % 2];$rcnt ++;%>>
   <TD>Account/Card/Phone Number</TD>
-    <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=acnum>
+    <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=acnum autocomplete=off SIZE=40>
   </TD></TR>
   <TR <%print $bcolor[$rcnt % 2];$rcnt++;%>>
     <TD>Ammount To Transfer (R) <%printf("%0.2f",$cavail);%> Avail.</TD>
