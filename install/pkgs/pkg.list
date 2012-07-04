@@ -15,7 +15,6 @@ locale.tbz:var/spool/rsync/programs:bunzip2
 mysql-manual.tgz:var/spool/rsync/webman/mysqlmanual:gunzip
 mysql.txz:var/spool/rsync/programs:unxz
 odbc.tar.bz2:var/spool/rsync/programs:bunzip2
-openvpn.tbz:var/spool/rsync/programs:bunzip2
 perl.tbz:var/spool/rsync/programs:bunzip2
 php_manual_en.tar.bz2:var/spool/rsync/webman/phpmanual:bunzip2
 polyfirm.txz:var/spool/apache/htdocs/polycom:unxz

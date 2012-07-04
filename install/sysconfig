@@ -98,8 +98,8 @@ EOF
   /usr/bin/dialog --backtitle "$BT" --title "GNU TLS" --infobox "Installing GNU Transport Layer Security" 7 35
   tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/gnutls.tar.bz2 > /dev/null 2>&1
 
-  /usr/bin/dialog --backtitle "$BT" --title "Open VPN" --infobox "Installing Open VPN Server" 7 35
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/openvpn.tbz > /dev/null 2>&1
+#  /usr/bin/dialog --backtitle "$BT" --title "Open VPN" --infobox "Installing Open VPN Server" 7 35
+#  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/openvpn.tbz > /dev/null 2>&1
 
   /usr/bin/dialog --backtitle "$BT" --title "FTP Server" --infobox "Installing Proftp" 7 35
   tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/proftp.tbz > /dev/null 2>&1
