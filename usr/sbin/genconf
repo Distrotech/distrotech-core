@@ -511,6 +511,7 @@ while(<CF>) {
       $dnsconf{'DynamicCNAME'}=@words[1];
     } elsif (@words[0] eq "Host") {
       shift @words;
+      @words[0]=lc(@words[0]);
       $hdata=join("\|",@words);
       $hosts{@words[0]}=$hdata;
 
