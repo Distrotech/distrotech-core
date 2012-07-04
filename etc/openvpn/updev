@@ -1,0 +1,6 @@
+#!/bin/bash
+
+/sbin/ip addr add ::${4}/96 dev sit0
+/sbin/ip route add ${4}/32 dev ${1} src ${4} table Link
+
+exit 0
