@@ -54,6 +54,7 @@ EOF
   setterm -cursor off
   /usr/bin/dialog --backtitle "$BT" --title "Installing Kernel" --infobox "Installing Linux Kernel" 7 35
   tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/core/kernel.tar.bz2 > /dev/null 2>&1
+  tar -C ${INST_BASE}/lib/firmware -xJf /install/pkgs/extrafw.txz > /dev/null 2>&1
   rsync -a /lib/modules/* ${INST_BASE}/lib/modules/ > /dev/null 2>&1
   rsync -a /boot/vmlinuz-install ${INST_BASE}/boot/vmlinuz-${KERNEL}-install
   rsync -a /boot/System.map-install ${INST_BASE}/boot/System.map-${KERNEL}-install
