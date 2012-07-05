@@ -93,7 +93,7 @@ EOF
   tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/fp-v5.0.tbz > /dev/null 2>&1
 
   /usr/bin/dialog --backtitle "$BT" --title "Python Scripting" --infobox "Installing Python Scripting" 7 35
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/python.tbz > /dev/null 2>&1
+  tar -C ${INST_BASE} -xJf /install/pkgs/python.txz > /dev/null 2>&1
 
   /usr/bin/dialog --backtitle "$BT" --title "GNU TLS" --infobox "Installing GNU Transport Layer Security" 7 35
   tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/gnutls.tar.bz2 > /dev/null 2>&1
