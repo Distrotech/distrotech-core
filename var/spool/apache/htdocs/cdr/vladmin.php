@@ -94,7 +94,7 @@ $langn=array(_("Spanish"),_("French"));
 $poscb=array("CDND","DRING","WAIT","RECORD","NOPRES","DFEAT","NOVOIP","CRMPOP","IAXLine","H323Line","Locked",
              "FAXMAIL","DISPNAME","SNOMLOCK","POLYDIRLN","DDIPASS");
 $negcb=array("NOVMAIL");
-$yesnocb=array("faxgateway","faxdetect");
+$yesnocb=array("faxgateway");
 
 $featarr=array("CDND","CFBU","CFIM","CFNA","CFFAX","ALTC","OFFICE","WAIT","RECORD",
                 "ALOCK","NOPRES","DFEAT","NOVOIP","CRMPOP","NOVMAIL","FAXMAIL","DISPNAME","SNOMLOCK","POLYDIRLN","EFAXD",
@@ -277,7 +277,7 @@ if ((isset($pbxupdate)) && ($pbxupdate == "Save Changes")) {
   $userarr=array("nat","dtmfmode","fullname","email","canreinvite","qualify","activated",
                  "language","callgroup","pickupgroup","insecure","h323prefix","simuse",
                  "tariff","h323gkid","h323permit","h323neighbor","t38pt_udptl","encryption",
-                 "encryption_taglen","faxdetect");
+                 "encryption_taglen");
 
   $dbq="";
   for($ucnt=0;$ucnt < count($userarr);$ucnt++) {
@@ -312,7 +312,7 @@ $qconsdata=pg_query($db,"SELECT context,count FROM console WHERE mailbox = '" . 
 $qgetudata=pg_query($db,"SELECT nat,dtmfmode,fullname,email,canreinvite,qualify,password,allow,callgroup,pickupgroup,
                                 insecure,h323permit,h323gkid,h323prefix,h323neighbor,ipaddr,language,secret,usertype,
                                 activated,simuse,tariff,t38pt_udptl,
-                                case when (encryption_taglen = '32') then encryption||',32bit' else encryption end,faxdetect
+                                case when (encryption_taglen = '32') then encryption||',32bit' else encryption end
                               FROM users WHERE name='" . $_POST['exten'] . "'");
 
 
@@ -365,7 +365,6 @@ $simuse=$udata[20];
 $tariff=$udata[21];
 $t38pt_udptl=$udata[22];
 $encryption=$udata[23];
-$faxdetect=$udata[24];
 
 $conscont=$consdata[0];
 $conscount=$consdata[1];
@@ -814,12 +813,12 @@ if ($SUPER_USER == 1) {
 }
 %>
 <TR CLASS=list-color<%print ($cnt % 2) + 1;$cnt++;%>>
-  <TD ALIGN=LEFT onmouseover=myHint.show('ES23') ONMOUSEOUT=myHint.hide()><%print _("Early Fax Detect");%></TD>
+  <TD ALIGN=LEFT onmouseover=myHint.show('ES23') ONMOUSEOUT=myHint.hide()><%print _("Fax Detectection");%></TD>
   <TD>
     <SELECT NAME=EFAXD> 
       <OPTION VALUE=0<%if ($origdata["efaxd"] == "0") {print " SELECTED";}%>>No Fax Detect</VALUE>
-      <OPTION VALUE=1<%if ($origdata["efaxd"] == "1") {print " SELECTED";}%>>Incoming Fax Detect</VALUE>
-      <OPTION VALUE=2<%if ($origdata["efaxd"] == "2") {print " SELECTED";}%>>In And Out</VALUE>
+      <OPTION VALUE=1<%if ($origdata["efaxd"] == "1") {print " SELECTED";}%>>Enabled</VALUE>
+      <OPTION VALUE=2<%if ($origdata["efaxd"] == "2") {print " SELECTED";}%>>Early Fax Detect</VALUE>
     </SELECT>
   </TD>
 </TR>
@@ -1145,10 +1144,6 @@ if ($SUPER_USER == 1) {
 <TR CLASS=list-color1>
   <TD onmouseover=myHint.show('ES39') ONMOUSEOUT=myHint.hide()><%print _("Allow T.38 Support");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=t38pt_udptl <%if ($t38pt_udptl != "no") {print "CHECKED";}%>></TD>
-</TR>
-<TR CLASS=list-color2>
-  <TD onmouseover=myHint.show('ES39') ONMOUSEOUT=myHint.hide()><%print _("Enable Fax Detect");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=faxdetect <%if ($faxdetect != "no") {print "CHECKED";}%>></TD>
 </TR>
 </TABLE>
 </DIV>
