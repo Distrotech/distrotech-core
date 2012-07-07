@@ -72,7 +72,7 @@ if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstco
     done
   fi;
 
-  if [ -s /etc/radvd.conf ] && [ ! "pidof radvd" ];then
+  if [ -s /etc/radvd.conf ] && [ ! "`pidof radvd`" ];then
     /usr/sbin/radvd
   fi;
 
