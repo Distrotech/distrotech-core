@@ -10528,7 +10528,7 @@ sub printcrontab() {
   print CT "\n#Server Set Options\n";
   printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","*","*","/usr/bin/nice -n 20 /usr/bin/logcheck.sh");
   printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","/usr/sbin/logrotate /etc/logrotate.conf");
-  printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","(killall dhcpd;sleep 2;killall -9 dhcpd;/usr/sbin/dhcpd;/usr/sbin/dhcpd -6 -cf /etc/dhcpd6.conf)");
+  printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","(killall dhcpd;sleep 2;killall -9 dhcpd;/usr/sbin/dhcpd;if [ -s /etc/dhcpd6.conf ];then /usr/sbin/dhcpd -6 -cf /etc/dhcpd6.conf; fi)");
 #  printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","*/4","*","kill -HUP `head -1 /var/run/sendmail.pid`");
   printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","/usr/bin/updatedb --output=/var/db/locate --prunepaths='/proc /dev /sys /tmp /var/tmp /mnt/dev /var/spool/mail /var/spool/mail /var/spool/mailscanner /var/web'");
   if ($sysconfig{'Type'} eq "full") {
