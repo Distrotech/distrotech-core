@@ -2202,9 +2202,9 @@ if [ "$DHFDIFF" ] || [ "$DHFDIFF6" ];then
   chown root.root /etc/dhcpd.conf /etc/dhcpd6.conf
   touch /var/state/dhcp/dhcpd.leases /var/state/dhcp/dhcpd6.leases
   kill -9 `cat /var/run/dhcpd.pid` > /dev/null 2>&1
-  kill -9 `cat /var/run/dhcpd6.pid` > /dev/null 2>&1
   /usr/sbin/dhcpd > /dev/null 2>&1
   if [ -s /etc/dhcpd6.conf ];then
+    kill -9 `cat /var/run/dhcpd6.pid` > /dev/null 2>&1
     /usr/sbin/dhcpd -6 -cf /etc/dhcpd6.conf > /dev/null 2>&1
   fi;
  else
