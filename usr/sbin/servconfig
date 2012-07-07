@@ -72,7 +72,7 @@ if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstco
     done
   fi;
 
-  if [ -s /etc/radvd.conf ] && [ ! "`pidof radvd`" ];then
+  if [ -s /etc/radvd.conf ] && [ -x /usr/sbin/radvd ] && [ ! "`pidof radvd`" ];then
     /usr/sbin/radvd
   fi;
 
@@ -2234,7 +2234,7 @@ if [ "$RADVDDIFF" ];then
     sleep 1
     KSTOP=${KSTOP}X
   done;
-  if [ -s /etc/radvd.conf ];then
+  if [ -s /etc/radvd.conf ] && [ -x /usr/sbin/radvd ];then
     /usr/sbin/radvd
     sleep 10;
     killall -HUP hostapd
