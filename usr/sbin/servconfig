@@ -72,6 +72,10 @@ if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstco
     done
   fi;
 
+  if [ -s /etc/radvd.conf ] && [ ! "pidof radvd" ];then
+    /usr/sbin/radvd
+  fi;
+
   if [ ! "`pidof named`" ];then
     /usr/sbin/named > /dev/null 2>&1
   fi;
@@ -2230,9 +2234,11 @@ if [ "$RADVDDIFF" ];then
     sleep 1
     KSTOP=${KSTOP}X
   done;
-  radvd
-  sleep 10;
-  killall -HUP hostapd
+  if [ -s /etc/radvd.conf ];then
+    /usr/sbin/radvd
+    sleep 10;
+    killall -HUP hostapd
+  fi;
 fi;
 
 if [ -e ipv6to4 ] && [ -e /etc/ifconf/ipv6to4 ];then 
