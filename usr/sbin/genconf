@@ -16831,10 +16831,8 @@ __EOB__
   $cnt=1;
   foreach $iface (@ints) {
     @idata = split(/\|/,$interface{$iface});
-    if ($sysconf{'External'} eq $iface) {
-      print "@idata\n";
-    }
-    if (( ! -e "/etc/chilli/$iface.conf") && (($isbridge{$iface} eq "") || (!$isbridge{$iface}))) {
+    if (( ! -e "/etc/chilli/$iface.conf") && (($isbridge{$iface} eq "") || (!$isbridge{$iface})) &&
+        (($sysconf{'External'} ne $iface) || ($i6addr{$iface} ne ""))){
       if ($i6addr{$iface} ne "") {
         @i6dat = split(/\|/,$i6addr{$iface});
         if ((@i6dat[4] ne "") && (@i6dat[5] ne "")) {
