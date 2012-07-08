@@ -169,7 +169,7 @@ if [ "$FIREWALL" == "EXTERNAL" ];then
  elif [ "$FIREWALL" == "INTERNAL" ] && [ "$DEFAULT" ];then
   sleep 2;
   (/sbin/ip route del 0/0 table 90;
-  /sbin/ip route add 0/0 via ${DEFAULT} table 90
+  /sbin/ip route add 0/0 via ${DEFAULT} table 90) > /dev/null 2>&1
 fi;
 
 #Bridge control

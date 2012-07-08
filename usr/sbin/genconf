@@ -5354,6 +5354,7 @@ sub printtables() {
     @brint=split(/ /,$sysconf{'Bridge'});
     $brcnt=0;
     foreach $bint (@brint) {
+      $isbridge{$bint}=TRUE;
       $brinf{$bint}=$sysconf{'Internal'};
       $brcnt++;
     }
@@ -16772,7 +16773,13 @@ sub printradvd {
   print SIX24 <<__EOB__;
 #!/bin/bash
 
-i6prefix=\$(printf '%02x%02x:%02x%02x\\n' \$(echo \${2} | sed 's/\\./ /g'))
+if [ "\${3}" ];then
+  extip=\${3};
+ else
+  extip=\${2};
+fi;
+
+i6prefix=\$(printf '%02x%02x:%02x%02x\\n' \$(echo \${extip} | sed 's/\\./ /g'))
 if [ -d /sys/class/net/sit1 ];then
   /sbin/ip tunnel change sit1 local \${2}
   /sbin/ip link set dev sit1 down
@@ -16781,8 +16788,13 @@ if [ -d /sys/class/net/sit1 ];then
 fi;
 
 /sbin/ip link set dev sit1 up
+if [ "\${3}" ];then
+  /sbin/ip -4 addr flush dev sit1
+  /sbin/ip -4 addr add \${3}/32 dev sit1
+  /sbin/ip -4 addr add ::\${3}/96 dev sit0 > /dev/null 2>&1
+fi;
+
 /sbin/ip -6 route add ::/0 via fe80::\${i6prefix} dev sit1
-/sbin/ip route add 0/0 proto 41 dev \${2} table Static
 /sbin/ip addr add 2002:\${i6prefix}::1/64 dev \${1} > /dev/null 2>&1
 /sbin/ip addr add 2002:\${i6prefix}::1/16 dev sit0 > /dev/null 2>&1
 
@@ -16819,9 +16831,10 @@ __EOB__
   $cnt=1;
   foreach $iface (@ints) {
     @idata = split(/\|/,$interface{$iface});
-    if ((( ! -e "/etc/chilli/$iface.conf") && (@idata[1] ne "0.0.0.0") && (@idata[2] ne "32") && ($sysconf{'External'} ne $iface)) || ($i6addr{$iface} ne "")) {
-#      print SIX24 "/sbin/ip addr add 2002:\${i6prefix}:${cnt}::1/64 dev " .  $iface . " >/dev/null 2>&1\n";
-      print SIX24A "/sbin/ip addr \${1} 2002:\${2}:${cnt}::1/64 dev " .  $iface . " >/dev/null 2>&1\n";
+    if ($sysconf{'External'} eq $iface) {
+      print "@idata\n";
+    }
+    if (( ! -e "/etc/chilli/$iface.conf") && (($isbridge{$iface} eq "") || (!$isbridge{$iface}))) {
       if ($i6addr{$iface} ne "") {
         @i6dat = split(/\|/,$i6addr{$iface});
         if ((@i6dat[4] ne "") && (@i6dat[5] ne "")) {
@@ -16838,7 +16851,8 @@ interface $iface {
 	AdvManagedFlag $radvman;
 	AdvOtherConfigFlag $radvman;
 __EOB__
-        if ($extint ne "") {
+        if (($extint ne "") && ($extint ne $iface)) {
+          print SIX24A "/sbin/ip addr \${1} 2002:\${2}:${cnt}::1/64 dev " .  $iface . " >/dev/null 2>&1\n";
           print RADVD <<__EOB__;
 	prefix 0:0:0:${cnt}::/64 {
 		AdvOnLink on;
@@ -16849,9 +16863,10 @@ __EOB__
 #		AdvPreferredLifetime 120;
 	};
 __EOB__
-      }
-      if ($i6addr{$iface} ne "") {
-        print RADVD <<__EOB__;
+          $cnt++;
+        }
+        if ($i6addr{$iface} ne "") {
+          print RADVD <<__EOB__;
 	prefix @i6dat[1]::/@i6dat[3] {
 		AdvOnLink on;
 		AdvAutonomous on;
@@ -16860,7 +16875,6 @@ __EOB__
 __EOB__
       }
       print RADVD "};\n\n";
-      $cnt++;
     }
   }
   close(RADVD);
