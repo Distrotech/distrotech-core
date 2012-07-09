@@ -5729,8 +5729,8 @@ if [ "\$0" == "/etc/ppp/ip-up" ];then
     if [ "\${1}" == "ppp0" ];then
       (echo "#\!/bin/bash";echo;echo "\$0 \$\@") > /tmp/pppup/ext.ip-up
       chmod 700 /tmp/pppup/ext.ip-up
+      /etc/ifconf/ipv6to4 \${EXT_IP_ADDR} &
     fi;
-    /etc/ifconf/ipv6to4 \${1} \${EXT_IP_ADDR} &
   fi;
   /sbin/ip addr add ::\${EXT_IP_ADDR}/96 dev sit0 > /dev/null 2>&1
 fi;
@@ -13656,7 +13656,7 @@ SYSFILES="var/spool/apache/htdocs/ns/config/netsentry.conf \\
           etc/asterisk/iaxtel.conf etc/asterisk/capi.conf \\
           etc/asound.state etc/zebra/Zebra.conf etc/dhcp.conf.local etc/dhcp6.conf.local \\
           etc/ipsec.d/cacerts/cacert.pem /etc/ppp/mangle /etc/dyndnsconf \\
-          etc/rc.d/rc.mangle etc/ipsec.secrets etc/*.local \\
+          etc/rc.d/rc.mangle etc/ipsec.secrets etc/*.local etc/ipv6.conf etc/6to4.conf \\
           etc/asterisk/pgsql.local etc/asterisk/pgsql.access etc/dns.master"
 
 
@@ -16770,69 +16770,142 @@ sub printradvd {
   open(SIX24,">ipv6to4");
   open(SIX24A,">ipv6to4.addr");
 
-  print SIX24 <<__EOB__;
+  if ($sysconf{'External'} eq "Dialup") {
+    $extint="ppp0";
+  } else {
+    $extint=$sysconf{'External'};
+    @extdat=split(/\|/,$interface{$extint});
+    $extifip=@extdat[1];
+    if (checkipv4($extifip) && (($sysconf{'NattedIP'} eq "") || checkipv4($sysconf{'NattedIP'}))) {
+      $extint="";
+    }
+  }
+
+  if (($sysconf{'NattedIP'} ne "") && ($extint ne "")) {
+    @eipdat=split(/\./,$extifip);
+    $gwout=sprintf("%02x%02x:%02x%02x",@eipdat[0], @eipdat[1], @eipdat[2], @eipdat[3]);
+    $extip=$sysconf{'NattedIP'};
+    $sitip=$extifip;
+  } elsif (($extint ne "") && ($extint ne "ppp0")) {
+    $gwout="\${i6prefix}";
+    $extip=$extifip;
+    $sitip=$extip;
+  } else {
+    $gwout="\${i6prefix}";
+  }
+  
+  if (($extint eq "") || ($extint eq "ppp0")) {
+    $extip="\${1}";
+    $sitip=$extip;
+    $ip6prefix="\$(printf '%02x%02x:%02x%02x\\n' \$(echo $extip | sed 's/\\./ /g'))";
+    $base6to4="\n		Base6to4Interface ppp0;";
+    $baseprefix="0:0:0";
+    $extrad=0;
+  } else {
+    @eipdat=split(/\./,$extip);
+    $ip6prefix=sprintf("%02x%02x:%02x%02x",@eipdat[0], @eipdat[1], @eipdat[2], @eipdat[3]);
+    $base6to4="";
+    $baseprefix="2002:" . $ip6prefix;
+    $extrad=1;
+  }
+
+  if ($extint ne "") {
+    print SIX24 <<__EOB__;
 #!/bin/bash
 
-if [ "\${3}" ];then
-  extip=\${3};
- else
-  extip=\${2};
-fi;
+i6prefix=$ip6prefix
 
-i6prefix=\$(printf '%02x%02x:%02x%02x\\n' \$(echo \${extip} | sed 's/\\./ /g'))
+#Configure block on local proxy
+/sbin/ip addr add 2002:\${i6prefix}::1/48 dev sit0 > /dev/null 2>&1
+
+#Configure Default gateway
 if [ -d /sys/class/net/sit1 ];then
-  /sbin/ip tunnel change sit1 local \${2}
+  /sbin/ip tunnel change sit1 local $sitip
   /sbin/ip link set dev sit1 down
  else
-  /sbin/ip tunnel add sit1 mode sit remote 192.88.99.1 local \${2}
+  /sbin/ip tunnel add sit1 mode sit remote 192.88.99.1 local $sitip
 fi;
-
 /sbin/ip link set dev sit1 up
-if [ "\${3}" ];then
-  /sbin/ip -4 addr flush dev sit1
-  /sbin/ip -4 addr add \${3}/32 dev sit1
-  /sbin/ip -4 addr add ::\${3}/96 dev sit0 > /dev/null 2>&1
-fi;
 
-/sbin/ip -6 route add ::/0 via fe80::\${i6prefix} dev sit1
-/sbin/ip addr add 2002:\${i6prefix}::1/64 dev \${1} > /dev/null 2>&1
-/sbin/ip addr add 2002:\${i6prefix}::1/16 dev sit0 > /dev/null 2>&1
+__EOB__
+
+    $cnt=2;
+    $nodefault=1;
+    if (-e "/etc/6to4.conf") {
+      open(SFC,"/etc/6to4.conf");
+      while(<SFC>) {
+        chop $_;
+        @gwto4=split(/\|/,$_);
+        if (@gwto4[1] eq "") {
+          @gwto4[1]=0;
+        }
+        print SIX24 <<__EOB__;
+#Additonal gateway 2002:@gwto4[1]::/@gwto4[2] Via @gwto4[0]
+if [ -d /sys/class/net/sit${cnt} ];then
+  /sbin/ip tunnel change sit${cnt} local $sitip
+  /sbin/ip link set dev sit${cnt} down
+ else
+  /sbin/ip tunnel add sit${cnt} mode sit remote @gwto4[0] local $sitip
+fi;
+/sbin/ip link set dev sit${cnt} up
+/sbin/ip route add 2002:@gwto4[1]::/@gwto4[2] via fe80::\${i6prefix} dev sit${cnt}
+
+__EOB__
+        if (@gwto4[2] <= 16) {
+          $nodefault=0;
+        }
+        $cnt++;
+      }
+      close(SFC);
+    }
+
+    if ($extint ne "ppp0") {
+      print SIX24 "/sbin/ip addr add 2002:\${i6prefix}::1/64 dev $extint > /dev/null 2>&1\n";
+    }
+
+    if ($nodefault) {
+      print SIX24 "\n/sbin/ip -6 route add 2002::/16 dev sit0 > /dev/null 2>&1\n";
+    }
+
+    print SIX24 <<__EOB__;
+/sbin/ip -6 route add ::/0 via fe80::${gwout} dev sit1 > /dev/null 2>&1
 
 killall -HUP radvd;
 sleep 3;
-if [ ! "`pidof radvd`" ] && [ -e /etc/radvd.conf ] && [ -s /etc/radvd.conf ];then
-  radvd;
+if [ ! "`pidof radvd`" ] && [ -x /usr/sbin/radvd ] && [ -s /etc/radvd.conf ];then
+  /usr/sbin/radvd;
 fi;
-sleep 10;
+
 if [ "`pidof hostapd`" ];then
+  sleep 10;
   killall -HUP hostapd
 fi;
 
 /sbin/iptables -F IP6RD
-/sbin/iptables -I IP6RD -j ACCEPT -i \${1} -d \${2}
-/sbin/iptables -I IP6RD -j ACCEPT -o \${1} -s \${2}
+/sbin/iptables -I IP6RD -j ACCEPT -i $extint -d $sitip
+/sbin/iptables -I IP6RD -j ACCEPT -o $extint -s $sitip
 
 /etc/ifconf/ipv6to4.addr add \${i6prefix}
 __EOB__
+  } else {
+    print SIX24 <<__EOB__;
+#!/bin/bash
 
+exit;
+
+__EOB__
+  }
   print SIX24A <<__EOB__;
 #!/bin/bash
 
 __EOB__
 
-  if ($sysconf{'External'} eq "Dialup") {
-    $extint="ppp0";
-  } elsif ($sysconf{'External'} ne $sysconf{'Internal'}) {
-    $extint=$sysconf{'External'};
-  } else {
-    $extint="";
-  }
-
   $cnt=1;
   foreach $iface (@ints) {
     @idata = split(/\|/,$interface{$iface});
-    if (( ! -e "/etc/chilli/$iface.conf") && (($isbridge{$iface} eq "") || (!$isbridge{$iface})) &&
-        (($sysconf{'External'} ne $iface) || ($i6addr{$iface} ne ""))){
+    if (( ! -e "chilli-conf.$iface") && (($isbridge{$iface} eq "") || (!$isbridge{$iface})) &&
+        (($extint ne $iface) || ($i6addr{$iface} ne "") || $extrad) &&
+        (($extint ne "") || ($i6addr{$iface} ne ""))){
       if ($i6addr{$iface} ne "") {
         @i6dat = split(/\|/,$i6addr{$iface});
         if ((@i6dat[4] ne "") && (@i6dat[5] ne "")) {
@@ -16852,16 +16925,25 @@ __EOB__
         if (($extint ne "") && ($extint ne $iface)) {
           print SIX24A "/sbin/ip addr \${1} 2002:\${2}:${cnt}::1/64 dev " .  $iface . " >/dev/null 2>&1\n";
           print RADVD <<__EOB__;
-	prefix 0:0:0:${cnt}::/64 {
+	prefix $baseprefix:${cnt}::/64 {
 		AdvOnLink on;
 		AdvAutonomous on;
-		AdvRouterAddr off;
-		Base6to4Interface $extint;
-#		AdvValidLifetime 300;
-#		AdvPreferredLifetime 120;
+		AdvRouterAddr off;$base6to4
+		AdvValidLifetime 7200;
+		AdvPreferredLifetime 3600;
 	};
 __EOB__
           $cnt++;
+        } elsif ($extrad) {
+          print RADVD <<__EOB__;
+	prefix ${baseprefix}::/64 {
+		AdvOnLink on;
+		AdvAutonomous on;
+		AdvRouterAddr off;
+		AdvValidLifetime 7200;
+		AdvPreferredLifetime 3600;
+	};
+__EOB__
         }
         if ($i6addr{$iface} ne "") {
           print RADVD <<__EOB__;
@@ -16913,6 +16995,40 @@ sub nmtocidr {
     }
   }
   return $cidr;
+}
+
+sub checkipv4 {
+  ($ip) = @_;
+
+  @ipdat=split(/\./,${ip});
+  $hip=sprintf("%02x%02x%02x%02x",@ipdat[0], @ipdat[1], @ipdat[2], @ipdat[3]);
+
+  if (!((hex($hip) ^ hex("e0000000")) >> 28)) { #224/4
+    return 1;
+  } elsif (!((hex($hip) ^ hex("00000000")) >> 24)) {#0/8
+    return 1;
+  } elsif (!((hex($hip) ^ hex("0a000000")) >> 24)) {#10/8
+    return 1;
+  } elsif (!((hex($hip) ^ hex("7f000000")) >> 24)) {#127/8
+    return 1;
+  } elsif (!((hex($hip) ^ hex("64400000")) >> 22)) {#100.64/10
+    return 1;
+  } elsif (!((hex($hip) ^ hex("ac100000")) >> 20)) {#172.16/12
+    return 1;
+  } elsif (!((hex($hip) ^ hex("c6120000")) >> 17)) {#198.18/15
+    return 1;
+  } elsif (!((hex($hip) ^ hex("c0a80000")) >> 16)) {#192.168/16
+    return 1;
+  } elsif (!((hex($hip) ^ hex("a9fe0000")) >> 16)) {#169.254/16
+    return 1;
+  } elsif (!((hex($hip) ^ hex("c0000200")) >> 8)) {#192.0.2/24
+    return 1;
+  } elsif (!((hex($hip) ^ hex("c6336400")) >> 8)) {#198.51.100/24
+    return 1;
+  } elsif (!((hex($hip) ^ hex("cb007100")) >> 8)) {#203.0.113/24
+    return 1;
+  }
+  return 0;
 }
 
 flock($lockfh, LOCK_UN);
