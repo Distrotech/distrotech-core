@@ -8448,6 +8448,19 @@ update delete $dnsconf{'DynZone'}. A
 update delete $dnsconf{'DynZone'}. AAAA
 update add $dnsconf{'DynZone'}. 180 A \$EXT_IP_ADDR
 update add $dnsconf{'DynZone'}. 180 AAAA 2002:\${i6prefix}::1
+__EOB__
+
+if (-e "/etc/ipv6.dns") {
+  open(SDNS,"/etc/ipv6.dns");
+  while(<SDNS>) {
+    chop $_;
+    @sixdyn=split(/\|/,$_);
+    print FWP "update delete @sixdyn[0].$dnsconf{'DynZone'}. AAAA\n";
+    print FWP "update add @sixdyn[0].$dnsconf{'DynZone'}. 180 AAAA 2002:\${i6prefix}:@sixdyn[1]\n";
+  }
+}
+
+print FWP<<__EOB__;
 $delrec
 send
 EOF
@@ -8887,7 +8900,7 @@ print FWD<<__EOB__;
 if [ ! \"\${6}\" ];then
   i6prefix=\$(printf '%02x%02x:%02x%02x\\n' \$(echo \${4} | sed 's/\\./ /g'))
   /sbin/ip addr del 2002:\${i6prefix}::1/64 dev \${1} > /dev/null 2>&1
-  /sbin/ip addr del 2002:\${i6prefix}::1/16 dev sit0 > /dev/null 2>&1
+  /sbin/ip addr del 2002:\${i6prefix}::1/48 dev sit0 > /dev/null 2>&1
   /etc/ifconf/ipv6to4.addr del \${i6prefix}
 __EOB__
   print FWD " elif [ \"\$6\"  == \"pppoe\" ];then\n";
@@ -13633,7 +13646,9 @@ BDATE=`date +%Y-%m-%d`
 BFILE=/var/spool/backup/backup-\${BDATE}.tar
 
 if [ `"whoami"` == "root" ] || [ `"whoami"` == "admin" ];then
-  /usr/bin/pg_dump -U asterisk -h 127.0.0.1 -aDt users -t interbranch -t atatable -t qfeatures -t features -t astdb -t queues -t queue_members -t queue_table -t dynspan -t zapspan -t zapchan -t zapgroup -t gsmchannels -t provider -t trunk -t officehours -t cc_callerid |/usr/bin/grep -vE "(^\$)|(^--)" |/usr/bin/gzip -c > /var/spool/backup/pbxdata-\${BDATE}.sql.gz
+  /usr/bin/pg_dump -U asterisk -h 127.0.0.1 -aDt users -t interbranch -t atatable -t qfeatures -t features -t astdb -t queues -t queue_members \
+                   -t queue_table -t dynspan -t zapspan -t zapchan -t zapgroup -t gsmchannels -t provider -t speed_dial \
+                   -t trunk -t officehours -t cc_callerid |/usr/bin/grep -vE "(^\$)|(^--)" |/usr/bin/gzip -c > /var/spool/backup/pbxdata-\${BDATE}.sql.gz
 fi;
 
 rm /var/spool/backup/pbxdata.sql.gz
@@ -13751,7 +13766,7 @@ if ( $voipbackup eq "true") {
   print BUS "/bin/touch /tmp/asterisk.psql.gz\n/bin/chmod 600 /tmp/asterisk.psql.gz\n";
   print BUS <<__EOF__;
 pg_dump -U asterisk -h 127.0.0.1 -dat users -t interbranch -t atatable -t qfeatures -t features -t astdb -t queue_members -t queue_tables -t officehours -t dynspan \\
-                                 -t zapchan -t zapspan -t zapgroup -t gsmchannels -t trunk -t localrates \\
+                                 -t zapchan -t zapspan -t zapgroup -t gsmchannels -t trunk -t speed_dial -t localrates \\
                                  -t provider -t tariff -t tariffrate -t reseller |gzip -c |dd of=/tmp/asterisk.psql.gz
 
 __EOF__
