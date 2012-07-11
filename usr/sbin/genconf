@@ -3769,6 +3769,7 @@ sub printrcppp(){
           print PUE " endpoint IP:@ldata[8]";
         }
         print PUE " &\n";
+        print PUE "flock -u 10\n";
         print PUE ") 10>/var/lock/ppp$lcnt.lock\n";
         close(PUE);
 
@@ -3944,6 +3945,7 @@ __EOB__
     print PU3G "fi;\n\n";
     print PU3G "date > /var/log/pppd.log.3g\n";
     print PU3G "exec /usr/sbin/pppd /dev/gsmmodem connect \"/usr/sbin/chat -v -f /etc/ppp/diald.3g\" lock maxfail 5 unit 10 logfile /var/log/pppd.log.3g linkname 3g ipparam 3g nodefaultroute noauth persist nomultilink nodetach usepeerdns &\n";
+    print PU3G "flock -u 10\n";
     print PU3G ") 10>/var/lock/ppp10.lock\n";
   }
   close(PU3G);
@@ -4050,6 +4052,7 @@ __EOB__
     print RP "#PPP Not Required On This System\n";
     print RP "/usr/sbin/servconfig\n";
   }
+  print PU "flock -u 10\n";
   print PU ") 10>/var/lock/ppp0.lock &\n";
   close(PU);
 
@@ -5813,12 +5816,12 @@ __EOB__
   print FW <<_EOB_;
 /sbin/iptables -t nat -N DEFPROXY
 /sbin/iptables -A DEFPROXY -j DNAT -t nat -p tcp --to-destination $localip --sport 1024:65535 --dport 80
-/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 4569
-/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 5000
-/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 5060
-/sbin/iptables -A DEFPROXY -j DNAT -t nat -p tcp --to-destination $localip --sport 1024:65535 --dport 5060:5061
-/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 10000:20000
-/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 1718:1720
+#/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 4569
+#/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 5000
+#/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 5060
+#/sbin/iptables -A DEFPROXY -j DNAT -t nat -p tcp --to-destination $localip --sport 1024:65535 --dport 5060:5061
+#/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 10000:20000
+#/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 1718:1720
 
 _EOB_
 
@@ -7672,12 +7675,12 @@ __EOB__
 
   print FW <<_EOB_;
 /sbin/iptables -A DEFPROXY -j REDIRECT -t nat -p tcp --sport 1024:65535 --dport 80 --to-port 8080 -m state --state ESTABLISHED,NEW
-/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 4569
-/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 5000
-/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 5060
-/sbin/iptables -A DEFPROXY -j DNAT -t nat -p tcp --to-destination $localip --sport 1024:65535 --dport 5060:5061
-/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 10000:20000
-/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 1718:1720
+#/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 4569
+#/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 5000
+#/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 5060
+#/sbin/iptables -A DEFPROXY -j DNAT -t nat -p tcp --to-destination $localip --sport 1024:65535 --dport 5060:5061
+#/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 10000:20000
+#/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 1718:1720
 /sbin/iptables -A DEFPROXY -j EXTPROXY -t nat
 
 _EOB_
