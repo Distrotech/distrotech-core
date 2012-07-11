@@ -3769,7 +3769,6 @@ sub printrcppp(){
           print PUE " endpoint IP:@ldata[8]";
         }
         print PUE " &\n";
-        print PUE "flock -u 10\n";
         print PUE ") 10>/var/lock/ppp$lcnt.lock\n";
         close(PUE);
 
@@ -3945,7 +3944,6 @@ __EOB__
     print PU3G "fi;\n\n";
     print PU3G "date > /var/log/pppd.log.3g\n";
     print PU3G "exec /usr/sbin/pppd /dev/gsmmodem connect \"/usr/sbin/chat -v -f /etc/ppp/diald.3g\" lock maxfail 5 unit 10 logfile /var/log/pppd.log.3g linkname 3g ipparam 3g nodefaultroute noauth persist nomultilink nodetach usepeerdns &\n";
-    print PU3G "flock -u 10\n";
     print PU3G ") 10>/var/lock/ppp10.lock\n";
   }
   close(PU3G);
@@ -4052,7 +4050,6 @@ __EOB__
     print RP "#PPP Not Required On This System\n";
     print RP "/usr/sbin/servconfig\n";
   }
-  print PU "flock -u 10\n";
   print PU ") 10>/var/lock/ppp0.lock &\n";
   close(PU);
 
@@ -10621,7 +10618,7 @@ sub printcrontab() {
     }
     if ((@vadsllink > 0) || ($mdmconf{'Connection'} eq "ADSL")) {
       print CT "\n#Shutdown ADSL PPP Link\n";
-      printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","1","*","(sleep 30;killall pppd;rm /var/run/netsentry*)");
+      printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","1","*","(sleep 30;killall pppd;rm /var/run/netsentry*;/var/lock/ppp*.lock)");
     }
   }
 
@@ -16947,8 +16944,8 @@ __EOB__
 		AdvOnLink on;
 		AdvAutonomous on;
 		AdvRouterAddr off;$base6to4
-		AdvValidLifetime 7200;
-		AdvPreferredLifetime 3600;
+		AdvValidLifetime 600;
+		AdvPreferredLifetime 300;
 	};
 __EOB__
           $cnt++;
@@ -16958,8 +16955,8 @@ __EOB__
 		AdvOnLink on;
 		AdvAutonomous on;
 		AdvRouterAddr off;
-		AdvValidLifetime 7200;
-		AdvPreferredLifetime 3600;
+		AdvValidLifetime 600;
+		AdvPreferredLifetime 300;
 	};
 __EOB__
         }
