@@ -1262,6 +1262,14 @@ if ( -e "/etc/ipv6.conf" ) {
   close(I6);
 }
 
+if (-e "/etc/6to4.conf") {
+  open(SFC,"/etc/6to4.conf");
+  while(<SFC>) {
+    chop $_;
+    push(@localsit, $_);
+  }
+}
+
 if ($sysconfig{'Type'} ne "") {
   open(CF,">netsentry.conf");
   chmod(0600,"netsentry.conf");
@@ -5332,6 +5340,9 @@ sub printtables() {
   open(FW,">iptables");
   chmod(0600,"iptables");
 
+  open(FW6,">ip6tables");
+  chmod(0600,"ip6tables");
+
   open(IF,">rc.interface");
   chmod(0600,"rc.interface");
 
@@ -5348,7 +5359,7 @@ sub printtables() {
   print FW "#!/bin/bash\n\n";
   print FWP "#!/bin/bash\n\n";
   print IF "#!/bin/bash\n\n";
-
+  print FW6 "#!/bin/bash\n\n";
 
   if ($sysconf{'Bridge'} ne "") {
     @brint=split(/ /,$sysconf{'Bridge'});
@@ -5815,8 +5826,8 @@ __EOB__
 /sbin/iptables -A DEFPROXY -j DNAT -t nat -p tcp --to-destination $localip --sport 1024:65535 --dport 80
 #/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 4569
 #/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 5000
-#/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 5060
-#/sbin/iptables -A DEFPROXY -j DNAT -t nat -p tcp --to-destination $localip --sport 1024:65535 --dport 5060:5061
+/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 5060
+/sbin/iptables -A DEFPROXY -j DNAT -t nat -p tcp --to-destination $localip --sport 1024:65535 --dport 5060:5061
 #/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 10000:20000
 #/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 1718:1720
 
@@ -5843,8 +5854,110 @@ _EOB_
   print FW "fi;\n";
 
   close(FW);
+  close(FW6);
   return;
 } else {
+  print FW6<<__EOB__;
+
+if [ \"\$1\" == "startup" ];then
+  /sbin/ip6tables -F
+  /sbin/ip6tables -N STATEOK
+  /sbin/ip6tables -N DENY
+  /sbin/ip6tables -N DEFIN
+  /sbin/ip6tables -N DEFOUT
+  /sbin/ip6tables -N EXTERNOUT
+  /sbin/ip6tables -N EXTERNIN
+  /sbin/ip6tables -N EXTERNFWD
+  /sbin/ip6tables -N INTERNOUT
+  /sbin/ip6tables -N EXTERNIN
+  /sbin/ip6tables -N INTERNFWD
+  /sbin/ip6tables -N MCASTFWD
+  /sbin/ip6tables -N SYSIN
+  /sbin/ip6tables -N SYSOUT
+  /sbin/ip6tables -N LOOPIN
+  /sbin/ip6tables -N LOOPOUT
+
+  /sbin/ip6tables -A INPUT -j STATEOK -m state --state RELATED,ESTABLISHED
+  /sbin/ip6tables -A INPUT -j ACCEPT -p icmpv6
+  /sbin/ip6tables -A INPUT -j ACCEPT -d ff02::/16 -s fe80::/64
+  /sbin/ip6tables -A INPUT -j LOOPIN -i lo
+  /sbin/ip6tables -A INPUT -j EXTERNIN
+  /sbin/ip6tables -A INPUT -j INTERNIN
+  /sbin/ip6tables -A INPUT -j DEFIN -i sit0 -s 2002::/16
+  /sbin/ip6tables -A INPUT -j DEFIN -i sit1
+  /sbin/ip6tables -A INPUT -j DENY
+
+  /sbin/ip6tables -A OUTPUT -j STATEOK -m state --state RELATED,ESTABLISHED
+  /sbin/ip6tables -A OUTPUT -j ACCEPT -p icmpv6
+  /sbin/ip6tables -A OUTPUT -j ACCEPT -d ff02::/16 -s fe80::/64
+  /sbin/ip6tables -A OUTPUT -j LOOPOUT -o lo
+  /sbin/ip6tables -A OUTPUT -j ACCEPT -p udp -s fe80::/64 -d fe80::/64 --sport 547 --dport 546
+  /sbin/ip6tables -A OUTPUT -j EXTERNOUT
+  /sbin/ip6tables -A OUTPUT -j INTERNOUT 
+  /sbin/ip6tables -A OUTPUT -j DEFOUT -o sit0 -d 2002::/16
+  /sbin/ip6tables -A OUTPUT -j DEFOUT -o sit1
+  /sbin/ip6tables -A OUTPUT -j DENY
+
+  /sbin/ip6tables -A FORWARD -j STATEOK -m state --state RELATED,ESTABLISHED
+  /sbin/ip6tables -A FORWARD -j ACCEPT -p icmpv6
+  /sbin/ip6tables -A FORWARD -j INTERNFWD
+  /sbin/ip6tables -A FORWARD -j ACCEPT -o sit0 -d 2002::/16
+  /sbin/ip6tables -A FORWARD -j ACCEPT -o sit1
+  /sbin/ip6tables -A FORWARD -j EXTERNFWD
+  /sbin/ip6tables -A FORWARD -j DENY
+
+  #Allow Related/Established Traffic
+  /sbin/ip6tables -A STATEOK -j ACCEPT ! -p tcp
+  /sbin/ip6tables -A STATEOK -j ACCEPT -p tcp ! --syn
+  /sbin/ip6tables -A STATEOK -j ACCEPT -p tcp --tcp-flags SYN,ACK,PSH ACK,PSH
+
+  #Multicast Forward
+  /sbin/ip6tables -A MCASTFWD -j ACCEPT -d ff02::/16 -s fe80::/64
+  /sbin/ip6tables -A MCASTFWD -j ACCEPT -s ff02::/16 -d fe80::/64
+
+  #Deny / Reject
+  /sbin/ip6tables -A DENY -j ACCEPT -p tcp --tcp-flags SYN,PSH PSH -m length --length 40
+  /sbin/ip6tables -A DENY -j ACCEPT -p tcp --tcp-flags SYN,RST RST -m length --length 40
+  /sbin/ip6tables -A DENY -j ACCEPT -p tcp --tcp-flags SYN,FIN FIN -m length --length 40
+  #/sbin/ip6tables -A DENY -j ULOG 
+  /sbin/ip6tables -A DENY -j LOG -p ! tcp --log-level info --log-ip-options --log-prefix "rejected packet "
+  /sbin/ip6tables -A DENY -j LOG -p tcp --log-level info --log-ip-options --log-tcp-options --log-tcp-sequence --log-prefix "rejected packet "
+  /sbin/ip6tables -A DENY -j REJECT -p tcp --reject-with tcp-reset
+  /sbin/ip6tables -A DENY -j REJECT
+fi;
+
+/sbin/ip6tables -F DEFIN
+/sbin/ip6tables -F DEFOUT
+/sbin/ip6tables -F LOOPIN
+/sbin/ip6tables -F LOOPOUT
+
+__EOB__
+
+  foreach $iface (@ints) {
+    @idata=split(/\|/,$interface{$iface});
+    print FW6 "#@idata[0]\n";
+    if ($iface ne $sysconf{'External'}) {
+      print FW6 "/sbin/ip6tables -A INTERNIN -i " . $iface . " -j SYSIN\n";
+      print FW6 "/sbin/ip6tables -A INTERNOUT -o " . $iface . " -j SYSOUT\n";
+      print FW6 "/sbin/ip6tables -A INTERNFWD -i " . $iface . " -o " . $iface . " -j MCASTFWD\n";
+      print FW6 "/sbin/ip6tables -A INTERNFWD -i " . $iface . " -j RETURN\n\n";
+    } else {
+      print FW6 "/sbin/ip6tables -A EXTERNIN -i " . $iface . " -j DEFIN\n";
+      print FW6 "/sbin/ip6tables -A EXTERNOUT -o " . $iface . " -j DEFOUT\n";
+      print FW6 "/sbin/ip6tables -A EXTERNFWD -o " . $iface . " -j ACCEPT\n\n";
+    }
+  }
+  print FW6 "#Deny All non internal traffic\n";
+  print FW6 "/sbin/ip6tables -A INTERNFWD -j DENY\n\n";
+
+  $cnt=2;
+  foreach $sittun (@localsit) {
+    @gwto4=split(/\|/,$sittun);
+    print FW6 "/sbin/ip6tables -I EXTERNIN -j DEFIN -i sit" . $cnt . " -s 2002:" . @gwto4[1] . "::/" . @gwto4[2] . "\n";
+    print FW6 "/sbin/ip6tables -I EXTERNOUT -j DEFOUT -o sit" . $cnt . " -d 2002:" . @gwto4[1] . "::/" . @gwto4[2] . "\n";
+    print FW6 "/sbin/ip6tables -I EXTERNFWD -j ACCEPT -o sit" . $cnt . " -d 2002:" . @gwto4[1] . "::/" . @gwto4[2] . "\n";
+  }
+
   print FWP<<__EOB__;
  elif [ ! "\$6" ];then
   #Set Bandwidth Rate
@@ -6287,6 +6400,33 @@ __EOB__
       $intgre{@tdat[3]}=1;
     }
   }
+
+print FW6<<__EOB__;
+#Activate Loopback Chain's
+/sbin/ip6tables -A LOOPIN -j ACCEPT -i lo -s ::1 -d ::1
+/sbin/ip6tables -A LOOPOUT -j ACCEPT -o lo -s ::1 -d ::1
+
+#Allow SCTP Traffic For Media Gateway
+/sbin/ip6tables -A LOOPIN -j ACCEPT -i lo -p 132
+/sbin/ip6tables -A LOOPOUT -j ACCEPT -o lo -p 132
+
+#Allow mISDN
+/sbin/ip6tables -A LOOPIN -j ACCEPT -i lo -p 34
+/sbin/ip6tables -A LOOPOUT -j ACCEPT -o lo -p 34
+
+#STUN Loopback
+/sbin/ip6tables -A LOOPIN -j ACCEPT -p udp $sfnew --sport 3478:3479 --dport 10000:65535
+/sbin/ip6tables -A LOOPOUT -j ACCEPT -p udp $sfnew --sport 3478:3479 --dport 10000:65535
+
+__EOB__
+
+foreach $i6int (sort keys %i6addr) {
+  @i6dat=split(/\|/,$i6addr{$i6int});
+  print FW6 "#Loopback for $i6int\n";
+  print FW6 "/sbin/ip6tables -A LOOPIN -j ACCEPT -s @i6dat[1]@i6dat[2]/@i6dat[3] -d @i6dat[1]@i6dat[2]/@i6dat[3]\n";
+  print FW6 "/sbin/ip6tables -A LOOPOUT -j ACCEPT -s @i6dat[1]@i6dat[2]/@i6dat[3] -d @i6dat[1]@i6dat[2]/@i6dat[3]\n\n";
+}
+
 
 print FW <<__EOB__;
 #Activate Loopback Chain's
@@ -7123,6 +7263,186 @@ __EOB__
 
 __EOR__
 
+
+  print FW6 <<__EOR__;
+#RIP
+/sbin/ip6tables -A SYSIN -j ACCEPT -m state --state NEW  -p udp --sport 520 --dport 520
+/sbin/ip6tables -A SYSOUT -j ACCEPT -m state --state NEW  -p udp --dport 520 --sport 520
+/sbin/ip6tables -A SYSOUT -j ACCEPT -m state --state NEW,INVALID  -p udp --dport 520 --sport 520
+
+#BGP
+/sbin/ip6tables -A SYSIN -j ACCEPT -m state --state NEW  -p tcp --sport 1024:65535 --dport 179
+/sbin/ip6tables -A SYSOUT -j ACCEPT -m state --state NEW,INVALID  -p tcp --dport 1024:65535 --sport 179
+/sbin/ip6tables -A SYSOUT -j ACCEPT -m state --state NEW  -p tcp --dport 179 --sport 1024:65535
+
+#OSPF
+/sbin/ip6tables -A SYSIN -j ACCEPT -m state --state NEW -p ospf
+/sbin/ip6tables -A SYSOUT -j ACCEPT -m state --state NEW,INVALID -p ospf
+
+#HylaFax
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 4559
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW,INVALID --dport 1024:65535 --sport 4559
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 4558
+
+#FTP
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 21
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW,INVALID  --dport 1024:65535 --sport 21
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state RELATED,NEW --sport 20 --dport 1024:65535
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state RELATED,NEW --sport 1024:65535 --dport 1024:65535
+
+#FTPS
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 990
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW,INVALID  --dport 1024:65535 --sport 990
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW --sport 989 --dport 1024:65535
+
+#DNS
+/sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW  --sport 1024:65535 --dport 53
+/sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW  --sport 53 --dport 53
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 53
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW  --dport 1024:65535 --sport 53
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW  --dport 53 --sport 53
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 53
+
+#LDAP
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 389
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 636
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 389
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 636
+
+#NTP
+/sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW  --sport 1024:65535 --dport 123
+/sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW  --sport 123 --dport 123
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW  --dport 1024:65535 --sport 123
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW  --dport 123 --sport 123
+
+#MySQL
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 3306
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 3306
+
+#PGSQL
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 5432
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 5432
+
+#Orb
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 2809
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW,INVALID --dport 1024:65535 --sport 2809
+
+#SMTP
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 25
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 25
+
+#POP3
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 110
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 110
+
+#POP3S
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 995
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 995
+
+#SSH
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 0:65535 --dport 22
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 0:65535 --sport 22
+
+#IDENT
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 113 --sport 1024:65535
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW,INVALID  --dport 113 --sport 1024:65535
+
+#IMAP
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 143
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 993
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 143
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 993
+
+#Trend
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 1812
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 1812
+
+#Asterisk FOP
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 4445
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 4445
+
+#HTTP
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 80
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW --dport 80 --sport 1024:65535
+
+#HTTPS
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 443
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 443
+
+#HTTPS Management
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 666
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 666
+
+#Proxy Server
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 3128
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 3129
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 8080
+
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW --dport 1024:65535 --sport 3128
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW --dport 1024:65535 --sport 3129
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW --dport 1024:65535 --sport 8080
+
+#NFS TCP/UDP
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 2049 
+/sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW --sport 1024:65535 --dport 2049
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW --dport 1024:65535 --sport 2049 
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW --dport 1024:65535 --sport 2049
+
+#LPD
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 515
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW --dport 1024:65535 --sport 515
+
+#IPSEC
+/sbin/ip6tables -A SYSIN -j ACCEPT -m state --state NEW  -p udp --sport 500 --dport 500
+/sbin/ip6tables -A SYSOUT -j ACCEPT -m state --state NEW  -p udp --dport 500 --sport 500
+/sbin/ip6tables -A SYSIN -j ACCEPT -m state --state NEW  -p udp --sport 1024:65535 --dport 500
+/sbin/ip6tables -A SYSOUT -j ACCEPT -m state --state NEW  -p udp --dport 1024:65535 --sport 500
+
+#SMB
+/sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW --sport 137:138 --dport 137:138
+/sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW --sport 1024:65535 --dport 137:138
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW --sport 137:138 --dport 137:138
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW --sport 1024:65535 --dport 137:138
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 139
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 139
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 445
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 445
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 548
+
+#SIP
+/sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW --sport 1024:65535 --dport 5000
+/sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW --sport 1024:65535 --dport 5060
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 5060:5061
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW --dport 1024:65535 --sport 5000
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW --dport 1024:65535 --sport 5060
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW --dport 1024:65535 --sport 5060:5061
+
+#H323
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 1720:1722
+/sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW --sport 1024:65535 --dport 1718:1729
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW --dport 1024:65535 --sport 1718:1722
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW --dport 1024:65535 --sport 1718:1722
+/sbin/ip6tables -A SYSIN -j ACCEPT -p udp --sport 1719 --dport 1719 -m state --state NEW
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp --dport 1719 --sport 1719 -m state --state NEW
+
+#MGCP
+/sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW --sport 1024:65535 --dport 2727
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW --dport 1024:65535 --sport 2727
+
+#IAX
+/sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW --sport 1024:65535 --dport 4569
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW --dport 1024:65535 --sport 4569
+
+#IAX2
+/sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW --sport 1024:65535 --dport 5036
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW --dport 1024:65535 --sport 5036
+
+#STUN
+/sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state ESTABLISHED,NEW --sport 3478:3479 --dport 1024:65535
+/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW,INVALID --dport 3478:3479 --sport 1024:65535
+
+__EOR__
+
   push(@bludp,"67");
   push(@bludp,"68");
   push(@bludp,"53");
@@ -7246,29 +7566,41 @@ __EOR__
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p udp $sfnew -d 0/0 --dport 53 --sport 1024:65535\n\n";
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfnew -d 0/0 --dport 53 --sport 1024:65535\n\n";
 
+  print FW6 "#Allow Access To External Nameservers For DNS ServerIP UDP Mode\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p udp --dport 53 --sport 53\n\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p udp --dport 53 --sport 1024:65535\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --dport 53 --sport 1024:65535\n\n";
+
   if ($dnsconf{'ExtServ'} eq true) {
     print FW "#Allow Access To Nameserver Externaly UDP Mode\n";
     print FW "/sbin/iptables -A DEFIN -j ACCEPT -p udp $sfnew -s 0/0 --sport 53 --dport 53\n";
     print FW "/sbin/iptables -A DEFIN -j ACCEPT -p udp $sfnew -s 0/0 --sport 1024:65535 --dport 53\n";
     print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -s 0/0 --sport 1024:65535 --dport 53\n";
+
+    print FW6 "#Allow Access To Nameserver Externaly UDP Mode\n";
+    print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p udp --sport 53 --dport 53\n";
+    print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p udp --sport 1024:65535 --dport 53\n";
+    print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --sport 1024:65535 --dport 53\n";
   }
+  print FW "\n";
+  print FW6 "\n";
 
   print FW "#SSH Access\n";
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfnew -d 0/0 --dport 22 --sport 1024:65535\n\n";
-  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -s 0/0 --dport 22 --sport 1024:65535\n";
+  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -s 0/0 --dport 22 --sport 1024:65535\n\n";
 
   print FW "#OVPN Access\n";
-  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -s 0/0 --dport 1194 --sport 1024:65535\n";
+  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -s 0/0 --dport 1194 --sport 1024:65535\n\n";
 
   print FW "#L2TP Access\n";
   print FW "/sbin/iptables -A DEFIN -j ACCEPT -p udp $sfnew -s 0/0 --dport 1701 --sport 1024:65535\n";
   print FW "/sbin/iptables -A DEFIN -j ACCEPT -p esp -m state --state RELATED\n";
-  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p udp -m state --state NEW --dport 1024:65535 --sport 1024:65535\n";
+  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p udp -m state --state NEW --dport 1024:65535 --sport 1024:65535\n\n";
 
   $tserv="0.0.0.0/0";
   print FW "#Allow Access To Time Server\n";
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p udp $sfnew -d $tserv --dport 123 --sport 123\n";
-  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p udp $sfnew -d $tserv --dport 123 --sport 1024:65535\n\n";
+  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p udp $sfnew -d $tserv --dport 123 --sport 1024:65535\n";
   print FW "/sbin/iptables -A DEFIN -j ACCEPT -p udp $sfnew -d $tserv --dport 123 --sport 123\n";
   print FW "/sbin/iptables -A DEFIN -j ACCEPT -p udp $sfnew -d $tserv --dport 123 --sport 1024:65535\n\n";
 
@@ -7283,7 +7615,7 @@ __EOR__
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfnew -s 0/0 --sport 1024:65535 --dport 995\n\n";
 
   print FW "#Allow Access To STUN Remotely\n";
-  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p udp $sfnew -s 0/0 --sport 1024:65535 --dport 3478:3479\n";
+  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p udp $sfnew -s 0/0 --sport 1024:65535 --dport 3478:3479\n\n";
 
   print FW "#Allow Remote SIP/IAX2/FOP\n";
   print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -s 0/0 --sport 1024:65535 --dport 4445\n";
@@ -7308,36 +7640,103 @@ __EOR__
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfnew -d 0/0 --sport 10000:12999 --dport 1024:65535\n\n";
 
   print FW "#Allow Access To LDAP/TLS Remotely\n";
-  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp -m state --state ESTABLISHED,NEW,INVALID -s 0/0 --sport 1024:65535 --dport 636\n";
-  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp -m state --state ESTABLISHED,NEW,INVALID -d 0/0 --dport 1024:65535 --sport 636\n";
-  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp -m state --state ESTABLISHED,NEW,INVALID -s 0/0 --sport 1024:65535 --dport 389\n";
-  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp -m state --state ESTABLISHED,NEW,INVALID -d 0/0 --dport 1024:65535 --sport 389\n\n";
+  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp -m state --state ESTABLISHED,NEW,INVALID --sport 1024:65535 --dport 636\n";
+  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp -m state --state ESTABLISHED,NEW,INVALID --dport 1024:65535 --sport 636\n";
+  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp -m state --state ESTABLISHED,NEW,INVALID --sport 1024:65535 --dport 389\n";
+  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp -m state --state ESTABLISHED,NEW,INVALID --dport 1024:65535 --sport 389\n\n";
+
+  print FW6 "#SSH Access\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --dport 22 --sport 1024:65535\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --dport 22 --sport 1024:65535\n\n";
+
+  print FW6 "#OVPN Access\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --dport 1194 --sport 1024:65535\n\n";
+
+  print FW6 "#L2TP Access\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p udp --dport 1701 --sport 1024:65535\n";
+#  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p esp -m state --state RELATED\n";
+#  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p udp -m state --state NEW --dport 1024:65535 --sport 1024:65535\n\n";
+
+  print FW6 "#Allow Access To Time Server\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p udp --dport 123 --sport 123\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p udp --dport 123 --sport 1024:65535\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p udp --dport 123 --sport 123\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p udp --dport 123 --sport 1024:65535\n\n";
+
+  print FW6 "#Allow Access To IMAP/POP3 Remotely\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --sport 1024:65535 --dport 143\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --sport 1024:65535 --dport 110\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --sport 1024:65535 --dport 993\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --sport 1024:65535 --dport 995\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --sport 1024:65535 --dport 143\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --sport 1024:65535 --dport 110\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --sport 1024:65535 --dport 993\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --sport 1024:65535 --dport 995\n\n";
+
+  print FW6 "#Allow Access To STUN Remotely\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p udp --sport 1024:65535 --dport 3478:3479\n\n";
+
+  print FW6 "#Allow Remote SIP/IAX2/FOP\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --sport 1024:65535 --dport 4445\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p udp --sport 1024:65535 --dport 5000\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p udp --sport 1024:65535 --dport 5060\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --sport 1024:65535 --dport 5060:5061\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p udp --sport 1024:65535 --dport 4569\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p udp --sport 5000 --dport 1024:65535\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p udp --sport 5060 --dport 1024:65535\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --sport 5060:5061 --dport 1024:65535\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p udp --dport 4569 --sport 1024:65535\n\n";
+
+  print FW6 "#Allow Remote H.323 Registrations\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p udp --sport 1024:65535 --dport 1719:1722\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p udp --dport 1719:1722 --sport 1024:65535\n\n";
+
+#  print FW6 "#Allow Remote Google Talk Connections\n";
+#  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p udp --sport 1024:65535 --dport 5222\n";
+
+  print FW6 "#Allow Remote H.323 Signaling\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --sport 1024:65535 --dport 10000:20000\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --sport 10000:12999 --dport 1024:65535\n\n";
+
+  print FW6 "#Allow Access To LDAP/TLS Remotely\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --sport 1024:65535 --dport 636\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --dport 1024:65535 --sport 636\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --sport 1024:65535 --dport 389\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --dport 1024:65535 --sport 389\n\n";
 
   print FW "#Allow Remote SMTP Connections\n";
+  print FW6 "#Allow Remote SMTP Connections\n";
   $mailconf{'Delivery'}=lc($mailconf{'Delivery'});
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfnew -d 0/0 --dport 25 --sport 1024:65535\n";
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfnew -d 0/0 --dport 587 --sport 1024:65535\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --dport 25 --sport 1024:65535\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --dport 587 --sport 1024:65535\n";
   if ($mailconf{'Delivery'} ne "deffered") {
     print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -s 0/0 --dport 25 --sport 1024:65535\n";
     print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -s 0/0 --dport 587 --sport 1024:65535\n";
+    print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --dport 25 --sport 1024:65535\n";
+    print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --dport 587 --sport 1024:65535\n";
   }
   print FW "\n";
+  print FW6 "\n";
+
 
   print FW "#Allow Remote ident Connections\n";
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfnew -d 0/0 --dport 113 --sport 1024:65535\n";
-  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -s 0/0 --sport 1024:65535 --dport 113\n";
+  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -s 0/0 --sport 1024:65535 --dport 113\n\n";
 
   print FW "#Accept External Access To Web Server/FTP\n";
   print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -s 0.0.0.0/0 --sport 1024:65535 --dport 80\n";
+  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -s 0.0.0.0/0 --dport 1024:65535 --sport 80\n";
   print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfrel -s 0.0.0.0/0 --sport 20 --dport 1024:65535\n";
   print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -s 0.0.0.0/0 --sport 989 --dport 1024:65535\n";
-  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -d 0.0.0.0/0 --dport 443 --sport 1024:65535\n\n";
-  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -d 0.0.0.0/0 --dport 666 --sport 1024:65535\n\n";
+  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -d 0.0.0.0/0 --dport 443 --sport 1024:65535\n";
+  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -d 0.0.0.0/0 --dport 666 --sport 1024:65535\n";
   print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp --dport 8080 -m state --state ESTABLISHED,NEW\n";
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfnew -d 0.0.0.0/0 --dport 80 --sport 1024:65535\n";
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfnew -d 0.0.0.0/0 --dport 21 --sport 1024:65535\n";
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfnew -d 0.0.0.0/0 --dport 990 --sport 1024:65535\n";
-  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfnew -d 0.0.0.0/0 --dport 443 --sport 1024:65535\n\n";
+  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfnew -d 0.0.0.0/0 --dport 443 --sport 1024:65535\n";
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfnew -d 0.0.0.0/0 --dport 666 --sport 1024:65535\n\n";
 
   print FW "#Allow IKE Negotiation / NAT-T\n";
@@ -7349,13 +7748,47 @@ __EOR__
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p udp -d 0/0 --dport 1024:65535 --sport 4500\n\n";
 
   print FW "#Allow FTP Data\n";
-  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfrel -d 0.0.0.0/0 --dport 1024:65535 --sport 1024:65535\n"; 
+  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfrel -d 0.0.0.0/0 --dport 1024:65535 --sport 1024:65535\n\n"; 
 
   print FW "#Allow Remote RTP\n";
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p udp $sfnew --dport 1024:65535 --sport 10000:20000\n";
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p udp -s 0/0 --sport 10000:20000 --dport 1024:65535\n";
   print FW "/sbin/iptables -A DEFIN -j ACCEPT -p udp $sfnre --sport 1024:65535 --dport 10000:20000\n";
   print FW "/sbin/iptables -A DEFIN -j ACCEPT -p udp -s 0/0 --sport 1024:65535 --dport 10000:20000\n\n";
+
+  print FW6 "#Allow Remote ident Connections\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --dport 113 --sport 1024:65535\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --sport 1024:65535 --dport 113\n\n";
+
+  print FW6 "#Accept External Access To Web Server/FTP\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --sport 1024:65535 --dport 80\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --dport 1024:65535 --sport 80\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --sport 20 --dport 1024:65535\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --sport 989 --dport 1024:65535\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --dport 443 --sport 1024:65535\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --dport 666 --sport 1024:65535\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --dport 3128 --sport 1024:65535\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --dport 8080 -m state --state ESTABLISHED,NEW\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --dport 80 --sport 1024:65535\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --dport 21 --sport 1024:65535\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --dport 990 --sport 1024:65535\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --dport 443 --sport 1024:65535\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --dport 666 --sport 1024:65535\n\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --dport 3128 --sport 1024:65535\n\n";
+
+  print FW6 "#Allow IKE Negotiation / NAT-T\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p udp --sport 500 --dport 500\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p udp --sport 1024:65535 --dport 500\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p udp --sport 1024:65535 --dport 4500\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p udp --dport 500 --sport 500\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p udp --dport 1024:65535 --sport 500\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p udp --dport 1024:65535 --sport 4500\n\n";
+
+  print FW6 "#Allow Remote RTP\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p udp --dport 1024:65535 --sport 10000:20000\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p udp -s 0/0 --sport 10000:20000 --dport 1024:65535\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p udp --sport 1024:65535 --dport 10000:20000\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p udp -s 0/0 --sport 1024:65535 --dport 10000:20000\n\n";
 
 #  foreach $mdrop (@emailmdrop) {
 #    @mdata=split(/\|/,$mdrop);
@@ -8955,6 +9388,7 @@ __EOF__
   print FW "fi;\n";
 
   close(FW);
+  close(FW6);
   close(FWP);
   close(FWD);
   close(IF);
@@ -16831,7 +17265,7 @@ sub printradvd {
 i6prefix=$ip6prefix
 
 #Configure block on local proxy
-/sbin/ip addr add 2002:\${i6prefix}::1/48 dev sit0 > /dev/null 2>&1
+#/sbin/ip addr add 2002:\${i6prefix}::1/64 dev sit0 > /dev/null 2>&1
 
 #Configure Default gateway
 if [ -d /sys/class/net/sit1 ];then
@@ -16846,15 +17280,12 @@ __EOB__
 
     $cnt=2;
     $nodefault=1;
-    if (-e "/etc/6to4.conf") {
-      open(SFC,"/etc/6to4.conf");
-      while(<SFC>) {
-        chop $_;
-        @gwto4=split(/\|/,$_);
-        if (@gwto4[1] eq "") {
-          @gwto4[1]=0;
-        }
-        print SIX24 <<__EOB__;
+    foreach $sittun (@localsit) {
+      @gwto4=split(/\|/,$sittun);
+      if (@gwto4[1] eq "") {
+        @gwto4[1]=0;
+      }
+      print SIX24 <<__EOB__;
 #Additonal gateway 2002:@gwto4[1]::/@gwto4[2] Via @gwto4[0]
 if [ -d /sys/class/net/sit${cnt} ];then
   /sbin/ip tunnel change sit${cnt} local $sitip
@@ -16865,17 +17296,13 @@ fi;
 /sbin/ip link set dev sit${cnt} up
 /sbin/ip route add 2002:@gwto4[1]::/@gwto4[2] via fe80::\${i6prefix} dev sit${cnt}
 
-__EOB__
-        if (@gwto4[2] <= 16) {
-          $nodefault=0;
-        }
-        $cnt++;
-      }
-      close(SFC);
-    }
+/sbin/ip addr add 2002:\${i6prefix}::1/64 dev $extint > /dev/null 2>&1
 
-    if ($extint ne "ppp0") {
-      print SIX24 "/sbin/ip addr add 2002:\${i6prefix}::1/64 dev $extint > /dev/null 2>&1\n";
+__EOB__
+      if (@gwto4[2] <= 16) {
+        $nodefault=0;
+      }
+      $cnt++;
     }
 
     if ($nodefault) {
