@@ -9333,8 +9333,10 @@ print FWD<<__EOB__;
 
 if [ ! \"\${6}\" ];then
   i6prefix=\$(printf '%02x%02x:%02x%02x\\n' \$(echo \${4} | sed 's/\\./ /g'))
-  /sbin/ip addr del 2002:\${i6prefix}::1/64 dev \${1} > /dev/null 2>&1
-  /sbin/ip addr del 2002:\${i6prefix}::1/48 dev sit0 > /dev/null 2>&1
+  (/sbin/ip addr del 2002:\${i6prefix}::1/64 dev \${1}
+  /sbin/ip addr del 2002:\${i6prefix}::1/48 dev sit0
+  /sbin/ip addr del 2002:\${i6prefix}::1/64 dev sit0
+  /sbin/ip addr del 2002:\${i6prefix}::1/128 dev sit0) > /dev/null 2>&1
   /etc/ifconf/ipv6to4.addr del \${i6prefix}
 __EOB__
   print FWD " elif [ \"\$6\"  == \"pppoe\" ];then\n";
@@ -17267,6 +17269,7 @@ i6prefix=$ip6prefix
 
 #Configure block on external
 /sbin/ip addr add 2002:\${i6prefix}::1/64 dev $extint > /dev/null 2>&1
+/sbin/ip addr add 2002:\${i6prefix}::1/128 dev sit0 > /dev/null 2>&1
 
 #Configure Default gateway
 if [ -d /sys/class/net/sit1 ];then
