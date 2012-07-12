@@ -5869,7 +5869,7 @@ if [ \"\$1\" == "startup" ];then
   /sbin/ip6tables -N EXTERNIN
   /sbin/ip6tables -N EXTERNFWD
   /sbin/ip6tables -N INTERNOUT
-  /sbin/ip6tables -N EXTERNIN
+  /sbin/ip6tables -N INTERNIN
   /sbin/ip6tables -N INTERNFWD
   /sbin/ip6tables -N MCASTFWD
   /sbin/ip6tables -N SYSIN
