@@ -8107,8 +8107,8 @@ __EOB__
 /sbin/iptables -A DEFPROXY -j REDIRECT -t nat -p tcp --sport 1024:65535 --dport 80 --to-port 8080 -m state --state ESTABLISHED,NEW
 #/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 4569
 #/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 5000
-#/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 5060
-#/sbin/iptables -A DEFPROXY -j DNAT -t nat -p tcp --to-destination $localip --sport 1024:65535 --dport 5060:5061
+/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 5060
+/sbin/iptables -A DEFPROXY -j DNAT -t nat -p tcp --to-destination $localip --sport 1024:65535 --dport 5060:5061
 #/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 10000:20000
 #/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 1718:1720
 /sbin/iptables -A DEFPROXY -j EXTPROXY -t nat
