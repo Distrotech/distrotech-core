@@ -7773,8 +7773,9 @@ __EOR__
   print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --dport 21 --sport 1024:65535\n";
   print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --dport 990 --sport 1024:65535\n";
   print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --dport 443 --sport 1024:65535\n";
-  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --dport 666 --sport 1024:65535\n\n";
-  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --dport 3128 --sport 1024:65535\n\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --dport 666 --sport 1024:65535\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --dport 3128 --sport 1024:65535\n";
+  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --sport 3128 --dport 1024:65535\n\n";
 
   print FW6 "#Allow IKE Negotiation / NAT-T\n";
   print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p udp --sport 500 --dport 500\n";
@@ -17264,8 +17265,8 @@ sub printradvd {
 
 i6prefix=$ip6prefix
 
-#Configure block on local proxy
-#/sbin/ip addr add 2002:\${i6prefix}::1/64 dev sit0 > /dev/null 2>&1
+#Configure block on external
+/sbin/ip addr add 2002:\${i6prefix}::1/64 dev $extint > /dev/null 2>&1
 
 #Configure Default gateway
 if [ -d /sys/class/net/sit1 ];then
@@ -17295,8 +17296,6 @@ if [ -d /sys/class/net/sit${cnt} ];then
 fi;
 /sbin/ip link set dev sit${cnt} up
 /sbin/ip route add 2002:@gwto4[1]::/@gwto4[2] via fe80::\${i6prefix} dev sit${cnt}
-
-/sbin/ip addr add 2002:\${i6prefix}::1/64 dev $extint > /dev/null 2>&1
 
 __EOB__
       if (@gwto4[2] <= 16) {
