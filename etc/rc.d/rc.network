@@ -37,6 +37,8 @@ if [ -x /etc/rc.d/rc.serial ];then
   /etc/rc.d/rc.serial
 fi;
 
+/usr/sbin/avahi-daemon -D > /dev/null 2>&1
+
 if [ ! -e /etc/.networksentry-lite ];then
 #  if [ -e /etc/netatalk/atalkd.conf ] && [ ! -e /etc/.install ];then
 #    /usr/sbin/atalkd &
