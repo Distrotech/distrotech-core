@@ -38,7 +38,6 @@
 - /etc/nsswitch.conf
 - /etc/openldap/ldap.conf
 - /etc/openssl
-- /etc/passwd
 - /etc/.pwd.lock
 - /etc/popper.conf
 - /etc/ppp/diald.scr
