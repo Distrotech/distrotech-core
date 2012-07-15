@@ -971,6 +971,20 @@ __EOB__
   }
 }
 
+@eidat=split(/\|/,$interface{$sysconf{'Internal'}});
+if ((@eidat[1] eq "0.0.0.0") && (-e "/etc/avahi/avahi-autoipd.addr")) {
+  open(ZCI,"/etc/avahi/avahi-autoipd.addr");
+  while(<ZCI>) {
+    chop $_;
+    @eidat[1] = $_;
+  }
+  close(ZCI);
+  @eidat[2]="16";
+  @eidat[4]="-";
+  @eidat[5]="-";
+  $interface{$sysconf{'Internal'}}=join("|",@eidat);
+}
+
 print SV "DOM_WG=\"" . $smboption{'Domain'} . "\";\n";
 print SV "DTYPE=\"" . $smboption{'Security'} . "\";\n";
 print SV "DOM_ADS=\"" . $smboption{'ADSRealm'} . "\";\n";
@@ -1663,7 +1677,7 @@ automount:	files
 EOF
 ) > /etc/nsswitch.conf.boot
   (cat << EOF
-hosts:          files dns ldap
+hosts:          files mdns_minimal [NOTFOUND=return] dns ldap mdns
 passwd:		files ldap
 shadow:		files ldap
 group:		files ldap
@@ -1751,7 +1765,7 @@ automount:	files
 EOF
 ) > /etc/nsswitch.conf.boot
   (cat << EOF
-hosts:          files dns ldap wins
+hosts:          files mdns_minimal [NOTFOUND=return] dns ldap wins mdns
 passwd:		files ldap winbind
 shadow:		files ldap
 group:		files ldap winbind
@@ -5450,17 +5464,13 @@ __EOI__
         chop $ifalias{$ifnme};
         print IFUP "ALIASES=\"$ifalias{$ifnme}\";\n";
       }
-      if ($sysconf{'Internal'} ne $sysconf{'External'}) {
-        if ($ifnme eq $sysconf{'Internal'}) {
-          print IFUP "FIREWALL=\"INTERNAL\";\n";
-          print IFUP "FORWARD=1;\n";
-        }
-        if ($ifnme eq $sysconf{'External'}) {
-          print IFUP "FIREWALL=\"EXTERNAL\";\n";
-        }
+      if ($ifnme eq $sysconf{'Internal'}) {
+        print IFUP "FIREWALL=\"INTERNAL\";\n";
+        print IFUP "FORWARD=1;\n";
+      } elsif ($ifnme eq $sysconf{'External'}) {
+        print IFUP "FIREWALL=\"EXTERNAL\";\n";
       } else {
-          print IFUP "FIREWALL=\"INTERNAL\";\n";
-          print IFUP "FORWARD=1;\n";
+        print IFUP "FIREWALL=\"OTHER\";\n";
       }
       if ($wificard{@idata[3]} ne "") {
         @wifidat=split(/\|/,$wificard{@idata[3]});
@@ -5873,7 +5883,6 @@ if [ \"\$1\" == "startup" ];then
   /sbin/ip6tables -N INTERNFWD
   /sbin/ip6tables -N MCASTFWD
   /sbin/ip6tables -N SYSIN
-  /sbin/ip6tables -N SYSOUT
   /sbin/ip6tables -N LOOPIN
   /sbin/ip6tables -N LOOPOUT
 
@@ -5912,8 +5921,8 @@ if [ \"\$1\" == "startup" ];then
   /sbin/ip6tables -A STATEOK -j ACCEPT -p tcp --tcp-flags SYN,ACK,PSH ACK,PSH
 
   #Multicast Forward
-  /sbin/ip6tables -A MCASTFWD -j ACCEPT -d ff02::/16 -s fe80::/64
-  /sbin/ip6tables -A MCASTFWD -j ACCEPT -s ff02::/16 -d fe80::/64
+  /sbin/ip6tables -A MCASTFWD -j ACCEPT -d ff02::/16
+  /sbin/ip6tables -A MCASTFWD -j ACCEPT -s ff02::/16
 
   #Deny / Reject
   /sbin/ip6tables -A DENY -j ACCEPT -p tcp --tcp-flags SYN,PSH PSH -m length --length 40
@@ -5937,8 +5946,8 @@ __EOB__
     @idata=split(/\|/,$interface{$iface});
     print FW6 "#@idata[0]\n";
     if ($iface ne $sysconf{'External'}) {
-      print FW6 "/sbin/ip6tables -A INTERNIN -i " . $iface . " -j SYSIN\n";
-      print FW6 "/sbin/ip6tables -A INTERNOUT -o " . $iface . " -j SYSOUT\n";
+      print FW6 "/sbin/ip6tables -A INTERNIN -i " . $iface . " -j SYSIN -m state --state NEW\n";
+      print FW6 "/sbin/ip6tables -A INTERNOUT -o " . $iface . " -j ACCEPT\n";
       print FW6 "/sbin/ip6tables -A INTERNFWD -i " . $iface . " -o " . $iface . " -j MCASTFWD\n";
       print FW6 "/sbin/ip6tables -A INTERNFWD -i " . $iface . " -j RETURN\n\n";
     } else {
@@ -5953,6 +5962,9 @@ __EOB__
   $cnt=2;
   foreach $sittun (@localsit) {
     @gwto4=split(/\|/,$sittun);
+    if (@gwto4[1] eq "") {
+      @gwto4[1]="0";
+    }
     print FW6 "/sbin/ip6tables -I EXTERNIN -j DEFIN -i sit" . $cnt . " -s 2002:" . @gwto4[1] . "::/" . @gwto4[2] . "\n";
     print FW6 "/sbin/ip6tables -I EXTERNOUT -j ACCEPT -o sit" . $cnt . " -d 2002:" . @gwto4[1] . "::/" . @gwto4[2] . "\n";
     print FW6 "/sbin/ip6tables -I EXTERNFWD -j ACCEPT -o sit" . $cnt . " -d 2002:" . @gwto4[1] . "::/" . @gwto4[2] . "\n\n";
@@ -6300,6 +6312,10 @@ __EOB__
 /sbin/iptables -A INPUT -j ICMP -p icmp
 /sbin/iptables -A OUTPUT -j ICMP -p icmp
 
+#Allow IGMP
+/sbin/iptables -A INPUT -j ACCEPT -p igmp
+/sbin/iptables -A OUTPUT -j ACCEPT -p igmp
+
 #Activate IP6RD Chain
 /sbin/iptables -A INPUT -j IP6RD -p 41
 /sbin/iptables -A OUTPUT -j IP6RD -p 41
@@ -6320,6 +6336,10 @@ __EOB__
 
 #Allow DHCP Packets
 /sbin/iptables -A INPUT -j ACCEPT -p udp -s 0.0.0.0/0 --sport 68 -d 255.255.255.255 --dport 67
+/sbin/iptables -A INPUT -j ACCEPT -p udp --sport 1024:65535 --dport 5353
+/sbin/iptables -A INPUT -j ACCEPT -p udp --dport 1024:65535 --sport 5353
+/sbin/iptables -A OUTPUT -j ACCEPT -p udp --dport 1024:65535 --sport 5353
+/sbin/iptables -A OUTPUT -j ACCEPT -p udp --sport 1024:65535 --dport 5353
 
 #Far South comma-ls
 #/sbin/iptables -A INPUT -j ACCEPT -p udp -s 0.0.0.0/0 --sport 17409 -d 255.255.255.255 --dport 1024:65535
@@ -7267,171 +7287,116 @@ __EOR__
   print FW6 <<__EOR__;
 #RIP
 /sbin/ip6tables -A SYSIN -j ACCEPT -m state --state NEW  -p udp --sport 520 --dport 520
-/sbin/ip6tables -A SYSOUT -j ACCEPT -m state --state NEW  -p udp --dport 520 --sport 520
-/sbin/ip6tables -A SYSOUT -j ACCEPT -m state --state NEW,INVALID  -p udp --dport 520 --sport 520
 
 #BGP
 /sbin/ip6tables -A SYSIN -j ACCEPT -m state --state NEW  -p tcp --sport 1024:65535 --dport 179
-/sbin/ip6tables -A SYSOUT -j ACCEPT -m state --state NEW,INVALID  -p tcp --dport 1024:65535 --sport 179
-/sbin/ip6tables -A SYSOUT -j ACCEPT -m state --state NEW  -p tcp --dport 179 --sport 1024:65535
 
 #OSPF
 /sbin/ip6tables -A SYSIN -j ACCEPT -m state --state NEW -p ospf
-/sbin/ip6tables -A SYSOUT -j ACCEPT -m state --state NEW,INVALID -p ospf
 
 #HylaFax
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 4559
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW,INVALID --dport 1024:65535 --sport 4559
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 4558
 
 #FTP
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 21
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW,INVALID  --dport 1024:65535 --sport 21
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state RELATED,NEW --sport 20 --dport 1024:65535
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state RELATED,NEW --sport 1024:65535 --dport 1024:65535
 
 #FTPS
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 990
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW,INVALID  --dport 1024:65535 --sport 990
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW --sport 989 --dport 1024:65535
 
 #DNS
 /sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW  --sport 1024:65535 --dport 53
 /sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW  --sport 53 --dport 53
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 53
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW  --dport 1024:65535 --sport 53
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW  --dport 53 --sport 53
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 53
 
 #LDAP
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 389
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 636
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 389
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 636
 
 #NTP
 /sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW  --sport 1024:65535 --dport 123
 /sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW  --sport 123 --dport 123
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW  --dport 1024:65535 --sport 123
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW  --dport 123 --sport 123
 
 #MySQL
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 3306
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 3306
 
 #PGSQL
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 5432
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 5432
 
 #Orb
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 2809
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW,INVALID --dport 1024:65535 --sport 2809
 
 #SMTP
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 25
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 25
 
 #POP3
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 110
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 110
 
 #POP3S
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 995
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 995
 
 #SSH
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 0:65535 --dport 22
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 0:65535 --sport 22
 
 #IDENT
 /sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 113 --sport 1024:65535
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW,INVALID  --dport 113 --sport 1024:65535
 
 #IMAP
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 143
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 993
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 143
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 993
 
 #Trend
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 1812
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 1812
 
 #Asterisk FOP
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 4445
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 4445
 
 #HTTP
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 80
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW --dport 80 --sport 1024:65535
 
 #HTTPS
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 443
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 443
 
 #HTTPS Management
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 666
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 1024:65535 --sport 666
 
 #Proxy Server
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 3128
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 3129
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 8080
 
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW --dport 1024:65535 --sport 3128
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW --dport 1024:65535 --sport 3129
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW --dport 1024:65535 --sport 8080
-
 #NFS TCP/UDP
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 2049 
 /sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW --sport 1024:65535 --dport 2049
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW --dport 1024:65535 --sport 2049 
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW --dport 1024:65535 --sport 2049
 
 #LPD
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 515
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW --dport 1024:65535 --sport 515
 
 #IPSEC
 /sbin/ip6tables -A SYSIN -j ACCEPT -m state --state NEW  -p udp --sport 500 --dport 500
-/sbin/ip6tables -A SYSOUT -j ACCEPT -m state --state NEW  -p udp --dport 500 --sport 500
 /sbin/ip6tables -A SYSIN -j ACCEPT -m state --state NEW  -p udp --sport 1024:65535 --dport 500
-/sbin/ip6tables -A SYSOUT -j ACCEPT -m state --state NEW  -p udp --dport 1024:65535 --sport 500
 
 #SMB
 /sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW --sport 137:138 --dport 137:138
 /sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW --sport 1024:65535 --dport 137:138
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW --sport 137:138 --dport 137:138
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW --sport 1024:65535 --dport 137:138
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 139
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 139
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 445
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 445
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 548
 
 #SIP
 /sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW --sport 1024:65535 --dport 5000
 /sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW --sport 1024:65535 --dport 5060
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 5060:5061
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW --dport 1024:65535 --sport 5000
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW --dport 1024:65535 --sport 5060
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW --dport 1024:65535 --sport 5060:5061
 
 #H323
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 1720:1722
 /sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW --sport 1024:65535 --dport 1718:1729
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW --dport 1024:65535 --sport 1718:1722
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW --dport 1024:65535 --sport 1718:1722
 /sbin/ip6tables -A SYSIN -j ACCEPT -p udp --sport 1719 --dport 1719 -m state --state NEW
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp --dport 1719 --sport 1719 -m state --state NEW
 
 #MGCP
 /sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW --sport 1024:65535 --dport 2727
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW --dport 1024:65535 --sport 2727
 
 #IAX
 /sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW --sport 1024:65535 --dport 4569
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW --dport 1024:65535 --sport 4569
 
 #IAX2
 /sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW --sport 1024:65535 --dport 5036
@@ -7439,7 +7404,9 @@ __EOR__
 
 #STUN
 /sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state ESTABLISHED,NEW --sport 3478:3479 --dport 1024:65535
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW,INVALID --dport 3478:3479 --sport 1024:65535
+
+#MDNS
+/sbin/ip6tables -A SYSIN -j ACCEPT -p udp --sport 5353 --dport 5353
 
 __EOR__
 
@@ -11056,7 +11023,7 @@ sub printcrontab() {
     }
     if ((@vadsllink > 0) || ($mdmconf{'Connection'} eq "ADSL")) {
       print CT "\n#Shutdown ADSL PPP Link\n";
-      printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","1","*","(sleep 30;killall pppd;rm /var/run/netsentry*;/var/lock/ppp*.lock)");
+      printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","1","*","(sleep 30;killall pppd;rm /var/run/netsentry* /var/lock/ppp*.lock)");
     }
   }
 
@@ -11274,29 +11241,47 @@ __EOB__
     $bcaddr=getbc(@iipdat[2],@iipdat[1]);
 
     @nwipq=split(/\./,$nwaddr);  
-    if (@iipdat[2] >= 24) {
-      $revblk="@nwipq[2].@nwipq[1].@nwipq[0].in-addr.arpa";
-    } elsif ((@iipdat[2] >= 16 ) && (@iipdat[2] < 24)) {
-      $cnum=(2**(8-(@iipdat[2] % 8)));
-      for($cnt=@nwipq[2];$cnt < (@nwipq[2]+$cnum);$cnt++){
-        $revblk="$cnt.@nwipq[1].@nwipq[0].in-addr.arpa";
-      }
-    } elsif ((@iipdata[2] >= 8 ) && (@iipdata[2] < 16)) {
-      $cnum=(2**(8-(@iipdat[2] % 8)));
-      for($cnt=@nwipq[1];$cnt < (@nwipq[1]+$cnum);$cnt++){
-        for ($cnt1=0;$cnt1 < 256;$cnt1++) {
-          $revblk="$cnt1.$cnt.@nwipq[0].in-addr.arpa";
-        }
-      }
-    }
  
     if (((($iface ne $sysconf{'External'}) && ($gretun{$iface} eq "")) || ($sysconf{'External'} eq $sysconf{'Internal'})) && (@iipdat[2] >= 8) && (@iipdat[2] < 32)) {
       if (( ! $dnsall) && ($dnsext{$iface} != "1")) {
         print DNS "               $nwaddr/@iipdat[2];\n";
       }
-      if (! $isrev{$revblk}) {
-        $isrev{$revblk}=true;
-        push(@revs,$revblk);
+      if (@iipdat[2] >= 24) {
+        $revblk="@nwipq[2].@nwipq[1].@nwipq[0].in-addr.arpa";
+        if (! $isrev{$revblk}) {
+          $isrev{$revblk}=true;
+          push(@revs,$revblk);
+        }
+      } elsif (@iipdat[2] > 16) {
+        $cnum=(2**(24-@iipdat[2]));
+        for($cnt=@nwipq[2];$cnt < (@nwipq[2]+$cnum);$cnt++){
+          $revblk="$cnt.@nwipq[1].@nwipq[0].in-addr.arpa";
+          if (! $isrev{$revblk}) {
+            $isrev{$revblk}=true;
+            push(@revs,$revblk);
+          }
+        }
+      } elsif (@iipdat[2] eq 16 ) {
+        $revblk="@nwipq[1].@nwipq[0].in-addr.arpa";
+        if (! $isrev{$revblk}) {
+          $isrev{$revblk}=true;
+          push(@revs,$revblk);
+        }
+      } elsif (@iipdat[2] > 8) {
+        $cnum=(2**(16-@iipdat[2]));
+        for($cnt=@nwipq[1];$cnt < (@nwipq[1]+$cnum);$cnt++){
+          $revblk="$cnt.@nwipq[0].in-addr.arpa";
+          if (! $isrev{$revblk}) {
+            $isrev{$revblk}=true;
+            push(@revs,$revblk);
+          }
+        }
+      } elsif (@iipdat[2] eq 8 ) {
+        $revblk="@nwipq[0].in-addr.arpa";
+        if (! $isrev{$revblk}) {
+          $isrev{$revblk}=true;
+          push(@revs,$revblk);
+        }
       }
     } elsif ($iface eq $sysconf{'Internal'}) {
       if (( ! $dnsall) && ($dnsext{$iface} != "1")) {
@@ -11343,8 +11328,8 @@ foreach $wanl (@wans){
       $isrev{$revblk}=true;
       push(@revs,$revblk);
     }
-  } elsif ((@idata[2] >= 16 ) && (@idata[2] < 24)) {
-    $cnum=(2**(8-(@idata[2] % 8)));
+  } elsif (@idata[2] > 16 ) {
+    $cnum=(2**(24-@idata[2]));
     for($cnt=@nwipq[2];$cnt < (@nwipq[2]+$cnum);$cnt++){
       $revblk="$cnt.@nwipq[1].@nwipq[0].in-addr.arpa";
       if (! $isrev{$revblk}) {
@@ -11352,16 +11337,26 @@ foreach $wanl (@wans){
         push(@revs,$revblk);
       }
     }
-  } elsif ((@idata[2] >= 8 ) && (@idata[2] < 16)) {
-    $cnum=(2**(8-(@idata[2] % 8)));
+  } elsif (@idata[2] eq 16 ) {
+    $revblk="@nwipq[1].@nwipq[0].in-addr.arpa";
+    if (! $isrev{$revblk}) {
+      $isrev{$revblk}=true;
+      push(@revs,$revblk);
+    }
+  } elsif (@idata[2] > 8 ) {
+    $cnum=(2**(16-@idata[2]));
     for($cnt=@nwipq[1];$cnt < (@nwipq[1]+$cnum);$cnt++){
-      for ($cnt1=0;$cnt1 < 256;$cnt1++) {
-        $revblk="$cnt1.$cnt.@nwipq[0].in-addr.arpa";
-        if (! $isrev{$revblk}) {
+      $revblk="$cnt.@nwipq[0].in-addr.arpa";
+      if (! $isrev{$revblk}) {
         $isrev{$revblk}=true;
-          push(@revs,$revblk);
-        }
+        push(@revs,$revblk);
       }
+    }
+  } elsif (@idata[2] eq 8 ) {
+    $revblk="@nwipq[0].in-addr.arpa";
+    if (! $isrev{$revblk}) {
+      $isrev{$revblk}=true;
+      push(@revs,$revblk);
     }
   }
 }
@@ -11464,23 +11459,25 @@ __EOB__
       close(ZONE);
     }
 
-    if ($revdns{$classc}) {
-      @revhosts=split(/,/,$revdns{$classc});
-      shift @revhosts;
-      print DUP "zone $classc\n";
-      print DUP "update add $classc. $dnsconf{'DefaultTTL'} NS $fqdn.\n";
-      foreach $rvdu (@revhosts) {
-        ($hname,$ipaddr)=split(/;/,$rvdu);
-        print DUP "update delete $ipaddr.$classc. PTR\n";
-        if ($hname ne "") {
-          print DUP "update add $ipaddr.$classc. $dnsconf{'DefaultTTL'} PTR $hname.$dnsconf{'Domain'}.\n";
-        } else {
-          print DUP "update add $ipaddr.$classc. $dnsconf{'DefaultTTL'} PTR $dnsconf{'Domain'}.\n";
+    foreach $revkey (sort keys %revdns) {
+      $sub = substr($revkey,length($revkey)-length($classc));
+      if ($sub eq $classc) {
+        @revhosts=split(/,/,$revdns{$revkey});
+        shift @revhosts;
+        print DUP "zone $classc\n";
+        print DUP "update add $classc. $dnsconf{'DefaultTTL'} NS $fqdn.\n";
+        foreach $rvdu (@revhosts) {
+          ($hname,$ipaddr)=split(/;/,$rvdu);
+          print DUP "update delete $ipaddr.$classc. PTR\n";
+          if ($hname ne "") {
+            print DUP "update add $ipaddr.$classc. $dnsconf{'DefaultTTL'} PTR $hname.$dnsconf{'Domain'}.\n";
+          } else {
+            print DUP "update add $ipaddr.$classc. $dnsconf{'DefaultTTL'} PTR $dnsconf{'Domain'}.\n";
+          }
         }
+        print DUP "send\n";
       }
-      print DUP "send\n";
     }
-
   }
   push(@idnszones,"$dnsconf{'Domain'}");
   open(ZONE,">zones/$dnsconf{'Domain'}");
@@ -12207,8 +12204,8 @@ foreach $iface (@ints){
           push(@revs,$revblk);
           $intduip{$revblk}=@idata[1];
         }
-      } elsif ((@idata[2] >= 16 ) && (@idata[2] < 24)) {
-        $cnum=(2**(8-(@idata[2] % 8)));
+      } elsif (@idata[2] > 16 ) {
+        $cnum=(2**(24-@idata[2]));
         for($cnt=@nwipq[2];$cnt < (@nwipq[2]+$cnum);$cnt++){
           $revblk="$cnt.@nwipq[1].@nwipq[0].in-addr.arpa";
           if (! $isrev{$revblk}) {
@@ -12217,17 +12214,29 @@ foreach $iface (@ints){
             $intduip{$revblk}=@idata[1];
           }
         }
-      } elsif ((@idata[2] >= 8 ) && (@idata[2] < 16)) {
-        $cnum=(2**(8-(@idata[2] % 8)));
+      } elsif (@idata[2] eq 16 ) {
+        $revblk="@nwipq[1].@nwipq[0].in-addr.arpa";
+        if (! $isrev{$revblk}) {
+          $isrev{$revblk}=true;
+          push(@revs,$revblk);
+          $intduip{$revblk}=@idata[1];
+        }
+      } elsif (@idata[2] > 8 ) {
+        $cnum=(2**(16-@idata[2]));
         for($cnt=@nwipq[1];$cnt < (@nwipq[1]+$cnum);$cnt++){
-          for ($cnt1=0;$cnt1 < 256;$cnt1++) {
-            $revblk="$cnt1.$cnt.@nwipq[0].in-addr.arpa";
-            if (! $isrev{$revblk}) {
-              $isrev{$revblk}=true;
-              push(@revs,$revblk);
-              $intduip{$revblk}=@idata[1];
-            }
+          $revblk="$cnt.@nwipq[0].in-addr.arpa";
+          if (! $isrev{$revblk}) {
+            $isrev{$revblk}=true;
+            push(@revs,$revblk);
+            $intduip{$revblk}=@idata[1];
           }
+        }
+      } elsif (@idata[2] eq 8 ) {
+        $revblk="@nwipq[0].in-addr.arpa";
+        if (! $isrev{$revblk}) {
+          $isrev{$revblk}=true;
+          push(@revs,$revblk);
+          $intduip{$revblk}=@idata[1];
         }
       }
       if ($isslaverev{$revblk}) {
@@ -12483,7 +12492,7 @@ __EOL__
 #__EOL__
 
   $dnsdhcpkey="\n  key rndc-key;";
-  if (($dnsconf{'Auth'} ne "false") && (@iipdat[1] ne "") && ($intipa ne "")) {
+  if ($dnsconf{'Auth'} ne "false") {
     $ddnsauth="  primary 127.0.0.1;$dnsdhcpkey";
     print DHCP<<__EOL__;
 
@@ -17269,6 +17278,7 @@ sub printradvd {
 i6prefix=$ip6prefix
 
 #Configure block on external
+/sbin/ip link set sit0 up
 /sbin/ip addr add 2002:\${i6prefix}::1/64 dev $extint > /dev/null 2>&1
 /sbin/ip addr add 2002:\${i6prefix}::1/128 dev sit0 > /dev/null 2>&1
 
