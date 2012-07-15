@@ -2010,6 +2010,21 @@ if [ "$FWDIFF" ];then
   chown root.root /etc/rc.d/rc.firewall
 fi;
 
+if [ -e ip6tables ] && [ -e /etc/rc.d/rc.firewall6 ];then 
+  FW6DIFF=`diff ip6tables /etc/rc.d/rc.firewall6`
+ else
+  if [ -e ip6tables ];then 
+    FW6DIFF="NO FILE";
+  fi;
+fi;
+
+if [ "$FW6DIFF" ];then
+  cp -p ip6tables /etc/rc.d/rc.firewall6
+  chmod 750 /etc/rc.d/rc.firewall6
+  chown root.root /etc/rc.d/rc.firewall6
+  /etc/rc.d/rc.firewall6 startup
+fi;
+
 if [ -e dnsupdate ] && [ -e /var/named/dnsupdate ];then 
   DNDIFF=`diff dnsupdate /var/named/dnsupdate`
  else
