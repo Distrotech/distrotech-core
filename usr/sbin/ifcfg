@@ -31,7 +31,7 @@ eval `cat /etc/ifconf/ifup.${INT}`
 #Set Address On Interface
 /sbin/ip -4 addr flush dev ${IFNAME}
 if [ "${CHILLI}" == "0" ];then
-  /sbin/ip addr add ${ADDRESS}/${NETMASK} dev ${IFNAME} broadcast ${BROADCAST} > /dev/null 2>&1
+  /sbin/ip addr add ${ADDRESS}/${NETMASK} dev ${IFNAME} broadcast ${BROADCAST} label ${IFNAME}:0 > /dev/null 2>&1
   /sbin/ip addr add ::${ADDRESS}/96 dev sit0 > /dev/null 2>&1
 fi;
 
@@ -121,6 +121,14 @@ if [ -e "/etc/ifconf/ifbw.${INT}" ] && [ ! -e /etc/.networksentry-lite ];then
 fi;
 
 if [ "${FIREWALL}" == "INTERNAL" ];then
+  /sbin/ip route add 224/4 dev ${IFNAME}
+  /sbin/ip route add 224/4 dev ${IFNAME} table Static
+  if [ -e /etc/avahi/avahi-autoipd.addr ];then 
+    /usr/sbin/avahi-autoipd -D -S `cat /etc/avahi/avahi-autoipd.addr` --force-bind ${IFNAME} > /dev/null 2>&1 &
+   else
+    /usr/sbin/avahi-autoipd -D -w --force-bind ${IFNAME} > /dev/null 2>&1 &
+  fi;
+
 #  /etc/rc.d/rc.firewall startup
 #  killall pppd
 
