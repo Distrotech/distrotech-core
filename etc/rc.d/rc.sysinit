@@ -190,8 +190,6 @@ if [ -e /etc/.install ];then
   /usr/sbin/syslogd &
   /usr/sbin/klogd -c 1 &
  else
-  /sbin/ip link set sit0 up
-
   #Set file-max
   echo 1228800 > /proc/sys/fs/file-max
 
