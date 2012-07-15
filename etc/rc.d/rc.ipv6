@@ -7,3 +7,5 @@ fi;
 if [ -e /etc/radvd.conf ] && [ -s /etc/radvd.conf ];then
   /usr/sbin/radvd
 fi;
+
+/etc/rc.d/rc.firewall6 startup
