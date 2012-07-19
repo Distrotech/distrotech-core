@@ -1,0 +1,7 @@
+BRAND="Distrotech";
+VERSION="12.01.04";
+KERNEL="3.4.4-x86";
+HN_ADDR="netsentry";
+DOM_ADDR="company.co.za";
+BT="${BRAND} V${VERSION} Linux V${KERNEL} Install";
+USBSLEEP="4";

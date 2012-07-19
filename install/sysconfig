@@ -238,6 +238,7 @@ EOF
 
   /usr/bin/dialog --backtitle "$BT" --title "Post Install" --infobox "Running genconf/servconfig This Takes Several Minutes" 7 35
   touch ${INST_BASE}/tmp/.firstconfig ${INST_BASE}/etc/.needsreconf
+  rsync -aR /var/lib/avahi-autoipd /etc/dhclient.conf ${INST_BASE} > /dev/null 2>&1
   chroot ${INST_BASE} /usr/sbin/genconf > /dev/null 2>&1
   chroot ${INST_BASE} /usr/sbin/servconfig > /dev/tty4 2> /dev/tty4
   rm -rf ${INST_BASE}/var/spool/mail/shared
