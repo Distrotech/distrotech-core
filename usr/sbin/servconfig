@@ -408,7 +408,7 @@ if [ -e gensshauth ] && [ gensshauth -nt /root/.ssh/authorized_keys  ];then
 fi;
 
 if [ ! -e networksentry-lite ] && [ ! -e /tmp/.firstconfig ] && [ ! -e /etc/.install ];then
-  /usr/sbin/pwsync > /dev/null 2>&1
+  (/usr/sbin/pwsync > /dev/null 2>&1) &
   if [ -e sslrevoke ];then
     cat sslrevoke  |awk '{printf "openssl ca -revoke /etc/openssl/newcerts/%s.pem -config /etc/openssl/ca.conf -batch\n",$1}' |sh
     rm sslrevoke
@@ -2254,6 +2254,34 @@ if [ "$RADVDDIFF" ];then
     sleep 10;
     killall -HUP hostapd
   fi;
+fi;
+
+if [ -e avahi-daemon.conf ] && [ -e /etc/avahi/avahi-daemon.conf ];then 
+  AVAHIDIFF=`diff avahi-daemon.conf /etc/avahi/avahi-daemon.conf`
+ else
+  if [ -e avahi-daemon.conf ];then 
+    AVAHIDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "${AVAHIDIFF}" ];then
+  cp avahi-daemon.conf /etc/avahi/avahi-daemon.conf
+  avahi-daemon -c
+  if [ $? == 0 ];then
+    /usr/sbin/avahi-daemon -r
+   else
+    /usr/sbin/avahi-daemon -D
+  fi; 
+fi;
+
+if [ -e dhclient.conf ] && [ -e /etc/dhclient.conf ] && [ ! -e /etc/.needsreconf ];then
+  DHCLIENTDIFF=`diff dhclient.conf /etc/dhclient.conf`
+ elif [ -e dhclient.conf ] && [ ! -e /etc/.needsreconf ];then
+  DHCLIENTDIFF="NO FILE";
+fi;
+
+if [ "${DHCLIENTDIFF}" ];then
+  cp dhclient.conf /etc/dhclient.conf
 fi;
 
 if [ -e ipv6to4 ] && [ -e /etc/ifconf/ipv6to4 ];then 
