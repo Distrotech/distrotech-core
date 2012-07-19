@@ -149,10 +149,8 @@ if [ "${FIREWALL}" == "INTERNAL" ];then
   /usr/sbin/avahi-autoipd -D -w --force-bind ${IFNAME} > /dev/null 2>&1 &
 
   if [ "${NETWORK}" == "169.254.0.0" ] && [ -s /etc/dhclient.conf ];then
-    (/usr/sbin/dhclient -6 -r ${IFNAME}
-    /usr/sbin/dhclient -4 -r ${IFNAME}
     /usr/sbin/dhclient -4 -nw ${IFNAME}
-    /usr/sbin/dhclient -6 -nw ${IFNAME}) > /dev/null 2>&1
+    /usr/sbin/dhclient -6 -nw ${IFNAME}
   fi;
 
 #  /etc/rc.d/rc.firewall startup

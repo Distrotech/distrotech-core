@@ -1211,14 +1211,14 @@ if ($SUPER_USER == 1) {
   <TD onmouseover=myHint.show('ES44') ONMOUSEOUT=myHint.hide()><%print _("First Audio Codec Choice");%></TD>
   <TD>
     <SELECT NAME=acodec1>
-      <%if (is_file("/usr/lib/asterisk/modules-10/codec_g723.so")) {
+      <%if (is_file("/usr/lib/asterisk/modules-1.8/codec_g723.so")) {
           print "<OPTION VALUE=0";
           if ($acodec[0] == $codec[0]) {
             print " SELECTED";
           }
           print ">" . $codecd[0] . "</OPTION>\n";
         }
-        if (is_file("/usr/lib/asterisk/modules-10/codec_g729.so")) {
+        if (is_file("/usr/lib/asterisk/modules-1.8/codec_g729.so")) {
           print "<OPTION VALUE=1";
           if ($acodec[0] == $codec[1]) {
             print " SELECTED";
@@ -1240,14 +1240,14 @@ if ($SUPER_USER == 1) {
   <TD onmouseover=myHint.show('ES44') ONMOUSEOUT=myHint.hide()><%print _("Second Audio Codec Choice");%></TD>
   <TD>
     <SELECT NAME=acodec2>
-      <%if (is_file("/usr/lib/asterisk/modules-10/codec_g723.so")) {
+      <%if (is_file("/usr/lib/asterisk/modules-1.4/codec_g723.so")) {
           print "<OPTION VALUE=0";
           if ($acodec[1] == $codec[0]) {
             print " SELECTED";
           }
           print ">" . $codecd[0] . "</OPTION>\n";
         }
-        if (is_file("/usr/lib/asterisk/modules-10/codec_g729.so")) {
+        if (is_file("/usr/lib/asterisk/modules-1.4/codec_g729.so")) {
           print "<OPTION VALUE=1";
           if ($acodec[1] == $codec[1]) {
             print " SELECTED";
@@ -1269,14 +1269,14 @@ if ($SUPER_USER == 1) {
   <TD onmouseover=myHint.show('ES44') ONMOUSEOUT=myHint.hide()><%print _("Third Audio Codec Choice");%></TD>
   <TD>
     <SELECT NAME=acodec3>
-      <%if (is_file("/usr/lib/asterisk/modules-10/codec_g723.so")) {
+      <%if (is_file("/usr/lib/asterisk/modules-1.4/codec_g723.so")) {
           print "<OPTION VALUE=0";
           if ($acodec[2] == $codec[0]) {
             print " SELECTED";
           }
           print ">" . $codecd[0] . "</OPTION>\n";
         }
-        if (is_file("/usr/lib/asterisk/modules-10/codec_g729.so")) {
+        if (is_file("/usr/lib/asterisk/modules-1.4/codec_g729.so")) {
           print "<OPTION VALUE=1";
           if ($acodec[2] == $codec[1]) {
             print " SELECTED";
