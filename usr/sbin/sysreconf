@@ -632,7 +632,7 @@ if [ -e /etc/.install ];then
   /bin/domainname $DOM_ADDR >/dev/null 2>&1
   /usr/sbin/avahi-daemon -D
 
-  dhhn=${HN_ADDR}-`cat /sys/class/net/${INT_IFACE[1]}/address  |tr ':' '-'`
+  dhhn=${HN_ADDR}-`cat /sys/class/net/${INT_IFACE[1]}/address  |tr 'a-f:' 'A-F\-'`
   (cat<<EOF
 interface "${INT_IFACE[1]}" {
   send host-name "${dhhn}";
