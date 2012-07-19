@@ -4,19 +4,28 @@ RELOAD=1;
 
 if [ -e /install/netsentry-version ];then
   eval `cat /install/netsentry-version`
+  IP_ADDR[1]="0.0.0.0";
+  SN_ADDR[1]="32";
  else
   eval `cat /etc/netsentry-version`
+  if [ "$IP_ADDR" ];then
+    IP_ADDR[1]=$IP_ADDR;
+    if [ "$SN_ADDR" ];then
+      SN_ADDR[1]=$SN_ADDR;
+     else
+      SN_ADDR[1]=24;
+    fi;
+   else
+    IP_ADDR[1]="0.0.0.0";
+    SN_ADDR[1]="32";
+  fi;
 fi;
 
-if [ "$IP_ADDR" ];then
-  IP_ADDR[1]=$IP_ADDR;
+INT_NAME[1]="Internal";
+if [ -d /sys/class/net/ethA ] && [ -d /sys/class/net/wlanA ] && [ -e /etc/.install ];then
+  INT_IFACE[1]="br0";
  else
-  IP_ADDR[1]="0.0.0.0";
-fi;
-if [ "$SN_ADDR" ];then
-  SN_ADDR[1]=$SN_ADDR;
- else
-  SN_ADDR[1]=24;
+  INT_IFACE[1]="ethA";
 fi;
 
 if [ -e /install/default.conf ];then
@@ -26,13 +35,6 @@ if [ -e /install/default.conf ];then
 fi;
 
 echo -n "" > /tmp/netsentry.conf
-
-INT_NAME[1]="Internal";
-if [ -d /sys/class/net/ethA ] && [ -d /sys/class/net/wlanA ] && [ -e /etc/.install ];then
-  INT_IFACE[1]="br0";
- else
-  INT_IFACE[1]="ethA";
-fi;
 
 X509_C="ZA";
 X509_ST="Gauteng";
@@ -70,12 +72,10 @@ if [ "$1" ];then
   if [ "$1" == "netsentry-sysvars" ];then
     rm netsentry-sysvars
   fi;
+ elif [ -e /etc/netsentry-sysvars ];then
+  eval `cat /etc/netsentry-sysvars`
  else
-  if [ -e /etc/netsentry-sysvars ];then
-    eval `cat /etc/netsentry-sysvars`
-   else
-    exit;
-  fi;
+  exit;
 fi;
 
 #Add detected interfaces to install and Bridge wlan0/eth0
@@ -90,6 +90,8 @@ if [ -e /etc/.install ];then
     fi;
     INT_NAME[1]="Internal";
     INT_IFACE[1]=br0
+    INT_PARV[1]=${INT_IFACE[1]}
+    INT_PARV[2]=${INT_IFACE[1]}
     BRIDGE="wlanA ethA"
     cnt=2
    else
@@ -622,9 +624,26 @@ EOF
 ) > /tmp/netsentry-sysvars
 
 if [ -e /etc/.install ];then
-  /sbin/ip addr add dev ${INT_IFACE[1]} $IP_ADDR/$SN_ADDR >/dev/null 2>&1
+  /usr/sbin/avahi-autoipd -c ${INT_IFACE[1]}
+  if [ $? != 0 ];then
+    /usr/sbin/avahi-autoipd --force-bind -D -w ${INT_IFACE[1]}
+  fi;
   /usr/bin/hostname $HN_ADDR >/dev/null 2>&1
   /bin/domainname $DOM_ADDR >/dev/null 2>&1
+  /usr/sbin/avahi-daemon -D
+
+  dhhn=${HN_ADDR}-`cat /sys/class/net/${INT_IFACE[1]}/address  |tr ':' '-'`
+  (cat<<EOF
+interface "${INT_IFACE[1]}" {
+  send host-name "${dhhn}";
+  send fqdn.fqdn "${dhhn}";
+  send fqdn.encoded on;
+  send fqdn.server-update on;
+  also request fqdn, dhcp6.fqdn;
+  script "/usr/bin/dhclient-script";
+}
+EOF
+) > /etc/dhclient.conf
 
   (cat <<EOF
 domain $DOM_ADDR
