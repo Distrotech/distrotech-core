@@ -35,53 +35,33 @@ PATH="$PATH:/usr/bin:/usr/sbin:/bin:/sbin"
 
 METRIC=$((1000 + `cat "/sys/class/net/$2/ifindex" 2>/dev/null || echo 0`))
 
-if [ -x /bin/ip -o -x /sbin/ip ] ; then
+case "$1" in
+    BIND)
+        if [ -e /etc/.install ];then
+          ip addr add ${3}/16 brd 169.254.255.255 scope link dev ${2}
+          ip route add 169.254/16 src ${3} dev ${2}
+          ip route add default dev ${2} metric ${METRIC} scope link
+         else
+          ip addr add ${3}/16 brd 169.254.255.255 label ${2}:avahi scope link dev ${2}
+          ip route add 169.254/16 src ${3} dev ${2} table Link
+          ip route add default dev ${2} metric ${METRIC} scope link table 90
+        fi;
+        ;;
 
-    # We have the Linux ip tool from the iproute package
+    CONFLICT|UNBIND|STOP)
+        if [ -e /etc/.install ];then
+          ip route del default dev ${2} metric ${METRIC} scope link
+          ip addr del ${3}/16 brd 169.254.255.255 label ${2}:avahi scope link dev ${2}
+       else
+          ip route del default dev ${2} metric ${METRIC} scope link table 90
+          ip addr del ${3}/16 brd 169.254.255.255 label ${2}:avahi scope link dev ${2}
+        fi;
+        ;;
 
-    case "$1" in
-        BIND)
-            ip addr add "$3"/16 brd 169.254.255.255 label "$2:avahi" scope link dev "$2"
-            ip route add default dev "$2" metric "$METRIC" scope link table 90 ||:
-            ;;
-
-        CONFLICT|UNBIND|STOP)
-            ip route del default dev "$2" metric "$METRIC" scope link table 90 ||:
-            ip addr del "$3"/16 brd 169.254.255.255 label "$2:avahi" scope link dev "$2"
-            ;;
-
-        *)
-            echo "Unknown event $1" >&2
-            exit 1
-            ;;
-    esac
-    echo $3 > /etc/avahi/avahi-autoipd.addr
-elif [ -x /bin/ifconfig -o -x /sbin/ifconfig ] ; then
-
-    # We have the old ifconfig tool
-
-    case "$1" in
-        BIND)
-            ifconfig "$2:avahi" inet "$3" netmask 255.255.0.0 broadcast 169.254.255.255 up
-            route add default dev "$2:avahi" metric "$METRIC" ||:
-            ;;
-
-        CONFLICT|STOP|UNBIND)
-            route del default dev "$2:avahi" metric "$METRIC" ||:
-            ifconfig "$2:avahi" down
-            ;;
-
-        *)
-            echo "Unknown event $1" >&2
-            exit 1
-            ;;
-    esac
-
-else
-
-    echo "No network configuration tool found." >&2
-    exit 1
-
-fi
+    *)
+        echo "Unknown event $1" >&2
+        exit 1
+        ;;
+esac
 
 exit 0

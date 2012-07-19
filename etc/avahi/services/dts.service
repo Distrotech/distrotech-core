@@ -1,0 +1,10 @@
+<?xml version="1.0" standalone='no'?><!--*-nxml-*-->
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+<service-group>
+  <name replace-wildcards="yes">Distrotech Service On %h</name>
+  <service>
+    <txt-record>DTS Server</txt-record>
+    <type>_dts._tcp</type>
+    <port>666</port>
+  </service>
+</service-group>
