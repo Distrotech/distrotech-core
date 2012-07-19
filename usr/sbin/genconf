@@ -972,25 +972,27 @@ __EOB__
 }
 
 @eidat=split(/\|/,$interface{$sysconf{'Internal'}});
-if (@eidat[1] eq "0.0.0.0") {
-  $mfile="/sys/class/net/" . @eidat[3] . "/address";
-  $ipaddr="";
-  if (-e $mfile) {
-    open(MAC,"<" . $mfile);
-    read(MAC,$macaddr,17);
-    close(MAC);
-    $ifile="/var/lib/avahi-autoipd/" . $macaddr;
-    if (-e "$ifile") {
-      open(LLIP,"<" . $ifile);
-      read(LLIP,@eidat[1],16);
-      close(LLIP);
-      chop @eidat[1];
-      @eidat[2]="16";
-      @eidat[4]="-";
-      @eidat[5]="-";
-      $interface{$sysconf{'Internal'}}=join("|",@eidat);
-    }
+$mfile="/sys/class/net/" . @eidat[3] . "/address";
+$zcipaddr="";
+if (-e $mfile) {
+  open(MAC,"<" . $mfile);
+  read(MAC,$macaddr,17);
+  close(MAC);
+  $ifile="/var/lib/avahi-autoipd/" . $macaddr;
+  if (-e "$ifile") {
+    open(LLIP,"<" . $ifile);
+    read(LLIP,$zcipaddr,16);
+    close(LLIP);
+    chop $zcipaddr;
   }
+}
+
+if ((@eidat[1] eq "0.0.0.0") && ($zcipaddr ne "")) {
+  @eidat[1]=$zcipaddr;
+  @eidat[2]="16";
+  @eidat[4]="-";
+  @eidat[5]="-";
+  $interface{$sysconf{'Internal'}}=join("|",@eidat);
 }
 
 print SV "DOM_WG=\"" . $smboption{'Domain'} . "\";\n";
@@ -5890,6 +5892,10 @@ _EOB_
     }
   }
 
+#  print FW "#SIP/RTP Proxy For $iface @idata[1]\n";
+#  print FW "/sbin/iptables -t nat -A SIPMAP -j DEFPROXY -i $ethint -d 169.254.0.0/16\n";
+#  print FW "/sbin/iptables -t nat -I SIPNAT -j SNAT -o $ethint -d 169.254.0.0/16 --to-source $zcipaddr\n\n";
+
   print FW "\nif [ -x /etc/firewall.local ];then\n";
   print FW "  /etc/firewall.local\n";
   print FW "fi;\n";
@@ -5990,6 +5996,7 @@ __EOB__
       print FW6 "/sbin/ip6tables -A EXTERNFWD -o " . $iface . " -j ACCEPT\n\n";
     }
   }
+
   print FW6 "#Deny All non internal traffic\n";
   print FW6 "/sbin/ip6tables -A INTERNFWD -j DENY\n\n";
 
@@ -6145,6 +6152,8 @@ if [ \"\$1\" == "startup" ];then
   /sbin/iptables -N WEBACCESSI
   /sbin/iptables -N WEBACCESSO
   /sbin/iptables -N HOTSPOTI
+  /sbin/iptables -N DYNAMICIPI
+  /sbin/iptables -N DYNAMICIPO
   /sbin/iptables -N HOTSPOTO
   /sbin/iptables -N GWOUT
   /sbin/iptables -N GWIN
@@ -6277,6 +6286,8 @@ fi;
 /sbin/iptables -F WEBACCESSO
 /sbin/iptables -F HOTSPOTI
 /sbin/iptables -F HOTSPOTO
+/sbin/iptables -F DYNAMICIPI
+/sbin/iptables -F DYNAMICIPO
 /sbin/iptables -t nat -F TXPROXY
 /sbin/iptables -t nat -F NONAT
 /sbin/iptables -t nat -F VPNNAT
@@ -6495,6 +6506,7 @@ print FW <<__EOB__;
 /sbin/iptables -A LOOPIN -j ACCEPT -i lo -s 127.0.0.2 -d 127.255.255.255
 /sbin/iptables -A LOOPIN -j ACCEPT -i lo -d 127.0.0.1 -s 127.255.255.255
 /sbin/iptables -A LOOPIN -j ACCEPT -i lo -d 127.0.0.2 -s 127.255.255.255
+/sbin/iptables -A LOOPIN -j ACCEPT -i lo -d $zcipaddr -s $zcipaddr
 /sbin/iptables -A OUTPUT -j LOOPOUT -o lo
 /sbin/iptables -A LOOPOUT -j ACCEPT -o lo -s 127.0.0.1 -d 127.0.0.1
 /sbin/iptables -A LOOPOUT -j ACCEPT -o lo -s 127.0.0.2 -d 127.0.0.2
@@ -6502,6 +6514,7 @@ print FW <<__EOB__;
 /sbin/iptables -A LOOPOUT -j ACCEPT -o lo -s 127.255.255.255 -d 127.0.0.2
 /sbin/iptables -A LOOPOUT -j ACCEPT -o lo -d 127.255.255.255 -s 127.0.0.1
 /sbin/iptables -A LOOPOUT -j ACCEPT -o lo -d 127.255.255.255 -s 127.0.0.2
+/sbin/iptables -A LOOPOUT -j ACCEPT -o lo -d $zcipaddr -s $zcipaddr
 
 #Activate NAT Chains
 /sbin/iptables -t nat -A PREROUTING -j NATMAPI
@@ -6728,7 +6741,12 @@ __EOB__
   print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 110\n";
   print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 143\n";
   print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 995\n";
-  print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 993\n";
+  print FW "/sbin/iptables -A HOTSPOTI -j ACCEPT -p tcp -d $localip/32 --dport 993\n\n";
+
+
+  print FW "#Allow Dynamic IP Traffic\n";
+  print FW "/sbin/iptables -A INPUT -j DYNAMICIPI -i $sysconf{'Internal'}\n";
+  print FW "/sbin/iptables -A OUTPUT -j DYNAMICIPO -o $sysconf{'Internal'}\n";
 
   foreach $hspot (@hotspots) {
     @idata=split(/\|/,$interface{$hspot});
@@ -6905,6 +6923,10 @@ __EOB__
       }
     }
   }
+  print FW "#Zero Conf\n";
+  print FW "/sbin/iptables -A INPUT -j DENY ! -i $ethint  -s 169.254.0.0/16\n"; 
+  print FW "/sbin/iptables -A OUTPUT -j DENY ! -o $ethint  -d 169.254.0.0/16\n";
+
 #  foreach $wan (@wans) {
 #    @wdat=split(/\|/,$routes{$wan});
 #    print FW "/sbin/iptables -A INPUT -j DENY ! -i $ethint  -s @wdat[1]/@wdat[2]\n";
@@ -7102,7 +7124,13 @@ _EOB_
 
   print FW "#Access From Interfaces For Web Proxy\n";
   print FW "/sbin/iptables -A INPUT -j WEBACCESSI -p tcp -d $localip/32 --dport 80\n";
-  print FW "/sbin/iptables -A OUTPUT -j WEBACCESSO  -p tcp -s $localip/32 --sport 80\n\n";
+  print FW "/sbin/iptables -A OUTPUT -j WEBACCESSO  -p tcp -s $localip/32 --sport 80\n";
+  if ($zcipaddr ne "") {
+    print FW "/sbin/iptables -A INPUT -j WEBACCESSI -p tcp -d $zcipaddr/32 --dport 80\n";
+    print FW "/sbin/iptables -A OUTPUT -j WEBACCESSO  -p tcp -s $zcipaddr/32 --sport 80\n\n";
+  } else {
+    print "\n";
+  }
 
   print FW "#Allow SMB Broadcasts\n";
   print FW "/sbin/iptables -A INPUT -j SMBNFSIN\n";
@@ -7890,6 +7918,13 @@ __EOR__
     }
   }
 
+  print FW "#SIP/RTP Proxy For $iface @idata[1]\n";
+  print FW "/sbin/iptables -t nat -A SIPMAP -j DEFPROXY -i $ethint -d $zcipaddr\n";
+  print FW "/sbin/iptables -t nat -I SIPNAT -j SNAT -o $ethint -d 169.254.0.0/16 --to-source $zcipaddr\n\n";
+
+  print FW "/sbin/iptables -t nat -A WEBACCESS -j DNAT -p tcp --to-destination @idata[1]:80 --dport 80 --sport 1024:65535 -d $zcipaddr/32 -s 169.254.0.0/16\n";
+  print FW "/sbin/iptables -A NONAT -t nat -j ACCEPT -o $ethint -s 169.254.0.0/16 -d 169.254.0.0/16\n\n";
+
   foreach $wann (@wans) {
     @wdata=split(/\|/,$routes{$wann});
     $lnknme=join(" ",split(/_/,@wdata[0]));
@@ -7934,6 +7969,14 @@ __EOR__
       print FW "#Allow Redirect For $rewfw To $rewip{$rewfw}/32\n";
       print FW "/sbin/iptables -A PROXYOUT -j ACCEPT -o $rewint{$rewfw}  -p tcp -s @rewidata[1]/32 --sport 1024:65535 -d $rewip{$rewfw}/32 --dport 80 $sfnew\n\n";
     }
+  }
+
+  if ($zcipaddr ne "") {
+    print FW "#Zeroconf\n";
+    print FW "/sbin/iptables -A INPUT -j SYSIN -i $ethint -s 169.254.0.0/16 -d $zcipaddr\n";
+    print FW "/sbin/iptables -A INPUT -j MCASTIN -i $ethint -s 169.254.0.0/16\n";
+    print FW "/sbin/iptables -A OUTPUT -j SYSOUT -o $ethint -d 169.254.0.0/16 -s $zcipaddr\n";
+    print FW "/sbin/iptables -A OUTPUT -j MCASTOUT -o $ethint -s 169.254.0.0/16\n\n";
   }
 
   foreach $int (@ints) {
@@ -8744,6 +8787,10 @@ _EOB_
       print FW "/sbin/iptables -A TXPROXY -t nat -j REDIRECT -p tcp --to-port 3129 -i tun+ -s $nwaddr/@idata[2]\n\n";
     }
   }
+  print FW "#Allow Transparent Proxy For Zero Conf Lan\n";
+  print FW "/sbin/iptables -A TXPROXY -p tcp -t nat -j REDIRECT --to-port 3129 -i $ethint -s 169.254.0.0/16\n";
+  print FW "/sbin/iptables -t nat -A SYSNAT -j NATOUT -s 169.254.0.0/16\n\n";
+
 
   print FW "/sbin/iptables -A OUTPUT -j SIPOUT\n";
   print FW "/sbin/iptables -A INPUT -j SBSRULESI\n";
@@ -10430,7 +10477,8 @@ foreach $iface (@ints) {
     }
   }
 }
-print SMB " 127.0.0.1\n";
+print SMB " " . $sysconf{'Internal'} . ":avahi";
+print SMB " " . $sysconf{'Internal'} . ":dhcp 127.0.0.1\n";
 print SMB "        bind interfaces only = Yes\n";
 print SMB "        strict allocate = Yes\n";
 print SMB "        ldap ssl = off\n";
