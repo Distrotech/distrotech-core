@@ -972,17 +972,25 @@ __EOB__
 }
 
 @eidat=split(/\|/,$interface{$sysconf{'Internal'}});
-if ((@eidat[1] eq "0.0.0.0") && (-e "/etc/avahi/avahi-autoipd.addr")) {
-  open(ZCI,"/etc/avahi/avahi-autoipd.addr");
-  while(<ZCI>) {
-    chop $_;
-    @eidat[1] = $_;
+if (@eidat[1] eq "0.0.0.0") {
+  $mfile="/sys/class/net/" . @eidat[3] . "/address";
+  $ipaddr="";
+  if (-e $mfile) {
+    open(MAC,"<" . $mfile);
+    read(MAC,$macaddr,17);
+    close(MAC);
+    $ifile="/var/lib/avahi-autoipd/" . $macaddr;
+    if (-e "$ifile") {
+      open(LLIP,"<" . $ifile);
+      read(LLIP,@eidat[1],16);
+      close(LLIP);
+      chop @eidat[1];
+      @eidat[2]="16";
+      @eidat[4]="-";
+      @eidat[5]="-";
+      $interface{$sysconf{'Internal'}}=join("|",@eidat);
+    }
   }
-  close(ZCI);
-  @eidat[2]="16";
-  @eidat[4]="-";
-  @eidat[5]="-";
-  $interface{$sysconf{'Internal'}}=join("|",@eidat);
 }
 
 print SV "DOM_WG=\"" . $smboption{'Domain'} . "\";\n";
@@ -1335,6 +1343,8 @@ if ($sysconfig{'Type'} eq "full") {
 &printlists();
 
 &printdhcp();
+&printavahi();
+&printdhclient();
 &printdynkey();
 &printdnsconf();
 
@@ -1657,6 +1667,13 @@ sub printsqlpass(){
 __EOF__
 
 if (($sysconfig{'Type'} ne "full") && (! -e "/tmp/.firstconfig")) {
+  @domprt=split(/\./,$dnsconf{'Domain'});
+  if ($domprt[-1] ne "local") {
+    $hosts="files mdns_minimal [NOTFOUND=return] dns ldap mdns";
+  } else {
+    $hosts="files dns ldap";
+  }
+
   print SP<<__EOF__;
 if [ -e /tmp/.firstconfig ];then
   (cat << EOF
@@ -1677,7 +1694,7 @@ automount:	files
 EOF
 ) > /etc/nsswitch.conf.boot
   (cat << EOF
-hosts:          files mdns_minimal [NOTFOUND=return] dns ldap mdns
+hosts:          $hosts
 passwd:		files ldap
 shadow:		files ldap
 group:		files ldap
@@ -1744,6 +1761,13 @@ __EOF__
   $lint=$sysconf{'Internal'};
   @eidat=split(/\|/,$interface{$lint});
   $localip=@eidat[1];
+
+  @domprt=split(/\./,$dnsconf{'Domain'});
+  if ($domprt[-1] ne "local") {
+    $hosts="files mdns_minimal [NOTFOUND=return] dns ldap wins mdns";
+  } else {
+    $hosts="files dns ldap wins";
+  }
  
   print SP<<__EOF__;
 if [ -e /tmp/.firstconfig ];then
@@ -1765,7 +1789,7 @@ automount:	files
 EOF
 ) > /etc/nsswitch.conf.boot
   (cat << EOF
-hosts:          files mdns_minimal [NOTFOUND=return] dns ldap wins mdns
+hosts:          $hosts
 passwd:		files ldap winbind
 shadow:		files ldap
 group:		files ldap winbind
@@ -2218,6 +2242,9 @@ if [ ! -e /etc/apache/sogo.conf ];then
 fi;
 
 if [ ! -d /opt/apache2 ];then
+  touch /tmp/httpd.conf
+  chmod 600 /tmp/httpd.conf
+  chown root.root /tmp/httpd.conf
   sed -e "s/^Listen 0.0.0.0:80.*/Listen @idata[1]:80/"  \\
       -e "s/^Listen 80.*/Listen @idata[1]:80/" \\
       -e "s/AuthLDAPUrl ldap:\\/\\/127.0.0.1/AuthLDAPUrl ldap:\\/\\/$ldapserv{'Server'}/" \\
@@ -2228,6 +2255,9 @@ if [ ! -d /opt/apache2 ];then
       -e "s/LOCAL_SERVER_NAME/$fqdn/" /etc/apache/httpd.conf.orig | grep -vE "(^#)" >  /tmp/httpd.conf
   HCDIFF=`diff /tmp/httpd.conf /etc/apache/httpd.conf`
  else
+  touch /tmp/httpd.conf.1 /tmp/httpd.conf
+  chmod 600 /tmp/httpd.conf.1 /tmp/httpd.conf
+  chown root.root /tmp/httpd.conf.1 /tmp/httpd.conf
   sed -e "s/^Listen 0.0.0.0:80.*/Listen @idata[1]:80/"  \\
       -e "s/^Listen 80.*/Listen @idata[1]:80/" \\
       -e "s/AuthLDAPUrl ldap:\\/\\/127.0.0.1/AuthLDAPUrl ldap:\\/\\/$ldapserv{'Server'}/" \\
@@ -2246,6 +2276,7 @@ if [ ! -d /opt/apache2 ];then
   fi;
   HCDIFF=`diff /tmp/httpd.conf /opt/apache2/conf/httpd.conf`
 fi;
+
 if [ "\$HCDIFF" ] && [ ! -e /etc/.install ] && [ ! -e /etc/.cdrom ];then
   if [ ! -d /opt/apache2 ];then
     apachectl stop > /dev/null 2>&1
@@ -2257,12 +2288,13 @@ if [ "\$HCDIFF" ] && [ ! -e /etc/.install ] && [ ! -e /etc/.cdrom ];then
     if [ ! -d /opt/apache2 ];then
       apachectl stop > /dev/null 2>&1;
      else
-      /usr/sbin/apachectl stop > /dev/null 2>&1
+      /opt/apache2/bin/apachectl stop > /dev/null 2>&1
     fi;
-    sleep 1;
+    sleep 2;
     tflag=x\$tflag;
   done
 
+  tflag="";
   while [ "`pidof httpd`" ] && [ "\$tflag" != "xxxxxxxxx" ];do 
     for htpid in `pidof httpd`;do
       kill -9 ${htpid};
@@ -2276,11 +2308,10 @@ if [ "\$HCDIFF" ] && [ ! -e /etc/.install ] && [ ! -e /etc/.cdrom ];then
   fi;
 
   if [ ! -d /opt/apache2 ];then
-    cp /tmp/httpd.conf /etc/apache
+    mv /tmp/httpd.conf /etc/apache
    else
-    cp /tmp/httpd.conf /opt/apache2/conf/httpd.conf
+    mv /tmp/httpd.conf /opt/apache2/conf/httpd.conf
   fi;
-  rm /tmp/httpd.conf
 
   if [ -e /etc/ipsec.d/cacerts/cacert.pem ] && [ -e /etc/openssl/server.signed.pem ] && [ ! -e /etc/.networksentry-lite ];then
     if [ ! -d /opt/apache2 ];then
@@ -5940,6 +5971,9 @@ fi;
 /sbin/ip6tables -F LOOPIN
 /sbin/ip6tables -F LOOPOUT
 
+#External Multicast Traffic
+/sbin/ip6tables -I DEFIN -j ACCEPT -d ff02::/16
+
 __EOB__
 
   foreach $iface (@ints) {
@@ -6431,12 +6465,16 @@ print FW6<<__EOB__;
 /sbin/ip6tables -A LOOPOUT -j ACCEPT -o lo -p 132
 
 #Allow mISDN
-/sbin/ip6tables -A LOOPIN -j ACCEPT -i lo -p 34
-/sbin/ip6tables -A LOOPOUT -j ACCEPT -o lo -p 34
+/sbin/ip6tables -A LOOPIN -j ACCEPT -p 34
+/sbin/ip6tables -A LOOPOUT -j ACCEPT -p 34
 
 #STUN Loopback
 /sbin/ip6tables -A LOOPIN -j ACCEPT -p udp $sfnew --sport 3478:3479 --dport 10000:65535
 /sbin/ip6tables -A LOOPOUT -j ACCEPT -p udp $sfnew --sport 3478:3479 --dport 10000:65535
+
+#Traffic to link local addresses
+/sbin/ip6tables -A LOOPIN -j ACCEPT -d fe80::/64
+/sbin/ip6tables -A LOOPOUT -j ACCEPT -d fe80::/64
 
 __EOB__
 
@@ -7406,7 +7444,7 @@ __EOR__
 /sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state ESTABLISHED,NEW --sport 3478:3479 --dport 1024:65535
 
 #MDNS
-/sbin/ip6tables -A SYSIN -j ACCEPT -p udp --sport 5353 --dport 5353
+/sbin/ip6tables -A SYSIN -j ACCEPT -p udp --sport 5353 --dport 1024:65535
 
 __EOR__
 
@@ -8285,6 +8323,7 @@ _EOB_
   print FW "/sbin/iptables -A INPUT -j TARPIT -p tcp --dport 5060:5061 -m state --state ESTABLISHED\n";
   print FW "/sbin/iptables -A INPUT -j TARPIT -m state --state NEW\n";
   print FW "/sbin/iptables -A TARPIT -j RETURN -p tcp --dport 3128\n";
+  print FW "/sbin/iptables -A TARPIT -j ACCEPT -m state --state NEW,ESTABLISHED -p tcp --dport 3129\n";
   print FW "/sbin/iptables -A TARPIT -j RETURN -p tcp --dport 8080\n";
   print FW "/sbin/iptables -A TARPIT -j RETURN -p tcp --dport 443\n";
   print FW "/sbin/iptables -A TARPIT -j RETURN -p tcp --dport 666\n";
@@ -12420,13 +12459,6 @@ subnet $nwaddr netmask $snmask {
   not authoritative;
 }
 __EOL__
-  print DHCP6<<__EOL__;
-
-#@idata[0]
-subnet $nwaddr netmask $snmask { 
-  not authoritative;
-}
-__EOL__
   }
 }
 
@@ -15053,6 +15085,7 @@ mohsuggest=default
 iaxthreadcount=16
 iaxmaxthreadcount=512 
 rtcachefriends=yes
+calltokenoptional = 0.0.0.0/0.0.0.0
 __EOF__
 
 if (( -e "/usr/lib/asterisk/modules-1.8/codec_g723.so") ||
@@ -17395,8 +17428,6 @@ __EOB__
 		AdvOnLink on;
 		AdvAutonomous on;
 		AdvRouterAddr off;
-		AdvValidLifetime 600;
-		AdvPreferredLifetime 300;
 	};
 __EOB__
         }
@@ -17416,8 +17447,6 @@ __EOB__
   close(SIX24);
   close(SIX24A);
 }
-
-#!/usr/bin/perl
 
 sub nmtocidr {
   ($nm) = @_;
@@ -17484,6 +17513,39 @@ sub checkipv4 {
     return 1;
   }
   return 0;
+}
+
+sub printavahi {
+  open(ADC,">avahi-daemon.conf");
+  print ADC<<__EOB__;
+[server]
+allow-interfaces=$sysconf{'Internal'}
+use-ipv4=yes
+use-ipv6=yes
+
+[reflector]
+enable-reflector=yes
+
+[publish]
+add-service-cookie=yes
+publish-a-on-ipv6=yes
+__EOB__
+  close(ADC);
+}
+
+sub printdhclient {
+  open(DHC,">dhclient.conf");
+  print DHC<<__EOB__;
+interface "$sysconf{'Internal'}" {
+  send host-name "$dnsconf{'Hostname'}";          
+  send fqdn.fqdn "$dnsconf{'Hostname'}";
+  send fqdn.encoded on;
+  send fqdn.server-update on;
+  also request fqdn, dhcp6.fqdn;
+  script "/usr/bin/dhclient-script";
+}
+__EOB__
+  close(DHC);
 }
 
 flock($lockfh, LOCK_UN);
