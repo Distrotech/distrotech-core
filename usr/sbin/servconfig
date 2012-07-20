@@ -1210,8 +1210,8 @@ done
 #fi;
 
 
-if [ -e named.conf ] && [ -e /etc/named.conf.orig ];then 
-  DNSDIFF=`diff named.conf /etc/named.conf.orig`
+if [ -e named.conf ] && [ -e /etc/named.conf ];then 
+  DNSDIFF=`diff named.conf /etc/named.conf`
  else
   if [ -e named.conf ];then 
     DNSDIFF="NO FILE";
@@ -1251,12 +1251,13 @@ if [ "$DNSEZDIFF" ] || [ "$DNSDZDIFF" ];then
 fi;
 
 if [ "$DNSDIFF" ];then
-  cp -p named.conf /etc/named.conf.orig
   cp -p named.conf /etc/named.conf
-  chown root.root /etc/named.conf.orig
   chown root.root /etc/named.conf
-  chmod 600 /etc/named.conf.orig
   chmod 600 /etc/named.conf
+  if [ ! -d /etc/bind ];then
+    mkdir /etc/bind
+  fi;
+  touch /etc/bind/forwarders.conf
   if [ "`pidof named`" ];then
     /usr/sbin/rndc reload
    else

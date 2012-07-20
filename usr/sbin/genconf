@@ -5850,8 +5850,7 @@ EOF
      else
       FWD=\${DNS1}
     fi;
-    echo "FWD=\\\"\${FWD}\\\";" > /etc/named.fwd
-    sed -e "s/^#FWD/       forwarders \\{\$FWD;\\};/" /etc/named.conf.orig > /etc/named.conf
+    echo "forwarders {\${FWD};};" > /etc/bind/forwarders.conf
   fi;
 
 __EOB__
@@ -8903,8 +8902,7 @@ _EOB_
      else
       FWD=\${DNS1}
     fi;
-    echo "FWD=\\\"\${FWD}\\\";" > /etc/named.fwd
-    sed -e "s/^#FWD/       forwarders \\{\$FWD;\\};/" /etc/named.conf.orig > /etc/named.conf
+    echo "forwarders {\${FWD};};" > /etc/bind/forwarders.conf
   fi;
 __EOB__
     }
@@ -9320,8 +9318,7 @@ EOF
      else
       FWD=\${DNS1}
     fi;
-    echo "FWD=\\\"\${FWD}\\\";" > /etc/named.fwd
-    sed -e "s/^#FWD/       forwarders \\{\$FWD;\\};/" /etc/named.conf.orig > /etc/named.conf
+    echo "forwarders {\${FWD};};" > /etc/bind/forwarders.conf
   fi;
  elif [ "\${6:0:4}"  == \"l2tp\" ];then
   /sbin/ip route add  \${5}/32 dev \${1} src \${4} table Link
@@ -11525,8 +11522,7 @@ print DNS<<__EOB__;
        };
 __EOB__
 } else {
-#if (($sysconf{'External'} eq "Dialup") && ($dnsconf{'Usepeer'} ne "true")) {
-  print DNS "#FWD\n";
+  print DNS "       include \"/etc/bind/forwarders.conf\";\n";
 }
 
 print DNS<<__EOB__;
