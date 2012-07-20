@@ -976,12 +976,13 @@ function verifyIP2 (IPvalue, IPMask) {
     return false;
   if (!verifyIP(IPvalue))
     return false;
+/*
   var mask=Math.pow(2,(32-IPMask))-1;
   var ipaddr=ip2long(IPvalue) & mask;
   if ((ipaddr == 0) || (ipaddr == mask))
     return false;
-  else 
-    return true;
+*/
+  return true;
 }
 
 function getelementbyname(formobj,elname) {

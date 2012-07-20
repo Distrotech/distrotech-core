@@ -65,6 +65,19 @@ $dnsconf{'DefaultTTL'}="3600";
 $dnsconf{'DynamicTTL'}="180";
 $dnsconf{'DynamicCNAME'}="true";
 
+
+$svlcr{'LCRAC'}="";
+$svlcr{'LCRPW'}="";
+$svlcr{'LCRSRV'}="";
+$svlcr{'LCRPROTO'}="SIP";
+$svlcr{'LCRH323P'}="";
+$svlcr{'LCRGWID'}="";
+$svlcr{'LCRREG'}="true";
+$svlcr{'LCRDTMF'}="info";
+$svlcr{'LCRFROMU'}="false";
+$svlcr{'LCRVIDEO'}="true";
+$svlcr{'LCRSRTP'}="false";
+
 $tuncnt=0;
 $tblcnt=0;
 $vparent=0;
@@ -375,26 +388,39 @@ while(<CF>) {
           $parentdial="IAX2/parent";
         } else {
           $proto=@words[3];
-          if ($proto eq "IAX") {
-            push(@words,"plaintext");
-            push(@words,"parent");
-            @words[4]=@words[0];
-            $sproxy=join("\|",@words);
-            push(@iaxproxys,$sproxy);    
-            $parentnumber=@words[0];
-            $parentdial="IAX2/parent";
-          } elsif ($proto eq "SIP") {
-            $sproxy=join("\|",@words);
-            push(@sipproxys,$sproxy);
-            $parentnumber=@words[0];
-            $parentdial="SIP/parent";
-          } else {
-            $h323number=@words[0];
-            $h323password=@words[1];
-            $h323server=@words[2];
-            $h323prefix=@words[4];
-            $parentdial="OH323";
-            $parentnumber=@words[0];
+          $svlcr{'LCRAC'}=@words[0];
+          $svlcr{'LCRPW'}=@words[1];
+          $svlcr{'LCRSRV'}=@words[2];
+          $svlcr{'LCRPROTO'}=$proto;
+          $svlcr{'LCRH323P'}=@words[4];
+          $svlcr{'LCRGWID'}=@words[5];
+          $svlcr{'LCRREG'}=@words[6];
+          $svlcr{'LCRDTMF'}=@words[7];
+          $svlcr{'LCRFROMU'}=@words[8];
+          $svlcr{'LCRVIDEO'}=@words[9];
+          $svlcr{'LCRSRTP'}=@words[10];
+          if (@words[0] ne "") {
+            if ($proto eq "IAX") {
+              push(@words,"plaintext");
+              push(@words,"parent");
+              @words[4]=@words[0];
+              $sproxy=join("\|",@words);
+              push(@iaxproxys,$sproxy);    
+              $parentnumber=@words[0];
+              $parentdial="IAX2/parent";
+            } elsif ($proto eq "SIP") {
+              $sproxy=join("\|",@words);
+              push(@sipproxys,$sproxy);
+              $parentnumber=@words[0];
+              $parentdial="SIP/parent";
+            } else {
+              $h323number=@words[0];
+              $h323password=@words[1];
+              $h323server=@words[2];
+              $h323prefix=@words[4];
+              $parentdial="OH323";
+              $parentnumber=@words[0];
+            }
           }
         }
       } elsif (@words[0] eq "GOSSIP") {
@@ -1054,6 +1080,11 @@ print SV "FWALL_INT=\"" . $sysconf{'Internal'} . "\";\n";
 print SV "FWALL_EXT=\"" . $sysconf{'External'} . "\";\n";
 print SV "DEL_DNS=\"0\";\n";
 print SV "SERIAL=\"" . $sysconfig{'Serial'} . "\";\n";
+
+foreach $lcrkey (sort keys %svlcr) {
+  print SV $lcrkey . "=\"" . $svlcr{$lcrkey} . "\";\n";
+}
+
 close(SV);
 
 if (($sysconfig{'Type'} ne "full") && ($sysconfig{'Type'} ne "")) {
@@ -11470,6 +11501,7 @@ foreach $wanl (@wans){
     print DNS<<__EOB__;
                127.0.0.1/32;
                ::1/128;
+               169.254.0.0/16;
 __EOB__
   }
 

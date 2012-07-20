@@ -35,7 +35,9 @@ if [ -e /install/default.conf ];then
 fi;
 
 echo -n "" > /tmp/netsentry.conf
-
+chmod 600 /tmp/netsentry.conf
+chown 0.0 /tmp/netsentry.conf
+ 
 X509_C="ZA";
 X509_ST="Gauteng";
 X509_L="Johanesburg";
@@ -479,6 +481,8 @@ fi;
 if [ "$DYN_KEY" ];then
   echo "DNS SmartKey $DYN_KEY" >> /tmp/netsentry.conf
 fi;
+
+echo "IP VOIP VBOX ${LCRAC} ${LCRPW} ${LCRSRV} ${LCRPROTO} ${LCRH323P} ${LCRGWID} ${LCRREG} ${LCRDTMF} ${LCRFROMU} ${LCRVIDEO} ${LCRSRTP}" >> /tmp/netsentry.conf
 
 (cat <<EOF
 IP Modem ComPort $MDM_PORT

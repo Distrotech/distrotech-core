@@ -401,39 +401,52 @@ if (isset($saved)) {
     pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('LocalPrefix','" . $DefaultPrefix . "','1')");
   }
   if ($DOMC == "on") {
-    $DOMC="0";
-    $OSLEVEL="65";
-    $DTYPE="USER";
-    $DOM_DC="";
-    $DOM_ADS="";
+    $_POST['DOMC']="0";
+    $_POST['OSLEVEL']="65";
+    $_POST['DTYPE']="USER";
+    $_POST['DOM_DC']="";
+    $_POST['DOM_ADS']="";
   } else {
-    $DOMC="1";
-    if ($DOM_DC != "") {
-      $OSLEVEL="5";
-      if ($DOM_ADS != "") {
-        $DTYPE="ADS";
+    $_POST['DOMC']="1";
+    if ($_POST['DOM_DC'] != "") {
+      $_POST['OSLEVEL']="5";
+      if ($_POST['DOM_ADS'] != "") {
+        $_POST['DTYPE']="ADS";
       } else {
-        $DTYPE="DOMAIN";
+        $_POST['DTYPE']="DOMAIN";
       }
     } else {
-      $OSLEVEL="65";
-      $DTYPE="USER";
+      $_POST['OSLEVEL']="65";
+      $_POST['DTYPE']="USER";
     }
+  }
+
+  $truefalse=array("LCRFROMU","LCRREG","LCRSRTP","LCRVIDEO");
+  for($tfcnt=0;$tfcnt < count($truefalse);$tfcnt++) {
+    if ($_POST[$truefalse[$tfcnt]] == on) {
+      $_POST[$truefalse[$tfcnt]]="true";
+    } else {
+      $_POST[$truefalse[$tfcnt]]="false";
+    }
+  }
+
+  if ($_POST['LCRDTMF'] == "on") {
+    $_POST['LCRDTMF']="info";
   }
 
   if (($MDM_CONN == "3G") || ($MDM_CONN == "3GIPW") || ($MDM_CONN == "Dialup") || ($MDM_CONN == "Leased")) {
-    $FWALL_EXT="Dialup";
-  } else if ($MDM_CONN != "") {
-    $FWALL_EXT=$MDM_CONN;
-    if ($EXTPPPOE == "on") {
-      $MDM_CONN="ADSL";
+    $_POST['FWALL_EXT']="Dialup";
+  } else if ($_POST['MDM_CONN'] != "") {
+    $_POST['FWALL_EXT']=$_POST['MDM_CONN'];
+    if ($_POST['EXTPPPOE'] == "on") {
+      $_POST['MDM_CONN']="ADSL";
     } else {
-      $MDM_CONN="Dialup";
+      $_POST['MDM_CONN']="Dialup";
     }
   }
 
-  if (($HN_ADDR != $conf["HN_ADDR"]) || ($DOM_ADDR != $conf["DOM_ADDR"])) {
-    $DEL_DNS="1";
+  if (($_POST['HN_ADDR'] != $conf["HN_ADDR"]) || ($_POST['DOM_ADDR'] != $conf["DOM_ADDR"])) {
+    $_POST['DEL_DNS']="1";
   }
 
   $newconf=fopen("/var/spool/apache/htdocs/ns/config/netsentry-sysvars","w");
@@ -485,8 +498,8 @@ if (isset($saved)) {
   if ($newconf) {
     while(list($key,$val) = each($conf)) {
       if (! is_array($conf[$key])) {
-        if (isset($$key)) {
-          fwrite($newconf,$key . "=\"" . $$key . "\";\n");
+        if (isset($_POST[$key])) {
+          fwrite($newconf, $key . "=\"" . $_POST[$key] . "\";\n");
         } else {
           fwrite($newconf,$key . "=\"" . $conf[$key] . "\";\n");
         }
@@ -517,8 +530,9 @@ if (isset($saved)) {
   }
 %>
 <DIV CLASS=formselect ID=exten_but onclick=showdiv('exten',document.confform) onmouseover=showdiv('exten',document.confform)>Voip Ext.</DIV>
-<DIV CLASS=formselect ID=voip_but onclick=showdiv('voip',document.confform) onmouseover=showdiv('voip',document.confform)>VOIP</DIV>
+<DIV CLASS=formselect ID=voip_but onclick=showdiv('voip',document.confform) onmouseover=showdiv('voip',document.confform)>PBX</DIV>
 <DIV CLASS=formselect ID=atten_but onclick=showdiv('atten',document.confform) onmouseover=showdiv('atten',document.confform)>Auto Atten.</DIV>
+<DIV CLASS=formselect ID=lcr_but onclick=showdiv('lcr',document.confform) onmouseover=showdiv('lcr',document.confform)>LCR</DIV>
 <DIV CLASS=formselect ID=save_but onclick=savereconfchanges() onmouseover=showdiv('save',document.confform)>Save</DIV>
 </DIV></DIV>
 
@@ -634,6 +648,55 @@ $col=0;
 voipmenu($attenvar,"atten");
 $col=0;
 %>
+
+<DIV id=lcr CLASS=formpart>
+<TABLE WIDTH=100% cellspacing=0 cellpadding=0>
+    <tr class="list-color2">
+      <td width="50%">Account</td>
+      <td><input size="52" name="LCRAC" value="<%print $conf["LCRAC"];%>" type="text"></td>
+    </tr>
+    <tr class="list-color1">
+      <td width="50%">Password</td>
+      <td><input size="52" name="LCRPW" value="<%print $conf["LCRPW"];%>" type="text"></td>
+    </tr>
+    <tr class="list-color2">
+      <td width="50%">Server</td>
+      <td><input size="52" name="LCRSRV" value="<%print $conf["LCRSRV"];%>" type="text"></td>
+    </tr>
+    <tr class="list-color1">
+      <td width="50%">Protocol</td>
+      <td><SELECT NAME=LCRPROTO><OPTION VALUE="SIP">SIP</OPTION>
+      <OPTION VALUE="IAX"<%if ($conf['LCRPROTO'] == "IAX") { print " SELECTED";}%>>IAX2</OPTION>
+      <OPTION VALUE="H.323"<%if ($conf['LCRPROTO'] == "H.323") { print " SELECTED";}%>>H.323</OPTION>
+      </TD>
+    </tr>
+    <tr class="list-color2">
+      <td width="50%">Register</td>
+      <td><INPUT TYPE=CHECKBOX NAME=LCRREG<%if ($conf['LCRREG'] == "true") { print " CHECKED";}%>>
+      </TD>
+    </tr>
+    <tr class="list-color1">
+      <td width="50%">Use DTMF INFO (SIP)</td>
+      <td><INPUT TYPE=CHECKBOX NAME=LCRDTMF<%if ($conf['LCRDTMF'] == "info") { print " CHECKED";}%>>
+      </TD>
+    </tr>
+    <tr class="list-color2">
+      <td width="50%">Use SRTP (SIP)</td>
+      <td><INPUT TYPE=CHECKBOX NAME=LCRSRTP<%if ($conf['LCRSRTP'] == "true") { print " CHECKED";}%>>
+      </TD>
+    </tr>
+    <tr class="list-color1">
+      <td width="50%">Use From User (SIP [Disables Sending CLI])</td>
+      <td><INPUT TYPE=CHECKBOX NAME=LCRFROMU<%if ($conf['LCRFROMU'] == "true") { print " CHECKED";}%>>
+      </TD>
+    </tr>
+    <tr class="list-color2">
+      <td width="50%">Disable Video</td>
+      <td><INPUT TYPE=CHECKBOX NAME=LCRVIDEO<%if ($conf['LCRVIDEO'] == "true") { print " CHECKED";}%>>
+      </TD>
+    </tr>
+</TABLE>
+</DIV>
 
 <DIV id=save CLASS=formpart>
 <TABLE WIDTH=100% cellspacing=0 cellpadding=0>
