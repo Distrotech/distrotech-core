@@ -1,6 +1,8 @@
 #!/bin/bash
 
-if [ -e /install/netsentry-version ];then
+if [ -e /etc/netsentry-version ];then
+  eval `cat /etc/netsentry-version`
+ elif [ -e /install/netsentry-version ];then
   eval `cat /install/netsentry-version`
  else
   echo "Config not found"
@@ -12,6 +14,28 @@ setterm -blank 20
 if [ -e "/tmp/fstab.new" ];then
   rm /tmp/fstab.new
 fi;
+
+
+Set_Serial() {
+  if [ -d /sys/class/net/br0 ];then
+    IFACE="br0";
+   elif [ -d /sys/class/net/ethA ];then
+    IFACE="ethA";
+   else
+    return -1;
+  fi;
+
+  MAC=`cat /sys/class/net/${IFACE}/address`
+  ZCIP=`cat "/var/lib/avahi-autoipd/${MAC}"`
+  if [ "${ZCIP}" ];then
+    cp /install/serial.pl ${INST_BASE}/root
+    chmod 750 ${INST_BASE}/root/serial.pl
+    chroot ${INST_BASE} /root/serial.pl ${1} ${ZCIP}+16 >> ${INST_BASE}/var/spool/apache/htdocs/ns/config/netsentry.conf
+    rm ${INST_BASE}/root/serial.pl
+   else
+    return -1;
+  fi;
+}
 
 Install_System() {
   setterm -cursor off
@@ -208,10 +232,7 @@ EOF
   if [ "$SERIAL" ];then
     echo "Serial $SERIAL" >> ${INST_BASE}/var/spool/apache/htdocs/ns/config/netsentry.conf
    else
-    cp /install/serial.pl ${INST_BASE}/root
-    chmod 750 ${INST_BASE}/root/serial.pl
-    chroot ${INST_BASE} /root/serial.pl ${NET_HNAME}.${NET_DOMAIN} ${NIP_ADDR}+${NSN_ADDR} >> ${INST_BASE}/var/spool/apache/htdocs/ns/config/netsentry.conf
-    rm ${INST_BASE}/root/serial.pl
+    Set_Serial ${HN_ADDR}.${DOM_ADDR}
   fi
 
   chmod 1777 ${INST_BASE}/tmp ${INST_BASE}/var/run

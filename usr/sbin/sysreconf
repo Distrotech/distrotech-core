@@ -124,6 +124,12 @@ if [ -e /etc/.install ];then
   fi;
   FWALL_INT="${INT_IFACE[1]}";
   FWALL_EXT="${INT_IFACE[1]}";
+
+  HN_ADDR=${HN_ADDR}-`cat /sys/class/net/${INT_IFACE[1]}/address  |tr 'a-f:' 'A-F\-'`
+  /usr/sbin/avahi-autoipd -c ${INT_IFACE[1]}
+  if [ $? != 0 ];then
+    /usr/sbin/avahi-autoipd --force-bind -D -w ${INT_IFACE[1]}
+  fi;
 fi;
 
 MAX_IF=${#INT_IFACE[@]};
@@ -628,15 +634,10 @@ EOF
 ) > /tmp/netsentry-sysvars
 
 if [ -e /etc/.install ];then
-  /usr/sbin/avahi-autoipd -c ${INT_IFACE[1]}
-  if [ $? != 0 ];then
-    /usr/sbin/avahi-autoipd --force-bind -D -w ${INT_IFACE[1]}
-  fi;
   /usr/bin/hostname $HN_ADDR >/dev/null 2>&1
   /bin/domainname $DOM_ADDR >/dev/null 2>&1
   /usr/sbin/avahi-daemon -D
 
-  dhhn=${HN_ADDR}-`cat /sys/class/net/${INT_IFACE[1]}/address  |tr 'a-f:' 'A-F\-'`
   (cat<<EOF
 interface "${INT_IFACE[1]}" {
   send host-name "${dhhn}";
