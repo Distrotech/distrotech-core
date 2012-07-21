@@ -1378,6 +1378,7 @@ if ($sysconfig{'Type'} eq "full") {
 &printdhcp();
 &printavahi();
 &printdhclient();
+&printdhcpfw();
 &printdynkey();
 &printdnsconf();
 
@@ -5850,7 +5851,16 @@ EOF
      else
       FWD=\${DNS1}
     fi;
-    echo "forwarders {\${FWD};};" > /etc/bind/forwarders.conf
+    echo "forwarders {\${FWD};};" > /etc/bind/forwarders.ppp.3g
+  fi;
+  if [ -s /etc/bind/forwarders.ppp.3g ];then
+    cp /etc/bind/forwarders.ppp.3g /etc/bind/forwarders.conf
+    if [ "`/bin/pidof named`" ];then
+      /usr/sbin/rndc reload &
+      sleep 5
+     else
+      /usr/sbin/named
+    fi;
   fi;
 
 __EOB__
@@ -5956,6 +5966,7 @@ if [ \"\$1\" == "startup" ];then
   /sbin/ip6tables -A INPUT -j STATEOK -m state --state RELATED,ESTABLISHED
   /sbin/ip6tables -A INPUT -j ACCEPT -p icmpv6
   /sbin/ip6tables -A INPUT -j ACCEPT -d ff02::/16 -s fe80::/64
+  /sbin/ip6tables -A INPUT -j ACCEPT -p udp --sport 547 --dport 546 -s fe80::/64 -d fe80::/64
   /sbin/ip6tables -A INPUT -j LOOPIN -i lo
   /sbin/ip6tables -A INPUT -j EXTERNIN
   /sbin/ip6tables -A INPUT -j INTERNIN
@@ -6184,6 +6195,7 @@ if [ \"\$1\" == "startup" ];then
   /sbin/iptables -N HOTSPOTI
   /sbin/iptables -N DYNAMICIPI
   /sbin/iptables -N DYNAMICIPO
+  /sbin/iptables -t nat -N DYNAMICPRE
   /sbin/iptables -N HOTSPOTO
   /sbin/iptables -N GWOUT
   /sbin/iptables -N GWIN
@@ -6409,8 +6421,10 @@ __EOB__
 /sbin/iptables -A VOIPOUT -j ACCEPT -p udp $sfnew --sport 1719:1722
 /sbin/iptables -A VOIPOUT -j ACCEPT -p udp $sfnew --sport 10000:20000
 
-#Allow DHCP Packets
+#Allow DHCP/mDNS/NTP Packets
 /sbin/iptables -A INPUT -j ACCEPT -p udp -s 0.0.0.0/0 --sport 68 -d 255.255.255.255 --dport 67
+/sbin/iptables -A INPUT -j ACCEPT -p udp -s 0.0.0.0/0 --sport 123 -d 255.255.255.255 --dport 123
+/sbin/iptables -A INPUT -j ACCEPT -p udp -s 0.0.0.0/0 --sport 1024:65535 -d 255.255.255.255 --dport 123
 /sbin/iptables -A INPUT -j ACCEPT -p udp --sport 1024:65535 --dport 5353
 /sbin/iptables -A INPUT -j ACCEPT -p udp --dport 1024:65535 --sport 5353
 /sbin/iptables -A OUTPUT -j ACCEPT -p udp --dport 1024:65535 --sport 5353
@@ -6997,15 +7011,10 @@ _EOB_
         $linkbc=getbc(@idata[2],@idata[1]);
 
         print FW "#Allow Nmb/Wins Requests For " . @idata[0] . " (" . @idata[3] . ")\n";
-        print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $iface -p udp -s $linknw/@idata[2] --sport 137:138 -d $linkbc/32 --dport 137:138\n";
-        print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $iface -p udp -s $linknw/@idata[2] --sport 1024:65535 -d $linkbc/32 --dport 137:138\n";
-        print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $iface -p udp -s $linknw/@idata[2] --dport 1024:65535 -d $linkbc/32 --sport 137:138\n";
         print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $iface -p udp --sport 137:138 -d $linkbc/32 --dport 137:138\n";
         print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $iface -p udp --sport 1024:65535 -d $linkbc/32 --dport 137:138\n";
-        print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $iface -p udp --dport 1024:65535 -d $linkbc/32 --sport 137:138\n";
         print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $iface -p udp --sport 137:138 -d $linkbc/32 --dport 137:138\n\n";
         print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $iface -p udp --sport 1024:65535 -d $linkbc/32 --dport 137:138\n";
-        print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $iface -p udp --dport 1024:65535 -d $linkbc/32 --sport 137:138\n";
       }
     }
   }
@@ -7952,7 +7961,7 @@ __EOR__
   print FW "/sbin/iptables -t nat -A SIPMAP -j DEFPROXY -i $ethint -d $zcipaddr\n";
   print FW "/sbin/iptables -t nat -I SIPNAT -j SNAT -o $ethint -d 169.254.0.0/16 --to-source $zcipaddr\n\n";
 
-  print FW "/sbin/iptables -t nat -A WEBACCESS -j DNAT -p tcp --to-destination @idata[1]:80 --dport 80 --sport 1024:65535 -d $zcipaddr/32 -s 169.254.0.0/16\n";
+  print FW "/sbin/iptables -t nat -A WEBACCESS -j DNAT -p tcp --to-destination $localip:80 --dport 80 --sport 1024:65535 -d $zcipaddr/32 -s 169.254.0.0/16\n";
   print FW "/sbin/iptables -A NONAT -t nat -j ACCEPT -o $ethint -s 169.254.0.0/16 -d 169.254.0.0/16\n\n";
 
   foreach $wann (@wans) {
@@ -8817,10 +8826,10 @@ _EOB_
       print FW "/sbin/iptables -A TXPROXY -t nat -j REDIRECT -p tcp --to-port 3129 -i tun+ -s $nwaddr/@idata[2]\n\n";
     }
   }
-  print FW "#Allow Transparent Proxy For Zero Conf Lan\n";
+  print FW "#Allow Transparent Proxy For Zero Conf/DHCP Lan\n";
   print FW "/sbin/iptables -A TXPROXY -p tcp -t nat -j REDIRECT --to-port 3129 -i $ethint -s 169.254.0.0/16\n";
+  print FW "/sbin/iptables -A TXPROXY -j DYNAMICPRE -t nat\n";
   print FW "/sbin/iptables -t nat -A SYSNAT -j NATOUT -s 169.254.0.0/16\n\n";
-
 
   print FW "/sbin/iptables -A OUTPUT -j SIPOUT\n";
   print FW "/sbin/iptables -A INPUT -j SBSRULESI\n";
@@ -8902,7 +8911,11 @@ _EOB_
      else
       FWD=\${DNS1}
     fi;
-    echo "forwarders {\${FWD};};" > /etc/bind/forwarders.conf
+    echo "forwarders {\${FWD};};" > /etc/bind/forwarders.ppp
+  fi;
+
+  if [ -s /etc/bind/forwarders.ppp ];then
+    cp /etc/bind/forwarders.ppp /etc/bind/forwarders.conf
   fi;
 __EOB__
     }
@@ -8986,11 +8999,13 @@ EOF
   chmod 640 /tmp/dnsup.ppp
   echo \$1 > /tmp/ppp.main.int
 __EOB__
+#    print FWP "    if [ \"`/bin/pidof named`\" ];then\n      /usr/sbin/rndc reload &\n      sleep 5\n   else\n     /usr/sbin/named\n    fi;\n";
+    print FWP "    if [ \"`/bin/pidof named`\" ];then\n      /usr/sbin/rndc reload &\n      sleep 5\n   fi;\n";
+
     if ($dnsconf{'DynZone'} ne "") {
       print FWP "    /usr/bin/nsupdate /tmp/dnsup.ppp\n";
     }
-#    print FWP "    if [ \"`/bin/pidof named`\" ];then\n      /usr/sbin/rndc reload &\n      sleep 5\n   else\n     /usr/sbin/named\n    fi;\n";
-    print FWP "    if [ \"`/bin/pidof named`\" ];then\n      /usr/sbin/rndc reload &\n      sleep 5\n   fi;\n";
+
     print FWP "    (/usr/bin/fetchmail;sendmail -q;sendmail -q -Ac) > /dev/null 2>&1 &\n";
     print FWP "    fi;\n";
     print FWP "  fi;\n\n";
@@ -9200,12 +9215,6 @@ EOF
 
   chmod 640 /tmp/dnsup.\$6.ppp
   echo \$1 > /tmp/ppp.\$6.int
-  if [ "`/bin/pidof named`" ];then
-    /usr/sbin/rndc reload &
-    sleep 5
-#   else
-#    /usr/sbin/named
-  fi;
 
 __EOS__
   if ($dnsconf{'DynZone'} ne "") {
@@ -9318,7 +9327,16 @@ EOF
      else
       FWD=\${DNS1}
     fi;
-    echo "forwarders {\${FWD};};" > /etc/bind/forwarders.conf
+    echo "forwarders {\${FWD};};" > /etc/bind/forwarders.\${6}.ppp
+    if [ ! -s /etc/bind/forwarders.ppp ];then
+      cp /etc/bind/forwarders.ppp.\${6} /etc/bind/forwarders.conf
+      if [ "`/bin/pidof named`" ];then
+        /usr/sbin/rndc reload &
+        sleep 5
+       else
+        /usr/sbin/named
+      fi;
+    fi;
   fi;
  elif [ "\${6:0:4}"  == \"l2tp\" ];then
   /sbin/ip route add  \${5}/32 dev \${1} src \${4} table Link
@@ -9420,6 +9438,21 @@ if [ ! \"\${6}\" ];then
   /sbin/ip addr del 2002:\${i6prefix}::1/64 dev sit0
   /sbin/ip addr del 2002:\${i6prefix}::1/128 dev sit0) > /dev/null 2>&1
   /etc/ifconf/ipv6to4.addr del \${i6prefix}
+  if [ -e /etc/bind/forwarders.ppp ];then
+    if [ ! "`diff -u /etc/bind/forwarders.ppp /etc/bind/forwarders.conf`" ];then
+      if [ -s /etc/bind/forwarders.static ];then
+        cp /etc/bind/forwarders.static /etc/bind/forwarders.conf
+       elif [ -s /etc/bind/forwarders.dhcp6 ];then
+        cp /etc/bind/forwarders.dhcp6 /etc/bind/forwarders.conf
+       elif [ -s /etc/bind/forwarders.dhcp4 ];then
+        cp /etc/bind/forwarders.dhcp4 /etc/bind/forwarders.conf
+       elif [ -s /etc/bind/forwarders.conf ];then
+        echo -n > /etc/bind/forwarders.conf
+      fi;
+      /usr/sbin/rndc reload
+    fi;
+    rm /etc/bind/forwarders.ppp
+  fi;
 __EOB__
   print FWD " elif [ \"\$6\"  == \"pppoe\" ];then\n";
 
@@ -9435,6 +9468,23 @@ __EOB__
   /sbin/iptables -D PPPOUT -j SYSOUT -o \$INT_NAME -s @pppoeint[1]/32 -d \$5/32
   /sbin/iptables -D PPPOUT -j MCASTOUT -o \$INT_NAME -s 224.0.0.0/3 -d \$5/32
  elif [ "\$6"  == \"3g\" ];then
+  if [ -e /etc/bind/forwarders.ppp.3g ];then
+    if [ ! "`diff -u /etc/bind/forwarders.ppp.3g /etc/bind/forwarders.conf`" ];then
+      if [ -s /etc/bind/forwarders.ppp ];then
+        cp /etc/bind/forwarders.ppp /etc/bind/forwarders.conf
+       elif [ -s /etc/bind/forwarders.static ];then
+        cp /etc/bind/forwarders.static /etc/bind/forwarders.conf
+       elif [ -s /etc/bind/forwarders.dhcp6 ];then
+        cp /etc/bind/forwarders.dhcp6 /etc/bind/forwarders.conf
+       elif [ -s /etc/bind/forwarders.dhcp4 ];then
+        cp /etc/bind/forwarders.dhcp4 /etc/bind/forwarders.conf
+       elif [ -s /etc/bind/forwarders.conf ];then
+        echo -n > /etc/bind/forwarders.conf
+      fi;
+      /usr/sbin/rndc reload
+    fi;
+    rm /etc/bind/forwarders.ppp.3g
+  fi;
   /sbin/iptables -F 3GIN
   /sbin/iptables -F 3GOUT
   /sbin/iptables -t nat -F 3GNAT
@@ -9449,6 +9499,24 @@ __EOB__
   /sbin/iptables -D PPPOUT -j MCASTOUT -o \${1} -s \${4} -d 224.0.0.0/3
  elif [ "\$6"  != \"other\" ] && [ "\$6" ];then
   /usr/sbin/radipdown \$6 \$5
+ elif [ "\$6" ];then
+  if [ -e /etc/bind/forwarders.ppp.\${6} ];then
+    if [ ! "`diff -u /etc/bind/forwarders.ppp.\${6} /etc/bind/forwarders.conf`" ];then
+      if [ -s /etc/bind/forwarders.ppp ];then
+        cp /etc/bind/forwarders.ppp /etc/bind/forwarders.conf
+       elif [ -s /etc/bind/forwarders.static ];then
+        cp /etc/bind/forwarders.static /etc/bind/forwarders.conf
+       elif [ -s /etc/bind/forwarders.dhcp6 ];then
+        cp /etc/bind/forwarders.dhcp6 /etc/bind/forwarders.conf
+       elif [ -s /etc/bind/forwarders.dhcp4 ];then
+        cp /etc/bind/forwarders.dhcp4 /etc/bind/forwarders.conf
+       elif [ -s /etc/bind/forwarders.conf ];then
+        echo -n > /etc/bind/forwarders.conf
+      fi;
+      /usr/sbin/rndc reload
+    fi;
+    rm /etc/bind/forwarders.ppp.\${6}
+  fi;
 fi;
 __EOF__
 #  MAC_ADDR=`/sbin/iptables -vnL PPPIN |grep \$5 |awk '\$12 == "MAC" {printf "%s\\n",\$13}'`
@@ -10505,8 +10573,13 @@ foreach $iface (@ints) {
     }
   }
 }
-print SMB " " . $sysconf{'Internal'} . ":avahi";
-print SMB " " . $sysconf{'Internal'} . ":dhcp 127.0.0.1\n";
+if ($zcipaddr ne "") {
+  print SMB " " . $sysconf{'Internal'} . ":avahi";
+}
+if (-e "/var/run/dhclient.pid") {
+  print SMB " " . $sysconf{'Internal'} . ":dhcp";
+}
+print SMB " 127.0.0.1\n";
 print SMB "        bind interfaces only = Yes\n";
 print SMB "        strict allocate = Yes\n";
 print SMB "        ldap ssl = off\n";
@@ -11505,25 +11578,22 @@ __EOB__
 print DNS "       };\n";
 
 
-if ((($sysconf{'PrimaryDns'} ne "") || ($sysconf{'SecondaryDns'} ne "")) && ($dnsconf{'Usepeer'} ne "true")) {
+print DNS "       include \"/etc/bind/forwarders.conf\";\n";
+
+if (($sysconf{'PrimaryDns'} ne "") || ($sysconf{'SecondaryDns'} ne "")) {
+  $fwdstat="forward first;\nforwarders {";
   if ($sysconf{'PrimaryDns'} ne "") {
-  }
-print DNS<<__EOB__;
-       forward first;
-       forwarders {
-__EOB__
-  if ($sysconf{'PrimaryDns'} ne "") {
-    print DNS "               $sysconf{'PrimaryDns'};\n";
+    $fwdstat=$fwdstat . $sysconf{'PrimaryDns'} . ";";
   }
   if ($sysconf{'SecondaryDns'} ne "") {
-    print DNS "               $sysconf{'SecondaryDns'};\n";
+    $fwdstat=$fwdstat . $sysconf{'SecondaryDns'} . ";";
   }
-print DNS<<__EOB__;
-       };
-__EOB__
-} else {
-  print DNS "       include \"/etc/bind/forwarders.conf\";\n";
+  $fwdstat=$fwdstat . "};\n";
 }
+
+open(DFS,">forwarders.static");
+print DFS $fwdstat;
+close(DFS);
 
 print DNS<<__EOB__;
        recursion yes;
@@ -12209,20 +12279,17 @@ sub printdhcp(){
   if ($dns eq "") {
     $dns="@iipdat[1]";
   }
+
+#option nortel_ipt code 128 = string;
+#option nortel_ipt "Nortel-i2004-A,@iipdat[1]:5000,1,10;@iipdat[1]:5000,1,10.";
+
 print DHCP<<__EOL__;
+not authoritative;
+
 option wpad-url code 252 = text;
 option tftp-cisco-server-name code 150 = ip-address;
 option polycom-vlanid code 251 = unsigned integer 16;
-option nortel_ipt code 128 = string;
 option yealink-url code 250 = string;
-
-option domain-name "$dnsconf{'Domain'}";
-option nis-domain "$dnsconf{'Domain'}";
-option domain-name-servers $dns;
-option wpad-url "http://$fqdn/proxy.pac";
-option tftp-server-name "http://$fqdn";
-option time-offset 7200;
-option nortel_ipt "Nortel-i2004-A,@iipdat[1]:5000,1,10;@iipdat[1]:5000,1,10.";
 
 __EOL__
 
@@ -12408,12 +12475,16 @@ print DHCP<<__EOL__;
 subnet $nwaddr netmask $snmask { 
   authoritative;
   range @idata[4] @idata[5];$dhroute
+  option domain-name "$dnsconf{'Domain'}";
+  option nis-domain "$dnsconf{'Domain'}";
+  option time-offset 7200;
   option ntp-servers @idata[1];
   option domain-name-servers $dnssrv;
   option subnet-mask $snmask;	
   option broadcast-address $bcaddr;
   option tftp-server-name "$tftpserv";$yeahelp$lwins
   option tftp-cisco-server-name @idata[1];
+  option wpad-url "http://$fqdn/proxy.pac";
 }
 __EOL__
     } elsif ($nwaddr ne "0.0.0.0"){
@@ -12514,9 +12585,15 @@ foreach $wanl (@wans){
 subnet $nwaddr netmask $snmask { 
   authoritative;
   range @idata[5] @idata[6];
+  option domain-name "$dnsconf{'Domain'}";
+  option nis-domain "$dnsconf{'Domain'}";
+  option time-offset 7200;
+  option domain-name-servers $dns;
   option routers @idata[4];
   option subnet-mask $snmask;
   option broadcast-address $bcaddr;
+  option wpad-url "http://$fqdn/proxy.pac";
+  option tftp-server-name "http://$fqdn";
 }
 __EOL__
   print DHCP6<<__EOL__;
@@ -12781,7 +12858,7 @@ sub enumrange() {
   return @outarr;
 }
 
-sub getbc() {
+sub getbc {
   local($maskbits,$ipaddr)=@_;
   local($bcaddr);
   @ipq=split(/\./,$ipaddr);
@@ -14639,10 +14716,17 @@ sub printntpconf() {
       $cnt++;
     }
   }
+
+#@idata=split(/\|/,$interface{$sysconf{'Internal'}});
+#$bcaddr = getbc(@idata[2],@idata[1]);
+#broadcast $bcaddr iburst burst minpoll 4
+#broadcastclient yes
+
   print NTP<<__EOF__;
 driftfile /tmp/ntp.drift
 restrict default nopeer noquery nomodify
 restrict 127.0.0.1
+restrict ::1
 __EOF__
   close(NTP);
 
@@ -17622,6 +17706,45 @@ interface "$sysconf{'Internal'}" {
 }
 __EOB__
   close(DHC);
+}
+
+sub printdhcpfw {
+  open(DFW,">dhclient-fw");
+  print DFW <<__EOF__;
+#!/bin/bash
+
+/sbin/iptables -F DYNAMICIPI
+/sbin/iptables -F DYNAMICIPO
+/sbin/iptables -t nat -F DYNAMICPRE
+
+/sbin/iptables -A DYNAMICIPI -j WEBACCESSI -p tcp --dport 80 -d \${3}
+/sbin/iptables -A DYNAMICIPI -j SYSIN -s \${1}/\${2} -d \${3}
+/sbin/iptables -A DYNAMICIPI -j SYSIN -s \${1}/\${2} -d $zcipaddr
+/sbin/iptables -A DYNAMICIPI -j MCASTIN -s \${1}/\${2}
+/sbin/iptables -A DYNAMICIPI -j ACCEPT -p udp --sport 137:138 -d \${4}/32 --dport 137:138
+/sbin/iptables -A DYNAMICIPI -j ACCEPT -p udp --sport 1024:65535 -d \${4}/32 --dport 137:138
+/sbin/iptables -A DYNAMICIPI -j DEFIN -d \${3}
+
+/sbin/iptables -A DYNAMICIPO -j WEBACCESSO -p tcp --sport 80 -s \${3}
+/sbin/iptables -A DYNAMICIPO -j ACCEPT -p udp --sport 53 --dport 53 -s \${3}
+/sbin/iptables -A DYNAMICIPO -j ACCEPT -p udp --sport 1024:65535 --dport 53 -s \${3}
+/sbin/iptables -A DYNAMICIPO -j ACCEPT -p tcp --sport 1024:65535 --dport 53 -s \${3}
+/sbin/iptables -A DYNAMICIPO -j SYSOUT -d \${1}/\${2} -s \${3}
+/sbin/iptables -A DYNAMICIPO -j SYSOUT -d \${1}/\${2} -s $zcipaddr
+/sbin/iptables -A DYNAMICIPO -j MCASTOUT -s \${1}/\${2}
+/sbin/iptables -A DYNAMICIPO -j ACCEPT -p udp --sport 137:138 -d \${4}/32 --dport 137:138
+/sbin/iptables -A DYNAMICIPO -j ACCEPT -p udp --sport 1024:65535 -d \${4}/32 --dport 137:138
+/sbin/iptables -A DYNAMICIPO -j DEFOUT -s \${3}
+
+/sbin/iptables -t nat -A DYNAMICPRE -j DNAT -p tcp -d \${3} --sport 1024:65535 --dport 80 --to-destination $zcipaddr:80
+/sbin/iptables -t nat -A DYNAMICPRE -j REDIRECT -s \${1}/\${2} -p tcp --sport 1024:65535 --dport 80 --to-port 3129
+#/sbin/iptables -t nat -A DYNAMICPRE -j ACCEPT -s \${1}/\${2} -d \${1}/\${2}
+#/sbin/iptables -t nat -A DYNAMICPRE -j DEFPROXY -d \${3}
+
+#/sbin/iptables -t nat -A DYNAMICPOST -j ACCEPT -s \${1}/\${2} -d \${1}/\${2}
+#/sbin/iptables -t nat -A DYNAMICPOST -j NATOUT -s \${1}/\${2}
+__EOF__
+  close(DFW);
 }
 
 flock($lockfh, LOCK_UN);
