@@ -130,7 +130,7 @@ if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstco
 
   NTPDPID=`pidof ntpd`
   if [ ! "$NTPDPID" ];then
-    /usr/bin/ntpd -g
+    /usr/bin/ntpd -b -g
   fi;
 #  su pgsql -c "pg_ctl status -D /var/spool/pgsql" > /dev/null 2>&1
 #  if [ $? == 1 ] || [ ! -d /proc/`cat /var/spool/pgsql/postmaster.pid  |head -1` ];then
@@ -867,7 +867,7 @@ if [ "$NTPCF" ] && [ ! -e networksentry-lite ];then
     killall ntpd
   fi;
   sleep 2
-  /usr/bin/ntpd -g
+  /usr/bin/ntpd -b -g
 fi;
 
 if [ -e filename.rules.conf ] && [ -e /opt/MailScanner/etc/filename.rules.conf ];then
@@ -1265,6 +1265,30 @@ if [ "$DNSDIFF" ];then
   fi;
  else
   touch /etc/named.conf
+fi;
+
+if [ -e forwarders.static ] && [ -e /etc/bind/forwarders.static ];then 
+  DNSFWDDIFF=`diff forwarders.static /etc/bind/forwarders.static`
+ else
+  if [ -e forwarders.static ];then 
+    DNSFWDDIFF="NO FILE";
+  fi;
+fi;
+
+if [ "${DNSFWDDIFF}" ];then
+  cp forwarders.static /etc/bind/forwarders.static
+  if [ ! -d /etc/bind ];then
+    mkdir /etc/bind
+  fi;
+  touch /etc/bind/forwarders.conf
+  if [ -s /etc/bind/forwarders.static ];then
+    cp /etc/bind/forwarders.static /etc/bind/forwarders.conf
+  fi;
+  if [ "`pidof named`" ];then
+    /usr/sbin/rndc reload
+   else
+    /usr/sbin/named
+  fi;
 fi;
 
 if [ -e rc.interface ] && [ -e /etc/rc.d/rc.interface ];then 
@@ -2283,6 +2307,17 @@ fi;
 
 if [ "${DHCLIENTDIFF}" ];then
   cp dhclient.conf /etc/dhclient.conf
+fi;
+
+if [ -e dhclient-fw ] && [ -e /usr/bin/dhclient-fw ];then
+  DHCLIENTFDIFF=`diff dhclient-fw /usr/bin/dhclient-fw`
+ elif [ -e dhclient-fw ];then
+  DHCLIENTFDIFF="NO FILE";
+fi;
+
+if [ "${DHCLIENTFDIFF}" ];then
+  cp dhclient-fw /usr/bin/dhclient-fw
+  chmod 750 /usr/bin/dhclient-fw
 fi;
 
 if [ -e ipv6to4 ] && [ -e /etc/ifconf/ipv6to4 ];then 
