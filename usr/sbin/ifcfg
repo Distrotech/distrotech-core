@@ -170,20 +170,11 @@ for pppl in $PPPLINKS;do
   fi;
 done;
 
-if [ "$FIREWALL" == "EXTERNAL" ];then
-  if [ "$DEFAULT" ];then
-    sleep 2;
-    (/sbin/ip route del 0/0 table 90;
-    /sbin/ip route add 0/0 via ${DEFAULT} table 90) > /dev/null 2>&1
-    (echo "#!/bin/bash";echo;echo "/etc/ppp/ip-up ${INT} ${ADDRESS} ${DEFAULT} hotplug") > /tmp/pppup/ext.ip-up
-   else
-    DEFINT=`ip route show 0.0.0.0/0 table 90 |awk '{print $5}'`
-    if [ "$DEFINT" ];then
-      IPADDR=`ip -f inet -o addr show $DEFINT |awk '{print $4}' |cut -d/ -f1`
-      DEFGW=`ip route show 0.0.0.0/0 table 90 |awk '{print $3}'`
-      (echo "#!/bin/bash";echo;echo "/etc/ppp/ip-up ${DEFINT} ${IPADDR} ${DEFGW} hotplug") > /tmp/pppup/ext.ip-up
-    fi;
-  fi;
+if [ "$FIREWALL" == "EXTERNAL" ] && [ "$DEFAULT" ];then
+  sleep 2;
+  (/sbin/ip route del 0/0 table 90;
+  /sbin/ip route add 0/0 via ${DEFAULT} table 90) > /dev/null 2>&1
+  (echo "#!/bin/bash";echo;echo "/etc/ppp/ip-up ${INT} ${ADDRESS} ${DEFAULT} hotplug") > /tmp/pppup/ext.ip-up
   chmod 700 /tmp/pppup/ext.ip-up
   /etc/ifconf/ipv6to4 > /dev/null 2>&1
   /tmp/pppup/ext.ip-up

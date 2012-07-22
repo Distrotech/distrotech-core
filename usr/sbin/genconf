@@ -4533,7 +4533,7 @@ sub printresolv() {
     }
     $intint=$sysconf{'Internal'};
     @iipdat=split(/\|/,$interface{$intint});
-    print RC "\nnameserver 127.0.0.1\n";
+    print RC "\nnameserver ::1\n";
     if (($sysconf{'PrimaryDns'} ne "") && ($sysconf{'PrimaryDns'} ne @iipdat[1])){
       print RC "nameserver $sysconf{'PrimaryDns'}\n";
     }
@@ -6421,7 +6421,7 @@ __EOB__
 /sbin/iptables -A VOIPOUT -j ACCEPT -p udp $sfnew --sport 1719:1722
 /sbin/iptables -A VOIPOUT -j ACCEPT -p udp $sfnew --sport 10000:20000
 
-#Allow DHCP/mDNS/NTP Packets
+#Allow DHCP/mDNS/DNS/NTP Packets
 /sbin/iptables -A INPUT -j ACCEPT -p udp -s 0.0.0.0/0 --sport 68 -d 255.255.255.255 --dport 67
 /sbin/iptables -A INPUT -j ACCEPT -p udp -s 0.0.0.0/0 --sport 123 -d 255.255.255.255 --dport 123
 /sbin/iptables -A INPUT -j ACCEPT -p udp -s 0.0.0.0/0 --sport 1024:65535 -d 255.255.255.255 --dport 123
@@ -6429,6 +6429,9 @@ __EOB__
 /sbin/iptables -A INPUT -j ACCEPT -p udp --dport 1024:65535 --sport 5353
 /sbin/iptables -A OUTPUT -j ACCEPT -p udp --dport 1024:65535 --sport 5353
 /sbin/iptables -A OUTPUT -j ACCEPT -p udp --sport 1024:65535 --dport 5353
+/sbin/iptables -A OUTPUT -j ACCEPT -p udp --dport 53 --sport 53
+/sbin/iptables -A OUTPUT -j ACCEPT -p udp --sport 1024:65535 --dport 53
+/sbin/iptables -A OUTPUT -j ACCEPT -p tcp --dport 53 --sport 53
 
 #Far South comma-ls
 #/sbin/iptables -A INPUT -j ACCEPT -p udp -s 0.0.0.0/0 --sport 17409 -d 255.255.255.255 --dport 1024:65535
@@ -6437,7 +6440,7 @@ __EOB__
 /sbin/iptables -A DHCPIN -j ACCEPT -p udp --sport 69 --dport 69
 /sbin/iptables -A DHCPIN -j ACCEPT -p udp --sport 1024:65535 --dport 69
 
-/sbin/iptables -A DHCPOUT -j ACCEPT -p udp --dport 68 --sport 67
+/sbin/iptables -A DHCPOUT -j ACCEPT -p udp --dport 67:68 --sport 67:68
 /sbin/iptables -A DHCPOUT -j ACCEPT -p udp --dport 69 --sport 69
 /sbin/iptables -A DHCPOUT -j ACCEPT -p udp --dport 1024:65535 --sport 69
 #/sbin/iptables -A DHCPOUT -j ACCEPT -p udp --sport 1024:65535 --dport 1024:65535 -m state --state ESTABLISHED,NEW
@@ -6451,6 +6454,7 @@ __EOB__
 /sbin/iptables -A OUTPUT -j ACCEPT -p ah
 __EOB__
 
+  print FW "/sbin/iptables -A OUTPUT -j DHCPOUT -p udp --sport 67:69\n";
   foreach $iface (@ints) {
     @idata=split(/\|/,$interface{$iface});
     if ((@idata[1] eq "0.0.0.0") || (@idata[2] eq "32"))  {
@@ -6492,7 +6496,6 @@ __EOB__
 
     print FW "\n#Activate BOOTP/DHCPD\n";
     print FW "/sbin/iptables -A INPUT -j DHCPIN -p udp --dport 67:69 -i $dhcpint -s $ifnw/@idata[2] -d @idata[1]/32\n";
-    print FW "/sbin/iptables -A OUTPUT -j DHCPOUT -p udp --sport 67:69 -o $dhcpint -d $ifnw/@idata[2] -s @idata[1]/32\n";
   }
   foreach $wan (@wans) {
     @wdat=split(/\|/,$routes{$wan});
@@ -17695,8 +17698,10 @@ __EOB__
 
 sub printdhclient {
   open(DHC,">dhclient.conf");
-  print DHC<<__EOB__;
-interface "$sysconf{'Internal'}" {
+  foreach $iface (@ints) {
+    if ($iface eq $sysconf{'Internal'}) {
+      print DHC<<__EOB__;
+interface "$iface" {
   send host-name "$dnsconf{'Hostname'}";          
   send fqdn.fqdn "$dnsconf{'Hostname'}";
   send fqdn.encoded on;
@@ -17704,12 +17709,29 @@ interface "$sysconf{'Internal'}" {
   also request fqdn, dhcp6.fqdn;
   script "/usr/bin/dhclient-script";
 }
+
 __EOB__
+    } else {
+      print DHC<<__EOB__;
+interface "$iface" {
+  script "/usr/bin/dhclient-script";
+}
+
+__EOB__
+    }
+  }
   close(DHC);
 }
 
 sub printdhcpfw {
   open(DFW,">dhclient-fw");
+
+  if ($sysconf{'Internal'} eq $sysconf{'External'}) {
+    print DFW "#!/bin/bash\n";
+    close(DFW);
+    return;
+  }
+
   print DFW <<__EOF__;
 #!/bin/bash
 
@@ -17717,7 +17739,6 @@ sub printdhcpfw {
 /sbin/iptables -F DYNAMICIPO
 /sbin/iptables -t nat -F DYNAMICPRE
 
-/sbin/iptables -A DYNAMICIPI -j WEBACCESSI -p tcp --dport 80 -d \${3}
 /sbin/iptables -A DYNAMICIPI -j SYSIN -s \${1}/\${2} -d \${3}
 /sbin/iptables -A DYNAMICIPI -j SYSIN -s \${1}/\${2} -d $zcipaddr
 /sbin/iptables -A DYNAMICIPI -j MCASTIN -s \${1}/\${2}
@@ -17725,10 +17746,6 @@ sub printdhcpfw {
 /sbin/iptables -A DYNAMICIPI -j ACCEPT -p udp --sport 1024:65535 -d \${4}/32 --dport 137:138
 /sbin/iptables -A DYNAMICIPI -j DEFIN -d \${3}
 
-/sbin/iptables -A DYNAMICIPO -j WEBACCESSO -p tcp --sport 80 -s \${3}
-/sbin/iptables -A DYNAMICIPO -j ACCEPT -p udp --sport 53 --dport 53 -s \${3}
-/sbin/iptables -A DYNAMICIPO -j ACCEPT -p udp --sport 1024:65535 --dport 53 -s \${3}
-/sbin/iptables -A DYNAMICIPO -j ACCEPT -p tcp --sport 1024:65535 --dport 53 -s \${3}
 /sbin/iptables -A DYNAMICIPO -j SYSOUT -d \${1}/\${2} -s \${3}
 /sbin/iptables -A DYNAMICIPO -j SYSOUT -d \${1}/\${2} -s $zcipaddr
 /sbin/iptables -A DYNAMICIPO -j MCASTOUT -s \${1}/\${2}
@@ -17738,13 +17755,12 @@ sub printdhcpfw {
 
 /sbin/iptables -t nat -A DYNAMICPRE -j DNAT -p tcp -d \${3} --sport 1024:65535 --dport 80 --to-destination $zcipaddr:80
 /sbin/iptables -t nat -A DYNAMICPRE -j REDIRECT -s \${1}/\${2} -p tcp --sport 1024:65535 --dport 80 --to-port 3129
-#/sbin/iptables -t nat -A DYNAMICPRE -j ACCEPT -s \${1}/\${2} -d \${1}/\${2}
-#/sbin/iptables -t nat -A DYNAMICPRE -j DEFPROXY -d \${3}
-
-#/sbin/iptables -t nat -A DYNAMICPOST -j ACCEPT -s \${1}/\${2} -d \${1}/\${2}
-#/sbin/iptables -t nat -A DYNAMICPOST -j NATOUT -s \${1}/\${2}
 __EOF__
   close(DFW);
+#/sbin/iptables -t nat -A DYNAMICPRE -j ACCEPT -s \${1}/\${2} -d \${1}/\${2}
+#/sbin/iptables -t nat -A DYNAMICPRE -j DEFPROXY -d \${3}
+#/sbin/iptables -t nat -A DYNAMICPOST -j ACCEPT -s \${1}/\${2} -d \${1}/\${2}
+#/sbin/iptables -t nat -A DYNAMICPOST -j NATOUT -s \${1}/\${2}
 }
 
 flock($lockfh, LOCK_UN);

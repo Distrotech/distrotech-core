@@ -82,6 +82,13 @@ EOF
   activate_dnsfwd
 }
 
+if [ -e /etc/ifconf/ifup.${interface} ];then
+  eval `cat /etc/ifconf/ifup.${interface}`
+ else
+  echo "no interface config found";
+  exit -1;
+fi;
+
 ### DHCPv4 Handlers
 ###
 
@@ -145,35 +152,43 @@ if [ x$reason = xBOUND ] || [ x$reason = xRENEW ] || \
     ip route add $new_network_number/$new_subnet_mask src $new_ip_address dev ${interface} table Link
 
     # Add a network route to the computed network address.
-    for router in $new_routers; do
-      if [ "x$new_subnet_mask" = "x255.255.255.255" ] ; then
-	ip route add $router src $new_ip_address dev ${interface}:dhcp table 90
-      fi
-      ip route add default via $router src $new_ip_address $metric_arg dev ${interface} table 90
-    done
+    if [ "${FIREWALL}" != "OTHER" ];then
+      for router in $new_routers; do
+        if [ "x$new_subnet_mask" = "x255.255.255.255" ] ; then
+          ip route add $router src $new_ip_address dev ${interface}:dhcp table 90
+        fi
+        ip route add default via $router src $new_ip_address $metric_arg dev ${interface} table 90
+      done
+    fi
   else
     # we haven't changed the address, have we changed other options           
     # that we wish to update?
-    if [ x$new_routers != x ] && [ x$new_routers != x$old_routers ] ; then
-      # if we've changed routers delete the old and add the new.
-      for router in $old_routers; do
-        ip route del default via $router table 90
-      done
-      for router in $new_routers; do
-        if [ "x$new_subnet_mask" = "x255.255.255.255" ] ; then
-	  ip route add $router src $new_ip_address dev $interface table 90
-	fi
-        ip route add default via $router src $new_ip_address $metric_arg dev $interface table 90
-      done
+    if [ "${FIREWALL}" != "OTHER" ];then
+      if [ x$new_routers != x ] && [ x$new_routers != x$old_routers ] ; then
+        # if we've changed routers delete the old and add the new.
+        for router in $old_routers; do
+          ip route del default via $router table 90
+        done
+        for router in $new_routers; do
+          if [ "x$new_subnet_mask" = "x255.255.255.255" ] ; then
+            ip route add $router src $new_ip_address dev $interface table 90
+	  fi
+          ip route add default via $router src $new_ip_address $metric_arg dev $interface table 90
+        done
+      fi;
     fi
   fi
   if [ x$new_ip_address != x$alias_ip_address ] && [ x$alias_ip_address != x ];then
-    ip addr add $alias_ip_address/$alias_subnet_mask broadcast $new_broadcast_address dev $interface label ${interface}:fixed
+    ip addr add $alias_ip_address/$alias_subnet_mask broadcast $alias_broadcast_address dev $interface label ${interface}:fixed
     ip route add $alias_network_number/$alias_subnet_mask src $alias_ip_address dev ${interface} table Link
   fi
-  add_dnsfwd
-  if [ -x /usr/bin/dhclient-fw ];then
-    /usr/bin/dhclient-fw $new_network_number $new_subnet_mask $new_ip_address $new_broadcast_address
+  if [ "${FIREWALL}" != "OTHER" ];then
+    add_dnsfwd
+    if [ "${FIREWALL}" == "INTERNAL" ];then
+      if [ -x /usr/bin/dhclient-fw ];then
+        /usr/bin/dhclient-fw $new_network_number $new_subnet_mask $new_ip_address $new_broadcast_address
+      fi;
+    fi;
   fi;
   exit 0
 fi
@@ -192,8 +207,10 @@ if [ x$reason = xEXPIRE ] || [ x$reason = xFAIL ] || [ x$reason = xRELEASE ] \
     ip addr add $alias_ip_address/$alias_subnet_mask broadcast $alias_broadcast_address dev $interface label ${interface}:fixed
     ip route add $alias_network_number/$alias_subnet_mask src $alias_ip_address dev ${interface} table Link
   fi
-  rm /etc/bind/forwarders.dhcp4
-  activate_dnsfwd
+  if [ "${FIREWALL}" != "OTHER" ];then
+    rm /etc/bind/forwarders.dhcp4
+    activate_dnsfwd
+  fi
   exit 0
 fi
 
@@ -212,21 +229,27 @@ if [ x$reason = xTIMEOUT ]; then
       ip addr add $alias_ip_address/$alias_subnet_mask broadcast $alias_broadcast_address dev $interface label ${interface}:fixed
       ip route add $alias_network_number/$alias_subnet_mask src $alias_ip_address dev ${interface} table Link
     fi
-    for router in $new_routers; do
-      if [ "x$new_subnet_mask" = "x255.255.255.255" ] ; then
-	ip route add $router src $new_ip_address dev $interface table 90
-      fi
-      ip route add default via $router src $new_ip_address $metric_arg dev $interface table 90
-    done
-    add_dnsfwd
-    if [ -x /usr/bin/dhclient-fw ];then
-      /usr/bin/dhclient-fw $new_network_number $new_subnet_mask $new_ip_address $new_broadcast_address
+    if [ "${FIREWALL}" != "OTHER" ];then
+      for router in $new_routers; do
+        if [ "x$new_subnet_mask" = "x255.255.255.255" ] ; then
+	  ip route add $router src $new_ip_address dev $interface table 90
+        fi
+        ip route add default via $router src $new_ip_address $metric_arg dev $interface table 90
+      done
+      add_dnsfwd
+      if [ "${FIREWALL}" == "INTERNAL" ];then
+        if [ -x /usr/bin/dhclient-fw ];then
+          /usr/bin/dhclient-fw $new_network_number $new_subnet_mask $new_ip_address $new_broadcast_address
+        fi;
+      fi;
     fi;
     exit 0
   fi
   ip -4 addr flush dev $interface label ${interface}:dhcp
-  rm /etc/bind/forwarders.dhcp4
-  activate_dnsfwd
+  if [ "${FIREWALL}" != "OTHER" ];then
+    rm /etc/bind/forwarders.dhcp4
+    activate_dnsfwd
+  fi;
   exit 1
 fi
 
