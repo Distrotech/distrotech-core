@@ -17519,11 +17519,11 @@ __EOB__
     }
 
     if ($nodefault) {
-      print SIX24 "\n/sbin/ip -6 route add 2002::/16 dev sit0 metric 1> /dev/null 2>&1\n";
+      print SIX24 "\n/sbin/ip -6 route add 2002::/16 dev sit0 metric 1 > /dev/null 2>&1\n";
     }
 
     print SIX24 <<__EOB__;
-/sbin/ip -6 route add ::/0 via fe80::${gwout} dev sit1 metric 1> /dev/null 2>&1
+/sbin/ip -6 route add ::/0 via fe80::${gwout} dev sit1 metric 1 > /dev/null 2>&1
 
 killall -HUP radvd;
 sleep 3;
