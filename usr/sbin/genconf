@@ -5963,6 +5963,7 @@ if [ \"\$1\" == "startup" ];then
   /sbin/ip6tables -N LOOPIN
   /sbin/ip6tables -N LOOPOUT
 
+  /sbin/ip6tables -A INPUT -j DENY ! -s fc::/7 -d fc::/7
   /sbin/ip6tables -A INPUT -j STATEOK -m state --state RELATED,ESTABLISHED
   /sbin/ip6tables -A INPUT -j ACCEPT -p icmpv6
   /sbin/ip6tables -A INPUT -j ACCEPT -d ff02::/16 -s fe80::/64
@@ -5974,6 +5975,7 @@ if [ \"\$1\" == "startup" ];then
   /sbin/ip6tables -A INPUT -j DEFIN -i sit1
   /sbin/ip6tables -A INPUT -j DENY
 
+  /sbin/ip6tables -A OUTPUT -j DENY -s fc::/7 ! -d fc::/7
   /sbin/ip6tables -A OUTPUT -j STATEOK -m state --state RELATED,ESTABLISHED
   /sbin/ip6tables -A OUTPUT -j ACCEPT -p icmpv6
   /sbin/ip6tables -A OUTPUT -j ACCEPT -d ff02::/16 -s fe80::/64
@@ -5985,6 +5987,8 @@ if [ \"\$1\" == "startup" ];then
   /sbin/ip6tables -A OUTPUT -j ACCEPT -o sit1
   /sbin/ip6tables -A OUTPUT -j DENY
 
+  /sbin/ip6tables -A FORWARD -j DENY -s fc::/7 ! -d fc::/7
+  /sbin/ip6tables -A FORWARD -j DENY -d fc::/7 ! -s fc::/7
   /sbin/ip6tables -A FORWARD -j STATEOK -m state --state RELATED,ESTABLISHED
   /sbin/ip6tables -A FORWARD -j ACCEPT -p icmpv6
   /sbin/ip6tables -A FORWARD -j INTERNFWD
@@ -17580,10 +17584,14 @@ __EOB__
 		AdvOnLink on;
 		AdvAutonomous on;
 		AdvRouterAddr off;$base6to4
+__EOB__
+          if ($extint eq "ppp0") {
+            print RADVD <<__EOB__;
 		AdvValidLifetime 600;
 		AdvPreferredLifetime 300;
-	};
 __EOB__
+          }
+          print RADVD "	};\n";
           $cnt++;
         } elsif ($extrad) {
           print RADVD <<__EOB__;
