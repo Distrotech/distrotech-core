@@ -32,26 +32,26 @@ activate_dnsfwd() {
   if [ -s /etc/bind/forwarders.ppp ];then
     if [ "`diff /etc/bind/forwarders.ppp /etc/bind/forwarders.conf`" ];then
       cp /etc/bind/forwarders.ppp /etc/bind/forwarders.conf
-      /usr/sbin/rndc reload
+      /usr/sbin/rndc reload > /dev/null 2>&1
     fi;
    elif [ -s /etc/bind/forwarders.static ];then
     if [ "`diff /etc/bind/forwarders.static /etc/bind/forwarders.conf`" ];then
       cp /etc/bind/forwarders.static /etc/bind/forwarders.conf
-      /usr/sbin/rndc reload
+      /usr/sbin/rndc reload > /dev/null 2>&1
     fi;
    elif [ -s /etc/bind/forwarders.dhcp6 ];then
     if [ "`diff /etc/bind/forwarders.dhcp6 /etc/bind/forwarders.conf`" ];then
       cp /etc/bind/forwarders.dhcp6 /etc/bind/forwarders.conf
-      /usr/sbin/rndc reload
+      /usr/sbin/rndc reload > /dev/null 2>&1
     fi;
    elif [ -s /etc/bind/forwarders.dhcp4 ];then
     if [ "`diff /etc/bind/forwarders.dhcp4 /etc/bind/forwarders.conf`" ];then
       cp /etc/bind/forwarders.dhcp4 /etc/bind/forwarders.conf
-      /usr/sbin/rndc reload
+      /usr/sbin/rndc reload > /dev/null 2>&1
     fi;
    elif [ -s /etc/bind/forwarders.conf ];then
      echo -n > /etc/bind/forwarders.conf
-     /usr/sbin/rndc reload
+     /usr/sbin/rndc reload > /dev/null 2>&1
   fi;
 }
 
@@ -208,7 +208,9 @@ if [ x$reason = xEXPIRE ] || [ x$reason = xFAIL ] || [ x$reason = xRELEASE ] \
     ip route add $alias_network_number/$alias_subnet_mask src $alias_ip_address dev ${interface} table Link
   fi
   if [ "${FIREWALL}" != "OTHER" ];then
-    rm /etc/bind/forwarders.dhcp4
+    if [ -e /etc/bind/forwarders.dhcp4 ];then
+      rm /etc/bind/forwarders.dhcp4
+    fi;
     activate_dnsfwd
   fi
   exit 0
@@ -247,7 +249,9 @@ if [ x$reason = xTIMEOUT ]; then
   fi
   ip -4 addr flush dev $interface label ${interface}:dhcp
   if [ "${FIREWALL}" != "OTHER" ];then
-    rm /etc/bind/forwarders.dhcp4
+    if [ -e /etc/bind/forwarders.dhcp4 ];then
+      rm /etc/bind/forwarders.dhcp4
+    fi;
     activate_dnsfwd
   fi;
   exit 1
@@ -273,7 +277,9 @@ if [ x$reason = xBOUND6 ] ; then
     exit 2;
   fi
   ${ip} -f inet6 addr add ${new_ip6_address}/${new_ip6_prefixlen} dev ${interface} scope global
-  add_dnsfwd
+  if [ "${FIREWALL}" != "OTHER" ];then
+    add_dnsfwd
+  fi;
   exit 0
 fi
 
@@ -285,7 +291,9 @@ if [ x$reason = xRENEW6 ] || [ x$reason = xREBIND6 ] ; then
 
   if [ "x${new_dhcp6_name_servers}" != "x${old_dhcp6_name_servers}" ] ||
      [ "x${new_dhcp6_domain_search}" != "x${old_dhcp6_domain_search}" ] ; then
-    add_dnsfwd
+    if [ "${FIREWALL}" != "OTHER" ];then
+      add_dnsfwd
+    fi;
   fi
   exit 0
 fi
@@ -304,8 +312,12 @@ if [ x$reason = xEXPIRE6 -o x$reason = xRELEASE6 -o x$reason = xSTOP6 ] ; then
   fi;
   ${ip} -f inet6 addr del ${old_ip6_address}/${old_ip6_prefixlen} dev ${interface}
 
-  rm /etc/bind/forwarders.dhcp6
-  activate_dnsfwd
+  if [ "${FIREWALL}" != "OTHER" ];then
+    if [ -e /etc/bind/forwarders.dhcp6 ];then
+      rm /etc/bind/forwarders.dhcp6
+    fi;
+    activate_dnsfwd
+  fi;
   exit 0
 fi
 
