@@ -7366,6 +7366,7 @@ __EOB__
 
 /sbin/iptables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 139
 /sbin/iptables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 139
+/sbin/iptables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 873
 
 /sbin/iptables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 445
 /sbin/iptables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 445
@@ -7497,6 +7498,7 @@ __EOR__
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 139
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 445
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 548
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 873
 
 #SIP
 /sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW --sport 1024:65535 --dport 5000

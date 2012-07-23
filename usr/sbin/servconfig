@@ -2299,9 +2299,9 @@ if [ "${AVAHIDIFF}" ];then
   fi; 
 fi;
 
-if [ -e dhclient.conf ] && [ -e /etc/dhclient.conf ] && [ ! -e /etc/.needsreconf ];then
+if [ -e dhclient.conf ] && [ -e /etc/dhclient.conf ];then
   DHCLIENTDIFF=`diff dhclient.conf /etc/dhclient.conf`
- elif [ -e dhclient.conf ] && [ ! -e /etc/.needsreconf ];then
+ elif [ -e dhclient.conf ];then
   DHCLIENTDIFF="NO FILE";
 fi;
 
