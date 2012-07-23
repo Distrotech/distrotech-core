@@ -1010,6 +1010,9 @@ if (-e $mfile) {
     read(LLIP,$zcipaddr,16);
     close(LLIP);
     chop $zcipaddr;
+    open(ZCIP,">zconfip");
+    print ZCIP $zcipaddr;
+    close(ZCIP);
   }
 }
 
@@ -5892,6 +5895,7 @@ if ($sysconf{'External'} eq $sysconf{'Internal'}) {
 /sbin/iptables -t nat -N MANGLE
 /sbin/iptables -t nat -N SYSNAT
 
+/sbin/iptables -t nat -A PREROUTING -j DNAT -t nat -p tcp --to-destination $localip --sport 1024:65535 --dport 80
 /sbin/iptables -t nat -A PREROUTING -j SIPMAP
 /sbin/iptables -t nat -A PREROUTING -j NATMAPI
 /sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p udp -s $localip --sport 5000 --dport 1024:65535
@@ -5906,7 +5910,7 @@ __EOB__
 
   print FW <<_EOB_;
 /sbin/iptables -t nat -N DEFPROXY
-/sbin/iptables -A DEFPROXY -j DNAT -t nat -p tcp --to-destination $localip --sport 1024:65535 --dport 80
+#/sbin/iptables -A DEFPROXY -j DNAT -t nat -p tcp --to-destination $localip --sport 1024:65535 --dport 80
 #/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 4569
 #/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 5000
 /sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 5060

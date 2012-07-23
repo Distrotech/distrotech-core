@@ -48,7 +48,8 @@ su pgsql -c "/usr/bin/pg_ctl -D /var/spool/pgsql -m immediate stop" > /dev/null 
 su pgsql -c "/usr/bin/pg_ctl -D /var/spool/cubit -m immediate stop" > /dev/null 2>&1
 
 if [ -e /var/run/dhclient6.pid ];then
-  /usr/sbin/dhclient -6 -r
+  /usr/sbin/dhclient -6 -r &
+  sleep 3
 fi
 
 if [ "$1" != "fast" ];then 

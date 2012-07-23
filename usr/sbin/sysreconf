@@ -112,6 +112,7 @@ if [ -e /etc/.install ];then
         INT_NAME[$cnt]="Int${iface:18}";
       fi;
       INT_IFACE[$cnt]="${iface:15}";
+      INT_MAC[$cnt]=`cat /sys/class/net/${INT_IFACE[$cnt]}/address |tr a-z A-Z`
     fi;
     if [ "${INT_NAME[$cnt]}" ];then
       let cnt++;

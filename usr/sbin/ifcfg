@@ -146,12 +146,20 @@ if [ "${FIREWALL}" == "INTERNAL" ];then
     killall -9 avahi-autoipd  >/dev/null 2>&1
     sleep 2;
   fi;
-  /usr/sbin/avahi-autoipd -D -w --force-bind ${IFNAME} > /dev/null 2>&1 &
-
+  if [ -s /var/spool/apache/htdocs/ns/config/zconfip ];then
+    /usr/sbin/avahi-autoipd -D -w --force-bind -S `cat /var/spool/apache/htdocs/ns/config/zconfip` ${IFNAME} > /dev/null 2>&1 &
+   else
+    /usr/sbin/avahi-autoipd -D -w --force-bind ${IFNAME} > /dev/null 2>&1 &
+  fi;
   if [ "${NETWORK}" == "169.254.0.0" ] && [ -s /etc/dhclient.conf ];then
-    (/usr/sbin/dhclient -6 -r ${IFNAME}
-    /usr/sbin/dhclient -4 -r ${IFNAME}
-    /usr/sbin/dhclient -4 -nw ${IFNAME}
+    /usr/sbin/dhclient -6 -r ${IFNAME} > /dev/null 2>&1 &
+    if [ -s /var/state/dhcp/dhclient.leases ];then
+      /usr/sbin/dhclient -4 -r ${IFNAME} > /dev/null 2>&1 &
+     else
+      touch /var/state/dhcp/dhclient.leases
+    fi;
+    sleep 4
+    (/usr/sbin/dhclient -4 -nw ${IFNAME}
     /usr/sbin/dhclient -6 -nw ${IFNAME}) > /dev/null 2>&1
   fi;
 
