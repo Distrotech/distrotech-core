@@ -5895,7 +5895,9 @@ if ($sysconf{'External'} eq $sysconf{'Internal'}) {
 /sbin/iptables -t nat -N MANGLE
 /sbin/iptables -t nat -N SYSNAT
 
-/sbin/iptables -t nat -A PREROUTING -j DNAT -t nat -p tcp --to-destination $localip --sport 1024:65535 --dport 80
+/sbin/iptables -t nat -A PREROUTING -j DNAT -t nat -p tcp ! -d $localip --to-destination $localip --sport 1024:65535 --dport 80
+/sbin/iptables -t nat -A PREROUTING -j DNAT -t nat -p tcp ! -d $localip --to-destination $localip --sport 1024:65535 --dport 5060:5061
+/sbin/iptables -t nat -A PREROUTING -j DNAT -t nat -p udp ! -d $localip --to-destination $localip --sport 1024:65535 --dport 5060
 /sbin/iptables -t nat -A PREROUTING -j SIPMAP
 /sbin/iptables -t nat -A PREROUTING -j NATMAPI
 /sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p udp -s $localip --sport 5000 --dport 1024:65535
@@ -5908,17 +5910,17 @@ if ($sysconf{'External'} eq $sysconf{'Internal'}) {
 
 __EOB__
 
-  print FW <<_EOB_;
-/sbin/iptables -t nat -N DEFPROXY
+#  print FW <<_EOB_;
+#/sbin/iptables -t nat -N DEFPROXY
 #/sbin/iptables -A DEFPROXY -j DNAT -t nat -p tcp --to-destination $localip --sport 1024:65535 --dport 80
 #/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 4569
 #/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 5000
-/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 5060
-/sbin/iptables -A DEFPROXY -j DNAT -t nat -p tcp --to-destination $localip --sport 1024:65535 --dport 5060:5061
+#/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 5060
+#/sbin/iptables -A DEFPROXY -j DNAT -t nat -p tcp --to-destination $localip --sport 1024:65535 --dport 5060:5061
 #/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 10000:20000
 #/sbin/iptables -A DEFPROXY -j DNAT -t nat -p udp --to-destination $localip --sport 1024:65535 --dport 1718:1720
-
-_EOB_
+#
+#_EOB_
 
   foreach $iface (@ints) {
     if (($iface ne $sysconf{'Internal'}) && ($iface ne $sysconf{'External'})) {
@@ -5930,7 +5932,7 @@ _EOB_
       if ((@idata[1] ne "0.0.0.0") || (@idata[2] ne "32")) {
         $linknw=getnw(@idata[2],@idata[1]);
         print FW "#SIP/RTP Proxy For $iface @idata[1]\n";
-        print FW "/sbin/iptables -t nat -A SIPMAP -j DEFPROXY -i $iface -d $linkip/32\n";
+#        print FW "/sbin/iptables -t nat -A SIPMAP -j DEFPROXY -i $iface -d $linkip/32\n";
         print FW "/sbin/iptables -t nat -I SIPNAT -j SNAT -o $iface -d $linknw/@idata[2] --to-source @idata[1]\n\n";
       }
     }
