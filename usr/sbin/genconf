@@ -7358,11 +7358,15 @@ __EOB__
 
 #SMB
 /sbin/iptables -A SYSIN -j ACCEPT -p udp -m state --state NEW --sport 137:138 --dport 137:138
-/sbin/iptables -A SYSIN -j ACCEPT -p udp -m state --state NEW --sport 1024:65535 --dport 137:138
 /sbin/iptables -A SYSOUT -j ACCEPT -p udp -m state --state NEW --sport 137:138 --dport 137:138
+/sbin/iptables -A SYSIN -j ACCEPT -p udp -m state --state NEW --sport 1024:65535 --dport 137:138
+/sbin/iptables -A SYSIN -j ACCEPT -p udp -m state --state NEW --dport 1024:65535 --sport 137:138
 /sbin/iptables -A SYSOUT -j ACCEPT -p udp -m state --state NEW --sport 1024:65535 --dport 137:138
+/sbin/iptables -A SYSOUT -j ACCEPT -p udp -m state --state NEW --dport 1024:65535 --sport 137:138
+
 /sbin/iptables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 139
 /sbin/iptables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 139
+
 /sbin/iptables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 445
 /sbin/iptables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 445
 /sbin/iptables -A SYSIN -j ACCEPT -p tcp -m state --state NEW --sport 1024:65535 --dport 548
