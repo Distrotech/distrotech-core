@@ -5896,8 +5896,6 @@ if ($sysconf{'External'} eq $sysconf{'Internal'}) {
 /sbin/iptables -t nat -N SYSNAT
 
 /sbin/iptables -t nat -A PREROUTING -j DNAT -t nat -p tcp ! -d $localip --to-destination $localip --sport 1024:65535 --dport 80
-/sbin/iptables -t nat -A PREROUTING -j DNAT -t nat -p tcp ! -d $localip --to-destination $localip --sport 1024:65535 --dport 5060:5061
-/sbin/iptables -t nat -A PREROUTING -j DNAT -t nat -p udp ! -d $localip --to-destination $localip --sport 1024:65535 --dport 5060
 /sbin/iptables -t nat -A PREROUTING -j SIPMAP
 /sbin/iptables -t nat -A PREROUTING -j NATMAPI
 /sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p udp -s $localip --sport 5000 --dport 1024:65535
@@ -5907,8 +5905,12 @@ if ($sysconf{'External'} eq $sysconf{'Internal'}) {
 /sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p udp -s $localip --sport 1718:1720 --dport 1024:65535
 /sbin/iptables -t nat -A POSTROUTING -j MANGLE -o ppp+
 /sbin/iptables -t nat -A POSTROUTING -j NATMAPO
+/sbin/ip6tables -A INPUT -j DENY ! -s fc00::/7 -d fc00::/7
 
 __EOB__
+
+#/sbin/iptables -t nat -A PREROUTING -j DNAT -t nat -p tcp ! -d $localip --to-destination $localip --sport 1024:65535 --dport 5060:5061
+#/sbin/iptables -t nat -A PREROUTING -j DNAT -t nat -p udp ! -d $localip --to-destination $localip --sport 1024:65535 --dport 5060
 
 #  print FW <<_EOB_;
 #/sbin/iptables -t nat -N DEFPROXY
@@ -5969,35 +5971,35 @@ if [ \"\$1\" == "startup" ];then
   /sbin/ip6tables -N LOOPIN
   /sbin/ip6tables -N LOOPOUT
 
-  /sbin/ip6tables -A INPUT -j DENY ! -s fc::/7 -d fc::/7
   /sbin/ip6tables -A INPUT -j STATEOK -m state --state RELATED,ESTABLISHED
   /sbin/ip6tables -A INPUT -j ACCEPT -p icmpv6
   /sbin/ip6tables -A INPUT -j ACCEPT -d ff02::/16 -s fe80::/64
   /sbin/ip6tables -A INPUT -j ACCEPT -p udp --sport 547 --dport 546 -s fe80::/64 -d fe80::/64
   /sbin/ip6tables -A INPUT -j LOOPIN -i lo
+  /sbin/ip6tables -A INPUT -j DENY ! -s fc00::/7 -d fc00::/7
   /sbin/ip6tables -A INPUT -j EXTERNIN
   /sbin/ip6tables -A INPUT -j INTERNIN
   /sbin/ip6tables -A INPUT -j DEFIN -i sit0 -s 2002::/16
   /sbin/ip6tables -A INPUT -j DEFIN -i sit1
   /sbin/ip6tables -A INPUT -j DENY
 
-  /sbin/ip6tables -A OUTPUT -j DENY -s fc::/7 ! -d fc::/7
   /sbin/ip6tables -A OUTPUT -j STATEOK -m state --state RELATED,ESTABLISHED
   /sbin/ip6tables -A OUTPUT -j ACCEPT -p icmpv6
   /sbin/ip6tables -A OUTPUT -j ACCEPT -d ff02::/16 -s fe80::/64
   /sbin/ip6tables -A OUTPUT -j LOOPOUT -o lo
   /sbin/ip6tables -A OUTPUT -j ACCEPT -p udp -s fe80::/64 -d fe80::/64 --sport 547 --dport 546
-  /sbin/ip6tables -A OUTPUT -j EXTERNOUT
   /sbin/ip6tables -A OUTPUT -j INTERNOUT 
+  /sbin/ip6tables -A OUTPUT -j DENY -s fc00::/7 ! -d fc00::/7
+  /sbin/ip6tables -A OUTPUT -j EXTERNOUT
   /sbin/ip6tables -A OUTPUT -j ACCEPT -o sit0 -d 2002::/16
   /sbin/ip6tables -A OUTPUT -j ACCEPT -o sit1
   /sbin/ip6tables -A OUTPUT -j DENY
 
-  /sbin/ip6tables -A FORWARD -j DENY -s fc::/7 ! -d fc::/7
-  /sbin/ip6tables -A FORWARD -j DENY -d fc::/7 ! -s fc::/7
   /sbin/ip6tables -A FORWARD -j STATEOK -m state --state RELATED,ESTABLISHED
   /sbin/ip6tables -A FORWARD -j ACCEPT -p icmpv6
   /sbin/ip6tables -A FORWARD -j INTERNFWD
+  /sbin/ip6tables -A FORWARD -j DENY -s fc00::/7 ! -d fc00::/7
+  /sbin/ip6tables -A FORWARD -j DENY -d fc00::/7 ! -s fc00::/7
   /sbin/ip6tables -A FORWARD -j ACCEPT -o sit0 -d 2002::/16
   /sbin/ip6tables -A FORWARD -j ACCEPT -o sit1
   /sbin/ip6tables -A FORWARD -j EXTERNFWD
@@ -7824,6 +7826,8 @@ __EOR__
   print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -s 0.0.0.0/0 --sport 989 --dport 1024:65535\n";
   print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -d 0.0.0.0/0 --dport 443 --sport 1024:65535\n";
   print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -d 0.0.0.0/0 --dport 666 --sport 1024:65535\n";
+  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -d 0.0.0.0/0 --dport 3128 --sport 1024:65535\n";
+  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -d 0.0.0.0/0 --dport 3129 --sport 1024:65535\n";
   print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp --dport 8080 -m state --state ESTABLISHED,NEW\n";
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfnew -d 0.0.0.0/0 --dport 80 --sport 1024:65535\n";
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfnew -d 0.0.0.0/0 --dport 21 --sport 1024:65535\n";
@@ -8031,7 +8035,8 @@ __EOR__
 
   if ($zcipaddr ne "") {
     print FW "#Zeroconf\n";
-    print FW "/sbin/iptables -A INPUT -j SYSIN -i $ethint -s 169.254.0.0/16 -d $zcipaddr\n";
+    print FW "/sbin/iptables -A INPUT -j SYSIN -i $ethint -p udp --dport 137:138 --sport 137:138 -d 169.254.255.255/16\n";
+    print FW "/sbin/iptables -A INPUT -j SYSIN -i $ethint -p udp --dport 137:138 --sport 1024:65535 -d 169.254.255.255/16\n";
     print FW "/sbin/iptables -A INPUT -j MCASTIN -i $ethint -s 169.254.0.0/16\n";
     print FW "/sbin/iptables -A OUTPUT -j SYSOUT -o $ethint -d 169.254.0.0/16 -s $zcipaddr\n";
     print FW "/sbin/iptables -A OUTPUT -j MCASTOUT -o $ethint -s 169.254.0.0/16\n\n";
@@ -8097,6 +8102,7 @@ __EOR__
       }
 
     } else {
+      print FW "/sbin/iptables -A INPUT -j ACCEPT -i $fint -s $ifnw/@idata[2] -p tcp --dport 3129\n";
       print FW "/sbin/iptables -A INPUT -j SYSIN -i $fint -s $ifnw/@idata[2] -d @idata[1]/32\n";
       print FW "/sbin/iptables -A OUTPUT -j SYSOUT -o $fint -d $ifnw/@idata[2] -s @idata[1]/32\n";
       if ($localip ne @idata[1]) {
@@ -8424,11 +8430,12 @@ _EOB_
   print FW "/sbin/iptables -A INPUT -j TARPIT -p tcp --dport 5060:5061 -m state --state ESTABLISHED\n";
   print FW "/sbin/iptables -A INPUT -j TARPIT -m state --state NEW\n";
   print FW "/sbin/iptables -A TARPIT -j RETURN -p tcp --dport 3128\n";
-  print FW "/sbin/iptables -A TARPIT -j ACCEPT -m state --state NEW,ESTABLISHED -p tcp --dport 3129\n";
+  print FW "/sbin/iptables -A TARPIT -j RETURN -p tcp --dport 3129\n";
   print FW "/sbin/iptables -A TARPIT -j RETURN -p tcp --dport 8080\n";
   print FW "/sbin/iptables -A TARPIT -j RETURN -p tcp --dport 443\n";
   print FW "/sbin/iptables -A TARPIT -j RETURN -p tcp --dport 666\n";
   print FW "/sbin/iptables -A TARPIT -j RETURN -p udp --dport 53\n";
+  print FW "/sbin/iptables -A TARPIT -j RETURN -p udp --dport 137:138\n";
   print FW "/sbin/iptables -A TARPIT -j RETURN -m state --state ESTABLISHED -m limit --limit 2/s --limit-burst 5\n";
   print FW "/sbin/iptables -A TARPIT -j RETURN -m state --state NEW -m limit --limit 2/s --limit-burst 5\n";
   print FW "/sbin/iptables -A TARPIT -j LOG -m recent --rcheck --seconds 30 --hitcount 20 --name RATELIM -m limit --limit 6/minute --limit-burst 1 --log-prefix \"RATELIM \" --log-level debug\n";
@@ -14970,7 +14977,6 @@ print SC<<__EOF__;
 context=ddi
 port=5060
 srvlookup=yes
-#externaddr=$localip
 bindaddr=::
 tcpbindaddr=::
 dbuser=asterisk
