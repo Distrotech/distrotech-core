@@ -5957,6 +5957,7 @@ __EOB__
 if [ \"\$1\" == "startup" ];then
   /sbin/ip6tables -F
   /sbin/ip6tables -N STATEOK
+  /sbin/ip6tables -N TCPCHECK
   /sbin/ip6tables -N DENY
   /sbin/ip6tables -N DEFIN
   /sbin/ip6tables -N DEFOUT
@@ -5971,7 +5972,8 @@ if [ \"\$1\" == "startup" ];then
   /sbin/ip6tables -N LOOPIN
   /sbin/ip6tables -N LOOPOUT
 
-  /sbin/ip6tables -A INPUT -j STATEOK -m state --state RELATED,ESTABLISHED
+  /sbin/ip6tables -A INPUT -j STATEOK -m state --state RELATED,ESTABLISHED,INVALID
+  /sbin/ip6tables -A INPUT -j TCPCHECK -p tcp
   /sbin/ip6tables -A INPUT -j ACCEPT -p icmpv6
   /sbin/ip6tables -A INPUT -j ACCEPT -d ff02::/16 -s fe80::/64
   /sbin/ip6tables -A INPUT -j ACCEPT -p udp --sport 547 --dport 546 -s fe80::/64 -d fe80::/64
@@ -5983,7 +5985,8 @@ if [ \"\$1\" == "startup" ];then
   /sbin/ip6tables -A INPUT -j DEFIN -i sit1
   /sbin/ip6tables -A INPUT -j DENY
 
-  /sbin/ip6tables -A OUTPUT -j STATEOK -m state --state RELATED,ESTABLISHED
+  /sbin/ip6tables -A OUTPUT -j STATEOK -m state --state RELATED,ESTABLISHED,INVALID
+  /sbin/ip6tables -A OUTPUT -j TCPCHECK -p tcp
   /sbin/ip6tables -A OUTPUT -j ACCEPT -p icmpv6
   /sbin/ip6tables -A OUTPUT -j ACCEPT -d ff02::/16 -s fe80::/64
   /sbin/ip6tables -A OUTPUT -j LOOPOUT -o lo
@@ -5995,7 +5998,8 @@ if [ \"\$1\" == "startup" ];then
   /sbin/ip6tables -A OUTPUT -j ACCEPT -o sit1
   /sbin/ip6tables -A OUTPUT -j DENY
 
-  /sbin/ip6tables -A FORWARD -j STATEOK -m state --state RELATED,ESTABLISHED
+  /sbin/ip6tables -A FORWARD -j STATEOK -m state --state RELATED,ESTABLISHED,INVALID
+  /sbin/ip6tables -A FORWARD -j TCPCHECK -p tcp
   /sbin/ip6tables -A FORWARD -j ACCEPT -p icmpv6
   /sbin/ip6tables -A FORWARD -j INTERNFWD
   /sbin/ip6tables -A FORWARD -j DENY -s fc00::/7 ! -d fc00::/7
@@ -6006,9 +6010,13 @@ if [ \"\$1\" == "startup" ];then
   /sbin/ip6tables -A FORWARD -j DENY
 
   #Allow Related/Established Traffic
+  /sbin/ip6tables -A STATEOK -j DROP -m state --state INVALID
   /sbin/ip6tables -A STATEOK -j ACCEPT ! -p tcp
-  /sbin/ip6tables -A STATEOK -j ACCEPT -p tcp ! --syn
   /sbin/ip6tables -A STATEOK -j ACCEPT -p tcp --tcp-flags SYN,ACK,PSH ACK,PSH
+  /sbin/ip6tables -A STATEOK -j ACCEPT -p tcp --tcp-flags SYN,ACK ACK
+
+  /sbin/ip6tables -A TCPCHECK -j DROP -p tcp -m tcp --tcp-flags SYN,FIN SYN,FIN
+  /sbin/ip6tables -A TCPCHECK -j DROP -p tcp -m tcp --tcp-flags SYN,RST SYN,RST
 
   #Multicast Forward
   /sbin/ip6tables -A MCASTFWD -j ACCEPT -d ff02::/16
@@ -7463,7 +7471,7 @@ __EOR__
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 0:65535 --dport 22
 
 #IDENT
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p tcp -m state --state NEW  --dport 113 --sport 1024:65535
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --dport 113 --sport 1024:65535
 
 #IMAP
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 143
@@ -7526,7 +7534,6 @@ __EOR__
 
 #IAX2
 /sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state NEW --sport 1024:65535 --dport 5036
-/sbin/ip6tables -A SYSOUT -j ACCEPT -p udp -m state --state NEW --dport 1024:65535 --sport 5036
 
 #STUN
 /sbin/ip6tables -A SYSIN -j ACCEPT -p udp -m state --state ESTABLISHED,NEW --sport 3478:3479 --dport 1024:65535
