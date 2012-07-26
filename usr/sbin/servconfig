@@ -87,7 +87,7 @@ if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstco
     if [ -e /var/run/nscd/socket ];then
       rm /var/run/nscd/socket
     fi;
-    /usr/sbin/nscd > /dev/null 2>&1
+    (/usr/sbin/nscd > /dev/null 2>&1) &
   fi;
 
   if [ "`whoami`" != "`echo root`" ];then

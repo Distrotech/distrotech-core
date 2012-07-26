@@ -2082,7 +2082,7 @@ chown root.root /root/.pgpass
 
 if [ -e "/etc/samba/smb.conf" ];then
   /usr/bin/smbpasswd -w "$ldapserv{'Password'}" > /dev/null 2>&1
-  /usr/bin/net idmap secret '*' "$ldapserv{'Password'}" > /dev/null 2>&1
+  (/usr/bin/net idmap secret '*' "$ldapserv{'Password'}" > /dev/null 2>&1) &
   /usr/sbin/add_domain $smboption{'ServName'} $smboption{'Domain'} >/dev/null 2>&1
   (cat<<EOF
 $ldapserv{'Password'}
@@ -5905,7 +5905,7 @@ if ($sysconf{'External'} eq $sysconf{'Internal'}) {
 /sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p udp -s $localip --sport 1718:1720 --dport 1024:65535
 /sbin/iptables -t nat -A POSTROUTING -j MANGLE -o ppp+
 /sbin/iptables -t nat -A POSTROUTING -j NATMAPO
-/sbin/ip6tables -A INPUT -j DENY ! -s fc00::/7 -d fc00::/7
+/sbin/ip6tables -A INPUT -j DROP ! -s fc00::/7 -d fc00::/7
 
 __EOB__
 
@@ -5978,7 +5978,7 @@ if [ \"\$1\" == "startup" ];then
   /sbin/ip6tables -A INPUT -j ACCEPT -d ff02::/16 -s fe80::/64
   /sbin/ip6tables -A INPUT -j ACCEPT -p udp --sport 547 --dport 546 -s fe80::/64 -d fe80::/64
   /sbin/ip6tables -A INPUT -j LOOPIN -i lo
-  /sbin/ip6tables -A INPUT -j DENY ! -s fc00::/7 -d fc00::/7
+  /sbin/ip6tables -A INPUT -j DROP ! -s fc00::/7 -d fc00::/7
   /sbin/ip6tables -A INPUT -j EXTERNIN
   /sbin/ip6tables -A INPUT -j INTERNIN
   /sbin/ip6tables -A INPUT -j DEFIN -i sit0 -s 2002::/16
@@ -5992,7 +5992,7 @@ if [ \"\$1\" == "startup" ];then
   /sbin/ip6tables -A OUTPUT -j LOOPOUT -o lo
   /sbin/ip6tables -A OUTPUT -j ACCEPT -p udp -s fe80::/64 -d fe80::/64 --sport 547 --dport 546
   /sbin/ip6tables -A OUTPUT -j INTERNOUT 
-  /sbin/ip6tables -A OUTPUT -j DENY -s fc00::/7 ! -d fc00::/7
+  /sbin/ip6tables -A OUTPUT -j DROP -s fc00::/7 ! -d fc00::/7
   /sbin/ip6tables -A OUTPUT -j EXTERNOUT
   /sbin/ip6tables -A OUTPUT -j ACCEPT -o sit0 -d 2002::/16
   /sbin/ip6tables -A OUTPUT -j ACCEPT -o sit1
@@ -6002,8 +6002,8 @@ if [ \"\$1\" == "startup" ];then
   /sbin/ip6tables -A FORWARD -j TCPCHECK -p tcp
   /sbin/ip6tables -A FORWARD -j ACCEPT -p icmpv6
   /sbin/ip6tables -A FORWARD -j INTERNFWD
-  /sbin/ip6tables -A FORWARD -j DENY -s fc00::/7 ! -d fc00::/7
-  /sbin/ip6tables -A FORWARD -j DENY -d fc00::/7 ! -s fc00::/7
+  /sbin/ip6tables -A FORWARD -j DROP -s fc00::/7 ! -d fc00::/7
+  /sbin/ip6tables -A FORWARD -j DROP -d fc00::/7 ! -s fc00::/7
   /sbin/ip6tables -A FORWARD -j ACCEPT -o sit0 -d 2002::/16
   /sbin/ip6tables -A FORWARD -j ACCEPT -o sit1
   /sbin/ip6tables -A FORWARD -j EXTERNFWD
@@ -6015,8 +6015,10 @@ if [ \"\$1\" == "startup" ];then
   /sbin/ip6tables -A STATEOK -j ACCEPT -p tcp --tcp-flags SYN,ACK,PSH ACK,PSH
   /sbin/ip6tables -A STATEOK -j ACCEPT -p tcp --tcp-flags SYN,ACK ACK
 
-  /sbin/ip6tables -A TCPCHECK -j DROP -p tcp -m tcp --tcp-flags SYN,FIN SYN,FIN
-  /sbin/ip6tables -A TCPCHECK -j DROP -p tcp -m tcp --tcp-flags SYN,RST SYN,RST
+  /sbin/ip6tables -A TCPCHECK -j DROP -p tcp --tcp-flags SYN,FIN SYN,FIN
+  /sbin/ip6tables -A TCPCHECK -j DROP -p tcp --tcp-flags SYN,RST SYN,RST
+  /sbin/ip6tables -A TCPCHECK -j ACCEPT -p tcp --tcp-flags SYN,ACK SYN,ACK
+  /sbin/ip6tables -A TCPCHECK -j ACCEPT -p tcp --tcp-flags SYN,ACK,RST RST
 
   #Multicast Forward
   /sbin/ip6tables -A MCASTFWD -j ACCEPT -d ff02::/16
