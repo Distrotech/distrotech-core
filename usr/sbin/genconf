@@ -5967,6 +5967,7 @@ if [ \"\$1\" == "startup" ];then
   /sbin/ip6tables -N INTERNOUT
   /sbin/ip6tables -N INTERNIN
   /sbin/ip6tables -N INTERNFWD
+  /sbin/ip6tables -N LOCALFWD
   /sbin/ip6tables -N MCASTFWD
   /sbin/ip6tables -N SYSIN
   /sbin/ip6tables -N LOOPIN
@@ -6052,7 +6053,8 @@ __EOB__
       print FW6 "/sbin/ip6tables -A INTERNIN -i " . $iface . " -j SYSIN -m state --state NEW\n";
       print FW6 "/sbin/ip6tables -A INTERNOUT -o " . $iface . " -j ACCEPT\n";
       print FW6 "/sbin/ip6tables -A INTERNFWD -i " . $iface . " -o " . $iface . " -j MCASTFWD\n";
-      print FW6 "/sbin/ip6tables -A INTERNFWD -i " . $iface . " -j RETURN\n\n";
+      print FW6 "/sbin/ip6tables -A INTERNFWD -i " . $iface . " -j RETURN\n";
+      print FW6 "/sbin/ip6tables -A INTERNFWD -j LOCALFWD -o $iface\n\n";
     } else {
       print FW6 "/sbin/ip6tables -A EXTERNIN -i " . $iface . " -j DEFIN\n";
       print FW6 "/sbin/ip6tables -A EXTERNOUT -o " . $iface . " -j ACCEPT\n";
@@ -17641,6 +17643,14 @@ __EOB__
       print RADVD "};\n\n";
     }
   }
+
+  print SIX24A<<__EOB__;
+
+if [ -x /etc/firewall6.local ];then
+  /sbin/ip6tables -F LOCALFWD
+  /etc/firewall6.local 2002:\${2}
+fi;
+__EOB__
   close(RADVD);
   close(SIX24);
   close(SIX24A);
