@@ -7324,6 +7324,7 @@ __EOB__
 
 #SMTP
 /sbin/iptables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 25
+/sbin/iptables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 587
 
 #POP3
 /sbin/iptables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 110
@@ -7464,6 +7465,7 @@ __EOR__
 
 #SMTP
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 25
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 587
 
 #POP3
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 110
@@ -7544,6 +7546,9 @@ __EOR__
 
 #MDNS
 /sbin/ip6tables -A SYSIN -j ACCEPT -p udp --sport 5353 --dport 1024:65535
+
+#RTP
+/sbin/ip6tables -A SYSIN -j ACCEPT -p udp --sport 1024:65535 --dport 10000:20000
 
 __EOR__
 
