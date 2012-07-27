@@ -5990,8 +5990,8 @@ if [ \"\$1\" == "startup" ];then
   /sbin/ip6tables -A OUTPUT -j TCPCHECK -p tcp
   /sbin/ip6tables -A OUTPUT -j ACCEPT -p icmpv6
   /sbin/ip6tables -A OUTPUT -j ACCEPT -d ff02::/16 -s fe80::/64
-  /sbin/ip6tables -A OUTPUT -j LOOPOUT -o lo
   /sbin/ip6tables -A OUTPUT -j ACCEPT -p udp -s fe80::/64 -d fe80::/64 --sport 547 --dport 546
+  /sbin/ip6tables -A OUTPUT -j LOOPOUT -o lo
   /sbin/ip6tables -A OUTPUT -j INTERNOUT 
   /sbin/ip6tables -A OUTPUT -j DROP -s fc00::/7 ! -d fc00::/7
   /sbin/ip6tables -A OUTPUT -j EXTERNOUT
@@ -6012,14 +6012,14 @@ if [ \"\$1\" == "startup" ];then
 
   #Allow Related/Established Traffic
   /sbin/ip6tables -A STATEOK -j DROP -m state --state INVALID
-  /sbin/ip6tables -A STATEOK -j ACCEPT ! -p tcp
-  /sbin/ip6tables -A STATEOK -j ACCEPT -p tcp --tcp-flags SYN,ACK,PSH ACK,PSH
-  /sbin/ip6tables -A STATEOK -j ACCEPT -p tcp --tcp-flags SYN,ACK ACK
+  /sbin/ip6tables -A STATEOK -j ACCEPT
 
   /sbin/ip6tables -A TCPCHECK -j DROP -p tcp --tcp-flags SYN,FIN SYN,FIN
   /sbin/ip6tables -A TCPCHECK -j DROP -p tcp --tcp-flags SYN,RST SYN,RST
   /sbin/ip6tables -A TCPCHECK -j ACCEPT -p tcp --tcp-flags SYN,ACK SYN,ACK
   /sbin/ip6tables -A TCPCHECK -j ACCEPT -p tcp --tcp-flags SYN,ACK,RST RST
+  /sbin/ip6tables -A TCPCHECK -j ACCEPT -p tcp --tcp-flags SYN,ACK,PSH ACK,PSH
+  /sbin/ip6tables -A TCPCHECK -j ACCEPT -p tcp --tcp-flags SYN,ACK ACK
 
   #Multicast Forward
   /sbin/ip6tables -A MCASTFWD -j ACCEPT -d ff02::/16
