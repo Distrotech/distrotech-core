@@ -8452,6 +8452,7 @@ _EOB_
   print FW "/sbin/iptables -A TARPIT -j RETURN -p tcp --dport 666\n";
   print FW "/sbin/iptables -A TARPIT -j RETURN -p udp --dport 53\n";
   print FW "/sbin/iptables -A TARPIT -j RETURN -p udp --dport 137:138\n";
+  print FW "/sbin/iptables -A TARPIT -j RETURN -p udp --sport 1024:65535 --dport 10000:20000\n";
   print FW "/sbin/iptables -A TARPIT -j RETURN -m state --state ESTABLISHED -m limit --limit 2/s --limit-burst 5\n";
   print FW "/sbin/iptables -A TARPIT -j RETURN -m state --state NEW -m limit --limit 2/s --limit-burst 5\n";
   print FW "/sbin/iptables -A TARPIT -j LOG -m recent --rcheck --seconds 30 --hitcount 20 --name RATELIM -m limit --limit 6/minute --limit-burst 1 --log-prefix \"RATELIM \" --log-level debug\n";
