@@ -626,9 +626,9 @@ while [ $RESULT == 0 ];do
     4)Date_Time;;
     I)Local_Install;;
     V){RET=0;
-       while [ ${RET} == 0 ];then
+       while [ ${RET} == 0 ];do
          View_Menu;;
          RET=$?;
-       do};;
+       done};;
   esac;
 done
