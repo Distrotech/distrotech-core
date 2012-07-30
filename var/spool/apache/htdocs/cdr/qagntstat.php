@@ -106,7 +106,7 @@
 }
 
   $usersq=pg_query($db,"SELECT name,fullname||' ('||users.name||')' FROM users 
-		LEFT OUTER JOIN astdb AS local ON  (local.family='LocalPrefix' AND local.key=substr(name,1,2)) WHERE local.value=1 ORDER BY fullname,name");
+		LEFT OUTER JOIN astdb AS local ON  (local.family='LocalPrefix' AND local.key=substr(name,1,2)) WHERE local.value='1' ORDER BY fullname,name");
   for($qcnt=0;$qcnt < pg_num_rows($usersq);$qcnt++) {
     $r=pg_fetch_array($usersq,$qcnt,PGSQL_NUM);
     $userinf[$r[0]]['name']=$r[1];

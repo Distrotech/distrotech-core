@@ -253,6 +253,9 @@ for($ecnt=0;$ecnt < count($chansort);$ecnt++) {
     print "<TD>" . $dndval . "</TD>\n";
   } else if ($techname == "SIP") {
     if ($_POST['print'] != "1") {
+      if (preg_match("/^[0-9a-fA-F]+:[0-9a-fA-F]+/",$r['IPaddress'])) {
+        $r['IPaddress']="[" . $r['IPaddress'] . "]";
+      }
       print "<TD><A HREF=\"javascript:openphone('http://" . $r['IPaddress'] . "')\">" . $r['IPaddress'] . "</A>";
       print "<TD>" . getuphref($r['Exten'],"nat",$r['Forcerport']?"1":"0",$r['Forcerport']?_("Yes"):_("No"));
       print "<TD>" . $r['IPport'] . "</TD>";

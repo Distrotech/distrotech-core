@@ -111,7 +111,7 @@
   if ($TMS_USER == 1) {
     $curextq.=" LEFT OUTER JOIN astdb AS bgrp ON (bgrp.family=name AND bgrp.key='BGRP')";
   }
-  $curextq.=" WHERE length(name) = 4 AND astdb.family = 'LocalPrefix' AND astdb.value=1";
+  $curextq.=" WHERE length(name) = 4 AND astdb.family = 'LocalPrefix' AND astdb.value='1'";
   if (($TMS_USER == 1) && ($SUPER_USER != 1)) {
     $curextq.=" AND " . $clogacl;
   }
