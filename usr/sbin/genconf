@@ -16092,7 +16092,7 @@ pickupgroup=0
 
 __EOB__
 
-  $zapchanq="SELECT * FROM zapgroup WHERE zaptrunk > 0 AND zaptrunk < 5 ORDER BY zaptrunk";
+  $zapchanq=" SELECT DISTINCT zapgroup.* FROM zapgroup LEFT OUTER JOIN zapchan USING (zaptrunk) WHERE channel IS NOT NULL AND channel != '' AND zaptrunk > 0 AND zaptrunk < 5 ORDER BY zaptrunk";
   $getzap=$dbh->prepare($zapchanq);
   $getzap->execute;
 
