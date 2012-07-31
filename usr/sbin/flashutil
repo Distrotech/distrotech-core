@@ -449,7 +449,7 @@ Sync_Update() {
   sleep 2
   umount ${1}/mnt/update
 
-  rm ${1}/etc/blkid.tab ${1}/etc/blkid.tab.old ${1}/etc/lvm/cache/.cache /tmp/* ${1}/etc/lvm/backup/flash \
+  rm ${1}/etc/blkid.tab ${1}/etc/blkid.tab.old ${1}/etc/lvm/cache/.cache ${1}/tmp/* ${1}/etc/lvm/backup/flash \
      ${1}/etc/lvm/archive/* ${1}/etc/iftab ${1}/var/run/* > /dev/null 2>&1
 }
 
