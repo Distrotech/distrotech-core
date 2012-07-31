@@ -17611,6 +17611,7 @@ interface $iface {
 	AdvSendAdvert on;
 	AdvManagedFlag $radvman;
 	AdvOtherConfigFlag $radvman;
+        MaxRtrAdvInterval 300;
 __EOB__
         if (($extint ne "") && ($extint ne $iface)) {
           print SIX24A "/sbin/ip addr \${1} 2002:\${2}:${cnt}::1/64 dev " .  $iface . " >/dev/null 2>&1\n";
