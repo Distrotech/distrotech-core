@@ -42,15 +42,15 @@
     $opclass=$pclass;
     if ($pclass != "NULL") {
       if ($exten == "NULL") {
-        $pclass=" AND users.name IS NULL AND cost >= 0 AND dst ~ '^[0-9]{4}[0-9]+' AND price='" . $pclass . "' ";
+        $pclass=" AND users.name IS NULL AND cost >= 0 AND price='" . $pclass . "' ";
       } else if (($trunk == "G") && ($pclass == "")) {
-        $pclass=" AND cost >= 0 AND dst ~ '^[0-9]{4}[0-9]+' AND dstchannel ~ '" . $trunko . "' ";
+        $pclass=" AND cost >= 0 ";
       } else {
-        $pclass=" AND cost >= 0 AND dst ~ '^[0-9]{4}[0-9]+' AND dstchannel ~ '" . $trunko . "' AND price='" . $pclass . "' ";
+        $pclass=" AND cost >= 0 AND price='" . $pclass . "' ";
       }
     } else {
       if ($exten == "NULL") {
-        $pclass=" AND users.name IS NULL AND (trunkcost.cost >= 0 AND dst ~ '^[0-9]{4}[0-9]+' OR (trunkcost.cost IS NOT NULL AND dst != 's' AND dst ~ '^[0-9]{4}[0-9]+')) AND
+        $pclass=" AND users.name IS NULL AND (trunkcost.cost >= 0 OR (trunkcost.cost IS NULL AND dst != 's' AND dst ~ '^[0-9]{4}[0-9]+')) AND
                       dstchannel ~ '" . $trunko . "' ";
       } else {
         $pclass=" AND trunkcost.cost IS NULL AND dst != 's' AND dst ~ '^[0-9]{4}[0-9]+' AND
@@ -59,10 +59,10 @@
     }
   } else {
     if ($exten == "NULL") {
-      $pclass=" AND users.name IS NULL AND price IS NULL AND (cost >= 0 AND dst ~ '^[0-9]{4}[0-9]+' OR (trunkcost.cost IS NULL AND dst != 's')) AND
+      $pclass=" AND users.name IS NULL AND price IS NULL AND (cost >= 0 OR (trunkcost.cost IS NULL AND dst != 's' AND dst ~ '^[0-9]{4}[0-9]+')) AND
                       dstchannel ~ '" . $trunko . "' ";
     } else {
-      $pclass=" AND (cost >= 0 AND dst ~ '^[0-9]{4}[0-9]+' OR (trunkcost.cost IS NULL AND dst != 's')) AND
+      $pclass=" AND (cost >= 0 OR (trunkcost.cost IS NULL AND dst != 's' AND dst ~ '^[0-9]{4}[0-9]+')) AND
                       dstchannel ~ '" . $trunko . "' ";
     }
   }
@@ -82,12 +82,11 @@
   }
 
   $time="(calldate > '" . $month[1] . "-" . $month[0] . "-" . $month[2] . "' AND calldate < '" . $month2[1] . "-" . $month2[0] . "-" . $month2[2] . "')";
-  $getcdrq="SELECT count(userfield) AS callcnt,userfield, description,
+  $getcdrq="SELECT count(userfield) AS callcnt,userfield,
                                sum(billsec) AS tottime,avg(billsec) AS avtime,
                                avg(duration-billsec) AS holdtime,stddev(billsec) as dv8,sum(cost)
                           from cdr 
                             left outer join trunkcost USING (uniqueid)
-			    LEFT OUTER JOIN numdb ON (userfield = number)
                              LEFT OUTER JOIN users ON (cdr.accountcode = name)" . $grpjoin;
   if ($TMS_USER == 1) {
     $getcdrq.=" LEFT OUTER JOIN astdb as bgrp ON (cdr.accountcode=bgrp.family AND bgrp.key='BGRP')";
@@ -97,7 +96,7 @@
   if (($SUPER_USER != 1) && ($TMS_USER == 1)) {
     $getcdrq.=" AND " . $clogacl;
   }
-  $getcdrq.=" group by userfield,description order by $morder";
+  $getcdrq.=" group by userfield order by $morder";
   
 //  print $getcdrq . "<BR>\n";
   $getcdr=pg_query($db,$getcdrq);
@@ -171,11 +170,10 @@
   }
 
   if ($_POST['print'] < 2) {
-    print "<TH COLSPAN=8 CLASS=heading-body>Call Report For " . $usern . "</TH></TR>";
+    print "<TH COLSPAN=7 CLASS=heading-body>Call Report For " . $usern . "</TH></TR>";
     print "<TR CLASS=list-color1>";
 
   print "<TH ALIGN=LEFT CLASS=heading-body2>Destination</TH>";
-  print "<TH ALIGN=LEFT CLASS=heading-body2>Description</TH>";
   print "<TH ALIGN=LEFT CLASS=heading-body2>Calls</TH>";
   print "<TH ALIGN=LEFT CLASS=heading-body2>Time</TH><TH ALIGN=LEFT CLASS=heading-body2>Average</TH><TH ALIGN=LEFT CLASS=heading-body2>Std. Dev.</TH>";
   print "<TH ALIGN=LEFT CLASS=heading-body2>Av. Hold Time</TH>";
@@ -183,7 +181,7 @@
   print "</TR>\n<TR CLASS=list-color2>";
   } else {
     print "\"" . $usern . "\"\n";
-    $data=array("Destination","Description","Calls","Time","Average","Std. Dev.","Av. Hold Time","Cost");
+    $data=array("Destination","Calls","Time","Average","Std. Dev.","Av. Hold Time","Cost");
     $dataout="\"" . str_replace(array("\"","--!@#--"),array("\"\"","\",\""),implode("--!@#--",$data)). "\"\n";
     print $dataout;
   }
@@ -213,31 +211,30 @@
         print "</A>";
       }
       print "</TD>";
-      print "<TD>" . $r[2] . "</TD>";
       print "<TD>" . $r[0] . "</TD>";
-      print "<TD>" . gtime($r[3]);
+      print "<TD>" . gtime($r[2]);
+      print "</TD><TD>";
+      print gtime($r[3]);
+      print "</TD><TD>" . gtime($r[5]);
       print "</TD><TD>";
       print gtime($r[4]);
-      print "</TD><TD>" . gtime($r[6]);
-      print "</TD><TD>";
-      print gtime($r[5]);
-      print "</TD><TD ALIGN=RIGHT>" . sprintf("%0.2f",$r[7]/100000);
+      print "</TD><TD ALIGN=RIGHT>" . sprintf("%0.2f",$r[6]/100000);
       print "</TD></TR>\n<TR $bcolor>";
     } else {
-      $data=array($r[1],$r[2],$r[0],gtime($r[3]),gtime($r[4]),gtime($r[5]),gtime($r[6]),sprintf("%0.2f",$r[7]/100000));
+      $data=array($r[1],$r[0],gtime($r[2]),gtime($r[3]),gtime($r[5]),gtime($r[4]),sprintf("%0.2f",$r[6]/100000));
       $dataout="\"" . str_replace(array("\"","--!@#%^&--"),array("\"\"","\",\""),implode("--!@#%^&--",$data)). "\"\n";
       print $dataout;
     }
     $totcalls[0]=$totcalls[0]+$r[0];
-    $totcalls[1]=$totcalls[1]+$r[3];
-    $totcalls[2]=$totcalls[2]+($r[5]*$r[0]);
-    $totcost=$totcost+$r[7];
+    $totcalls[1]=$totcalls[1]+$r[2];
+    $totcalls[2]=$totcalls[2]+($r[4]*$r[0]);
+    $totcost=$totcost+$r[6];
     $ccnt++;
   }
   $tavg=$totcalls[1]/$totcalls[0];
   $totcalls[2]=$totcalls[2]/$totcalls[0];
   if ($_POST['print'] < 2) {
-    print "<TD CLASS=heading-body2>Total Numbers Called: " . $ccnt . "</TD><TD CLASS=heading-body2>&nbsp;</TD><TD CLASS=heading-body2>" . $totcalls[0];
+    print "<TD CLASS=heading-body2>Total Numbers Called: " . $ccnt . "</TD><TD CLASS=heading-body2>" . $totcalls[0];
     print "</TD><TD CLASS=heading-body2>" . gtime($totcalls[1]) . "</TD><TD CLASS=heading-body2>" . gtime($tavg);
     print "</TD><TD CLASS=heading-body2>&nbsp;</TD><TD CLASS=heading-body2>" . gtime($totcalls[2]);
     print "</TD><TD ALIGN=RIGHT CLASS=heading-body2>" . sprintf("%0.2f",$totcost/100000) . "</TR>";
@@ -248,13 +245,13 @@
       $bcolor=" CLASS=list-color1";
     }
   } else {
-    $data=array("Total (" . $ccnt . ")","",$totcalls[0],gtime($totcalls[1]),gtime($tavg),"",gtime($totcalls[2]),sprintf("%0.2f",$totcost/100000));
+    $data=array("Total (" . $ccnt . ")",$totcalls[0],gtime($totcalls[1]),gtime($tavg),"",gtime($totcalls[2]),sprintf("%0.2f",$totcost/100000));
     $dataout="\"" . str_replace(array("\"","--!@#%^&--"),array("\"\"","\",\""),implode("--!@#%^&--",$data)). "\"\n";
     print $dataout;
   }
   if ($_POST['print'] < 2) {
     if ($_POST['print'] != "1") {
-      print "<TR" . $bcolor . "><TH COLSPAN=8 CLASS=heading-body>";
+      print "<TR" . $bcolor . "><TH COLSPAN=7 CLASS=heading-body>";
       print "<INPUT TYPE=BUTTON NAME=pbutton VALUE=\"" . _("CSV Export") . "\" ONCLICK=\"csvpage(document.printexten)\">";
       print "<INPUT TYPE=BUTTON NAME=pbutton VALUE=\"" . _("Print") . "\" ONCLICK=\"printpage(document.printexten)\">";
       print "</TH></TR>";
