@@ -9283,22 +9283,27 @@ __EOS__
 
   print FWP "fi;\n";
 
-  print FWD "#!/bin/bash\n\n";
-  print FWD "INT_NAME=\"\$1\"\n";
-
   $lint=$sysconf{'Internal'};
   @eidat=split(/\|/,$interface{$lint});
   $intlocalip=@eidat[1];
 
-  print FWD "LOCALIP=\"$intlocalip\"\n\n";
+  print FWD<<__EOS__;
+#!/bin/bash
 
-  print FWD "/usr/bin/awk -F\\| -v LINK=\$1 '\$6 == LINK {printf \"spddelete %s %s any -P out;\\nspddelete %s %s any -P in;\\n\",\$2,\$3,\$3,\$2}'  /etc/vpnconf |/usr/sbin/setkey -c\n\n";
+INT_NAME="\$1"
+LOCALIP="$intlocalip"
+
+/usr/bin/awk -F\\| -v LINK=\$1 '\$6 == LINK {printf "spddelete %s %s any -P out;\\nspddelete %s %s any -P in;\\n\",\$2,\$3,\$3,\$2}' /etc/vpnconf |/usr/sbin/setkey -c
+/sbin/ip addr del ::\${4}/96 dev sit0 > /dev/null 2>&1
+i6prefix=\$(printf '%02x%02x:%02x%02x\\n' \$(echo \${4} | sed 's/\\./ /g'))
+/sbin/ip addr del 2002:\${i6prefix}::1/128 dev sit0 > /dev/null 2>&1
+__EOS__
 
   $lcnt=0;
   foreach $adslvl (@vadsllink) {
     @adslldat=split(/\|/,$adsllink{$adslvl});
     if ($lcnt eq "0") {
-      print FWD "if [ \"\$6\" == \"$adslvl\" ];then\n";
+      print FWD "\nif [ \"\$6\" == \"$adslvl\" ];then\n";
     } else {
       print FWD " elif [ \"\$6\" == \"$adslvl\" ];then\n";
     }
@@ -9312,7 +9317,7 @@ __EOS__
 
     print FWD<<__EOS__;
 
-  if [ ! -e /tmp/pppup/\$1.ip-up ];then
+  if [ -e /tmp/pppup/\$1.ip-up ];then
     rm /tmp/pppup/\$1.ip-up
   fi;
 
@@ -9327,7 +9332,7 @@ __EOS__
 
   #Delete the alternate route path
   /sbin/ip route del default table \${RTABLE}
-  /sbin/ip rule |grep \${RTABLE} |awk '\$3 != "all" {print "/sbin/ip rule del from "\$3" iif lo table "\$7}' |sh
+  /sbin/ip rule del from \${4} iif lo table \${RTABLE}
   /sbin/ip route flush cache
 
   /sbin/iptables -D MANGLEIN -j ACCEPT -p 41 -i \$INT_NAME -d \${4}
@@ -9354,7 +9359,6 @@ EOF
 
   chmod 640 /tmp/dnsup.\$6.ppp
   echo \$1 > /tmp/ppp.\$6.int
-
 __EOS__
     if ($dnsconf{'DynZone'} ne "") {
       print FWD "  /usr/bin/nsupdate /tmp/dnsup.\$6.ppp\n";
@@ -9367,10 +9371,6 @@ if ($lcnt) {
 }
 
 print FWD<<__EOB__;
-
-/sbin/ip addr del ::\${4}/96 dev sit0 > /dev/null 2>&1
-i6prefix=\$(printf '%02x%02x:%02x%02x\\n' \$(echo \${4} | sed 's/\\./ /g'))
-/sbin/ip addr del 2002:\${i6prefix}::1/128 dev sit0 > /dev/null 2>&1
 
 if [ ! \"\${6}\" ];then
   (/sbin/ip addr del 2002:\${i6prefix}::1/64 dev \${1}
