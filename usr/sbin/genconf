@@ -13963,7 +13963,7 @@ sub printmrtg() {
 
   $ifcnt=0;
   $idx=1;
-  while(($ifcnt < int($val)) && ($idx < 100)) {
+  while(($ifcnt < int($val)) && ($idx < 1024)) {
     $val2 = $sess->get("ifDescr." . "$idx");
     if ($val2 ne "") {
       $ifcnt++;
