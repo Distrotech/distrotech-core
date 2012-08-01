@@ -3825,18 +3825,8 @@ sub printrcppp(){
         chmod(0600,"pppup.ppp$lcnt");
 	$pppdev="ppp" . $lcnt;
         print PUE "#!/bin/bash\n\n";
-#        print PUE "if [ \"\${1}\" == \"nolock\" ];then\n";
-#        print PUE "  rm /var/lock/ppp-@ldata[0]\n";
-#        print PUE "fi\n";
         print PUE "\n";
         print PUE "(flock -w 20 10 || exit\n";
-#        print PUE "if [ -e /var/run/ppp$lcnt.pid ];then\n";
-#        print PUE "  PID=`cat /var/run/ppp$lcnt.pid`\n";
-#        print PUE "  if [ \"\${PID}\" ] && [ ! -d /proc/\${PID} ];then\n";
-#        print PUE "    /usr/bin/kill -9 \${PID}\n";
-#        print PUE "    sleep 3\n";
-#        print PUE "  fi\n";
-#        print PUE "fi\n";
         chop $ppptun{$pppdev};
 	@ppptdat=split(/ /,$ppptun{$pppdev});
         foreach $ppptdev (@ppptdat) {
@@ -3858,8 +3848,9 @@ sub printrcppp(){
         if (@ldata[8] ne "") {
           print PUE " endpoint IP:@ldata[8]";
         }
-        print PUE " &\n";
-        print PUE ") 10>/var/lock/ppp$lcnt.lock\n";
+        print PUE "\n";
+        print PUE "flock -u 10\n";
+        print PUE ") 10>/var/lock/ppp$lcnt.lock\n\n";
         close(PUE);
 
         print RP<<__EOB__;
@@ -3917,8 +3908,9 @@ __EOB__
     print PU3G "  exit -1\n";
     print PU3G "fi;\n\n";
     print PU3G "date > /var/log/pppd.log.3g\n";
-    print PU3G "exec /usr/sbin/pppd /dev/gsmmodem connect \"/usr/sbin/chat -v -f /etc/ppp/diald.3g\" lock maxfail 5 unit 10 logfile /var/log/pppd.log.3g linkname 3g ipparam 3g nodefaultroute noauth persist nomultilink nodetach usepeerdns &\n";
-    print PU3G ") 10>/var/lock/ppp10.lock\n";
+    print PU3G "/usr/sbin/pppd /dev/gsmmodem connect \"/usr/sbin/chat -v -f /etc/ppp/diald.3g\" lock maxfail 5 unit 10 logfile /var/log/pppd.log.3g linkname 3g ipparam 3g nodefaultroute noauth persist nomultilink nodetach usepeerdns\n";
+    print PU3G "flock -u 10\n";
+    print PU3G ") 10>/var/lock/ppp10.lock\n\n";
   }
   close(PU3G);
 
@@ -3958,7 +3950,7 @@ __EOB__
     }
 
     print PU "date > /var/log/pppd.log.0\n";
-    print PU "exec /usr/sbin/pppd sync plugin rp-pppoe.so $dslint unit 0 logfile /var/log/pppd.log.0 linkname main user $mdmconf{'Username'} nodefaultroute noauth persist nomultilink usepeerdns$servname nodetach &\n";
+    print PU "/usr/sbin/pppd sync plugin rp-pppoe.so $dslint unit 0 logfile /var/log/pppd.log.0 linkname main user $mdmconf{'Username'} nodefaultroute noauth persist nomultilink usepeerdns$servname nodetach\n";
     &startexadsl();
   } elsif (($mdmconf{'Connection'} eq "3GIPW") && ($sysconf{'External'} eq "Dialup")) {
     $mdmconf{'ComPort'}="/dev/tts/IPW0";
@@ -3971,7 +3963,7 @@ __EOB__
     }
 
     print PU "date > /var/log/pppd.log.0\n";
-    print PU "exec /usr/sbin/pppd $mdmconf{'ComPort'} connect \"/usr/sbin/chat -v -f /etc/ppp/diald.scr\" lock unit 0 logfile /var/log/pppd.log.0 mru $mdmconf{'MTU'} mtu $mdmconf{'MTU'} linkname main user $mdmconf{'Username'} defaultroute noauth persist nomultilink usepeerdns nodetach &\n";
+    print PU "/usr/sbin/pppd $mdmconf{'ComPort'} connect \"/usr/sbin/chat -v -f /etc/ppp/diald.scr\" lock unit 0 logfile /var/log/pppd.log.0 mru $mdmconf{'MTU'} mtu $mdmconf{'MTU'} linkname main user $mdmconf{'Username'} defaultroute noauth persist nomultilink usepeerdns nodetach\n";
     &startexadsl();
   } elsif (($mdmconf{'Connection'} eq "3G") && ($sysconf{'External'} eq "Dialup")) {
     $mdmconf{'ComPort'}="/dev/gsmmodem";
@@ -3984,7 +3976,7 @@ __EOB__
     }
 
     print PU "date > /var/log/pppd.log.0\n";
-    print PU "exec /usr/sbin/pppd $mdmconf{'ComPort'} connect \"/usr/sbin/chat -v -f /etc/ppp/diald.scr\" lock unit 0 logfile /var/log/pppd.log.0 mru $mdmconf{'MTU'} mtu $mdmconf{'MTU'} linkname main defaultroute noauth persist nomultilink usepeerdns nodetach &\n";
+    print PU "/usr/sbin/pppd $mdmconf{'ComPort'} connect \"/usr/sbin/chat -v -f /etc/ppp/diald.scr\" lock unit 0 logfile /var/log/pppd.log.0 mru $mdmconf{'MTU'} mtu $mdmconf{'MTU'} linkname main defaultroute noauth persist nomultilink usepeerdns nodetach\n";
     &startexadsl();
 
   } elsif (($mdmconf{'Connection'} eq "Dialup") && ($sysconf{'External'} eq "Dialup")) {
@@ -4000,7 +3992,7 @@ __EOB__
     }
 
     print PU "date > /var/log/pppd.log.0\n";
-    print PU "exec /usr/sbin/pppd " . $mdmconf{'ComPort'} . " " . $mdmconf{'Speed'} . " " . $mdmconf{'Address'} . ":" . $mdmconf{'Gateway'} . " user $mdmconf{'Username'} $mdmconf{'FlowControl'} ipcp-accept-local passive demand idle $mdmconf{'IdleTimeout'} unit 0 logfile /var/log/pppd.log.0 mru $mdmconf{'MTU'} mtu $mdmconf{'MTU'} linkname main defaultroute noauth persist nomultilink usepeerdns nodetach &\n";
+    print PU "/usr/sbin/pppd " . $mdmconf{'ComPort'} . " " . $mdmconf{'Speed'} . " " . $mdmconf{'Address'} . ":" . $mdmconf{'Gateway'} . " user $mdmconf{'Username'} $mdmconf{'FlowControl'} ipcp-accept-local passive demand idle $mdmconf{'IdleTimeout'} unit 0 logfile /var/log/pppd.log.0 mru $mdmconf{'MTU'} mtu $mdmconf{'MTU'} linkname main defaultroute noauth persist nomultilink usepeerdns nodetach\n";
 
 
 #    } elsif ($mdmconf{'ComPort'} eq "CAPI") {
@@ -4014,7 +4006,8 @@ __EOB__
     print RP "#PPP Not Required On This System\n";
     print RP "/usr/sbin/servconfig\n";
   }
-  print PU ") 10>/var/lock/ppp0.lock &\n";
+  print PU "flock -u 10\n";
+  print PU ") 10>/var/lock/ppp0.lock\n\n";
   close(PU);
 
 #  print RP<<__EOF__;
