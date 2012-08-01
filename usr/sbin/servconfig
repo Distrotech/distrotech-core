@@ -2990,24 +2990,6 @@ if [ "$WEB_RESTART" ] || [ -e /tmp/.sslrestart ];then
   Gen_CRL_Cert;
 fi;
 
-if [ ! -x /tmp/pppup/ext.ip-up ];then 
-  DEFINT=`ip route show 0.0.0.0/0 table 90|awk '{print $5}'`
-  if [ "$DEFINT" ];then
-    if [ ! -d /tmp/pppup ];then
-      mkdir /tmp/pppup
-    fi;
-    IPADDR=`ip -f inet -o addr show $DEFINT |head -1 |awk '{print $4}' |cut -d/ -f1`
-    DEFGW=`ip route show 0.0.0.0/0 table 90|awk '{print $3}'`
-    (cat << EOF
-#!/bin/bash
-
-/etc/ppp/ip-up $DEFINT - - $IPADDR $DEFGW
-EOF
-) > /tmp/pppup/ext.ip-up
-    chmod 700 /tmp/pppup/ext.ip-up
-  fi;
-fi;
-
 if [ "$ODIFF" ] || [ "$SDIFF" ] || [ "$ADIFF" ] || [ "$RCPDIFF" ] || [ "$FWDIFF2" ] || [ "$FWDIFF" ];then
   if [ ! -e /tmp/.firstconfig ] && [ ! -e /etc/.install ] && [ ! -e /etc/.cdrom ];then
     if [ "$FWDIFF" ];then

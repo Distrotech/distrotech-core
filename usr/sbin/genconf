@@ -5851,6 +5851,13 @@ if [ \"\$1\" == "startup" ];then
   /sbin/ip6tables -A INPUT -j INTERNIN
   /sbin/ip6tables -A INPUT -j DEFIN -i sit0 -s 2002::/16
   /sbin/ip6tables -A INPUT -j DEFIN -i sit1
+__EOB__
+  $lcnt=1;
+  foreach $adslvl (@vadsllink) {
+    print FW6 "  /sbin/ip6tables -A INPUT -j DEFIN -i sit1." . ${lcnt} . "\n";
+    $lcnt++;
+  }
+  print FW6<<__EOB__;
   /sbin/ip6tables -A INPUT -j DENY
 
   /sbin/ip6tables -A OUTPUT -j STATEOK -m state --state RELATED,ESTABLISHED,INVALID
@@ -5864,6 +5871,13 @@ if [ \"\$1\" == "startup" ];then
   /sbin/ip6tables -A OUTPUT -j EXTERNOUT
   /sbin/ip6tables -A OUTPUT -j ACCEPT -o sit0 -d 2002::/16
   /sbin/ip6tables -A OUTPUT -j ACCEPT -o sit1
+__EOB__
+  $lcnt=1;
+  foreach $adslvl (@vadsllink) {
+    print FW6 "  /sbin/ip6tables -A OUTPUT -j ACCEPT -o sit1." . ${lcnt} . "\n";
+    $lcnt++;
+  }
+  print FW6<<__EOB__;
   /sbin/ip6tables -A OUTPUT -j DENY
 
   /sbin/ip6tables -A FORWARD -j STATEOK -m state --state RELATED,ESTABLISHED,INVALID
@@ -5874,6 +5888,13 @@ if [ \"\$1\" == "startup" ];then
   /sbin/ip6tables -A FORWARD -j DROP -d fc00::/7 ! -s fc00::/7
   /sbin/ip6tables -A FORWARD -j ACCEPT -o sit0 -d 2002::/16
   /sbin/ip6tables -A FORWARD -j ACCEPT -o sit1
+__EOB__
+  $lcnt=1;
+  foreach $adslvl (@vadsllink) {
+    print FW6 "  /sbin/ip6tables -A FORWARD -j ACCEPT -o sit1." . ${lcnt} . "\n";
+    $lcnt++;
+  }
+  print FW6<<__EOB__;
   /sbin/ip6tables -A FORWARD -j EXTERNFWD
   /sbin/ip6tables -A FORWARD -j DENY
 
@@ -6091,6 +6112,7 @@ if [ \"\$1\" == "startup" ];then
   /sbin/iptables -N GWOUT
   /sbin/iptables -N GWIN
   /sbin/iptables -N IP6RD
+  /sbin/iptables -N IP6RDDSL
 
   /sbin/iptables -t nat -N SIPLB
   /sbin/iptables -t nat -N SIPMAP
@@ -6209,6 +6231,7 @@ fi;
 /sbin/iptables -F DEFIN
 /sbin/iptables -F DEFOUT
 /sbin/iptables -F IP6RD
+/sbin/iptables -F IP6RDDSL
 
 /sbin/iptables -t nat -F PREROUTING
 /sbin/iptables -t nat -F POSTROUTING
@@ -6297,6 +6320,8 @@ __EOB__
 #Activate IP6RD Chain
 /sbin/iptables -A INPUT -j IP6RD -p 41
 /sbin/iptables -A OUTPUT -j IP6RD -p 41
+/sbin/iptables -A INPUT -j IP6RDDSL -p 41
+/sbin/iptables -A OUTPUT -j IP6RDDSL -p 41
 
 /sbin/iptables -A VOIPIN -j ACCEPT -p udp $sfnew --dport 5000
 /sbin/iptables -A VOIPIN -j ACCEPT -p udp $sfnew --dport 5060
@@ -7547,6 +7572,12 @@ __EOR__
 #  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p udp --dport 53 --sport 1024:65535\n";#
 #  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --dport 53 --sport 1024:65535\n\n";
 
+  print FW "#Accept ingress on tcp flags\n";
+  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp --tcp-flags SYN,ACK SYN,ACK\n";
+  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp --tcp-flags SYN,ACK,RST RST\n";
+  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp --tcp-flags SYN,ACK,PSH ACK,PSH\n";
+  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp --tcp-flags SYN,ACK ACK\n";
+
   if ($dnsconf{'ExtServ'} eq true) {
     print FW "#Allow Access To Nameserver Externaly UDP Mode\n";
     print FW "/sbin/iptables -A DEFIN -j ACCEPT -p udp $sfnew -s 0/0 --sport 53 --dport 53\n";
@@ -7621,9 +7652,10 @@ __EOR__
   print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp -m state --state ESTABLISHED,NEW,INVALID --sport 1024:65535 --dport 389\n";
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp -m state --state ESTABLISHED,NEW,INVALID --dport 1024:65535 --sport 389\n\n";
 
-  print FW6 "#SSH Access\n";
+  print FW6 "#SSH/Rsync Access\n";
 #  print FW6 "/sbin/ip6tables -A DEFOUT -j ACCEPT -p tcp --dport 22 --sport 1024:65535\n";
-  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --dport 22 --sport 1024:65535\n\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --dport 22 --sport 1024:65535\n";
+  print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --dport 873 --sport 1024:65535\n\n";
 
   print FW6 "#OVPN Access\n";
   print FW6 "/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --dport 1194 --sport 1024:65535\n\n";
@@ -7922,6 +7954,7 @@ __EOR__
     print FW "/sbin/iptables -A INPUT -j SYSIN -i $ethint -p udp --dport 137:138 --sport 1024:65535 -d 169.254.255.255/16\n";
     print FW "/sbin/iptables -A INPUT -j MCASTIN -i $ethint -s 169.254.0.0/16\n";
     print FW "/sbin/iptables -A OUTPUT -j SYSOUT -o $ethint -d 169.254.0.0/16 -s $zcipaddr\n";
+    print FW "/sbin/iptables -A OUTPUT -j SYSOUT -o $ethint -d 169.254.0.0/16 -s $localip\n";
     print FW "/sbin/iptables -A OUTPUT -j MCASTOUT -o $ethint -s 169.254.0.0/16\n\n";
   }
 
@@ -9000,6 +9033,12 @@ __EOB__
   print FWP "    METRIC=";
   print FWP $lcnt+256-1 . "\n";
 
+  if ($sysconf{'External'} eq "Dialup") {
+    $extint="ppp0";
+  } else {
+    $extint=$sysconf{'External'};
+  }
+
   print FWP<<__EOS__;
   if [ ! -d /tmp/pppup ];then
     mkdir /tmp/pppup;
@@ -9012,19 +9051,21 @@ __EOB__
   /sbin/iptables -t mangle -F MANGLEO\${FILID}
   /sbin/iptables -t mangle -F MANGLEF\${FILID}
 
-  #Determine The Default Gateway
-  DEF_GW=`/sbin/ip route show 0/0 table 90 |awk '{print \$5}'`
-  DEF_ADDR=`/sbin/ip addr show \$DEF_GW |tail -1 |awk '{print \$2}'`
-
 __EOS__
     @tosval=split(/,/,@adslldat[5]);
     print FWP "  #Set fwmark based on TOS value\n";
     foreach $tosmatch (@tosval) {
       if ($tosmatch ne "0") {
-        print FWP "  /sbin/iptables -t mangle -A MANGLEO\${FILID} -j MARK -o \$DEF_GW -m tos --tos $tosmatch --set-mark \${MARK} ! -d \$EXT_IP_ADDR\n";
-        print FWP "  /sbin/iptables -t mangle -A MANGLEF\${FILID} -j MARK -o \$DEF_GW -m tos --tos $tosmatch --set-mark \${MARK} ! -d \$EXT_IP_ADDR\n";
+        print FWP "  /sbin/iptables -t mangle -A MANGLEO\${FILID} -j MARK -o ${extint} -m tos --tos $tosmatch --set-mark \${MARK} ! -d \$EXT_IP_ADDR\n";
+        print FWP "  /sbin/iptables -t mangle -A MANGLEF\${FILID} -j MARK -o ${extint} -m tos --tos $tosmatch --set-mark \${MARK} ! -d \$EXT_IP_ADDR\n";
         print FWP "  /sbin/iptables -t mangle -A MANGLEP\${FILID} ! -i ppp+ -j MARK -m tos --tos $tosmatch -m mark --mark 0 --set-mark \${MARK} ! -d \$EXT_IP_ADDR\n";
       }
+    }
+
+    if (@adslldat[9]) { 
+      $sitip=@adslldat[9];
+    } else {
+      $sitip="192.88.99.1";
     }
 
     print FWP<<__EOS__;
@@ -9087,7 +9128,7 @@ __EOS__
   #Default Incoming/Outgoing Rules
   /sbin/iptables -I MANGLEIN -j VOIPIN -i \$INT_NAME -d \${LOCALIP} -p udp --sport 1024:65535
   /sbin/iptables -I MANGLEIN -j DEFIN -i \$INT_NAME -d \$EXT_IP_ADDR
-  /sbin/iptables -I MANGLEIN -j ACCEPT -p 41 -i \$INT_NAME -d \$EXT_IP_ADDR
+  /sbin/iptables -I IP6RDDSL -j ACCEPT -i \$INT_NAME -d \$EXT_IP_ADDR
 #  /sbin/iptables -A MANGLEIN\${FILID} -j ACCEPT -i \$INT_NAME -m state --state RELATED,ESTABLISHED
 #  /sbin/iptables -A MANGLEOUT\${FILID} -j ACCEPT -o \$INT_NAME -s \$EXT_IP_ADDR -m state --state NEW,RELATED,ESTABLISHED
 
@@ -9095,7 +9136,7 @@ __EOS__
   /sbin/iptables -I MANGLEOUT -j ACCEPT -o \$INT_NAME -m mark --mark \${MARK}
   /sbin/iptables -I MANGLEOUT -j DEFOUT -o \$INT_NAME -s \$EXT_IP_ADDR
   /sbin/iptables -I MANGLEOUT -j VOIPOUT -o \$INT_NAME -s \${LOCALIP} -p udp --dport 1024:65535
-  /sbin/iptables -I MANGLEOUT -j ACCEPT -p 41 -o \$INT_NAME -s \$EXT_IP_ADDR
+  /sbin/iptables -I IP6RDDSL -j ACCEPT -o \$INT_NAME -s \$EXT_IP_ADDR
 
   /sbin/iptables -I MANGLEFWD -j ACCEPT -o \$INT_NAME 
 
@@ -9109,19 +9150,31 @@ __EOS__
 #  /sbin/iptables -t nat -A SIPMAP -j DNAT \$INT_IN -p udp -d \$EXT_IP --dport 10000:20000 -s 0/0 --sport 1024:65535 --to-destination $localip
 
   #Clear TOS Values on marked packets
-#  /sbin/iptables -t mangle -A MANGLEO\${FILID} -j TOS -o \$DEF_GW -m tos ! --tos 0 --set-tos 0 -m mark ! --mark 0x0 ! -d \$EXT_IP_ADDR
-  /sbin/iptables -t mangle -A MANGLEF\${FILID} -j TOS -o \$DEF_GW -m tos ! --tos 0 --set-tos 0 -m mark ! --mark 0x0 ! -d \$EXT_IP_ADDR
+#  /sbin/iptables -t mangle -A MANGLEO\${FILID} -j TOS -o ${extint} -m tos ! --tos 0 --set-tos 0 -m mark ! --mark 0x0 ! -d \$EXT_IP_ADDR
+  /sbin/iptables -t mangle -A MANGLEF\${FILID} -j TOS -o ${extint} -m tos ! --tos 0 --set-tos 0 -m mark ! --mark 0x0 ! -d \$EXT_IP_ADDR
   /sbin/iptables -t mangle -A MANGLEP\${FILID} -j TOS ! -i ppp+ -m tos ! --tos 0 --set-tos 0 -m mark ! --mark 0x0 ! -d \$EXT_IP_ADDR
 __EOS__
     if (@adslldat[8]) { 
       print FWP "\n  /sbin/ip route add @adslldat[8]/32 via \${DEST_IP} src \${EXT_IP_ADDR} dev \${INT_NAME} table Link\n";
     }
+
     print FWP<<__EOS__;
   /sbin/ip route add default via \${DEST_IP} dev \${INT_NAME} metric \${METRIC} table 90
 
   #IPv6
   /sbin/ip addr add 2002:\${ip6prefix}::1/48 dev \${INT_NAME}
   /sbin/ip addr add 2002:\${ip6prefix}::1/128 dev sit0
+
+  #Configure Default gateway
+  if [ -d /sys/class/net/sit1.${lcnt} ];then
+    /sbin/ip tunnel change sit1.${lcnt} local \${EXT_IP_ADDR}
+    /sbin/ip link set dev sit1.${lcnt} down
+   else
+    /sbin/ip tunnel add sit1.${lcnt} mode sit remote $sitip local \${EXT_IP_ADDR}
+  fi;
+  /sbin/ip link set dev sit1.${lcnt} up
+  sleep 2
+  /sbin/ip -6 route add ::/0 via fe80::\${ip6prefix} dev sit1.${lcnt} metric \${METRIC}
 
   (cat <<EOF
 server $dnsconf{'DynServ'}
@@ -9328,11 +9381,13 @@ __EOS__
   /sbin/ip rule del from \${4} iif lo table \${RTABLE}
   /sbin/ip route flush cache
 
-  /sbin/iptables -D MANGLEIN -j ACCEPT -p 41 -i \$INT_NAME -d \${4}
+  /sbin/ip tunnel del sit1.\${FILID} 
+
+  /sbin/iptables -D IP6RDDSL -j ACCEPT -i \$INT_NAME -d \${4}
   /sbin/iptables -D MANGLEIN -j DEFIN -i \$INT_NAME -d \${4}
   /sbin/iptables -D MANGLEIN -j VOIPIN -i \$INT_NAME -d \${LOCALIP} -p udp --sport 1024:65535
   /sbin/iptables -D MANGLEOUT -j DEFOUT -o \$INT_NAME -s \${4}
-  /sbin/iptables -D MANGLEOUT -j ACCEPT -p 41 -o \$INT_NAME -s \${4}
+  /sbin/iptables -D IP6RDDSL -j ACCEPT -o \$INT_NAME -s \${4}
   /sbin/iptables -D MANGLEOUT -j ACCEPT -o \$INT_NAME -m mark --mark \${MARK}
   /sbin/iptables -D MANGLEOUT -j ACCEPT -m mark --mark \${MARK}
   /sbin/iptables -D MANGLEOUT -j VOIPOUT -o \$INT_NAME -s \${LOCALIP} -p udp --dport 1024:65535
