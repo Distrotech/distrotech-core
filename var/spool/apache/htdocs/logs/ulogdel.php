@@ -22,7 +22,7 @@
 %>
 <link rel=stylesheet type=text/css href=/style.php>
 <%  
-  $mintime=mktime($time_hour,$time_min,$time_sec,$time_month,$time_day,$time_year);
+  $mintime=mktime($dtime_hour,$dtime_min,$dtime_sec,$dtime_month,$dtime_day,$dtime_year);
   $query="DELETE FROM packet_filter WHERE local_time < $mintime";
   $dresult=mysql_query($query);
   $pcnt=mysql_affected_rows();

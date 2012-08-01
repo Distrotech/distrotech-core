@@ -297,7 +297,7 @@
 <TH><FONT SIZE=1>Month</TH>
 <TH><FONT SIZE=1>Year</TH></TR>
 <TR CLASS=list-color2><TD><FONT SIZE=1>
-  <SELECT NAME=time_day>
+  <SELECT NAME=dtime_day>
 <%
   $cur_date=getdate();
   $dday=$cur_date['mday'];
@@ -315,7 +315,7 @@
 %>
   </SELECT>
 </TD><TD><FONT SIZE=1>
-  <SELECT NAME=time_month>
+  <SELECT NAME=dtime_month>
 <%
   for($month=1;$month <= 12;$month++) {
     if ($month != $cur_date['mon'] -1) {
@@ -327,7 +327,7 @@
 %>
   </SELECT>
 </TD><TD><FONT SIZE=1>
-  <SELECT NAME=time_year>
+  <SELECT NAME=dtime_year>
 <%
   for($year=2000;$year <= 2050;$year++) {
     if ($year != $cur_date['year']) {
@@ -344,7 +344,7 @@
 <TH><FONT SIZE=1>Minute</TH>
 <TH><FONT SIZE=1>Second</TH></TR>
 <TR CLASS=list-color2><TD><FONT SIZE=1>
-  <SELECT NAME=time_hour>
+  <SELECT NAME=dtime_hour>
 <%
   for($hour=0;$hour < 24;$hour++) {
     if ($hour != $cur_date['hours']) {
@@ -356,7 +356,7 @@
 %>
   </SELECT>
 </TD><TD><FONT SIZE=1>
-  <SELECT NAME=time_min>
+  <SELECT NAME=dtime_min>
 <%
   for($minute=0;$minute < 60;$minute++) {
     if ($minute != $cur_date['minutes']) {
@@ -368,7 +368,7 @@
 %>
   </SELECT>
 </TD><TD><FONT SIZE=1>
-  <SELECT NAME=time_sec>
+  <SELECT NAME=dtime_sec>
 <%
   for($second=0;$second < 60;$second++) {
     if ($second != $cur_date['seconds']) {

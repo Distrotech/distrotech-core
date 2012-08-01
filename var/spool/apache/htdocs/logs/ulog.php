@@ -170,12 +170,16 @@ if (($type == "") || ($type == "ip")) {
   print "<TR CLASS=list-color1><TH>ID</TH><TH>Time</TH><TH>Source Addr</TH><TH>Dest. Address</TH><TH>Direction</TH><TH>Protocol</TH>";
   print "<TH>Size</TH><TH>TTL</TH></TR>\n";
 
-  $result=mysql_query("SELECT tcp_sport,tcp_dport,udp_sport,udp_dport,ip_saddr,ip_daddr,ip_protocol,oob_in,oob_out,
+  $resultq="SELECT tcp_sport,tcp_dport,udp_sport,udp_dport,ip_saddr,ip_daddr,ip_protocol,oob_in,oob_out,
                               icmp_type,icmp_code,icmp_echoid,icmp_echoseq,icmp_gateway,icmp_fragmtu,ip_csum,
                               ip_tos,ip_id,ip_fragoff,ip_ihl,udp_len,raw_mac,tcp_ack,tcp_psh,tcp_rst,tcp_syn,tcp_fin,
                               tcp_urg,tcp_seq,tcp_ackseq,tcp_window,tcp_urgp,
                               id,FROM_UNIXTIME(local_time),ip_totlen,ip_ttl FROM packet_filter
-                              WHERE oob_prefix=\"\"$search ORDER BY local_time");
+                              WHERE oob_prefix=\"\"$search ORDER BY local_time";
+
+//  print $resultq . "<P>";
+  $result=mysql_query($resultq);
+
   $idval=32;
   $cnt=0;
   while($line = mysql_fetch_row($result)) {
