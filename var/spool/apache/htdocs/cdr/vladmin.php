@@ -1138,7 +1138,7 @@ if ($SUPER_USER == 1) {
   <TD><INPUT TYPE=CHECKBOX NAME=qualify <%if ($qualify == "yes") {print "CHECKED";}%>></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover=myHint.show('ES39') ONMOUSEOUT=myHint.hide()><%print _("Pass DDI To Extension");%></TD>
+  <TD onmouseover=myHint.show('ES39') ONMOUSEOUT=myHint.hide()><%print _("Pass DDI To Extension (Set To Header)");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=DDIPASS <%if ($origdata["ddipass"] == "1") {print "CHECKED";}%>></TD>
 </TR>
 <TR CLASS=list-color1>

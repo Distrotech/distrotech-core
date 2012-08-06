@@ -176,7 +176,7 @@ if (isset($_POST['adduser'])) {
   <TD>Allow Reinvite</TD>
   <TD><INPUT TYPE=CHECKBOX NAME=canreinvite CHECKED></TD></TR>
 <TR CLASS=list-color2>
-  <TD>Use DDI Pass ON</TD>
+  <TD>Set To Header With DDI (SIP)</TD>
   <TD><INPUT TYPE=CHECKBOX NAME=DDIPASS></TD></TR>
 <TR CLASS=list-color1>
 <TD COLSPAN=2 ALIGN=MIDDLE><INPUT TYPE=SUBMIT NAME=adduser VALUE="Add User"></TD></TR>
