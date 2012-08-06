@@ -77,7 +77,7 @@ if ($_SESSION['auser'] == 1) {
 //  $reports["Detailed Report"]=openpage("reports","getbill.php");
 //  $reports["Users Report"]=openpage("reports","getusrreport.php");
   $reports["Daily Report"]=openpage("reports","getdlyrep.php");
-  $reports["Account Registrations"]="javascript:opencsexten(\'SIP\')";
+  $reports["Account Registrations"]=openpage("reports","anaexten.php");
 
   $main["Reports"]="include:reports";
 
