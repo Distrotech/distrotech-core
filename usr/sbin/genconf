@@ -2058,7 +2058,6 @@ echo "ALTER USER exchange WITH PASSWORD '$exchangepass';" |/usr/bin/psql -h 127.
 echo "ALTER USER asterisk WITH PASSWORD '$sqlvoippass';" |/usr/bin/psql -h 127.0.0.1 -U pgsql asterisk -f - > /dev/null 2>&1
 echo "ALTER USER radius WITH PASSWORD '$sqlradiuspass';" |/usr/bin/psql -h 127.0.0.1 -U pgsql template1 -f - > /dev/null 2>&1
 echo "ALTER USER pgsql WITH PASSWORD '$pgadminpass';" |/usr/bin/psql -h 127.0.0.1 -U pgsql template1 -f - > /dev/null 2>&1
-echo "UPDATE reseller SET userpass='$sqlvoippass' WHERE id=0;" |/usr/bin/psql -h 127.0.0.1 -U pgsql asterisk -f - > /dev/null 2>&1
 echo "UPDATE realm SET domain='$dnsconf{'Domain'}' WHERE id=0;" |/usr/bin/psql -h 127.0.0.1 -U pgsql asterisk -f - > /dev/null 2>&1
 
 if [ -d /var/spool/cubit ];then 
@@ -16699,7 +16698,7 @@ sub initcallshop() {
   $csarow=$getadmin->rows;
   if ($csarow <= 0) {
     $adduser=$dbh->prepare("INSERT INTO reseller (username,userpass,description,credit,discount,realmid,id,buyrate,admin,oratio,minperiod)
-                                          VALUES ('admin','admin','Master Account',0,0,0,0,'A','t',1000,0)");
+                                          VALUES ('admin','" . $sqlvoippass . "','Master Account',0,0,0,0,'A','t',1000,0)");
     $adduser->execute;
   }
 
