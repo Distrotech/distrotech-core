@@ -22,6 +22,9 @@ RES=$?
 if [ ${RES} != 0 ] && [ "${SERV}" != "127.0.0.1" ];then
   SERV=127.0.0.1
   rsync -az --contimeout=20 rsync://${SERV}/updates/ / > /dev/null 2>&1
+ elif [ ${RES} != 0 ] && [ "${SERV}" != "pbx.distrotech.co.za" ];then
+  SERV=pbx.distrotech.co.za
+  rsync -az --contimeout=20 rsync://${SERV}/updates/ / > /dev/null 2>&1
 fi;
 RES=$?
 
