@@ -6624,7 +6624,7 @@ __EOB__
   print FW<<__EOB__;
 
 #Activate Local Proxy Chain
-/sbin/iptables -t nat -A PREROUTING -j LOCALPROXY
+/sbin/iptables -t nat -A PREROUTING -j LOCALPROXY -m state --state ESTABLISHED,NEW
 /sbin/iptables -t nat -A PREROUTING -j MANGLEPROXY
 
 #Dont Allow ICMP Fragments
@@ -8144,11 +8144,12 @@ __EOB__
 
 _EOB_
 
-  print FWP "  #Allow Inbound IAX/SIP sessions\n";
-  print FWP "  /sbin/iptables -t nat -A LOCALPROXY -j DEFPROXY \$INT_IN -d \$EXT_IP\n\n";
+#  print FWP "  #Allow Inbound IAX/SIP sessions\n";
+#  print FWP "  /sbin/iptables -t nat -A LOCALPROXY -j DEFPROXY \$INT_IN -d \$EXT_IP\n\n";
 
-#  print FWP "  #Allow Transparent Proxy For External Connections\n";
-#  print FWP "  /sbin/iptables -t nat -A LOCALPROXY -j REDIRECT \$INT_IN -p tcp -s 0.0.0.0/0 -d 0.0.0.0/0 --dport 80 --to-port 8080 -m state --state ESTABLISHED,NEW\n\n";
+  print FWP "  #Allow Transparent Proxy For External Connections\n";
+  print FWP "  /sbin/iptables -t nat -A LOCALPROXY -j REDIRECT \$INT_IN -p tcp -s 0.0.0.0/0 -d \$EXT_IP --dport 80 --to-port 8080\n";
+  print FWP "  /sbin/iptables -t nat -A LOCALPROXY -j EXTPROXY \$INT_IN -d \$EXT_IP\n\n";
 
   ($proxyip,$webcatch)=split(/:/,$proxyconf{'Parent'});
   if ($webcatch ne "") {
