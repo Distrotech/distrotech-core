@@ -103,6 +103,7 @@
   $getcdr=pg_query($db,$getcdrq);
 
   if (pg_num_rows($getcdr) == 0) {
+    print "<DIV></DIV>";
     return;
   }
 
