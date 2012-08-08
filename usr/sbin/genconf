@@ -10475,6 +10475,7 @@ __EOF__
   print SMB "        name resolve order = lmhosts host wins bcast\n";
   print SMB "        guest account = nobody\n";
   print SMB "        hide dot files = Yes\n";
+  print SMB "        hide unreadable = Yes\n";
   print SMB "        deadtime = 5\n";
   print SMB "        security = $smboption{'Security'}\n";
   print SMB "        obey pam restrictions = Yes\n";
@@ -10681,6 +10682,7 @@ print AVD "/var/spool/apache/vhosts WEBSITES allow:\@www\n";
         read only = No
         create mask = 0664
         directory mask = 0775
+        hide unreadable = Yes
         guest ok = No
         valid users = $usergrp
 
@@ -10691,6 +10693,7 @@ print AVD "/var/spool/apache/vhosts WEBSITES allow:\@www\n";
         create mask = 0664
         directory mask = 0775
         guest ok = No
+        hide unreadable = Yes
         force group = nogroup
         force user = nobody
         valid users = $usergrp
@@ -10703,6 +10706,7 @@ print AVD "/var/spool/apache/vhosts WEBSITES allow:\@www\n";
         writeable = Yes
         create mask = 0640
         directory mask = 0750
+        hide unreadable = Yes
         guest ok = No
 
 [TFTPBOOT]
@@ -10711,6 +10715,7 @@ print AVD "/var/spool/apache/vhosts WEBSITES allow:\@www\n";
         read only = No
         create mask = 0644
         directory mask = 0755
+        hide unreadable = Yes
         force group = nogroup
         force user = nobody
         valid users = $admingrp
@@ -10726,6 +10731,7 @@ __EOB__
         read only = Yes
         create mask = 0664
         directory mask = 0775
+        hide unreadable = Yes
         force user = admin
         valid users = $usergrp
         guest ok = No
@@ -10741,8 +10747,10 @@ __EOB__
         read only = Yes
         create mask = 0664
         directory mask = 0775
-        force user = admin
+        hide unreadable = Yes
+        force user = nobody
         valid users = $usergrp
+        hide files = *.meta
         guest ok = No
 
 __EOB__
@@ -10757,6 +10765,7 @@ __EOB__
         directory mask = 0775
         guest ok = No
         force user = admin
+        hide unreadable = Yes
         valid users = $admingrp
 
 [MAILLISTS]
@@ -10766,6 +10775,7 @@ __EOB__
         create mask = 0644
         directory mask = 0755
         guest ok = No
+        hide unreadable = Yes
         force group = majordomo
         force user = majordomo
         valid users = $admingrp
@@ -10777,6 +10787,7 @@ __EOB__
         create mask = 0664
         directory mask = 0775
         guest ok = No
+        hide unreadable = Yes
         force user = admin
         valid users = $admingrp
 
@@ -10787,6 +10798,7 @@ __EOB__
         create mask = 0660
         directory mask = 0770
         guest ok = No
+        hide unreadable = Yes
         force user = admin
         valid users = $admingrp
 
@@ -10797,6 +10809,7 @@ __EOB__
         create mask = 0660
         directory mask = 0770
         guest ok = No
+        hide unreadable = Yes
         force user = admin
         valid users = $admingrp
 
@@ -10807,6 +10820,7 @@ __EOB__
         create mask = 0660
         directory mask = 0770
         guest ok = No
+        hide unreadable = Yes
         force user = admin
         valid users = $admingrp
 
@@ -10817,6 +10831,7 @@ __EOB__
         create mask = 0660
         directory mask = 0770
         guest ok = No
+        hide unreadable = Yes
         force user = admin
         valid users = $admingrp
 
@@ -10827,6 +10842,7 @@ __EOB__
         create mask = 0660
         directory mask = 0770
         guest ok = No
+        hide unreadable = Yes
         force user = admin
         valid users = $admingrp
 
@@ -10837,6 +10853,7 @@ __EOB__
         create mask = 0660
         directory mask = 0770
         guest ok = No
+        hide unreadable = Yes
         force user = admin
         valid users = $admingrp
 
@@ -10847,6 +10864,7 @@ __EOB__
         create mask = 0660
         directory mask = 0770
         guest ok = No
+        hide unreadable = Yes
         force user = admin
         valid users = $admingrp
 
@@ -10857,6 +10875,7 @@ __EOB__
         create mask = 0660
         directory mask = 0770
         guest ok = No
+        hide unreadable = Yes
         force user = admin
         valid users = $admingrp
 
@@ -10867,6 +10886,7 @@ __EOB__
         create mask = 0660
         directory mask = 0770
         guest ok = No
+        hide unreadable = Yes
         force group = users
         force user = admin
         valid users = $admingrp
@@ -10878,6 +10898,7 @@ __EOB__
         create mask = 0660
         directory mask = 0770
         guest ok = No
+        hide unreadable = Yes
         force user = admin
         valid users = $admingrp
 
@@ -10888,6 +10909,7 @@ __EOB__
         create mask = 0660
         directory mask = 0770
         guest ok = No
+        hide unreadable = Yes
         force user = admin
         valid users = $admingrp
 
@@ -10898,6 +10920,7 @@ __EOB__
         create mask = 0660
         directory mask = 0770
         guest ok = No
+        hide unreadable = Yes
         force user = admin
         valid users = $admingrp
 
@@ -10906,6 +10929,7 @@ __EOB__
         path = /var/spool/apache/htdocs/polycom
         read only = No
         guest ok = No
+        hide unreadable = Yes
         create mask = 0640
         directory mask = 0750
         hide files = /*.php/*.inc/
@@ -10922,6 +10946,7 @@ __EOB__
         create mask = 0660
         directory mask = 0770
         guest ok = No
+        hide unreadable = Yes
         force group = smbadm
         force user = admin
         valid users = $admingrp
@@ -10937,6 +10962,7 @@ __EOB__
         read only = No
         create mask = 0664
         directory mask = 0755
+        hide unreadable = Yes
         force group = smbadm
         valid users = $admingrp
         guest ok = No
@@ -10952,6 +10978,7 @@ __EOB__
         create mask = 0660
         directory mask = 0770
         guest ok = No
+        hide unreadable = Yes
         force user = admin
         valid users = $admingrp
 
@@ -11010,6 +11037,7 @@ $vfsobj        comment = "@share[0]"
         read only = No
         create mask = $mask
         directory mask = $dmask
+        hide unreadable = Yes
         valid users = +$ugrp
         force group = +@share[3]
         guest ok = No
