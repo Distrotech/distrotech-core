@@ -31,3 +31,4 @@ sugarcrm.tar.bz2:var/spool/rsync/programs/var/spool/apache/htdocs:bunzip2
 svn.tbz:var/spool/rsync/programs:bunzip2
 windomadmin.tgz:var/spool/rsync/programs/var/spool/samba/dadmin:gunzip
 extrafw.txz:var/spool/rsync/programs/lib/firmware:unxz
+ecrypt.txz:var/spool/rsync/programs:unxz

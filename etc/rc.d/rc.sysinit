@@ -305,7 +305,13 @@ if [ -e /etc/.install ];then
   /usr/sbin/vgchange -a y --poll y --monitor y > /dev/null 2>&1
 
   #Turn Swap On
+  #Format crypted swap space 
+  if [ -e /etc/crypttab ];then
+    awk '/cryptswap/ {printf "cryptsetup -d %s create %s %s;dd if=/dev/zero of=%s bs=512b count=1;mkswap -f /dev/mapper/%s\n",$3,$1,$2,$2,$1}' /etc/crypttab |sh
+  fi;
+
   #run mkswap on partitions that do not have a UUID
+  blkid -g
   blkid -t TYPE=swap -o device |awk '{printf "\
     if [ ! \"`blkid %s -s UUID`\" ];then\
       touch /tmp/.fstab.new\
@@ -619,7 +625,7 @@ EOF
   fi;
 
   #Mount All Other Filesytems Except NFS
-  mount -at nonfs > /dev/null 2>&1
+  mount -at nonfs,noecryptfs > /dev/null 2>&1
 
   #Configure The Bridge
   if [ -x /etc/rc.d/rc.interface ]; then

@@ -63,14 +63,27 @@ while(<MNT>) {
   }
 }
 
-open(FSW,"blkid -t TYPE=swap -s UUID -o value |");
+open(FSW,"blkid -t TYPE=swap -s UUID |");
 while(<FSW>) {
   chop $_;
-  $UUID="UUID=\"$_\"";
-  printf "%-45s %-50s %-10s nofail%-22s 0 0\n",$UUID,"none","swap","";
+  if (/^([\w\/-]+):\s(.*)\s/) {
+    if (index($1, "/dev/mapper/cryptswap") eq 0) {
+      printf "%-45s %-50s %-10s nofail%-22s 0 0\n",$1,"none","swap","";
+    } else {
+      printf "%-45s %-50s %-10s nofail%-22s 0 0\n",$2,"none","swap","";
+    }
+  }
 }
 
 printf "%-45s %-50s %-10s defaults%-20s 0 0\n","proc","/proc","proc","";
 printf "%-45s %-50s %-10s defaults%-20s 0 0\n","devpts","/dev/pts","devpts","";
 printf "%-45s %-50s %-10s defaults%-20s 0 0\n","usbfs","/proc/bus/usb","usbfs","";
 printf "%-45s %-50s %-10s defaults%-20s 0 0\n","nfsd","/proc/fs/nfsd","nfsd","";
+
+if (-e "/etc/fstab.vault") {
+  open(EFS,"/etc/fstab.vault");
+  while(<EFS>) {
+    print $_;
+  }
+  close(EFS);
+}
