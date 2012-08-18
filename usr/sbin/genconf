@@ -10750,7 +10750,7 @@ __EOB__
         hide unreadable = Yes
         force user = nobody
         valid users = $usergrp
-        hide files = *.meta
+        hide files = /*.meta
         guest ok = No
 
 __EOB__
