@@ -300,14 +300,17 @@ if [ -e /etc/.install ];then
    chmod 1777 /tmp)>/dev/null 2>&1
 
   #Mount All Mount Points
-  mount -a > /dev/null 2>&1
+  mount -at nonfs,noecryptfs > /dev/null 2>&1
 
   /usr/sbin/vgchange -a y --poll y --monitor y > /dev/null 2>&1
 
   #Turn Swap On
   #Format crypted swap space 
   if [ -e /etc/crypttab ];then
-    awk '/cryptswap/ {printf "cryptsetup -d %s create %s %s;dd if=/dev/zero of=%s bs=512b count=1;mkswap -f /dev/mapper/%s\n",$3,$1,$2,$2,$1}' /etc/crypttab |sh
+    (awk '/cryptswap/ {printf "\
+	cryptsetup -d %s create %s %s;\
+	dd if=/dev/zero of=%s bs=512b count=1;\
+	mkswap -f /dev/mapper/%s\n",$3,$1,$2,$2,$1}' /etc/crypttab |sh) > /dev/null 2>&1
   fi;
 
   #run mkswap on partitions that do not have a UUID
@@ -623,9 +626,6 @@ EOF
       sleep 3;
     done;
   fi;
-
-  #Mount All Other Filesytems Except NFS
-  mount -at nonfs,noecryptfs > /dev/null 2>&1
 
   #Configure The Bridge
   if [ -x /etc/rc.d/rc.interface ]; then
