@@ -1,6 +1,10 @@
 #!/bin/bash
 
 /usr/sbin/grub-mkdevicemap --no-floppy
+if [ -e /boot/grub/devicemap.local ];then
+  cat /boot/grub/devicemap.local >> /boot/grub/device.map
+fi;
+
 DCNT=0
 
 #Ensure swap space has a UUID
