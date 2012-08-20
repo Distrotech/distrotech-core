@@ -1,10 +1,7 @@
 <%
 header("Content-Type: application/zip");
-include "../ldap/ldapcon.inc";
-$r=ldap_bind($ds,$LDAP_ROOT_DN,$LDAP_ROOT_PW);
- 
-$sr=ldap_search($ds,"ou=Admin","(&(objectclass=groupofnames)(member=" . $ldn . ")(cn=Admin Access))");
- 
+include "/var/spool/apache/htdocs/ldap/ldapbind.inc";
+  
 $certs=array("usercertificate;binary","userpkcs12","usersmimecertificate");
 $sr=ldap_search($ds,"","(&(objectClass=officePerson)(uid=" . $_GET['euser'] . "))", $certs);
 $ei=ldap_first_entry($ds, $sr);

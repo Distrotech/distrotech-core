@@ -23,15 +23,7 @@ if ($info == "usercertificate") {
   $info .=";binary";
 }
 
-include "../ldap/ldapcon.inc";
-$r=ldap_bind($ds,$LDAP_ROOT_DN,$LDAP_ROOT_PW);
-
-$sr=ldap_search($ds,"ou=Admin","(&(objectclass=groupofnames)(member=" . $ldn . ")(cn=Admin Access))");
-if ((ldap_count_entries($ds,$sr) == 1) || ($PHP_AUTH_USER == "admin")) {
-  $ADMIN_USER="admin";
-} else {
-  $ADMIN_USER="pleb";
-}
+include "/var/spool/apache/htdocs/ldap/ldapbind.inc";
 
 $sr=ldap_search($ds,"","(&(objectClass=officePerson)(uid=$euser)($info=*))", array($info));
 $ei=ldap_first_entry($ds, $sr);

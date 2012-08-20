@@ -22,8 +22,8 @@ if ($info == "usercertificate") {
   $info .=";binary";
 }
 
-include "ldapcon.inc";
-$r=ldap_bind($ds,$LDAP_ROOT_DN,$LDAP_ROOT_PW);
+include "ldapbind.inc";
+
 $sr=ldap_search($ds,"","(&(objectClass=officePerson)(uid=$euser)($info=*))", array($info));
 $ei=ldap_first_entry($ds, $sr);
 $cinf = ldap_get_values_len($ds, $ei,$info);

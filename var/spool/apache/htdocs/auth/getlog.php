@@ -17,18 +17,7 @@
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-include "../ldap/ldapcon.inc";
-
-$auth_uss=ldap_bind($ds,$LDAP_ROOT_DN,$LDAP_ROOT_PW);
-if ($PHP_AUTH_USER != "admin") {
-  $auth_ussr=ldap_search($ds,"","(&(objectClass=officePerson)(uid=$PHP_AUTH_USER))");
-  $auth_ures=ldap_first_entry($ds,$auth_ussr);
-  $ldn=ldap_get_dn($ds,$auth_ures);
-  ldap_bind($ds,$ldn,$PHP_AUTH_PW);
-} else {
-  ldap_bind($ds,$LDAP_ROOT_DN,$LDAP_ROOT_PW);
-  $ldn=$LDAP_ROOT_DN;
-}
+include "/var/spool/apache/htdocs/ldap/ldapbind.inc";
 
 $sr=ldap_search($ds,"ou=Admin","(&(objectclass=groupofnames)(member=" . $ldn . ")(|(cn=Admin Access)(cn=Call Logging)))");
 if (ldap_count_entries($ds,$sr) <= 0) {
@@ -36,6 +25,7 @@ if (ldap_count_entries($ds,$sr) <= 0) {
 }
 
 $fname="/var/spool/asterisk/monitor/" . $logfile;
+
 $fp=fopen($fname, 'rb');
 if ($type != "1") {
   header("Content-type: audio/x-wav");

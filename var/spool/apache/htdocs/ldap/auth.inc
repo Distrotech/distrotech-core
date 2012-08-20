@@ -18,23 +18,11 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
   include_once "/var/spool/apache/htdocs/ldap/ldap.inc";
+  include_once "/var/spool/apache/htdocs/ldap/ldapbind.inc";
 
-
-  if ($_SERVER['PHP_AUTH_USER'] == "admin") {
-    $auth_uss=ldap_bind($ds,$LDAP_ROOT_DN,$LDAP_ROOT_PW);
-    $ldn="uid=admin,ou=users";
-    $auth_ussr=ldap_search($ds,$ldn,"uid=*");
-    $auth_ures=ldap_first_entry($ds,$auth_ussr);
-    $ldn=ldap_get_dn($ds,$auth_ures);
-  } else {
-    $auth_uss=ldap_bind($ds,$LDAP_ROOT_DN,$LDAP_ROOT_PW);
-    $auth_ussr=ldap_search($ds,"","(&(objectClass=officePerson)(uid=" . $_SERVER['PHP_AUTH_USER'] . "))");
-    $auth_ures=ldap_first_entry($ds,$auth_ussr);
-    $ldn=@ldap_get_dn($ds,$auth_ures);
-    if (ereg("ou=Idmap",$ldn)) {
-      $ainfo["userPassword"]="{CRYPT}" . crypt($_SERVER['PHP_AUTH_PW']);
-      ldap_mod_replace($ds,$ldn,$ainfo);
-    }
+  if (ereg("ou=Idmap",$ldn)) {
+    $ainfo["userPassword"]="{CRYPT}" . crypt($_SERVER['PHP_AUTH_PW']);
+    ldap_mod_replace($ds,$ldn,$ainfo);
   }
 
   if ($getuid) {

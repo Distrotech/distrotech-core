@@ -17,27 +17,25 @@
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-include "ldapbind.inc";
 
-$subj=`/usr/bin/openssl x509 -in /etc/openssl/newcerts/$cert.pem  -noout -subject`;
-$subj=chop($subj);
-$x509dn=split("/",$subj);
-array_shift($x509dn);
+if (! $ds) {
+  include_once "/var/spool/apache/htdocs/ldap/ldapcon.inc";
+}
 
-$search=join(")(",$x509dn);
+if ($ds && ldap_bind($ds,$LDAP_LIMIT_DN,$LDAP_LIMIT_PW) && ($_SERVER['PHP_AUTH_USER'] != "")) {
+  $auth_ussr=ldap_search($ds,"","(&(objectClass=officePerson)(uid=" . $_SERVER['PHP_AUTH_USER'] . "))");
+  $auth_ures=ldap_first_entry($ds,$auth_ussr);
+  $ldn=ldap_get_dn($ds,$auth_ures);
+  ldap_bind($ds,$ldn,$_SERVER['PHP_AUTH_PW']);
 
-$info=array("uid");
-
-
-$sr=ldap_search($ds,"","(&(" . $search . "))",$info);
-$ei=ldap_first_entry($ds, $sr);
-$cinf = ldap_get_values($ds,$ei,"uid");
-
-ldap_unbind($ds);
-
-if ($cinf[0] != "") {
-  header("Location: https://$SERVER_NAME:666/auth/index.php?disppage=ldap/userinfo.php&euser=$cinf[0]");
+  $sr=ldap_search($ds,"ou=Admin","(&(objectclass=groupofnames)(member=" . $ldn . ")(cn=Admin Access))");
+  if ((ldap_count_entries($ds,$sr) == 1) || ($_SERVER['PHP_AUTH_USER'] == "admin")) {
+    $ADMIN_USER="admin";
+  } else {
+    $ADMIN_USER="pleb";
+  }
 } else {
-  header("Location: https://$SERVER_NAME:666/auth/index.php?navpage=ldap/ennav.php");
+  $ldn=$LDAP_LIMIT_DN;
+  $ADMIN_USER="pleb";
 }
 %>
