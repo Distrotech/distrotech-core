@@ -246,9 +246,7 @@ while(<CF>) {
         if ($ldap ne "") {
           $lbndr=$ldap->bind($ldapserv{'Login'},password => $ldapserv{'OPassword'});
           if ($lbndr->code eq "0") {
-            $pwcrypt="{CRYPT}";
-            $salt=join('',('.', '/', 0..9, 'A'..'Z', 'a'..'z')[rand 64, rand 64, rand 64, rand 64, rand 64, rand 64, rand 64,rand 64]);
-            $pwcrypt.=unix_md5_crypt($ldapserv{'Password'},$salt);
+            $pwcrypt="{CRYPT}" . unixcrypt($ldapserv{'Password'});
             $pwres=$ldap->modify($ldapserv{'Login'},replace => { 'userPassword' => $pwcrypt });
             if ($pwres->code eq "0") {
               &printetcshadow();
@@ -1287,6 +1285,8 @@ if ($repmaster eq "") {
 
 close(CF);
 
+$ldaplimpw=checkanonuser();
+
 if ( -e "/etc/ipv6.conf" ) {
   open(I6, "/etc/ipv6.conf");
   while(<I6>) {
@@ -1661,14 +1661,6 @@ sub printsqlpass(){
   open(SP,">sqlpasswd");
   chmod(0600,"sqlpasswd");
 
-  if ($mailldap{'Password'} eq "") {
-    $mailldap{'Password'}=$ldapserv{'Password'};
-  }
-
-  if ($mailldap{'Login'} eq "") {
-    $mailldap{'Login'}=$ldapserv{'Login'};
-  }
-
   if ($sqlserver eq "") {
     $sqlserver="localhost";
   }
@@ -1696,7 +1688,6 @@ sub printsqlpass(){
     $vsuf.="dc=" . $dndat . ",";
   }
   chop $vsuf;
-
   
   print SP<<__EOF__;
 #!/bin/bash
@@ -1767,6 +1758,8 @@ EOF
   ldap_set_option(\\\$ds, LDAP_OPT_PROTOCOL_VERSION,3);
   \\\$LDAP_ROOT_DN="$ldapserv{'Login'}";
   \\\$LDAP_ROOT_PW="$ldapserv{'Password'}";
+  \\\$LDAP_LIMIT_DN="cn=anon,$ldapserv{'Login'}";
+  \\\$LDAP_LIMIT_PW="$ldaplimpw";
   \\\$LOCAL_DOMAIN="$dnsconf{'Domain'}";
   \\\$LDAP_BDN="$vsuf";
 \%>
@@ -1775,8 +1768,9 @@ EOF
 chmod 600 /var/spool/apache/htdocs/ldap/ldapcon.inc
 chown 80.80 /var/spool/apache/htdocs/ldap/ldapcon.inc
 
-sed -e "s/^binddn.*****\$/binddn $ldapserv{'Login'}/" \\
-    -e "s/^bindpw.*****\$/bindpw $ldapserv{'Password'}/" \\
+sed -e "s/^binddn.*****\$/binddn cn=anon,$ldapserv{'Login'}/" \\
+    -e "s/^rootbinddn.*****\$/rootbinddn $ldapserv{'Login'}/" \\
+    -e "s/^bindpw.*****\$/bindpw $ldaplimpw/" \\
     -e "s/^base.*****\$/base $vsuf/" \\
     -e "s/^port.*/port 389/" \\
     -e "s/^uri.*****\$/uri ldap\\:\\/\\/$ldapserv{'Server'}/" \\
@@ -1785,7 +1779,17 @@ sed -e "s/^binddn.*****\$/binddn $ldapserv{'Login'}/" \\
 chmod 644 /etc/ldap.conf
 chown 0.139 /etc/ldap.conf
 
-echo "$mailldap{'Password'}" > /etc/mail/ldap
+touch /etc/ldap.secret
+chmod 400 /etc/ldap.secret
+echo "$ldapserv{'Password'}" > /etc/ldap.secret
+
+touch /etc/ldap.limited
+chmod 400 /etc/ldap.limited
+echo '$ldaplimpw' > /etc/ldap.limited
+
+if [ -e /etc/mail/ldap ];then
+  rm /etc/mail/ldap
+fi;
 __EOF__
 
 } else {
@@ -1873,6 +1877,14 @@ fi;
 __EOF__
   }
 
+#sed -e "s/FQDN/$fqdn/" \\
+#    -e "s/LOCALIP/$localip/" /etc/omniORB.cfg.orig > /etc/omniORB.cfg
+#
+#killall omniNames > /dev/null 2>&1
+#sleep 3
+#rm /var/log/omninames* > /dev/null 2>&1
+#/usr/bin/omniNames -start -logdir /var/log >/dev/null 2>&1 &
+
   $scrmcrypt=crypt($sqlcrmpass,"ad");
   $scrmmd5=md5_hex($sqlcrmpass);
   print SP<<__EOF__;
@@ -1891,6 +1903,8 @@ EOF
   ldap_set_option(\\\$ds, LDAP_OPT_PROTOCOL_VERSION,3);
   \\\$LDAP_ROOT_DN="$ldapserv{'Login'}";
   \\\$LDAP_ROOT_PW="$ldapserv{'Password'}";
+  \\\$LDAP_LIMIT_DN="cn=anon,$ldapserv{'Login'}";
+  \\\$LDAP_LIMIT_PW="$ldaplimpw";
   \\\$LOCAL_DOMAIN="$dnsconf{'Domain'}";
   \\\$LDAP_BDN="$vsuf";
 \%>
@@ -1916,8 +1930,9 @@ EOF
 
 sed -e "s/^\\\$whereami.*/\\\$whereami = \\\"$dnsconf{'Domain'}\\\";/" /var/spool/majordomo/majordomo.cf.orig  > /var/spool/majordomo/majordomo.cf
 
-sed -e "s/^binddn.*****\$/binddn $ldapserv{'Login'}/" \\
-    -e "s/^bindpw.*****\$/bindpw $ldapserv{'Password'}/" \\
+sed -e "s/^binddn.*****\$/binddn cn=anon,$ldapserv{'Login'}/" \\
+    -e "s/^rootbinddn.*****\$/rootbinddn $ldapserv{'Login'}/" \\
+    -e "s/^bindpw.*****\$/bindpw $ldaplimpw/" \\
     -e "s/^base.*****\$/base $vsuf/" \\
     -e "s/^port.*/port 636/" \\
     -e "s/^master_host.*\$/master_host $repmaster/" \\
@@ -1926,23 +1941,17 @@ sed -e "s/^binddn.*****\$/binddn $ldapserv{'Login'}/" \\
 chmod 644 /etc/ldap.conf
 chown root.smbadm /etc/ldap.conf
 
-echo "$mailldap{'Password'}" > /etc/mail/ldap
+touch /etc/ldap.secret
+chmod 400 /etc/ldap.secret
+echo "$ldapserv{'Password'}" > /etc/ldap.secret
 
-#sed -e "s/FQDN/$fqdn/" \\
-#    -e "s/LOCALIP/$localip/" /etc/omniORB.cfg.orig > /etc/omniORB.cfg
-#
-#killall omniNames > /dev/null 2>&1
-#sleep 3
-#rm /var/log/omninames* > /dev/null 2>&1
-#/usr/bin/omniNames -start -logdir /var/log >/dev/null 2>&1 &
+touch /etc/ldap.limited
+chmod 400 /etc/ldap.limited
+echo '$ldaplimpw' > /etc/ldap.limited
 
-#sed -e "s/^domain=\\*\\*\\*\\*\\*\$/domain=$dnsconf{'Domain'}/" \\
-#    -e "s/^ldapurl=\\*\\*\\*\\*\\*\$/ldapurl=ldaps:\\/\\/$ldapserv{'Server'}/" \\
-#    -e "s/^ldapbdn=\\*\\*\\*\\*\\*\$/ldapbdn=$ldapserv{'Login'}/" \\
-#    -e "s/^ldappass=\\*\\*\\*\\*\\*\$/ldappass=$ldapserv{'Password'}/" \\
-#    -e "s/^dbpasswd=\\*\\*\\*\\*\\*\$/dbpasswd=$exchangepass/" /etc/bill.conf.orig > /etc/bill.conf
-#chmod 600 /etc/bill.conf
-#chown root.root /etc/bill.conf
+if [ -e /etc/mail/ldap ];then
+  rm /etc/mail/ldap
+fi;
 
 (cat <<EOF
 <%
@@ -2078,17 +2087,7 @@ chown root.root /root/.pgpass
 #kill `cat /var/run/exchange4linux/exchange4linux.pid 2>/dev/null` > /dev/null 2>&1
 #/usr/bin/python /usr/local/exchange4linux/Server.pyc > /dev/null 2>&1 &
 
-
-if [ -e "/etc/samba/smb.conf" ];then
-  /usr/bin/smbpasswd -w "$ldapserv{'Password'}" > /dev/null 2>&1
-  (/usr/bin/net idmap secret '*' "$ldapserv{'Password'}" > /dev/null 2>&1) &
-  /usr/sbin/add_domain $smboption{'ServName'} $smboption{'Domain'} >/dev/null 2>&1
-  (cat<<EOF
-$ldapserv{'Password'}
-$ldapserv{'Password'}
-EOF
-) | smbpasswd -sa admin &
-fi;
+/usr/sbin/setsmbpasswd
 
 if [ -e /var/spool/apache/htdocs/horde/config/horde.php ];then
   sed -e "s/\\\$conf\\['prefs'\\]\\['params'\\]\\['password'\\] = .*;/\\\$conf['prefs']['params']['password'] = '$hordepass';/" \\
@@ -2284,8 +2283,8 @@ if [ ! -d /opt/apache2 ];then
   sed -e "s/^Listen 0.0.0.0:80.*/Listen @idata[1]:80/"  \\
       -e "s/^Listen 80.*/Listen @idata[1]:80/" \\
       -e "s/AuthLDAPUrl ldap:\\/\\/127.0.0.1/AuthLDAPUrl ldap:\\/\\/$ldapserv{'Server'}/" \\
-      -e "s/AuthLDAPBindDN uid=admin,ou=Users/AuthLDAPBindDN $ldapserv{'Login'}/" \\
-      -e "s/AuthLDAPBindPassword admin/AuthLDAPBindPassword $ldapserv{'Password'}/" \\
+      -e "s/AuthLDAPBindDN.*/AuthLDAPBindDN cn=anon,$ldapserv{'Login'}/" \\
+      -e "s/AuthLDAPBindPassword admin/AuthLDAPBindPassword $ldaplimpw/" \\
       -e "s/AuthLDAPStartTLS on/AuthLDAPStartTLS $isldaptls/" \\
       -e "s/\(^\|^#\)ServerName.*/ServerName $fqdn/" \\
       -e "s/LOCAL_SERVER_NAME/$fqdn/" /etc/apache/httpd.conf.orig | grep -vE "(^#)" >  /tmp/httpd.conf
@@ -2297,8 +2296,8 @@ if [ ! -d /opt/apache2 ];then
   sed -e "s/^Listen 0.0.0.0:80.*/Listen @idata[1]:80/"  \\
       -e "s/^Listen 80.*/Listen @idata[1]:80/" \\
       -e "s/AuthLDAPUrl ldap:\\/\\/127.0.0.1/AuthLDAPUrl ldap:\\/\\/$ldapserv{'Server'}/" \\
-      -e "s/AuthLDAPBindDN uid=admin,ou=Users/AuthLDAPBindDN $ldapserv{'Login'}/" \\
-      -e "s/AuthLDAPBindPassword admin/AuthLDAPBindPassword $ldapserv{'Password'}/" \\
+      -e "s/AuthLDAPBindDN.*/AuthLDAPBindDN cn=anon,$ldapserv{'Login'}/" \\
+      -e "s/AuthLDAPBindPassword admin/AuthLDAPBindPassword $ldaplimpw/" \\
       -e "s/AuthLDAPStartTLS on/AuthLDAPStartTLS $isldaptls/" \\
       -e "s/LOCAL_SERVER_NAME/$fqdn/" /opt/apache2/conf/httpd.conf.orig >  /tmp/httpd.conf.1
   if [ ! -e /opt/apache2/conf/httpd.conf ];then
@@ -2379,6 +2378,7 @@ sub printldap(){
   foreach $dndat (@dninf) {
     $vsuf.="dc=" . $dndat . ",";
   }
+
   chop $vsuf;
 if ( -d "/etc/openldap/schema" ) {
   print SC<<__EOB__;
@@ -2493,6 +2493,7 @@ if ($ldapread eq "true") {
 #}
 
 $rootdn=$ldapserv{'Login'} . "," . $vsuf;
+$anondn="cn=anon," . $ldapserv{'Login'};
 
 print SC<<__EOB__;
 
@@ -2514,6 +2515,8 @@ access to  attrs=loginShell,homeDirectory,shadowMin,shadowMax,shadowInactive,sha
     write
   by dn.regex="^uid=.*,ou=servers"
     read
+  by dn="$anondn"
+    read
   by anonymous
     auth
 
@@ -2530,6 +2533,18 @@ access to dn="ou=Snom"
     auth
 
 access to dn.regex="^cn=(.*),ou=Snom"
+  by dn="$rootdn"
+    write
+  by group="cn=Admin Access,ou=Admin"
+    write
+  by group="cn=Voip Admin,ou=Admin"
+    write
+  by dn="cn=Snom,ou=Snom"
+    read
+  by anonymous
+    auth
+
+access to dn.regex="^uid=(.*),ou=Snom"
   by dn="$rootdn"
     write
   by group="cn=Admin Access,ou=Admin"
@@ -2640,6 +2655,8 @@ access to dn.regex="^uid=(.*),(uid|sambasid)=(.*),ou=(users|idmap)" attrs=object
     read
   by *
     search
+  by dn="$anondn"
+    read
   by anonymous
     auth
 
@@ -2656,6 +2673,8 @@ access to dn.regex="^uid=(.*),(uid|sambasid)=(.*),ou=(users|idmap)" attrs=mailLo
     write
   by dn.regex="^uid=\$1,\$2=\$3,ou=\$4"
     write
+  by dn="$anondn"
+    read
   by anonymous
     auth
 
@@ -2673,6 +2692,8 @@ access to dn.regex="^uid=(.*),(uid|sambasid)=(.*),ou=(users|idmap)"
   by dn.regex="^uid=\$1,\$2=\$3,ou=\$4"
     write
   $ureadaccess
+    read
+  by dn="$anondn"
     read
   by anonymous
     auth
@@ -2752,6 +2773,8 @@ access to dn.regex="^uid=(.*),o=(.*),ou=Users" attrs=objectclass
     write
   by dn.regex="^uid=\$1,o=\$2,ou=users"
     read
+  by dn="$anondn"
+    read
   by *
     search
   by anonymous
@@ -2800,6 +2823,8 @@ access to dn.regex="^uid=(.*),o=(.*),ou=Users" attrs=displayName,cn
     read
   $ureadaccess
     read
+  by dn="$anondn"
+    read
   by anonymous
     auth
 
@@ -2829,6 +2854,8 @@ access to dn.regex="^uid=(.*),o=(.*),ou=Users" attrs=mailLocalAddress,mailRoutin
   by dn.regex="^uid=.*,ou=email"
     read
   by dn.regex="^uid=.*,ou=servers"
+    read
+  by dn="$anondn"
     read
   by anonymous
     auth
@@ -2922,6 +2949,8 @@ access to dn.regex="^uid=(.*),o=(.*),ou=Users"
     write
   $ureadaccess
     read
+  by dn="$anondn"
+    read
   by anonymous
     auth
 
@@ -2934,6 +2963,8 @@ access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=objectClass
   by dn.regex="^uid=.*,ou=servers"
     write
   by dn.regex="^sambaSID=\$1,ou=Idmap"
+    read
+  by dn="$anondn"
     read
   by *
     search
@@ -2977,6 +3008,8 @@ access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=displayName,cn
     write
   $ureadaccess
     read
+  by dn="$anondn"
+    read
   by anonymous
     auth
 
@@ -3003,6 +3036,8 @@ access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=mailLocalAddress,mailRoutingA
     read
   by dn.regex="^sambaSID=\$1,ou=Idmap"
     write
+  by dn="$anondn"
+    read
   by anonymous
     auth
 
@@ -3063,6 +3098,8 @@ access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=gidnumber,uid
     read
   by dn.regex="^sambaSID=\$1,ou=Idmap"
     read
+  by dn="$anondn"
+    read
   by *
     search
   by anonymous
@@ -3083,6 +3120,8 @@ access to dn.regex="^sambaSID=(.*),ou=Idmap"
     write
   $ureadaccess
     read
+  by dn="$anondn"
+    read
   by anonymous
     auth
 
@@ -3095,6 +3134,8 @@ access to dn.regex="^uid=(.*),ou=Users" attrs=objectClass
   by dn.regex="^uid=.*,ou=servers"
     write
   by dn.regex="^uid=\$1,ou=Users"
+    read
+  by dn="$anondn"
     read
   by *
     search
@@ -3138,6 +3179,8 @@ access to dn.regex="^uid=(.*),ou=Users" attrs=displayName,cn
     write
   $ureadaccess
     read
+  by dn="$anondn"
+    read
   by anonymous
     auth
 
@@ -3164,6 +3207,8 @@ access to dn.regex="^uid=(.*),ou=Users" attrs=mailLocalAddress,mailRoutingAddres
     read
   by dn.regex="^uid=\$1,ou=Users"
     write
+  by dn="$anondn"
+    read
   by anonymous
     auth
 
@@ -3224,6 +3269,8 @@ access to dn.regex="^uid=(.*),ou=Users" attrs=gidnumber,uid
     read
   by dn.regex="^uid=\$1,ou=Users"
     read
+  by dn="$anondn"
+    read
   by *
     search
   by anonymous
@@ -3244,6 +3291,8 @@ access to dn.regex="^uid=(.*),ou=users"
     write
   $ureadaccess
     read
+  by dn="$anondn"
+    read
   by anonymous
     auth
 
@@ -3253,6 +3302,8 @@ access to attrs=objectclass
     write
   by group="cn=Admin Access,ou=Admin"
     write
+  by dn="$anondn"
+    read
   by *
     search
   by anonymous
@@ -3311,6 +3362,8 @@ access to dn.regex="^sendmailMTAClassName=(LDAPRoute|R),ou=Email"
     write
   by group="cn=Admin Access,ou=Admin"
     write
+  by dn="$anondn"
+    read
   by *
     read
   by anonymous
@@ -3324,6 +3377,32 @@ access to dn.regex="^.*,ou=Email"
   by dn.regex="^uid=.*,ou=email"
     read
   by dn.regex="^uid=.*,ou=servers"
+    read
+  by dn="$anondn"
+    read
+  by anonymous
+    auth
+
+access to dn.regex="^.*,ou=Groups"
+  by dn="$rootdn"
+    write
+  by group="cn=Admin Access,ou=Admin"
+    write
+  by dn.regex="^uid=.*,ou=servers"
+    read
+  by dn="$anondn"
+    read
+  by anonymous
+    auth
+
+access to dn.regex="^.*,sendmailMTAMapName=.*,ou=Email"
+  by dn="$rootdn"
+    write
+  by group="cn=Admin Access,ou=Admin"
+    write
+  by dn="$anondn"
+    read
+  by dn="$anondn"
     read
   by anonymous
     auth
@@ -3413,7 +3492,6 @@ database        hdb
 suffix          "ou=Log"
 directory       /var/log/ldap
 rootdn          uid=admin,ou=Log
-rootpw          $ldapserv{'Password'}
 index           default eq
 index           entryCSN,objectClass,reqEnd,reqResult,reqStart eq
 index           reqDN               eq
@@ -3444,7 +3522,6 @@ suffix		""
 directory	/var/spool/ldap
 lastmod         on
 rootdn          $ldapserv{'Login'}
-rootpw          $ldapserv{'Password'}
 cachesize	10000
 cachefree	10
 idlcachesize	30000
@@ -3644,7 +3721,7 @@ fi;
 __EOB__
 
   if (($ldap ne "") && ( -d "/var/spool/ldap")) {
-    $ldap->bind($ldapserv{'Login'},password => $ldapserv{'Password'});
+    $ldap->bind("cn=anon," . $ldapserv{'Login'},password => $ldaplimpw);
     $mesg = $ldap->search(base=>"ou=email",filter =>"(&(description=*)(sendmailMTAAliasValue=pubbox))",attrs=>['sendmailMTAKey','description']);
     while($entry = $mesg->shift_entry) {
       @mbdat=split(/:/,$entry->get_value("description"));
@@ -12925,7 +13002,7 @@ define(\`STATUS_FILE',\`/var/db/sendmail.statistics')dnl
 define(\`confFORWARD_PATH',\`\$z/.forward.\$w+\$h:\$z/.forward+\$h:\$z/.forward.\$w:\$z/.forward')dnl
 define(\`confMAX_HEADERS_LENGTH', \`32768')dnl
 define(`confLDAP_CLUSTER', `AllServers')
-define(`confLDAP_DEFAULT_SPEC', `-h "$ldapserv{'Replicate'}" -d $mailldap{'Login'} -M simple -P /etc/mail/ldap')dnl
+define(`confLDAP_DEFAULT_SPEC', `-h "$ldapserv{'Replicate'}" -d cn=anon,$ldapserv{'Login'} -M simple -P /etc/ldap.limited')dnl
 LDAPROUTE_DOMAIN_FILE(`\@LDAP')dnl
 FEATURE(`ldap_routing')dnl
 VIRTUSER_DOMAIN_FILE(`\@ldap:-k (&(objectClass=sendmailMTAClass)(sendmailMTAClassName=LDAPRoute)) -v sendmailMTAClassValue')dnl
@@ -14264,12 +14341,12 @@ fi;
 openssl pkcs12 -export -chain -CApath /etc/ipsec.d/certs \\
                -inkey /etc/openssl/serverkey.pem \\
                -in /etc/openssl/server.signed.pem \\
-               -password file:/etc/mail/ldap -out /etc/openssl/server.p12
+               -password file:/etc/ldap.secret -out /etc/openssl/server.p12
 
 openssl pkcs12 -export -chain -CApath /etc/ipsec.d/certs \\
                -inkey /etc/openssl/private/cakey.pem \\
                -in /etc/ipsec.d/cacerts/cacert.pem \\
-               -password file:/etc/mail/ldap -out /etc/openssl/ca.p12
+               -password file:/etc/ldap.secret -out /etc/openssl/ca.p12
 
 #Get Key
 #openssl pkcs12 -in server.p12 -nodes -password pass:seeme -nocerts 2>/dev/null | \
@@ -14385,7 +14462,7 @@ if ( $ldapbackup eq "true") {
   print BUS "#Backup LDAP Database Binary Objects Excluding Photos\n";
   print BUS "echo $fcnt LDAP Database Binary Objects Excluding Photos\n";
   print BUS "/bin/touch /tmp/ldap.mod.gz\n/bin/chmod 600 /tmp/ldap.mod.gz\n";
-  print BUS "/usr/bin/ldapsearch -U admin -Y PLAIN -w \"\`cat /etc/mail/ldap\`\" -LLL -Z \`slapcat -b \"\"|grep \"::\" |grep -vE \"(jpegPhoto)|(.*=\$)\" |cut -d: -f1\ |sort |uniq` > /tmp/ldap.mod.gz\n";
+  print BUS "/usr/bin/ldapsearch -U admin -Y PLAIN -w \"\`cat /etc/ldap.secret\`\" -LLL -Z \`slapcat -b \"\"|grep \"::\" |grep -vE \"(jpegPhoto)|(.*=\$)\" |cut -d: -f1\ |sort |uniq` > /tmp/ldap.mod.gz\n";
   print BUS "/usr/bin/tar \$TAROPT \${TAPE} tmp/ldap.mod.gz 2>&1\n"; 
   print BUS "/bin/rm /tmp/ldap.mod.gz\n\n";
   $fcnt++;
@@ -16864,13 +16941,9 @@ sub printnfsexport() {
 }
 
 sub printetcshadow() {
-   local($pwcrypt)=@_;
    open(ESP,">shadow");
    chmod(0600,"shadow");
-   if ($pwcrpt eq "") {
-     $salt=join('',('.', '/', 0..9, 'A'..'Z', 'a'..'z')[rand 64, rand 64, rand 64, rand 64, rand 64, rand 64, rand 64,rand 64]);
-     $pwcrypt=unix_md5_crypt($ldapserv{'Password'},$salt);
-   }
+   $pwcrypt=unixcrypt($ldapserv{'Password'});
    print ESP "root:" . $pwcrypt . ":13305:0:99999:7:::\n";
    close(ESP);
 }
@@ -17099,9 +17172,11 @@ __EOF__
 		IDFieldName = uid;
 		UIDFieldName = uid;
 		baseDN = "ou=users,$vsuf";
-		bindDN = "$ldapserv{'Login'},$vsuf";
-		bindPassword = $ldapserv{'Password'};
+		bindDN = "cn=anon,$ldapserv{'Login'},$vsuf";
+		bindPassword = $ldaplimpw;
 		canAuthenticate = YES;
+		bindAsCurrentUser = YES;
+		bindFields = (uid);
 		displayName = "Corporate Directory";
 		hostname = 127.0.0.1:389;
 		id = public;
@@ -17785,6 +17860,61 @@ __EOF__
 #/sbin/iptables -t nat -A DYNAMICPRE -j DEFPROXY -d \${3}
 #/sbin/iptables -t nat -A DYNAMICPOST -j ACCEPT -s \${1}/\${2} -d \${1}/\${2}
 #/sbin/iptables -t nat -A DYNAMICPOST -j NATOUT -s \${1}/\${2}
+}
+
+sub unixcrypt {
+   local($clearpw)=@_;
+   $salt=join('',('.', '/', 0..9, 'A'..'Z', 'a'..'z')[rand 64, rand 64, rand 64, rand 64, rand 64, rand 64, rand 64,rand 64]);
+   return unix_md5_crypt($clearpw,$salt);
+}
+
+sub apgget {
+  open(APG,"apg -M SNCL -n 1 -m 10 -E '!$%^~|`\",'|");
+  while(<APG>) {
+    chop $_;
+    $apg=$_;
+  }
+  close(APG);
+  return $apg;
+}
+
+sub checkanonuser {
+  if ($sysconfig{'Type'} eq "full") {
+    $ldap = Net::LDAPS->new($repmaster,port=>"636",verify => 'none',timeout => "10");
+  } else {
+    $ldap = Net::LDAP->new($repmaster,timeout => "10");
+  }
+
+
+  $newpw="";
+  $lbndr=$ldap->bind($ldapserv{'Login'},password => $ldapserv{'Password'});
+  if ($lbndr->code eq "0") {
+    $user=$ldap->search(base=>$ldapserv{'Login'},filter=>"cn=anon",attrs=>["dn"]);
+    if ($user->count <= 0) {
+      $newpw=apgget();
+      $newcrypt="{CRYPT}" . unixcrypt($newpw);
+      $result = $ldap->add("cn=anon," . $ldapserv{'Login'},
+                           attr => [
+                                'cn'   => ['anon'],
+                                'objectclass' => ['device', 'simpleSecurityObject'],
+                                'userPassword'   => [$newcrypt],
+                            ]);
+      open(LLIM,">ldap.limited");
+      chmod(0600,"ldap.limited");
+      print LLIM $newpw;
+      close(LLIM);
+    }
+  }
+  $ldap->unbind();
+
+  if (($newpw eq "") && (-e "ldap.limited")) {
+    open(LLIM,"<ldap.limited");
+    while(<LLIM>) {
+      $newpw = $_;
+    }
+    close(LLIM);
+  }
+  return $newpw;
 }
 
 flock($lockfh, LOCK_UN);

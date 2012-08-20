@@ -1,0 +1,14 @@
+#!/bin/bash
+
+ROOTPW=`cat /etc/ldap.secret`
+
+if [ -e "/etc/samba/smb.conf" ];then
+  /usr/bin/smbpasswd -w ${ROOTPW} > /dev/null 2>&1
+  (/usr/bin/net idmap secret '*' ${ROOTPW} > /dev/null 2>&1) &
+  /usr/sbin/add_domain  SMARTDNS >/dev/null 2>&1
+  (cat<<EOF
+${ROOTPW}
+${ROOTPW}
+EOF
+) | smbpasswd -sa admin &
+fi;
