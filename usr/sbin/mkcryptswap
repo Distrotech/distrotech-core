@@ -1,0 +1,37 @@
+#!/bin/bash
+
+if [ "${1}" != "startup" ];then
+  swapoff -a
+  if [ $? != 0 ];then
+    swapon -a
+    exit;
+  fi;
+fi;
+
+if [ ! -e /etc/crypttab ];then
+  CCNT=1;
+  for swdev in `blkid -t TYPE=swap -o device`;do
+    printf "cryptswap${CCNT}\\t\t${swdev}\t\t/dev/urandom\n" >> /etc/crypttab
+    let CCNT++
+  done
+  if [ -e /etc/crypttab ];then
+    NEWFSTAB=1
+   else
+    NEWFSTAB=0
+  fi;
+ else
+  NEWFSTAB=0
+fi;
+
+if [ -e /etc/crypttab ];then
+  (awk '/cryptswap/ {printf "\
+        dd if=/dev/zero of=%s bs=512b count=1;\
+        cryptsetup -d %s create %s %s;\
+        mkswap -f /dev/mapper/%s\n",$2,$3,$1,$2,$1}' /etc/crypttab |sh) > /dev/null 2>&1
+fi;
+
+if [ ${NEWFSTAB} == 1 ];then
+  mkfstab  > /etc/fstab
+fi;
+
+swapon -a

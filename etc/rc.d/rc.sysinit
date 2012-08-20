@@ -308,9 +308,9 @@ if [ -e /etc/.install ];then
   #Format crypted swap space 
   if [ -e /etc/crypttab ];then
     (awk '/cryptswap/ {printf "\
-	cryptsetup -d %s create %s %s;\
 	dd if=/dev/zero of=%s bs=512b count=1;\
-	mkswap -f /dev/mapper/%s\n",$3,$1,$2,$2,$1}' /etc/crypttab |sh) > /dev/null 2>&1
+	cryptsetup -d %s create %s %s;\
+	mkswap -f /dev/mapper/%s\n",$2,$3,$1,$2,$1}' /etc/crypttab |sh) > /dev/null 2>&1
   fi;
 
   #run mkswap on partitions that do not have a UUID
