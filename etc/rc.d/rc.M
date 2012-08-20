@@ -40,7 +40,7 @@ if [ -e /etc/.install ];then
   fi;
 
   if [ -x /etc/rc.d/rc.ipv6 ];then
-    /etc/rc.d/rc.ipv6
+    /etc/rc.d/rc.ipv6 > /dev/null 2>&1
   fi;
 
   if [ -x /etc/rc.d/rc.network ];then
