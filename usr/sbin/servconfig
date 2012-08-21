@@ -160,7 +160,7 @@ if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstco
 
   #Start Ldap
   if [ ! -e /etc/.networksentry-lite ] && [ -e /etc/ldap.secret ] && [ ! -e /tmp/.firstconfig ];then
-    ldapsearch -U admin -Y PLAIN -w "`cat /etc/ldap.secret`" -b uid=admin,ou=users uid=admin uid > /tmp/ldaps.out &
+    ldapsearch -U admin -Y PLAIN -y /etc/ldap.secret -b uid=admin,ou=users uid=admin uid > /tmp/ldaps.out &
     LDS="";
     while [ ! -s /tmp/ldaps.out ] && [ "${LDS}" != "XXXXXXXXXXXXXXXXXXXX" ];do
       sleep 1

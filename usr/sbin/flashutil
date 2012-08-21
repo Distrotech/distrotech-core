@@ -1336,7 +1336,7 @@ __EOF__
     touch /var/spool/pgsql/exchange.db
 
     if [ /var/spool/update/remote.keys -nt /root/.ssh/authorized_keys ] || [ ! -e /root/.ssh/authorized_keys ] || [ ! -s /root/.ssh/authorized_keys ];then
-      (/usr/bin/ldapmodify -U admin -Y PLAIN -w "`cat /etc/ldap.secret`" -cf /var/spool/update/remote.keys
+      (/usr/bin/ldapmodify -U admin -Y PLAIN -y /etc/ldap.secret -cf /var/spool/update/remote.keys
       /usr/bin/gensshauth > /root/.ssh/authorized_keys.tmp
       if [ ! -d /root/.ssh ];then
         mkdir /root/.ssh
