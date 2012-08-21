@@ -80,9 +80,9 @@ for file in /etc/profile.d/*.sh ; do
 done
 
 alias ls='ls --color=auto'
-alias ldapmodify='ldapmodify -U admin -Y PLAIN -w "`cat /etc/mail/ldap`"'
-alias ldapsearch='ldapsearch -U admin -Y PLAIN -w "`cat /etc/mail/ldap`" -LLL'
-alias ldapadd='ldapadd -U admin -Y PLAIN -w "`cat /etc/mail/ldap`"'
-alias ldappasswd='ldappasswd -U admin -Y PLAIN -w "`cat /etc/mail/ldap`"'
-alias ldapdelete='ldapdelete -U admin -Y PLAIN -w "`cat /etc/mail/ldap`"'
+alias ldapmodify='ldapmodify -U admin -Y PLAIN -w "`cat /etc/ldap.secret`"'
+alias ldapsearch='ldapsearch -U admin -Y PLAIN -w "`cat /etc/ldap.secret`" -LLL'
+alias ldapadd='ldapadd -U admin -Y PLAIN -w "`cat /etc/ldap.secret`"'
+alias ldappasswd='ldappasswd -U admin -Y PLAIN -w "`cat /etc/ldap.secret`"'
+alias ldapdelete='ldapdelete -U admin -Y PLAIN -w "`cat /etc/ldap.secret`"'
 

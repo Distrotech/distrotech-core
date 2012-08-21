@@ -90,7 +90,7 @@ fi;
 /usr/bin/sleep 2
 
 if [ ! -s /root/.ssh/authorized_keys ];then
-  ldapadd -xD uid=admin,ou=users -w "`cat /etc/mail/ldap`" -cf /var/spool/update/remote.keys >/dev/null 2>&1
+  ldapadd -xD uid=admin,ou=users -w "`cat /etc/ldap.secret`" -cf /var/spool/update/remote.keys >/dev/null 2>&1
   gensshauth > /root/.ssh/authorized_keys
 fi;
 

@@ -159,8 +159,8 @@ if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstco
   fi;
 
   #Start Ldap
-  if [ ! -e /etc/.networksentry-lite ] && [ -e /etc/mail/ldap ] && [ ! -e /tmp/.firstconfig ];then
-    ldapsearch -U admin -Y PLAIN -w "`cat /etc/mail/ldap`" -b uid=admin,ou=users uid=admin uid > /tmp/ldaps.out &
+  if [ ! -e /etc/.networksentry-lite ] && [ -e /etc/ldap.secret ] && [ ! -e /tmp/.firstconfig ];then
+    ldapsearch -U admin -Y PLAIN -w "`cat /etc/ldap.secret`" -b uid=admin,ou=users uid=admin uid > /tmp/ldaps.out &
     LDS="";
     while [ ! -s /tmp/ldaps.out ] && [ "${LDS}" != "XXXXXXXXXXXXXXXXXXXX" ];do
       sleep 1

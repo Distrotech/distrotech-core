@@ -13,4 +13,4 @@ if [ ! -d /root/.ssh ];then
   chmod 700 /root/.ssh
 fi;
 
-ssh-keygen -f /root/.ssh/server.key -t rsa -b 2048 -N "`cat /etc/mail/ldap`"  -C "Server Access Key"
+ssh-keygen -f /root/.ssh/server.key -t rsa -b 2048 -N "`cat /etc/ldap.secret`"  -C "Server Access Key"
