@@ -2664,6 +2664,8 @@ access to dn.regex="^cn=(.*),ou=Admin"
    read
   by dn.regex="^uid=.*,ou=servers"
     read
+  by dn="$anondn"
+    read
   by anonymous
     auth
 

@@ -1857,9 +1857,6 @@ if [ -e slapd.conf ] && [ -e /etc/openldap/slapd.conf ];then
 fi;
 
 if [ "$SLDIFF" ] && [ ! -e /etc/.cdrom ] && [ ! -e /tmp/.firstconfig ];then
-  cp -p slapd.conf /etc/openldap/slapd.conf
-  chmod 400 /etc/openldap/slapd.conf
-  chown root.root /etc/openldap/slapd.conf
   if [ "`pidof slapd`" ];then
     killall -9 slapd > /dev/null 2>&1
   fi;
