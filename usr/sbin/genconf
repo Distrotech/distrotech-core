@@ -1285,7 +1285,7 @@ if ($repmaster eq "") {
 
 close(CF);
 
-$ldaplimpw=checkanonuser();
+$pldaplimpw=checkanonuser();
 
 if ( -e "/etc/ipv6.conf" ) {
   open(I6, "/etc/ipv6.conf");
@@ -1692,6 +1692,31 @@ sub printsqlpass(){
   print SP<<__EOF__;
 #!/bin/bash
 
+ADMINPW='$ldapserv{'Password'}';
+
+if [ -e /var/spool/apache/htdocs/ns/config/ldap.limited ];then
+  LDAPLIMPW=`cat /var/spool/apache/htdocs/ns/config/ldap.limited`
+fi;
+
+if [ ! "\${LDAPLIMPW}" ];then
+  ldapdelete -U admin -Y PLAIN -w "\${ADMINPW}" cn=anon,$ldapserv{'Login'},$vsuf
+  LDAPLIMPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
+  CRYPT=`slappasswd -c '\$1\$%.8s' -s \${LDAPLIMPW}`
+
+  touch /var/spool/apache/htdocs/ns/config/ldap.limited
+  chmod 600 /var/spool/apache/htdocs/ns/config/ldap.limited
+  chown www.www /var/spool/apache/htdocs/ns/config/ldap.limited
+  echo -n \${LDAPLIMPW} > /var/spool/apache/htdocs/ns/config/ldap.limited
+  (cat <<EOF
+dn: cn=anon,$ldapserv{'Login'}
+cn: anon
+objectClass: device
+objectClass: simpleSecurityObject
+userPassword: \${CRYPT}
+EOF
+) |ldapadd -U admin -Y PLAIN -w "\${ADMINPW}"
+fi;
+
 __EOF__
 
 if (($sysconfig{'Type'} ne "full") && (! -e "/tmp/.firstconfig")) {
@@ -1757,9 +1782,9 @@ EOF
   \\\$ds=ldap_connect("ldap://$repmaster");    
   ldap_set_option(\\\$ds, LDAP_OPT_PROTOCOL_VERSION,3);
   \\\$LDAP_ROOT_DN="$ldapserv{'Login'}";
-  \\\$LDAP_ROOT_PW="$ldapserv{'Password'}";
+  \\\$LDAP_ROOT_PW="\${ADMINPW}";
   \\\$LDAP_LIMIT_DN="cn=anon,$ldapserv{'Login'}";
-  \\\$LDAP_LIMIT_PW="$ldaplimpw";
+  \\\$LDAP_LIMIT_PW="\${LDAPLIMPW}";
   \\\$LOCAL_DOMAIN="$dnsconf{'Domain'}";
   \\\$LDAP_BDN="$vsuf";
 \%>
@@ -1770,7 +1795,7 @@ chown 80.80 /var/spool/apache/htdocs/ldap/ldapcon.inc
 
 sed -e "s/^binddn.*****\$/binddn cn=anon,$ldapserv{'Login'}/" \\
     -e "s/^rootbinddn.*****\$/rootbinddn $ldapserv{'Login'}/" \\
-    -e "s/^bindpw.*****\$/bindpw $ldaplimpw/" \\
+    -e "s/^bindpw.*****\$/bindpw \${LDAPLIMPW}/" \\
     -e "s/^base.*****\$/base $vsuf/" \\
     -e "s/^port.*/port 389/" \\
     -e "s/^uri.*****\$/uri ldap\\:\\/\\/$ldapserv{'Server'}/" \\
@@ -1781,11 +1806,11 @@ chown 0.139 /etc/ldap.conf
 
 touch /etc/ldap.secret
 chmod 400 /etc/ldap.secret
-echo "$ldapserv{'Password'}" > /etc/ldap.secret
+echo "\${ADMINPW}" > /etc/ldap.secret
 
 touch /etc/ldap.limited
 chmod 400 /etc/ldap.limited
-echo '$ldaplimpw' > /etc/ldap.limited
+echo "${LDAPLIMPW}" > /etc/ldap.limited
 
 if [ -e /etc/mail/ldap ];then
   rm /etc/mail/ldap
@@ -1902,9 +1927,9 @@ EOF
   \\\$ds=ldap_connect("ldaps://$repmaster");    
   ldap_set_option(\\\$ds, LDAP_OPT_PROTOCOL_VERSION,3);
   \\\$LDAP_ROOT_DN="$ldapserv{'Login'}";
-  \\\$LDAP_ROOT_PW="$ldapserv{'Password'}";
+  \\\$LDAP_ROOT_PW="\${ADMINPW}";
   \\\$LDAP_LIMIT_DN="cn=anon,$ldapserv{'Login'}";
-  \\\$LDAP_LIMIT_PW="$ldaplimpw";
+  \\\$LDAP_LIMIT_PW="\${LDAPLIMPW}";
   \\\$LOCAL_DOMAIN="$dnsconf{'Domain'}";
   \\\$LDAP_BDN="$vsuf";
 \%>
@@ -1932,7 +1957,7 @@ sed -e "s/^\\\$whereami.*/\\\$whereami = \\\"$dnsconf{'Domain'}\\\";/" /var/spoo
 
 sed -e "s/^binddn.*****\$/binddn cn=anon,$ldapserv{'Login'}/" \\
     -e "s/^rootbinddn.*****\$/rootbinddn $ldapserv{'Login'}/" \\
-    -e "s/^bindpw.*****\$/bindpw $ldaplimpw/" \\
+    -e "s/^bindpw.*****\$/bindpw \${LDAPLIMPW}/" \\
     -e "s/^base.*****\$/base $vsuf/" \\
     -e "s/^port.*/port 636/" \\
     -e "s/^master_host.*\$/master_host $repmaster/" \\
@@ -1943,11 +1968,11 @@ chown root.smbadm /etc/ldap.conf
 
 touch /etc/ldap.secret
 chmod 400 /etc/ldap.secret
-echo "$ldapserv{'Password'}" > /etc/ldap.secret
+echo "\${ADMINPW}" > /etc/ldap.secret
 
 touch /etc/ldap.limited
 chmod 400 /etc/ldap.limited
-echo '$ldaplimpw' > /etc/ldap.limited
+echo "\${LDAPLIMPW}" > /etc/ldap.limited
 
 if [ -e /etc/mail/ldap ];then
   rm /etc/mail/ldap
@@ -2238,7 +2263,7 @@ fi;
 
 sed -e "s/.*[^_]server.*=.******/                server  = $ldapserv{'Server'}/" \\
   -e "s/.*identity.*=.******/                identity = $ldapserv{'Login'}/" \\
-  -e "s/.*password.*=.*/                password = $ldapserv{'Password'}/" \\
+  -e "s/.*password.*=.*/                password = \${ADMINPW}/" \\
   -e "s/.*basedn.*=.*/                basedn = $vsuf/" \\
  /etc/raddb/radiusd.conf.orig > /etc/raddb/radiusd.conf
 chmod 640 /etc/raddb/radiusd.conf
@@ -2284,7 +2309,7 @@ if [ ! -d /opt/apache2 ];then
       -e "s/^Listen 80.*/Listen @idata[1]:80/" \\
       -e "s/AuthLDAPUrl ldap:\\/\\/127.0.0.1/AuthLDAPUrl ldap:\\/\\/$ldapserv{'Server'}/" \\
       -e "s/AuthLDAPBindDN.*/AuthLDAPBindDN cn=anon,$ldapserv{'Login'}/" \\
-      -e "s/AuthLDAPBindPassword admin/AuthLDAPBindPassword $ldaplimpw/" \\
+      -e "s/AuthLDAPBindPassword admin/AuthLDAPBindPassword \${LDAPLIMPW}/" \\
       -e "s/AuthLDAPStartTLS on/AuthLDAPStartTLS $isldaptls/" \\
       -e "s/\(^\|^#\)ServerName.*/ServerName $fqdn/" \\
       -e "s/LOCAL_SERVER_NAME/$fqdn/" /etc/apache/httpd.conf.orig | grep -vE "(^#)" >  /tmp/httpd.conf
@@ -2297,7 +2322,7 @@ if [ ! -d /opt/apache2 ];then
       -e "s/^Listen 80.*/Listen @idata[1]:80/" \\
       -e "s/AuthLDAPUrl ldap:\\/\\/127.0.0.1/AuthLDAPUrl ldap:\\/\\/$ldapserv{'Server'}/" \\
       -e "s/AuthLDAPBindDN.*/AuthLDAPBindDN cn=anon,$ldapserv{'Login'}/" \\
-      -e "s/AuthLDAPBindPassword admin/AuthLDAPBindPassword $ldaplimpw/" \\
+      -e "s/AuthLDAPBindPassword admin/AuthLDAPBindPassword \${LDAPLIMPW}/" \\
       -e "s/AuthLDAPStartTLS on/AuthLDAPStartTLS $isldaptls/" \\
       -e "s/LOCAL_SERVER_NAME/$fqdn/" /opt/apache2/conf/httpd.conf.orig >  /tmp/httpd.conf.1
   if [ ! -e /opt/apache2/conf/httpd.conf ];then
@@ -2653,10 +2678,10 @@ access to dn.regex="^uid=(.*),(uid|sambasid)=(.*),ou=(users|idmap)" attrs=object
     read
   by dn.regex="^uid=\$1,\$2=\$3,ou=\$4"
     read
-  by *
-    search
   by dn="$anondn"
     read
+  by *
+    search
   by anonymous
     auth
 
@@ -2888,7 +2913,7 @@ access to dn.regex="^uid=(.*),o=(.*),ou=Users" attrs=sambapwdcanchange,sambapwdl
   by anonymous
     auth
 
-access to dn.regex="^uid=(.*),o=(.*),ou=Users" attrs=certificateRequest,certificatesign,userCertificate,userPassword,shadowLastChange
+access to dn.regex="^uid=(.*),o=(.*),ou=Users" attrs=userCertificate,userSMIMECertificate
   by dn="$rootdn"
     write
   by group="cn=Admin Access,ou=Admin"
@@ -2899,10 +2924,12 @@ access to dn.regex="^uid=(.*),o=(.*),ou=Users" attrs=certificateRequest,certific
     write
   by dn.regex="^uid=\$1,o=\$2,ou=users"
     write
+  by dn="$anondn"
+    read
   by anonymous
     auth
 
-access to dn.regex="^uid=(.*),o=(.*),ou=Users" attrs=userSMIMECertificate,userPKCS12
+access to dn.regex="^uid=(.*),o=(.*),ou=Users" attrs=certificateRequest,certificatesign,userPassword,shadowLastChange,userPKCS12
   by dn="$rootdn"
     write
   by group="cn=Admin Access,ou=Admin"
@@ -2910,7 +2937,7 @@ access to dn.regex="^uid=(.*),o=(.*),ou=Users" attrs=userSMIMECertificate,userPK
   by group/virtZoneSettings.regex="cn=\$2,ou=VAdmin"
     write
   by dn.regex="^uid=.*,ou=servers"
-    read
+    write
   by dn.regex="^uid=\$1,o=\$2,ou=users"
     write
   by anonymous
@@ -3065,7 +3092,7 @@ access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=sambapwdcanchange,sambapwdlas
   by anonymous
     auth
 
-access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=certificateRequest,certificatesign,userCertificate,userPassword,shadowLastChange
+access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=certificateRequest,certificatesign,userPassword,shadowLastChange,userPKCS12
   by dn="$rootdn"
     write
   by group="cn=Admin Access,ou=Admin"
@@ -3077,15 +3104,17 @@ access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=certificateRequest,certificat
   by anonymous
     auth
 
-access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=userSMIMECertificate,userPKCS12
+access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=userSMIMECertificate,userCertificate
   by dn="$rootdn"
     write
   by group="cn=Admin Access,ou=Admin"
     write
   by dn.regex="^uid=.*,ou=servers"
-    read
+    write
   by dn.regex="^sambaSID=\$1,ou=Idmap"
     write
+  by dn="$anondn"
+    read
   by anonymous
     auth
 
@@ -3236,7 +3265,7 @@ access to dn.regex="^uid=(.*),ou=Users" attrs=sambapwdcanchange,sambapwdlastset,
   by anonymous
     auth
 
-access to dn.regex="^uid=(.*),ou=Users" attrs=certificateRequest,certificatesign,userCertificate,userPassword,shadowLastChange
+access to dn.regex="^uid=(.*),ou=Users" attrs=certificateRequest,certificatesign,userPassword,shadowLastChange,userPKCS12
   by dn="$rootdn"
     write
   by group="cn=Admin Access,ou=Admin"
@@ -3248,15 +3277,17 @@ access to dn.regex="^uid=(.*),ou=Users" attrs=certificateRequest,certificatesign
   by anonymous
     auth
 
-access to dn.regex="^uid=(.*),ou=Users" attrs=userSMIMECertificate,userPKCS12
+access to dn.regex="^uid=(.*),ou=Users" attrs=userSMIMECertificate,userCertificate
   by dn="$rootdn"
     write
   by group="cn=Admin Access,ou=Admin"
     write
   by dn.regex="^uid=.*,ou=servers"
-    read
+    write
   by dn.regex="^uid=\$1,ou=Users"
     write
+  by dn="$anondn"
+    read
   by anonymous
     auth
 
@@ -16948,7 +16979,6 @@ sub printetcshadow() {
    close(ESP);
 }
 
-
 sub printchilli() {
   if ($dnsconf{'Hostname'}) {
     $fqdn="$dnsconf{'Hostname'}.$dnsconf{'Domain'}";
@@ -17879,35 +17909,7 @@ sub apgget {
 }
 
 sub checkanonuser {
-  if ($sysconfig{'Type'} eq "full") {
-    $ldap = Net::LDAPS->new($repmaster,port=>"636",verify => 'none',timeout => "10");
-  } else {
-    $ldap = Net::LDAP->new($repmaster,timeout => "10");
-  }
-
-
-  $newpw="";
-  $lbndr=$ldap->bind($ldapserv{'Login'},password => $ldapserv{'Password'});
-  if ($lbndr->code eq "0") {
-    $user=$ldap->search(base=>$ldapserv{'Login'},filter=>"cn=anon",attrs=>["dn"]);
-    if ($user->count <= 0) {
-      $newpw=apgget();
-      $newcrypt="{CRYPT}" . unixcrypt($newpw);
-      $result = $ldap->add("cn=anon," . $ldapserv{'Login'},
-                           attr => [
-                                'cn'   => ['anon'],
-                                'objectclass' => ['device', 'simpleSecurityObject'],
-                                'userPassword'   => [$newcrypt],
-                            ]);
-      open(LLIM,">ldap.limited");
-      chmod(0600,"ldap.limited");
-      print LLIM $newpw;
-      close(LLIM);
-    }
-  }
-  $ldap->unbind();
-
-  if (($newpw eq "") && (-e "ldap.limited")) {
+  if (-e "ldap.limited") {
     open(LLIM,"<ldap.limited");
     while(<LLIM>) {
       $newpw = $_;
