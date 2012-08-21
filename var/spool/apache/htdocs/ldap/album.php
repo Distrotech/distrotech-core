@@ -74,8 +74,7 @@ if ($_SESSION['imlim'] == "") {
 if ($_SESSION['rcnt'] == "") {
   $_SESSION['rcnt']=3;
 }
-include "ldapcon.inc";
-$r=ldap_bind($ds,$LDAP_ROOT_DN,$LDAP_ROOT_PW);
+include_once "ldapbind.inc";
 $sr=ldap_search($ds,"","(&(objectClass=officeperson)(uid=" . $_SESSION['euser']  . "))", array("jpegPhoto","cn"));
 $ei=ldap_first_entry($ds, $sr);
 $cinf = ldap_get_values_len($ds, $ei,"jpegPhoto");

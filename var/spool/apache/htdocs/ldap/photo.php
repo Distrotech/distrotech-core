@@ -20,8 +20,7 @@
 if ($pcount == "") {
   $pcount=0;
 }
-include "ldapcon.inc";
-$r=ldap_bind($ds,$LDAP_ROOT_DN,$LDAP_ROOT_PW);
+include "ldapbind.inc";
 
 if ($type == "pdc" ) {
   $sr=ldap_search($ds,"ou=Idmap", "(&(objectClass=officePerson)(uid=$euser))", array("jpegPhoto"));

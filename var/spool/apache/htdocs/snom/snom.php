@@ -1,13 +1,12 @@
 <%
 include "../cdr/auth.inc";
 include "../cdr/autoadd.inc";
-include "../ldap/ldapcon.inc";
+include "../ldap/ldapbind.inc";
 
 header('Content-type: text/xml');
 
 $mac=strtoupper($mac);
 
-$auth_uss=ldap_bind($ds,$LDAP_ROOT_DN,$LDAP_ROOT_PW);
 $auth_ussr=ldap_search($ds,"ou=snom","(&(objectClass=person)(cn=snom))");
 
 $uadata=explode(";",$_SERVER['HTTP_USER_AGENT']);
