@@ -1249,8 +1249,10 @@ if ($ldapserv{'Login'} eq "") {
 
 if ($dnsconf{'Hostname'} ne "") {
   $ldapserv{'limited'}="uid=ldap_limted_" . $dnsconf{'Hostname'} . "," . $ldapserv{'Login'};
+  $ldapserv{'config'}="uid=ldap_config_" . $dnsconf{'Hostname'} . "," . $ldapserv{'Login'};
 } else {
   $ldapserv{'limited'}="uid=ldap_limited," . $ldapserv{'Login'};
+  $ldapserv{'config'}="uid=ldap_config," . $ldapserv{'Login'};
 }
 
 if ($ldapserv{'Password'} eq "") {
@@ -1677,11 +1679,15 @@ sub printsqlpass(){
   if ($dnsconf{'Hostname'}) {
     $fqdn="$dnsconf{'Hostname'}.$dnsconf{'Domain'}";
     $anonuid="ldap_limited_" . $dnsconf{'Hostname'};
+    $confuid="ldap_config_" . $dnsconf{'Hostname'};
     $limfile="ldap_" . $dnsconf{'Hostname'} . ".limited";
+    $conffile="ldap_" . $dnsconf{'Hostname'} . ".config";
   } else {
     $fqdn=$dnsconf{'Domain'};
     $anonuid="ldap_limited";
+    $confuid="ldap_config";
     $limfile="ldap.limited";
+    $conffile="ldap.config";
   }
 
   if ($voipopsecret eq "") {
@@ -1704,10 +1710,6 @@ sub printsqlpass(){
 
 ADMINPW='$ldapserv{'Password'}';
 
-if [ -e /var/spool/apache/htdocs/ns/config/$limfile ];then
-  LDAPLIMPW=`cat /var/spool/apache/htdocs/ns/config/$limfile`
-fi;
-
 SNOMPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
 
 (cat <<EOF
@@ -1719,6 +1721,10 @@ EOF
 ) |/usr/bin/ldapmodify -U admin -Y PLAIN -w "\${ADMINPW}" -h $repmaster
 
 /usr/sbin/rebootphone
+
+if [ -e /var/spool/apache/htdocs/ns/config/$limfile ];then
+  LDAPLIMPW=`cat /var/spool/apache/htdocs/ns/config/$limfile`
+fi;
 
 if [ ! "\${LDAPLIMPW}" ];then
   ldapdelete -U admin -Y PLAIN -w "\${ADMINPW}" -h $repmaster $ldapserv{'limited'},$vsuf
@@ -1735,7 +1741,32 @@ uid: $anonuid
 objectClass: device
 objectClass: uidObject
 objectClass: simpleSecurityObject
-cn: Priv seperation account
+cn: Priv seperation account (Limited)
+userPassword: \${CRYPT}
+EOF
+) |/usr/bin/ldapadd -U admin -Y PLAIN -w "\${ADMINPW}" -h $repmaster
+fi;
+
+if [ -e /var/spool/apache/htdocs/ns/config/$conffile ];then
+  LDAPCONFPW=`cat /var/spool/apache/htdocs/ns/config/$conffile`
+fi;
+
+if [ ! "\${LDAPCONFPW}" ];then
+  ldapdelete -U admin -Y PLAIN -w "\${ADMINPW}" -h $repmaster $ldapserv{'config'},$vsuf
+  LDAPCONFPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
+  CRYPT=`slappasswd -c '\$1\$%.8s' -s \${LDAPCONFPW}`
+
+  touch /var/spool/apache/htdocs/ns/config/$conffile
+  chmod 600 /var/spool/apache/htdocs/ns/config/$conffile
+  chown www.www /var/spool/apache/htdocs/ns/config/$conffile
+  echo -n \${LDAPCONFPW} > /var/spool/apache/htdocs/ns/config/$conffile
+  (cat <<EOF
+dn: $ldapserv{'config'}
+uid: $confuid
+objectClass: device
+objectClass: uidObject
+objectClass: simpleSecurityObject
+cn: Priv seperation account (Config)
 userPassword: \${CRYPT}
 EOF
 ) |/usr/bin/ldapadd -U admin -Y PLAIN -w "\${ADMINPW}" -h $repmaster
@@ -2460,6 +2491,10 @@ moduleload accesslog.la
 __EOB__
   }
 
+$rootdn=$ldapserv{'Login'} . "," . $vsuf;
+$anondn=$ldapserv{'limited'};
+$confdn=$ldapserv{'config'};
+
 print SC<<__EOB__;
 moduleload unique.la
 moduleload refint.la
@@ -2471,6 +2506,10 @@ idletimeout 30
 timelimit 180
 sizelimit 1000
 conn_max_pending 256
+
+limits dn.exact="$rootdn" time=unlimited size=unlimited
+limits dn.regex="^uid=.*,ou=servers" time=unlimited size=unlimited
+limits group/groupOfNames/member="cn=Admin Access,ou=Admin" time=unlimited size=unlimited
 
 sasl-secprops none
 authz-regexp uid=(.*),cn=.*,cn=.* ldap:///$vsuf??subtree?uid=\$1
@@ -2523,7 +2562,7 @@ if ($sysconfig{'Type'} eq "full") {
 }
 
 if ($ldapread eq "true") {
-  $ureadaccess="by dn.regex=\"^uid=.*,ou=Users\"\n    read\n  by dn.regex=\"^sambaSID=.*,ou=Idmap\"";
+  $ureadaccess="by dn=\"$confdn\"\n    none\n  by dn.regex=\"^uid=.*,ou=Users\"\n    read\n  by dn.regex=\"^sambaSID=.*,ou=Idmap\"";
 } else {
   $ureadaccess="by group=\"cn=User Read Access,ou=Admin\"";
 }
@@ -2533,9 +2572,6 @@ if ($ldapread eq "true") {
 #} else {
 #  $rootdn="cn=admin";
 #}
-
-$rootdn=$ldapserv{'Login'} . "," . $vsuf;
-$anondn=$ldapserv{'limited'};
 
 print SC<<__EOB__;
 
@@ -2601,16 +2637,6 @@ access to dn.regex="^uid=(.*),ou=Snom"
     read
   by anonymous
     auth
-
-access to dn="cn=Addressbooks"
-  by dn="$rootdn"
-    write
-  by group="cn=Admin Access,ou=Admin"
-    write
-  by dn.regex="^uid=.*,ou=servers"
-    write
-  by *
-    read
 
 access to dn.regex="^cn=(.*),ou=Admin"
   by dn="$rootdn"
@@ -2835,6 +2861,8 @@ access to dn.regex="^uid=(.*),o=(.*),ou=Users" attrs=sn,givenName,mail,preferred
     write
   by dn.regex="^uid=\$1,o=\$2,ou=users"
     write
+  by dn="$anondn"
+    none
   $ureadaccess
     read
   by anonymous
@@ -2851,6 +2879,8 @@ access to dn.regex="^uid=(.*),o=(.*),ou=Users" attrs=telephoneNumber,facsimileTe
     write
   by dn="cn=Snom,ou=Snom"
     read
+  by dn="$anondn"
+    none
   $ureadaccess
     read
   by anonymous
@@ -3026,6 +3056,8 @@ access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=sn,givenName,mail,preferredLa
     write
   by dn.regex="^sambaSID=\$1,ou=Idmap"
     write
+  by dn="$anondn"
+    none
   $ureadaccess
     read
   by anonymous
@@ -3040,6 +3072,8 @@ access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=telephoneNumber,facsimileTele
     read
   by dn.regex="^sambaSID=\$1,ou=Idmap"
     write
+  by dn="$anondn"
+    none
   $ureadaccess
     read
   by anonymous
@@ -3199,6 +3233,8 @@ access to dn.regex="^uid=(.*),ou=Users" attrs=sn,givenName,mail,initials,preferr
     write
   by dn.regex="^uid=\$1,ou=Users"
     write
+  by dn="$anondn"
+    none
   $ureadaccess
     read
   by anonymous
@@ -3213,6 +3249,8 @@ access to dn.regex="^uid=(.*),ou=Users" attrs=telephoneNumber,facsimileTelephone
     read
   by dn.regex="^uid=\$1,ou=Users"
     write
+  by dn="$anondn"
+    none
   $ureadaccess
     read
   by anonymous
@@ -3416,6 +3454,8 @@ access to dn.regex="^sendmailMTAClassName=(LDAPRoute|R),ou=Email"
     write
   by dn="$anondn"
     read
+  by dn="$confdn"
+    write
   by *
     read
   by anonymous
@@ -3452,8 +3492,6 @@ access to dn.regex="^.*,sendmailMTAMapName=.*,ou=Email"
     write
   by group="cn=Admin Access,ou=Admin"
     write
-  by dn="$anondn"
-    read
   by dn="$anondn"
     read
   by anonymous
@@ -3507,7 +3545,19 @@ __EOB__
   }
 
 print SC<<__EOB__;
-access to dn.regex="^(cn|ou)=[a-zA-Z0-9]+" attrs=entry
+access to dn.regex=".*,ou=hosts"
+  by dn="$rootdn"
+    write
+  by group="cn=Admin Access,ou=Admin"
+    write
+  by anonymous
+    auth
+  by dn="$confdn"
+    none
+  by *
+    read
+
+access to dn.regex="^ou=[a-zA-Z0-9]+" attrs=entry
   by dn="$rootdn"
     write
   by group="cn=Admin Access,ou=Admin"
@@ -3516,6 +3566,28 @@ access to dn.regex="^(cn|ou)=[a-zA-Z0-9]+" attrs=entry
     search
   by anonymous
     auth
+
+access to dn.regex="^cn=(Domain|Admin)" attrs=entry
+  by dn="$rootdn"
+    write
+  by group="cn=Admin Access,ou=Admin"
+    write
+  by *
+    search
+  by anonymous
+    auth
+
+access to dn="cn=Addressbooks"
+  by dn="$rootdn"
+    write
+  by group="cn=Admin Access,ou=Admin"
+    write
+  by dn.regex="^uid=.*,ou=servers"
+    write
+  by dn="$confdn"
+    write
+  by *
+    read
 
 access to *
   by dn="$rootdn"
@@ -13586,6 +13658,22 @@ __EOF__
 
 
 sub setldapdom() {
+  if ($dnsconf{'Hostname'}) {
+    $conffile="ldap_" . $dnsconf{'Hostname'} . ".config";
+  } else {
+    $conffile="ldap.config";
+  }
+
+  if (-e $conffile) {
+    open(LLIM,"<$conffile");
+    while(<LLIM>) {
+      $newpw = $_;
+    }
+    close(LLIM);
+  } else {
+    return;
+  }
+
   if ($sysconfig{'Type'} eq "full") {
     $ldap = Net::LDAPS->new($repmaster,port=>"636",verify => 'none',timeout => "10");
   } else {
@@ -13593,7 +13681,7 @@ sub setldapdom() {
   }
 
   if ($ldap ne "") {
-    $ldap->bind($ldapserv{'Login'},password => $ldapserv{'Password'});
+    $ldap->bind($ldapserv{'config'},password => $newpw);
 
     %lrhash = ( sendmailMTAClassValue => $dnsconf{'Domain'});
 
@@ -13623,6 +13711,7 @@ sub setldapdom() {
       }
       if ($gotdom eq "false") {
         $ldap->modify("sendmailMTAClassName=LDAPRoute,ou=Email",add => { %lrhash });
+        $ldap->modify("sendmailMTAClassName=R,ou=Email",add => { %lrhash });
       }
     } else {
       $mesg = $ldap->search(base=>"ou=Email",filter =>"(&(objectClass=sendmailMTAClass)(sendmailMTAClassName=LDAPRoute))",
