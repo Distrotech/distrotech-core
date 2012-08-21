@@ -485,6 +485,10 @@ if [ -e /var/run/netsentry-update ];then
   chmod -R u+rw,g-rwx,o-rwx /var/spool/apache/htdocs/ns/config
   chown -R www.www /var/spool/apache/htdocs/ns/config
  else
+  if [ -e ldap.newsecret ];then
+    /usr/sbin/sqlpasswd
+  fi;
+
   rm /var/run/netsentry-config
   if [ "$RUNGENCONF" == 1 ];then
     /usr/sbin/genconf
@@ -3002,6 +3006,10 @@ if [ "$ODIFF" ] || [ "$SDIFF" ] || [ "$ADIFF" ] || [ "$RCPDIFF" ] || [ "$FWDIFF2
 fi;
 
 rm /var/run/netsentry-config
+
+if [ -e ldap.newsecret ];then
+  /usr/sbin/sqlpasswd
+fi;
 
 if [ -e /tmp/.firstconfig ];then
   rm /tmp/.firstconfig

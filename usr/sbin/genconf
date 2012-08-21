@@ -1747,7 +1747,7 @@ if [ ! "\${LDAPLIMPW}" ];then
 
   touch /etc/ldap.limited
   chmod 400 /etc/ldap.limited
-  echo "\${LDAPLIMPW}" > /etc/ldap.limited
+  echo -n "\${LDAPLIMPW}" > /etc/ldap.limited
 
   (cat <<EOF
 dn: $ldapserv{'limited'},$vsuf
