@@ -1247,6 +1247,12 @@ if ($ldapserv{'Login'} eq "") {
   $ldapserv{'Login'}="uid=admin,ou=Users";
 }
 
+if ($dnsconf{'Hostname'} ne "") {
+  $ldapserv{'limited'}="uid=ldap_limted_" . $dnsconf{'Hostname'} . "," . $ldapserv{'Login'};
+} else {
+  $ldapserv{'limited'}="uid=ldap_limited," . $ldapserv{'Login'};
+}
+
 if ($ldapserv{'Password'} eq "") {
   $ldapserv{'Password'}=$ldappass;
 }
@@ -1670,8 +1676,12 @@ sub printsqlpass(){
 
   if ($dnsconf{'Hostname'}) {
     $fqdn="$dnsconf{'Hostname'}.$dnsconf{'Domain'}";
+    $anonuid="ldap_limited_" . $dnsconf{'Hostname'};
+    $limfile="ldap_" . $dnsconf{'Hostname'} . ".limited";
   } else {
-    $fqdn=$dnsconf{'Domain'}
+    $fqdn=$dnsconf{'Domain'};
+    $anonuid="ldap_limited";
+    $limfile="ldap.limited";
   }
 
   if ($voipopsecret eq "") {
@@ -1694,27 +1704,41 @@ sub printsqlpass(){
 
 ADMINPW='$ldapserv{'Password'}';
 
-if [ -e /var/spool/apache/htdocs/ns/config/ldap.limited ];then
-  LDAPLIMPW=`cat /var/spool/apache/htdocs/ns/config/ldap.limited`
+if [ -e /var/spool/apache/htdocs/ns/config/$limfile ];then
+  LDAPLIMPW=`cat /var/spool/apache/htdocs/ns/config/$limfile`
 fi;
 
+SNOMPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
+
+(cat <<EOF
+dn: cn=Snom,ou=snom
+changetype: modify
+replace: userPassword
+userPassword: \${SNOMPW}
+EOF
+) |/usr/bin/ldapmodify -U admin -Y PLAIN -w "\${ADMINPW}" -h $repmaster
+
+/usr/sbin/rebootphone
+
 if [ ! "\${LDAPLIMPW}" ];then
-  ldapdelete -U admin -Y PLAIN -w "\${ADMINPW}" cn=anon,$ldapserv{'Login'},$vsuf
+  ldapdelete -U admin -Y PLAIN -w "\${ADMINPW}" -h $repmaster $ldapserv{'limited'},$vsuf
   LDAPLIMPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
   CRYPT=`slappasswd -c '\$1\$%.8s' -s \${LDAPLIMPW}`
 
-  touch /var/spool/apache/htdocs/ns/config/ldap.limited
-  chmod 600 /var/spool/apache/htdocs/ns/config/ldap.limited
-  chown www.www /var/spool/apache/htdocs/ns/config/ldap.limited
-  echo -n \${LDAPLIMPW} > /var/spool/apache/htdocs/ns/config/ldap.limited
+  touch /var/spool/apache/htdocs/ns/config/$limfile
+  chmod 600 /var/spool/apache/htdocs/ns/config/$limfile
+  chown www.www /var/spool/apache/htdocs/ns/config/$limfile
+  echo -n \${LDAPLIMPW} > /var/spool/apache/htdocs/ns/config/$limfile
   (cat <<EOF
-dn: cn=anon,$ldapserv{'Login'}
-cn: anon
+dn: $ldapserv{'limited'}
+uid: $anonuid
 objectClass: device
+objectClass: uidObject
 objectClass: simpleSecurityObject
+cn: Priv seperation account
 userPassword: \${CRYPT}
 EOF
-) |ldapadd -U admin -Y PLAIN -w "\${ADMINPW}"
+) |/usr/bin/ldapadd -U admin -Y PLAIN -w "\${ADMINPW}" -h $repmaster
 fi;
 
 __EOF__
@@ -1763,13 +1787,6 @@ fi;
 
 __EOF__
 
-  @dninf=split(/\./,$dnsconf{'Domain'});
-  $vsuf="";
-  foreach $dndat (@dninf) {
-    $vsuf.="dc=" . $dndat . ",";
-  }
-  chop $vsuf;
-
   print SP<<__EOF__;
 (cat <<EOF
 URI             ldap://$ldapserv{'Server'}
@@ -1783,7 +1800,7 @@ EOF
   ldap_set_option(\\\$ds, LDAP_OPT_PROTOCOL_VERSION,3);
   \\\$LDAP_ROOT_DN="$ldapserv{'Login'}";
   \\\$LDAP_ROOT_PW="\${ADMINPW}";
-  \\\$LDAP_LIMIT_DN="cn=anon,$ldapserv{'Login'}";
+  \\\$LDAP_LIMIT_DN="$ldapserv{'limited'}";
   \\\$LDAP_LIMIT_PW="\${LDAPLIMPW}";
   \\\$LOCAL_DOMAIN="$dnsconf{'Domain'}";
   \\\$LDAP_BDN="$vsuf";
@@ -1793,7 +1810,7 @@ EOF
 chmod 600 /var/spool/apache/htdocs/ldap/ldapcon.inc
 chown 80.80 /var/spool/apache/htdocs/ldap/ldapcon.inc
 
-sed -e "s/^binddn.*****\$/binddn cn=anon,$ldapserv{'Login'}/" \\
+sed -e "s/^binddn.*****\$/binddn $ldapserv{'limited'}/" \\
     -e "s/^rootbinddn.*****\$/rootbinddn $ldapserv{'Login'}/" \\
     -e "s/^bindpw.*****\$/bindpw \${LDAPLIMPW}/" \\
     -e "s/^base.*****\$/base $vsuf/" \\
@@ -1928,7 +1945,7 @@ EOF
   ldap_set_option(\\\$ds, LDAP_OPT_PROTOCOL_VERSION,3);
   \\\$LDAP_ROOT_DN="$ldapserv{'Login'}";
   \\\$LDAP_ROOT_PW="\${ADMINPW}";
-  \\\$LDAP_LIMIT_DN="cn=anon,$ldapserv{'Login'}";
+  \\\$LDAP_LIMIT_DN="$ldapserv{'limited'}";
   \\\$LDAP_LIMIT_PW="\${LDAPLIMPW}";
   \\\$LOCAL_DOMAIN="$dnsconf{'Domain'}";
   \\\$LDAP_BDN="$vsuf";
@@ -1955,7 +1972,7 @@ EOF
 
 sed -e "s/^\\\$whereami.*/\\\$whereami = \\\"$dnsconf{'Domain'}\\\";/" /var/spool/majordomo/majordomo.cf.orig  > /var/spool/majordomo/majordomo.cf
 
-sed -e "s/^binddn.*****\$/binddn cn=anon,$ldapserv{'Login'}/" \\
+sed -e "s/^binddn.*****\$/binddn $ldapserv{'limited'}/" \\
     -e "s/^rootbinddn.*****\$/rootbinddn $ldapserv{'Login'}/" \\
     -e "s/^bindpw.*****\$/bindpw \${LDAPLIMPW}/" \\
     -e "s/^base.*****\$/base $vsuf/" \\
@@ -2308,7 +2325,7 @@ if [ ! -d /opt/apache2 ];then
   sed -e "s/^Listen 0.0.0.0:80.*/Listen @idata[1]:80/"  \\
       -e "s/^Listen 80.*/Listen @idata[1]:80/" \\
       -e "s/AuthLDAPUrl ldap:\\/\\/127.0.0.1/AuthLDAPUrl ldap:\\/\\/$ldapserv{'Server'}/" \\
-      -e "s/AuthLDAPBindDN.*/AuthLDAPBindDN cn=anon,$ldapserv{'Login'}/" \\
+      -e "s/AuthLDAPBindDN.*/AuthLDAPBindDN $ldapserv{'limited'}/" \\
       -e "s/AuthLDAPBindPassword admin/AuthLDAPBindPassword \${LDAPLIMPW}/" \\
       -e "s/AuthLDAPStartTLS on/AuthLDAPStartTLS $isldaptls/" \\
       -e "s/\(^\|^#\)ServerName.*/ServerName $fqdn/" \\
@@ -2321,7 +2338,7 @@ if [ ! -d /opt/apache2 ];then
   sed -e "s/^Listen 0.0.0.0:80.*/Listen @idata[1]:80/"  \\
       -e "s/^Listen 80.*/Listen @idata[1]:80/" \\
       -e "s/AuthLDAPUrl ldap:\\/\\/127.0.0.1/AuthLDAPUrl ldap:\\/\\/$ldapserv{'Server'}/" \\
-      -e "s/AuthLDAPBindDN.*/AuthLDAPBindDN cn=anon,$ldapserv{'Login'}/" \\
+      -e "s/AuthLDAPBindDN.*/AuthLDAPBindDN $ldapserv{'limited'}/" \\
       -e "s/AuthLDAPBindPassword admin/AuthLDAPBindPassword \${LDAPLIMPW}/" \\
       -e "s/AuthLDAPStartTLS on/AuthLDAPStartTLS $isldaptls/" \\
       -e "s/LOCAL_SERVER_NAME/$fqdn/" /opt/apache2/conf/httpd.conf.orig >  /tmp/httpd.conf.1
@@ -2518,7 +2535,7 @@ if ($ldapread eq "true") {
 #}
 
 $rootdn=$ldapserv{'Login'} . "," . $vsuf;
-$anondn="cn=anon," . $ldapserv{'Login'};
+$anondn=$ldapserv{'limited'};
 
 print SC<<__EOB__;
 
@@ -2554,6 +2571,8 @@ access to dn="ou=Snom"
     write
   by dn="cn=Snom,ou=Snom"
     search
+  by dn="$anondn"
+    search
   by anonymous
     auth
 
@@ -2565,6 +2584,8 @@ access to dn.regex="^cn=(.*),ou=Snom"
   by group="cn=Voip Admin,ou=Admin"
     write
   by dn="cn=Snom,ou=Snom"
+    read
+  by dn="$anondn"
     read
   by anonymous
     auth
@@ -2805,7 +2826,7 @@ access to dn.regex="^uid=(.*),o=(.*),ou=Users" attrs=objectclass
   by anonymous
     auth
 
-access to dn.regex="^uid=(.*),o=(.*),ou=Users" attrs=sn,givenName,mail,preferredLanguage,initials,ipHostNumber,description,physicalDeliveryOfficeName,postalAddress,postalCode,title,homePostalAddress,pager,conferenceInformation,ou,o,st,l,comment,URL,c,jpegPhoto
+access to dn.regex="^uid=(.*),o=(.*),ou=Users" attrs=sn,givenName,mail,preferredLanguage,initials,ipHostNumber,description,physicalDeliveryOfficeName,postalAddress,postalCode,title,homePostalAddress,pager,conferenceInformation,ou,o,st,l,comment,URL,c
   by dn="$rootdn"
     write
   by group="cn=Admin Access,ou=Admin"
@@ -2835,7 +2856,7 @@ access to dn.regex="^uid=(.*),o=(.*),ou=Users" attrs=telephoneNumber,facsimileTe
   by anonymous
     auth
 
-access to dn.regex="^uid=(.*),o=(.*),ou=Users" attrs=displayName,cn
+access to dn.regex="^uid=(.*),o=(.*),ou=Users" attrs=displayName,cn,jpegPhoto
   by dn="$rootdn"
     write
   by group="cn=Admin Access,ou=Admin"
@@ -2998,7 +3019,7 @@ access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=objectClass
   by anonymous
     auth
 
-access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=sn,givenName,mail,preferredLanguage,initials,ipHostNumber,description,physicalDeliveryOfficeName,postalAddress,postalCode,title,homePostalAddress,pager,conferenceInformation,ou,o,st,l,comment,URL,c,jpegPhoto
+access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=sn,givenName,mail,preferredLanguage,initials,ipHostNumber,description,physicalDeliveryOfficeName,postalAddress,postalCode,title,homePostalAddress,pager,conferenceInformation,ou,o,st,l,comment,URL,c
   by dn="$rootdn"
     write
   by group="cn=Admin Access,ou=Admin"
@@ -3024,7 +3045,7 @@ access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=telephoneNumber,facsimileTele
   by anonymous
     auth
 
-access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=displayName,cn
+access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=displayName,cn,jpegPhoto
   by dn="$rootdn"
     write
   by group="cn=Admin Access,ou=Admin"
@@ -3171,7 +3192,7 @@ access to dn.regex="^uid=(.*),ou=Users" attrs=objectClass
   by anonymous
     auth
 
-access to dn.regex="^uid=(.*),ou=Users" attrs=sn,givenName,mail,initials,preferredLanguage,ipHostNumber,description,physicalDeliveryOfficeName,postalAddress,postalCode,title,homePostalAddress,pager,conferenceInformation,ou,o,st,l,comment,URL,c,jpegPhoto
+access to dn.regex="^uid=(.*),ou=Users" attrs=sn,givenName,mail,initials,preferredLanguage,ipHostNumber,description,physicalDeliveryOfficeName,postalAddress,postalCode,title,homePostalAddress,pager,conferenceInformation,ou,o,st,l,comment,URL,c
   by dn="$rootdn"
     write
   by group="cn=Admin Access,ou=Admin"
@@ -3197,7 +3218,7 @@ access to dn.regex="^uid=(.*),ou=Users" attrs=telephoneNumber,facsimileTelephone
   by anonymous
     auth
 
-access to dn.regex="^uid=(.*),ou=Users" attrs=displayName,cn
+access to dn.regex="^uid=(.*),ou=Users" attrs=displayName,cn,jpegPhoto
   by dn="$rootdn"
     write
   by group="cn=Admin Access,ou=Admin"
@@ -3752,7 +3773,7 @@ fi;
 __EOB__
 
   if (($ldap ne "") && ( -d "/var/spool/ldap")) {
-    $ldap->bind("cn=anon," . $ldapserv{'Login'},password => $ldaplimpw);
+    $ldap->bind($ldapserv{'limited'},password => $ldaplimpw);
     $mesg = $ldap->search(base=>"ou=email",filter =>"(&(description=*)(sendmailMTAAliasValue=pubbox))",attrs=>['sendmailMTAKey','description']);
     while($entry = $mesg->shift_entry) {
       @mbdat=split(/:/,$entry->get_value("description"));
@@ -13033,7 +13054,7 @@ define(\`STATUS_FILE',\`/var/db/sendmail.statistics')dnl
 define(\`confFORWARD_PATH',\`\$z/.forward.\$w+\$h:\$z/.forward+\$h:\$z/.forward.\$w:\$z/.forward')dnl
 define(\`confMAX_HEADERS_LENGTH', \`32768')dnl
 define(`confLDAP_CLUSTER', `AllServers')
-define(`confLDAP_DEFAULT_SPEC', `-h "$ldapserv{'Replicate'}" -d cn=anon,$ldapserv{'Login'} -M simple -P /etc/ldap.limited')dnl
+define(`confLDAP_DEFAULT_SPEC', `-h "$ldapserv{'Replicate'}" -d $ldapserv{'limited'} -M simple -P /etc/ldap.limited')dnl
 LDAPROUTE_DOMAIN_FILE(`\@LDAP')dnl
 FEATURE(`ldap_routing')dnl
 VIRTUSER_DOMAIN_FILE(`\@ldap:-k (&(objectClass=sendmailMTAClass)(sendmailMTAClassName=LDAPRoute)) -v sendmailMTAClassValue')dnl
@@ -17202,7 +17223,7 @@ __EOF__
 		IDFieldName = uid;
 		UIDFieldName = uid;
 		baseDN = "ou=users,$vsuf";
-		bindDN = "cn=anon,$ldapserv{'Login'},$vsuf";
+		bindDN = "$ldapserv{'limited'},$vsuf";
 		bindPassword = $ldaplimpw;
 		canAuthenticate = YES;
 		bindAsCurrentUser = YES;
@@ -17909,8 +17930,14 @@ sub apgget {
 }
 
 sub checkanonuser {
-  if (-e "ldap.limited") {
-    open(LLIM,"<ldap.limited");
+  if ($dnsconf{'Hostname'}) {
+    $limfile="ldap_" . $dnsconf{'Hostname'} . ".limited";
+  } else {
+    $limfile="ldap.limited";
+  }
+
+  if (-e $limfile) {
+    open(LLIM,"<$limfile");
     while(<LLIM>) {
       $newpw = $_;
     }
