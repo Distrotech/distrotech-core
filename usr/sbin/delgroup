@@ -8,12 +8,18 @@ while(<LCON>) {
   @centry=split(/\s/,$_);
   if (@centry[0] eq "master_host") {
     $host=@centry[1];
-  } elsif (@centry[0] eq "binddn") {
+  } elsif (@centry[0] eq "rootbinddn") {
     $binddn=@centry[1];
-  } elsif (@centry[0] eq "bindpw") {
-    $password=@centry[1];
   }
 }
+close(LCON);
+
+open(LSP,"/etc/ldap.secret");
+while(<LSP>) {
+  chop $_;
+  $password=$_;
+}
+close(LSP);
 
 $ldap = Net::LDAPS->new($host,port=>"636",verify => 'none',timeout => "10");
 $ldap->bind($binddn,password => $password);

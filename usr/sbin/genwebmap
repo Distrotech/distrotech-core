@@ -9,12 +9,18 @@ open(LCON,"/etc/ldap.conf");
 while(<LCON>) {
   chop $_;
   @centry=split(/\s/,$_);
-  if (@centry[0] eq "binddn") {
+  if (@centry[0] eq "rootbinddn") {
     $binddn=@centry[1];
-  } elsif (@centry[0] eq "bindpw") {
-    $password=@centry[1];
   }
 }
+close(LCON);
+
+open(LSP,"/etc/ldap.secret");
+while(<LSP>) {
+  chop $_;
+  $password=$_;
+}
+close(LSP);
 
 $ldap = Net::LDAPS->new("127.0.0.1",port=>"636",verify => 'none') or exit;
 
