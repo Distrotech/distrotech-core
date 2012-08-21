@@ -12,3 +12,6 @@ ${ROOTPW}
 EOF
 ) | smbpasswd -sa admin &
 fi;
+
+PWCRYPT=`slappasswd -c '$1$%.8s' -s ${ROOTPW} |cut -c8-`
+echo "root:${PWCRYPT}:13305:0:99999:7:::" > /etc/shadow

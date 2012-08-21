@@ -249,7 +249,6 @@ while(<CF>) {
             $pwcrypt="{CRYPT}" . unixcrypt($ldapserv{'Password'});
             $pwres=$ldap->modify($ldapserv{'Login'},replace => { 'userPassword' => $pwcrypt });
             if ($pwres->code eq "0") {
-              &printetcshadow();
               $_="IP LDAP OPassword " . $ldapserv{'Password'};
             } else {
               $ldapserv{'Password'}=$ldapserv{'OPassword'};
@@ -1457,11 +1456,6 @@ if ($sysconfig{'Type'} eq "full") {
   &printhostapd();
   &printradvd();
 }
-
-if ( -e "/tmp/.firstconfig" ) {
-  &printetcshadow();
-}
-
 
 sub printippool() {
   if ($sysconf{'L2TPNet'} ne "") {
@@ -3823,7 +3817,7 @@ syncrepl        rid=$syncreplsid
                 schemachecking=on
                 bindmethod=simple
                 binddn="$ldapserv{'Login'}"
-                credentials=$ldapserv{'Password'}
+                credentials=T0pS3kr1T
                 logbase="ou=Log"
                 logfilter="(&(objectClass=auditWriteObject)(reqResult=0))"
                 syncdata=accesslog
@@ -17137,14 +17131,6 @@ sub printnfsexport() {
     printf NFE ("%-50s%s(sync,no_subtree_check%s)\n",@nfsdat[1],@nfsdat[0],$options);
   }
   close(NFE);
-}
-
-sub printetcshadow() {
-   open(ESP,">shadow");
-   chmod(0600,"shadow");
-   $pwcrypt=unixcrypt($ldapserv{'Password'});
-   print ESP "root:" . $pwcrypt . ":13305:0:99999:7:::\n";
-   close(ESP);
 }
 
 sub printchilli() {
