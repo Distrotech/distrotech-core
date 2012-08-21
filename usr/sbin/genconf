@@ -241,22 +241,6 @@ while(<CF>) {
     } elsif (@words[0] eq "LDAP") {
       shift @words;
       $ldapserv{@words[0]}=@words[1];
-      if ((@words[0] eq "OPassword") && (@words[1] ne $ldapserv{'Password'}) && (-d "/var/spool/ldap")) {
-        $ldap = Net::LDAP->new("127.0.0.1",timeout => "10");
-        if ($ldap ne "") {
-          $lbndr=$ldap->bind($ldapserv{'Login'},password => $ldapserv{'OPassword'});
-          if ($lbndr->code eq "0") {
-            $pwcrypt="{CRYPT}" . unixcrypt($ldapserv{'Password'});
-            $pwres=$ldap->modify($ldapserv{'Login'},replace => { 'userPassword' => $pwcrypt });
-            if ($pwres->code eq "0") {
-              $_="IP LDAP OPassword " . $ldapserv{'Password'};
-            } else {
-              $ldapserv{'Password'}=$ldapserv{'OPassword'};
-            }
-          }
-          $ldap->unbind();
-        }
-      }
     } elsif (@words[0] eq "FW") {
       shift @words;
       if (@words[0] eq "SourceNetwork") {
@@ -1254,10 +1238,6 @@ if ($dnsconf{'Hostname'} ne "") {
   $ldapserv{'config'}="uid=ldap_config," . $ldapserv{'Login'};
 }
 
-if ($ldapserv{'Password'} eq "") {
-  $ldapserv{'Password'}=$ldappass;
-}
-
 if ($sqlradiusserv eq "") {
   $sqlradiusserv="localhost";
 }
@@ -1702,18 +1682,42 @@ sub printsqlpass(){
   print SP<<__EOF__;
 #!/bin/bash
 
-touch /etc/ldap.secret
-chmod 400 /etc/ldap.secret
-echo '$ldapserv{'Password'}' > /etc/ldap.secret
-
-#Change the password if need be
-/usr/sbin/setsmbpasswd
-
 if [ -e /etc/mail/ldap ];then
+  if [ ! -e /etc/ldap.secret ];then
+    touch /etc/ldap.secret
+    chmod 400 /etc/ldap.secret
+    chown root.root /etc/ldap.secret
+    ADMINPW="`cat /etc/mail/ldap`";
+    echo -n "\${ADMINPW}" > /etc/ldap.secret
+  fi;
   rm /etc/mail/ldap
 fi;
 
 ADMINPW="`cat /etc/ldap.secret`";
+
+#Change the password if need be
+if [ -e /var/spool/apache/htdocs/ns/config/ldap.newsecret ];then
+  NEWROOTPW="`cat /var/spool/apache/htdocs/ns/config/ldap.newsecret`";
+  rm /var/spool/apache/htdocs/ns/config/ldap.newsecret
+  CRYPT=`slappasswd -c '\$1\$%.8s' -s \${NEWROOTPW}`
+
+  (cat <<EOF
+dn: $ldapserv{'Login'},$vsuf
+changetype: modify
+replace: userPassword
+userPassword: \${CRYPT}
+EOF
+) |/usr/bin/ldapmodify -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z
+	  
+  ADMINPW="\${NEWROOTPW}";
+
+  touch /etc/ldap.secret
+  chmod 400 /etc/ldap.secret
+  chown root.root /etc/ldap.secret   
+  echo -n "\${ADMINPW}" > /etc/ldap.secret
+fi;
+
+/usr/sbin/setsmbpasswd
 
 SNOMPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
 
@@ -1723,7 +1727,7 @@ changetype: modify
 replace: userPassword
 userPassword: \${SNOMPW}
 EOF
-) |/usr/bin/ldapmodify -xD $ldapserv{'Login'} -w "\${ADMINPW}" -h $repmaster -Z
+) |/usr/bin/ldapmodify -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z
 
 /usr/sbin/rebootphone
 
@@ -1732,7 +1736,7 @@ if [ -e /var/spool/apache/htdocs/ns/config/$limfile ];then
 fi;
 
 if [ ! "\${LDAPLIMPW}" ];then
-  ldapdelete -xD $ldapserv{'Login'} -w "\${ADMINPW}" -h $repmaster -Z $ldapserv{'limited'},$vsuf
+  ldapdelete -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z $ldapserv{'limited'},$vsuf
   LDAPLIMPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
   CRYPT=`slappasswd -c '\$1\$%.8s' -s \${LDAPLIMPW}`
 
@@ -1754,7 +1758,7 @@ objectClass: simpleSecurityObject
 cn: Priv seperation account (Limited)
 userPassword: \${CRYPT}
 EOF
-) |/usr/bin/ldapadd -xD $ldapserv{'Login'} -w "\${ADMINPW}" -h $repmaster -Z
+) |/usr/bin/ldapadd -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z
 fi;
 
 if [ -e /var/spool/apache/htdocs/ns/config/$conffile ];then
@@ -1762,7 +1766,7 @@ if [ -e /var/spool/apache/htdocs/ns/config/$conffile ];then
 fi;
 
 if [ ! "\${LDAPCONFPW}" ];then
-  ldapdelete -xD $ldapserv{'Login'} -w "\${ADMINPW}" -h $repmaster -Z $ldapserv{'config'},$vsuf
+  ldapdelete -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z $ldapserv{'config'},$vsuf
   LDAPCONFPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
   CRYPT=`slappasswd -c '\$1\$%.8s' -s \${LDAPCONFPW}`
 
@@ -1779,7 +1783,7 @@ objectClass: simpleSecurityObject
 cn: Priv seperation account (Config)
 userPassword: \${CRYPT}
 EOF
-) |/usr/bin/ldapadd -xD $ldapserv{'Login'} -w "\${ADMINPW}" -h $repmaster -Z
+) |/usr/bin/ldapadd -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z
 fi;
 
 if [ -e /etc/ldap-$fqdn ];then
@@ -1787,7 +1791,7 @@ if [ -e /etc/ldap-$fqdn ];then
 fi;
 
 if [ ! "\${LDAPREPPW}" ];then
-  ldapdelete -xD $ldapserv{'Login'} -w "\${ADMINPW}" -h $repmaster -Z uid=$fqdn,ou=servers,$vsuf
+  ldapdelete -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z uid=$fqdn,ou=servers,$vsuf
   LDAPREPPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
   CRYPT=`slappasswd -c '\$1\$%.8s' -s \${LDAPREPPW}`
 
@@ -1804,7 +1808,7 @@ objectClass: simpleSecurityObject
 cn: Priv seperation account (Replication/Local)
 userPassword: \${CRYPT}
 EOF
-) |/usr/bin/ldapadd -xD $ldapserv{'Login'} -w "\${ADMINPW}" -h $repmaster -Z
+) |/usr/bin/ldapadd -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z
 fi;
 
 __EOF__
@@ -14627,7 +14631,7 @@ if ( $ldapbackup eq "true") {
   print BUS "#Backup LDAP Database Binary Objects Excluding Photos\n";
   print BUS "echo $fcnt LDAP Database Binary Objects Excluding Photos\n";
   print BUS "/bin/touch /tmp/ldap.mod.gz\n/bin/chmod 600 /tmp/ldap.mod.gz\n";
-  print BUS "/usr/bin/ldapsearch -U admin -Y PLAIN -w \"\`cat /etc/ldap.secret\`\" -LLL -Z \`slapcat -b \"\"|grep \"::\" |grep -vE \"(jpegPhoto)|(.*=\$)\" |cut -d: -f1\ |sort |uniq` > /tmp/ldap.mod.gz\n";
+  print BUS "/usr/bin/ldapsearch -U admin -Y PLAIN -y /etc/ldap.secret -LLL -Z \`slapcat -b \"\"|grep \"::\" |grep -vE \"(jpegPhoto)|(.*=\$)\" |cut -d: -f1\ |sort |uniq` > /tmp/ldap.mod.gz\n";
   print BUS "/usr/bin/tar \$TAROPT \${TAPE} tmp/ldap.mod.gz 2>&1\n"; 
   print BUS "/bin/rm /tmp/ldap.mod.gz\n\n";
   $fcnt++;

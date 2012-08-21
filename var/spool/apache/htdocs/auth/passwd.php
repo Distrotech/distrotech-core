@@ -33,39 +33,13 @@ if (!isset($_SESSION['auth'])) {
 <TABLE WIDTH=90% CELLSPACING=0 CELLPADDING=0>
 <%
   if (($pass1 == $pass2) && (isset($uppass)) && ($ADMIN_USER == "admin")) {
-    $htaccess=file("/var/spool/apache/htdocs/ns/config/netsentry.conf");
-    while(list($lnum,$ldata)=each($htaccess)) {
-      if (preg_match("/^(IP LDAP Login )(.*)/i",$ldata, $matches)) {
-        $ldapuser=$matches[2];
-      } elseif (preg_match("/^IP LDAP Password (.*)/",$ldata,$pwdat)) {
-        $pwlnum=$lnum;
-	$origpw=$pwdat[1];
-      } elseif (preg_match("/^IP LDAP OPassword (.*)/",$ldata,$opwdat)) {
-        $opwlnum=$lnum;
-      }
-      $newdata[$lnum]=$ldata;
-    }
-
-    if ($ldapuser != "") {
-      $newdata[$pwlnum]="IP LDAP Password $pass1\r\n";
-      if ($opwlnum != "") {
-        $newdata[$opwlnum]="IP LDAP OPassword $origpw\r\n";
-      } else {
-        array_push($newdata,"IP LDAP OPassword $origpw\r\n");
-      }
-      $datain=implode($newdata);
-      $fname="/var/spool/apache/htdocs/ns/config/netsentry.conf";
-      $cfile=fopen($fname,w);
-      chmod($fname,0660);
-      fwrite($cfile,$datain);
-      fclose($cfile);
-      system("/usr/sbin/genconf > /dev/null 2>&1");       
-      print "<TR CLASS=list-color2><TH>" . _("Password Changed") . "</TH></TR></TABLE>";
-      return;
-    } else {
-      print "<TR CLASS=list-color2><TH COLSPAN=2>" . _("Change Failed") . "</TH></TR>";
-      return;
-    }
+    $fname="/var/spool/apache/htdocs/ns/config/ldap.newsecret";
+    $cfile=fopen($fname,w);
+    chmod($fname,0600);
+    fwrite($cfile,$pass1);
+    fclose($cfile);
+    print "<TR CLASS=list-color2><TH>" . _("Password Change Queued") . "</TH></TR></TABLE>";
+    return;
   } else if (isset($uppass)) {
     print "<TR CLASS=list-color2><TH COLSPAN=2>" . _("Password Mismatch") . "</TH></TR>";
     return;
@@ -84,4 +58,3 @@ if (!isset($_SESSION['auth'])) {
 %>
 </FORM>
 </TABLE>
-
