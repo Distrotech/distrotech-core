@@ -1829,8 +1829,6 @@ EOF
 <\%
   \\\$ds=ldap_connect("ldap://$repmaster");    
   ldap_set_option(\\\$ds, LDAP_OPT_PROTOCOL_VERSION,3);
-  \\\$LDAP_ROOT_DN="$ldapserv{'Login'}";
-  \\\$LDAP_ROOT_PW="\${ADMINPW}";
   \\\$LDAP_LIMIT_DN="$ldapserv{'limited'}";
   \\\$LDAP_LIMIT_PW="\${LDAPLIMPW}";
   \\\$LOCAL_DOMAIN="$dnsconf{'Domain'}";
@@ -1974,8 +1972,6 @@ EOF
 <\%
   \\\$ds=ldap_connect("ldaps://$repmaster");    
   ldap_set_option(\\\$ds, LDAP_OPT_PROTOCOL_VERSION,3);
-  \\\$LDAP_ROOT_DN="$ldapserv{'Login'}";
-  \\\$LDAP_ROOT_PW="\${ADMINPW}";
   \\\$LDAP_LIMIT_DN="$ldapserv{'limited'}";
   \\\$LDAP_LIMIT_PW="\${LDAPLIMPW}";
   \\\$LOCAL_DOMAIN="$dnsconf{'Domain'}";
