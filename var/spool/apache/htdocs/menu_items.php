@@ -268,8 +268,8 @@ if ($_SESSION['showmenu'] == "users") {
 $users[_("System Users")]="javascript:usersetup(\'system\')";
 $users[_("PDC Users")]="javascript:usersetup(\'pdc\')";
 $users[_("Trust Accounts")]="javascript:usersetup(\'trust\')";
-$users[_("Email Routing")]="javascript:usersetup(\'mserver\')";
 /*
+$users[_("Email Routing")]="javascript:usersetup(\'mserver\')";
 $users[_("Server Accounts")]="javascript:usersetup(\'server\')";
 */
 $groups[_("Administrators")]="javascript:openagroup(\'cn=Admin Access,ou=Admin\')";
@@ -365,7 +365,7 @@ if ($_SESSION['showmenu'] == "snomc") {
   $snomc[_(".. Voip Config")]=openpage("voip","");
 }
 $snomc[_("Snom Phonebook")]="javascript:usersetup(\'snom\')";
-$snomc[_("Snom P.Book Pass.")]=openpage("snomc","auth/snompass.php");
+//$snomc[_("Snom P.Book Pass.")]=openpage("snomc","auth/snompass.php");
 $snomc[_("Snom Firmware")]=openpage("snomc","cdr/snomload.php");
 
 if ($_SESSION['showmenu'] == "zap") {
