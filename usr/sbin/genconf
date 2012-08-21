@@ -1706,6 +1706,9 @@ touch /etc/ldap.secret
 chmod 400 /etc/ldap.secret
 echo '$ldapserv{'Password'}' > /etc/ldap.secret
 
+#Change the password if need be
+/usr/sbin/setsmbpasswd
+
 if [ -e /etc/mail/ldap ];then
   rm /etc/mail/ldap
 fi;
@@ -1740,7 +1743,7 @@ if [ ! "\${LDAPLIMPW}" ];then
 
   touch /etc/ldap.limited
   chmod 400 /etc/ldap.limited
-  echo "${LDAPLIMPW}" > /etc/ldap.limited
+  echo "\${LDAPLIMPW}" > /etc/ldap.limited
 
   (cat <<EOF
 dn: $ldapserv{'limited'},$vsuf
@@ -2164,8 +2167,6 @@ chown root.root /root/.pgpass
 
 #kill `cat /var/run/exchange4linux/exchange4linux.pid 2>/dev/null` > /dev/null 2>&1
 #/usr/bin/python /usr/local/exchange4linux/Server.pyc > /dev/null 2>&1 &
-
-/usr/sbin/setsmbpasswd
 
 if [ -e /var/spool/apache/htdocs/horde/config/horde.php ];then
   sed -e "s/\\\$conf\\['prefs'\\]\\['params'\\]\\['password'\\] = .*;/\\\$conf['prefs']['params']['password'] = '$hordepass';/" \\
@@ -2750,8 +2751,6 @@ access to dn.regex="^uid=(.*),(uid|sambasid)=(.*),ou=(users|idmap)" attrs=mailLo
     write
   by group="cn=Admin Access,ou=Admin"
     write
-  by dn.regex="^uid=.*,ou=email"
-    read
   by dn.regex="^uid=.*,ou=servers"
     read
   by dn.regex="^\$2=\$3,ou=\$4"
@@ -2768,8 +2767,6 @@ access to dn.regex="^uid=(.*),(uid|sambasid)=(.*),ou=(users|idmap)"
     write
   by group="cn=Admin Access,ou=Admin"
     write
-  by dn.regex="^uid=.*,ou=email"
-    read
   by dn.regex="^uid=.*,ou=Servers"
     read
   by dn.regex="^\$2=\$3,ou=\$4"
@@ -2947,8 +2944,6 @@ access to dn.regex="^uid=(.*),o=(.*),ou=Users" attrs=mailLocalAddress,mailRoutin
     write
   by dn.regex="^uid=\$1,o=\$2,ou=users"
     write
-  by dn.regex="^uid=.*,ou=email"
-    read
   by dn.regex="^uid=.*,ou=servers"
     read
   by dn="$anondn"
@@ -3038,8 +3033,6 @@ access to dn.regex="^uid=(.*),o=(.*),ou=Users"
   by group/virtZoneSettings.regex="cn=\$2,ou=VAdmin"
     write
   by dn.regex="^uid=.*,ou=servers"
-    read
-  by dn.regex="^uid=.*,ou=email"
     read
   by dn="cn=Snom,ou=Snom"
     read
@@ -3138,8 +3131,6 @@ access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=mailLocalAddress,mailRoutingA
     write
   by dn.regex="^uid=.*,ou=Servers"
     read
-  by dn.regex="^uid=.*,ou=Email"
-    read
   by dn.regex="^sambaSID=\$1,ou=Idmap"
     write
   by dn="$anondn"
@@ -3219,8 +3210,6 @@ access to dn.regex="^sambaSID=(.*),ou=Idmap"
   by group="cn=Admin Access,ou=Admin"
     write
   by dn.regex="^uid=.*,ou=servers"
-    read
-  by dn.regex="^uid=.*,ou=email"
     read
   by dn="cn=Snom,ou=Snom"
     read
@@ -3319,8 +3308,6 @@ access to dn.regex="^uid=(.*),ou=Users" attrs=mailLocalAddress,mailRoutingAddres
     write
   by dn.regex="^uid=.*,ou=Servers"
     read
-  by dn.regex="^uid=.*,ou=Email"
-    read
   by dn.regex="^uid=\$1,ou=Users"
     write
   by dn="$anondn"
@@ -3401,8 +3388,6 @@ access to dn.regex="^uid=(.*),ou=users"
     write
   by dn.regex="^uid=.*,ou=servers"
     read
-  by dn.regex="^uid=.*,ou=email"
-    read
   by dn="cn=Snom,ou=Snom"
     read
   by dn.regex="^uid=\$1,ou=users"
@@ -3470,17 +3455,6 @@ access to dn.regex="^uid=.*,ou=servers"
   by anonymous
     auth
 
-#Email Server Restricted Access
-access to dn.regex="^uid=.*,ou=Email"
-  by dn="$rootdn"
-    write
-  by group="cn=Admin Access,ou=Admin"
-    write
-  by dn.regex="^uid=.*,ou=servers"
-    read
-  by anonymous
-    auth
-
 access to dn.regex="^sendmailMTAClassName=(LDAPRoute|R),ou=Email"
   by dn="$rootdn"
     write
@@ -3502,8 +3476,6 @@ access to dn.regex="^.*,ou=Email"
     write
   by group="cn=Admin Access,ou=Admin"
     write
-  by dn.regex="^uid=.*,ou=email"
-    read
   by dn.regex="^uid=.*,ou=servers"
     read
   by dn="$anondn"
