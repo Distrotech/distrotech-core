@@ -1293,7 +1293,7 @@ if ($repmaster eq "") {
 
 close(CF);
 
-$pldaplimpw=checkanonuser();
+$ldaplimpw=checkanonuser();
 
 if ( -e "/etc/ipv6.conf" ) {
   open(I6, "/etc/ipv6.conf");
@@ -1708,17 +1708,25 @@ sub printsqlpass(){
   print SP<<__EOF__;
 #!/bin/bash
 
-ADMINPW='$ldapserv{'Password'}';
+touch /etc/ldap.secret
+chmod 400 /etc/ldap.secret
+echo '$ldapserv{'Password'}' > /etc/ldap.secret
+
+if [ -e /etc/mail/ldap ];then
+  rm /etc/mail/ldap
+fi;
+
+ADMINPW="`cat /etc/ldap.secret`";
 
 SNOMPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
 
 (cat <<EOF
-dn: cn=Snom,ou=snom
+dn: cn=Snom,ou=snom,$vsuf
 changetype: modify
 replace: userPassword
 userPassword: \${SNOMPW}
 EOF
-) |/usr/bin/ldapmodify -U admin -Y PLAIN -w "\${ADMINPW}" -h $repmaster
+) |/usr/bin/ldapmodify -xD $ldapserv{'Login'} -w "\${ADMINPW}" -h $repmaster -Z
 
 /usr/sbin/rebootphone
 
@@ -1727,7 +1735,7 @@ if [ -e /var/spool/apache/htdocs/ns/config/$limfile ];then
 fi;
 
 if [ ! "\${LDAPLIMPW}" ];then
-  ldapdelete -U admin -Y PLAIN -w "\${ADMINPW}" -h $repmaster $ldapserv{'limited'},$vsuf
+  ldapdelete -xD $ldapserv{'Login'} -w "\${ADMINPW}" -h $repmaster -Z $ldapserv{'limited'},$vsuf
   LDAPLIMPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
   CRYPT=`slappasswd -c '\$1\$%.8s' -s \${LDAPLIMPW}`
 
@@ -1735,8 +1743,13 @@ if [ ! "\${LDAPLIMPW}" ];then
   chmod 600 /var/spool/apache/htdocs/ns/config/$limfile
   chown www.www /var/spool/apache/htdocs/ns/config/$limfile
   echo -n \${LDAPLIMPW} > /var/spool/apache/htdocs/ns/config/$limfile
+
+  touch /etc/ldap.limited
+  chmod 400 /etc/ldap.limited
+  echo "${LDAPLIMPW}" > /etc/ldap.limited
+
   (cat <<EOF
-dn: $ldapserv{'limited'}
+dn: $ldapserv{'limited'},$vsuf
 uid: $anonuid
 objectClass: device
 objectClass: uidObject
@@ -1744,7 +1757,7 @@ objectClass: simpleSecurityObject
 cn: Priv seperation account (Limited)
 userPassword: \${CRYPT}
 EOF
-) |/usr/bin/ldapadd -U admin -Y PLAIN -w "\${ADMINPW}" -h $repmaster
+) |/usr/bin/ldapadd -xD $ldapserv{'Login'} -w "\${ADMINPW}" -h $repmaster -Z
 fi;
 
 if [ -e /var/spool/apache/htdocs/ns/config/$conffile ];then
@@ -1752,7 +1765,7 @@ if [ -e /var/spool/apache/htdocs/ns/config/$conffile ];then
 fi;
 
 if [ ! "\${LDAPCONFPW}" ];then
-  ldapdelete -U admin -Y PLAIN -w "\${ADMINPW}" -h $repmaster $ldapserv{'config'},$vsuf
+  ldapdelete -xD $ldapserv{'Login'} -w "\${ADMINPW}" -h $repmaster -Z $ldapserv{'config'},$vsuf
   LDAPCONFPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
   CRYPT=`slappasswd -c '\$1\$%.8s' -s \${LDAPCONFPW}`
 
@@ -1761,7 +1774,7 @@ if [ ! "\${LDAPCONFPW}" ];then
   chown www.www /var/spool/apache/htdocs/ns/config/$conffile
   echo -n \${LDAPCONFPW} > /var/spool/apache/htdocs/ns/config/$conffile
   (cat <<EOF
-dn: $ldapserv{'config'}
+dn: $ldapserv{'config'},$vsuf
 uid: $confuid
 objectClass: device
 objectClass: uidObject
@@ -1769,7 +1782,32 @@ objectClass: simpleSecurityObject
 cn: Priv seperation account (Config)
 userPassword: \${CRYPT}
 EOF
-) |/usr/bin/ldapadd -U admin -Y PLAIN -w "\${ADMINPW}" -h $repmaster
+) |/usr/bin/ldapadd -xD $ldapserv{'Login'} -w "\${ADMINPW}" -h $repmaster -Z
+fi;
+
+if [ -e /etc/ldap-$fqdn ];then
+  LDAPREPPW=`cat /etc/ldap-$fqdn`
+fi;
+
+if [ ! "\${LDAPREPPW}" ];then
+  ldapdelete -xD $ldapserv{'Login'} -w "\${ADMINPW}" -h $repmaster -Z uid=$fqdn,ou=servers,$vsuf
+  LDAPREPPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
+  CRYPT=`slappasswd -c '\$1\$%.8s' -s \${LDAPREPPW}`
+
+  touch /etc/ldap-$fqdn
+  chmod 400 /etc/ldap-$fqdn
+  chown root.root /etc/ldap-$fqdn
+  echo -n \${LDAPREPPW} > /etc/ldap-$fqdn
+  (cat <<EOF
+dn: uid=$fqdn,ou=servers,$vsuf
+uid: $fqdn
+objectClass: device
+objectClass: uidObject
+objectClass: simpleSecurityObject
+cn: Priv seperation account (Replication/Local)
+userPassword: \${CRYPT}
+EOF
+) |/usr/bin/ldapadd -xD $ldapserv{'Login'} -w "\${ADMINPW}" -h $repmaster -Z
 fi;
 
 __EOF__
@@ -1850,17 +1888,6 @@ sed -e "s/^binddn.*****\$/binddn $ldapserv{'limited'}/" \\
 chmod 644 /etc/ldap.conf
 chown 0.139 /etc/ldap.conf
 
-touch /etc/ldap.secret
-chmod 400 /etc/ldap.secret
-echo "\${ADMINPW}" > /etc/ldap.secret
-
-touch /etc/ldap.limited
-chmod 400 /etc/ldap.limited
-echo "${LDAPLIMPW}" > /etc/ldap.limited
-
-if [ -e /etc/mail/ldap ];then
-  rm /etc/mail/ldap
-fi;
 __EOF__
 
 } else {
@@ -2009,18 +2036,6 @@ sed -e "s/^binddn.*****\$/binddn $ldapserv{'limited'}/" \\
 
 chmod 644 /etc/ldap.conf
 chown root.smbadm /etc/ldap.conf
-
-touch /etc/ldap.secret
-chmod 400 /etc/ldap.secret
-echo "\${ADMINPW}" > /etc/ldap.secret
-
-touch /etc/ldap.limited
-chmod 400 /etc/ldap.limited
-echo "\${LDAPLIMPW}" > /etc/ldap.limited
-
-if [ -e /etc/mail/ldap ];then
-  rm /etc/mail/ldap
-fi;
 
 (cat <<EOF
 <%
@@ -2578,7 +2593,7 @@ access to  attrs=olduid,exchangeServerAccess,sambaPasswordHistory,sambaLMPasswor
   by group="cn=Admin Access,ou=Admin"
     write
   by dn.regex="^uid=.*,ou=servers"
-    write
+    read
   by anonymous
     auth
 
@@ -2601,6 +2616,8 @@ access to dn="ou=Snom"
     write
   by group="cn=Voip Admin,ou=Admin"
     write
+  by dn.regex="^uid=.*,ou=servers"
+    read
   by dn="cn=Snom,ou=Snom"
     search
   by dn="$anondn"
@@ -2615,6 +2632,8 @@ access to dn.regex="^cn=(.*),ou=Snom"
     write
   by group="cn=Voip Admin,ou=Admin"
     write
+  by dn.regex="^uid=.*,ou=servers"
+    read
   by dn="cn=Snom,ou=Snom"
     read
   by dn="$anondn"
@@ -2629,6 +2648,8 @@ access to dn.regex="^uid=(.*),ou=Snom"
     write
   by group="cn=Voip Admin,ou=Admin"
     write
+  by dn.regex="^uid=.*,ou=servers"
+    read
   by dn="cn=Snom,ou=Snom"
     read
   by anonymous
@@ -2781,7 +2802,6 @@ access to dn.regex="^cn=(.*),ou=VAdmin" attrs=objectclass,cn
   by anonymous
     auth
 
-
 access to dn.regex="^cn=(.*),ou=VAdmin" attrs=maxwebaliases,maxaliases,maxmailboxes,squidProxyAccess,smbServerAccess,radiusRealm,quotaFileServer,quotaMailSpool,quotaHomeDir,dialupaccess,radiusporttype,radiusframedipaddress,radiusframedmtu,radiusframedcompression,radiussimultaneoususe,radiussessiontimeout,radiusidletimeout,radiusacctinteriminterval,radiusreplyitem,radiuscheckitem,radiusServiceType,radiusFramedProtocol,radiusFramedIPNetmask,radiusAuthType
   by dn="$rootdn"
     write
@@ -2829,6 +2849,8 @@ access to dn.regex="^o=(.*),ou=Users"
     write
   by group/virtZoneSettings.regex="cn=\$1,ou=VAdmin"
     write
+  by dn.regex="^uid=.*,ou=servers"
+    read
   by anonymous
     auth
 
@@ -2839,6 +2861,8 @@ access to dn.regex="^uid=(.*),o=(.*),ou=Users" attrs=objectclass
     write
   by group/virtZoneSettings.regex="cn=\$2,ou=VAdmin"
     write
+  by dn.regex="^uid=.*,ou=servers"
+    read
   by dn.regex="^uid=\$1,o=\$2,ou=users"
     read
   by dn="$anondn"
@@ -2857,6 +2881,8 @@ access to dn.regex="^uid=(.*),o=(.*),ou=Users" attrs=sn,givenName,mail,preferred
     write
   by dn.regex="^uid=\$1,o=\$2,ou=users"
     write
+  by dn.regex="^uid=.*,ou=servers"
+    read
   by dn="$anondn"
     none
   $ureadaccess
@@ -2874,6 +2900,8 @@ access to dn.regex="^uid=(.*),o=(.*),ou=Users" attrs=telephoneNumber,facsimileTe
   by dn.regex="^uid=\$1,o=\$2,ou=users"
     write
   by dn="cn=Snom,ou=Snom"
+    read
+  by dn.regex="^uid=.*,ou=servers"
     read
   by dn="$anondn"
     none
@@ -2954,7 +2982,7 @@ access to dn.regex="^uid=(.*),o=(.*),ou=Users" attrs=sambapwdcanchange,sambapwdl
   by group/virtZoneSettings.regex="cn=\$2,ou=VAdmin"
     write
   by dn.regex="^uid=.*,ou=Servers"
-    write
+    read
   by dn.regex="^uid=\$1,o=\$2,ou=users"
     read
   by anonymous
@@ -2968,7 +2996,7 @@ access to dn.regex="^uid=(.*),o=(.*),ou=Users" attrs=userCertificate,userSMIMECe
   by group/virtZoneSettings.regex="cn=\$2,ou=VAdmin"
     write
   by dn.regex="^uid=.*,ou=servers"
-    write
+    read
   by dn.regex="^uid=\$1,o=\$2,ou=users"
     write
   by dn="$anondn"
@@ -2984,7 +3012,7 @@ access to dn.regex="^uid=(.*),o=(.*),ou=Users" attrs=certificateRequest,certific
   by group/virtZoneSettings.regex="cn=\$2,ou=VAdmin"
     write
   by dn.regex="^uid=.*,ou=servers"
-    write
+    read
   by dn.regex="^uid=\$1,o=\$2,ou=users"
     write
   by anonymous
@@ -3035,7 +3063,7 @@ access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=objectClass
   by group="cn=Admin Access,ou=Admin"
     write
   by dn.regex="^uid=.*,ou=servers"
-    write
+    read
   by dn.regex="^sambaSID=\$1,ou=Idmap"
     read
   by dn="$anondn"
@@ -3052,6 +3080,8 @@ access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=sn,givenName,mail,preferredLa
     write
   by dn.regex="^sambaSID=\$1,ou=Idmap"
     write
+  by dn.regex="^uid=.*,ou=servers"
+    read
   by dn="$anondn"
     none
   $ureadaccess
@@ -3065,6 +3095,8 @@ access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=telephoneNumber,facsimileTele
   by group="cn=Admin Access,ou=Admin"
     write
   by dn="cn=Snom,ou=Snom"
+    read
+  by dn.regex="^uid=.*,ou=servers"
     read
   by dn.regex="^sambaSID=\$1,ou=Idmap"
     write
@@ -3081,7 +3113,7 @@ access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=displayName,cn,jpegPhoto
   by group="cn=Admin Access,ou=Admin"
     write
   by dn.regex="^uid=.*,ou=servers"
-    write
+    read
   by dn.regex="^sambaSID=\$1,ou=Idmap"
     write
   $ureadaccess
@@ -3137,7 +3169,7 @@ access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=sambapwdcanchange,sambapwdlas
   by group="cn=Admin Access,ou=Admin"
     write
   by dn.regex="^uid=.*,ou=servers"
-    write
+    read
   by dn.regex="^sambaSID=\$1,ou=Idmap"
     read
   by anonymous
@@ -3149,7 +3181,7 @@ access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=certificateRequest,certificat
   by group="cn=Admin Access,ou=Admin"
     write
   by dn.regex="^uid=.*,ou=servers"
-    write
+    read
   by dn.regex="^sambaSID=\$1,ou=Idmap"
     write
   by anonymous
@@ -3161,7 +3193,7 @@ access to dn.regex="^sambaSID=(.*),ou=Idmap" attrs=userSMIMECertificate,userCert
   by group="cn=Admin Access,ou=Admin"
     write
   by dn.regex="^uid=.*,ou=servers"
-    write
+    read
   by dn.regex="^sambaSID=\$1,ou=Idmap"
     write
   by dn="$anondn"
@@ -3212,7 +3244,7 @@ access to dn.regex="^uid=(.*),ou=Users" attrs=objectClass
   by group="cn=Admin Access,ou=Admin"
     write
   by dn.regex="^uid=.*,ou=servers"
-    write
+    read
   by dn.regex="^uid=\$1,ou=Users"
     read
   by dn="$anondn"
@@ -3229,6 +3261,8 @@ access to dn.regex="^uid=(.*),ou=Users" attrs=sn,givenName,mail,initials,preferr
     write
   by dn.regex="^uid=\$1,ou=Users"
     write
+  by dn.regex="^uid=.*,ou=servers"
+    read
   by dn="$anondn"
     none
   $ureadaccess
@@ -3242,6 +3276,8 @@ access to dn.regex="^uid=(.*),ou=Users" attrs=telephoneNumber,facsimileTelephone
   by group="cn=Admin Access,ou=Admin"
     write
   by dn="cn=Snom,ou=Snom"
+    read
+  by dn.regex="^uid=.*,ou=servers"
     read
   by dn.regex="^uid=\$1,ou=Users"
     write
@@ -3258,7 +3294,7 @@ access to dn.regex="^uid=(.*),ou=Users" attrs=displayName,cn,jpegPhoto
   by group="cn=Admin Access,ou=Admin"
     write
   by dn.regex="^uid=.*,ou=servers"
-    write
+    read
   by dn.regex="^uid=\$1,ou=Users"
     write
   $ureadaccess
@@ -3314,7 +3350,7 @@ access to dn.regex="^uid=(.*),ou=Users" attrs=sambapwdcanchange,sambapwdlastset,
   by group="cn=Admin Access,ou=Admin"
     write
   by dn.regex="^uid=.*,ou=servers"
-    write
+    read
   by dn.regex="^uid=\$1,ou=Users"
     read
   by anonymous
@@ -3326,7 +3362,7 @@ access to dn.regex="^uid=(.*),ou=Users" attrs=certificateRequest,certificatesign
   by group="cn=Admin Access,ou=Admin"
     write
   by dn.regex="^uid=.*,ou=servers"
-    write
+    read
   by dn.regex="^uid=\$1,ou=Users"
     write
   by anonymous
@@ -3338,7 +3374,7 @@ access to dn.regex="^uid=(.*),ou=Users" attrs=userSMIMECertificate,userCertifica
   by group="cn=Admin Access,ou=Admin"
     write
   by dn.regex="^uid=.*,ou=servers"
-    write
+    read
   by dn.regex="^uid=\$1,ou=Users"
     write
   by dn="$anondn"
@@ -3388,6 +3424,8 @@ access to attrs=objectclass
     write
   by group="cn=Admin Access,ou=Admin"
     write
+  by dn.regex="^uid=.*,ou=servers"
+    read
   by dn="$anondn"
     read
   by *
@@ -3402,7 +3440,7 @@ access to dn="cn=Domain"
   by group="cn=Admin Access,ou=Admin"
     write
   by dn.regex="^uid=.*,ou=servers"
-    write
+    read
   by anonymous
     auth
 
@@ -3412,7 +3450,7 @@ access to dn.regex="^sambaDomainName=.*"
   by group="cn=Admin Access,ou=Admin"
     write
   by dn.regex="^uid=.*,ou=servers"
-    write
+    read
   by anonymous
     auth
 
@@ -3422,7 +3460,7 @@ access to dn.regex="^uid=.*,ou=trusts"
   by group="cn=Admin Access,ou=Admin"
     write
   by dn.regex="^uid=.*,ou=servers"
-    write
+    read
   by anonymous
     auth
 
@@ -3431,6 +3469,8 @@ access to dn.regex="^uid=.*,ou=servers"
     write
   by group="cn=Admin Access,ou=Admin"
     write
+  by dn.regex="^uid=.*,ou=servers"
+    read
   by anonymous
     auth
 
@@ -3440,6 +3480,8 @@ access to dn.regex="^uid=.*,ou=Email"
     write
   by group="cn=Admin Access,ou=Admin"
     write
+  by dn.regex="^uid=.*,ou=servers"
+    read
   by anonymous
     auth
 
@@ -3448,6 +3490,8 @@ access to dn.regex="^sendmailMTAClassName=(LDAPRoute|R),ou=Email"
     write
   by group="cn=Admin Access,ou=Admin"
     write
+  by dn.regex="^uid=.*,ou=servers"
+    read
   by dn="$anondn"
     read
   by dn="$confdn"
@@ -3488,6 +3532,8 @@ access to dn.regex="^.*,sendmailMTAMapName=.*,ou=Email"
     write
   by group="cn=Admin Access,ou=Admin"
     write
+  by dn.regex="^uid=.*,ou=servers"
+    read
   by dn="$anondn"
     read
   by anonymous
@@ -3504,6 +3550,8 @@ access to dn="cn=Users,cn=$abook"
     write
   by group="cn=Users,cn=$abook"
     write
+  by dn.regex="^uid=.*,ou=servers"
+    read
   by anonymous
     auth
 
@@ -3516,6 +3564,8 @@ access to dn="ou=Entries,cn=$abook"
     write
   by group="cn=Users,cn=$abook"
     write
+  by dn.regex="^uid=.*,ou=servers"
+    read
 __EOB__
     if ($ldapanon{$abook} eq "true") {
       print SC<<__EOB__;
@@ -3534,6 +3584,8 @@ access to dn="cn=$abook"
     write
   by group="cn=Users,cn=$abook"
     write
+  by dn.regex="^uid=.*,ou=servers"
+    read
   by anonymous
     auth
 
@@ -3546,6 +3598,8 @@ access to dn.regex=".*,ou=hosts"
     write
   by group="cn=Admin Access,ou=Admin"
     write
+  by dn.regex="^uid=.*,ou=servers"
+    read
   by anonymous
     auth
   by dn="$confdn"
@@ -3558,6 +3612,8 @@ access to dn.regex="^ou=[a-zA-Z0-9]+" attrs=entry
     write
   by group="cn=Admin Access,ou=Admin"
     write
+  by dn.regex="^uid=.*,ou=servers"
+    read
   by *
     search
   by anonymous
@@ -3568,6 +3624,8 @@ access to dn.regex="^cn=(Domain|Admin)" attrs=entry
     write
   by group="cn=Admin Access,ou=Admin"
     write
+  by dn.regex="^uid=.*,ou=servers"
+    read
   by *
     search
   by anonymous
@@ -3579,7 +3637,7 @@ access to dn="cn=Addressbooks"
   by group="cn=Admin Access,ou=Admin"
     write
   by dn.regex="^uid=.*,ou=servers"
-    write
+    read
   by dn="$confdn"
     write
   by *
@@ -3590,6 +3648,8 @@ access to *
     write
   by group="cn=Admin Access,ou=Admin"
     write
+  by dn.regex="^uid=.*,ou=servers"
+    read
   by anonymous
     auth
   by *
