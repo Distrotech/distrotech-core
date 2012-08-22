@@ -23,7 +23,7 @@ if (! $ds) {
 }
 
 if ($ds && ldap_bind($ds,$LDAP_LIMIT_DN,$LDAP_LIMIT_PW) && ($_SERVER['PHP_AUTH_USER'] != "")) {
-  $auth_ussr=ldap_search($ds,"","(&(objectClass=officePerson)(uid=" . $_SERVER['PHP_AUTH_USER'] . "))");
+  $auth_ussr=ldap_search($ds,"","(&(objectClass=posixAccount)(uid=" . $_SERVER['PHP_AUTH_USER'] . "))");
   $auth_ures=ldap_first_entry($ds,$auth_ussr);
   $ldn=ldap_get_dn($ds,$auth_ures);
   ldap_bind($ds,$ldn,$_SERVER['PHP_AUTH_PW']);
