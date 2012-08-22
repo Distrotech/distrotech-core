@@ -34,8 +34,9 @@ fi;
 if [ -d /etc/openldap ] && [ ! -e /etc/.install ] && [ -d /var/spool/apache/htdocs/ns/config ];then
   /bin/touch /etc/openldap/slapd.conf
   /bin/chmod 400 /etc/openldap/slapd.conf
-  ADMINPW=`cat /etc/ldap.secret | sed 's/\//\\\\\//g'`
-  /usr/bin/sed -e "s/\(credentials\)=/\1=${ADMINPW}/" /var/spool/apache/htdocs/ns/config/slapd.conf > /etc/openldap/slapd.conf
+  HN=`hostname -f`
+  ADMINPW=`cat /etc/ldap-${HN} | sed 's/\//\\\\\//g'`
+  /usr/bin/sed -e "s/\(credentials\)=.*/\1=${ADMINPW}/" /var/spool/apache/htdocs/ns/config/slapd.conf > /etc/openldap/slapd.conf
   if [ ! -s /etc/openldap/slapd.conf ];then
     cp /var/spool/apache/htdocs/ns/config/slapd.conf /etc/openldap/slapd.conf
   fi;

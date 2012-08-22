@@ -1790,20 +1790,21 @@ EOF
 ) |/usr/bin/ldapadd -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z
 fi;
 
-if [ -e /etc/ldap-$fqdn ];then
-  LDAPREPPW=`cat /etc/ldap-$fqdn`
-fi;
+if [ -s /var/spool/apache/htdocs/ns/config/ldap.replica ];then
+  if [ -e /etc/ldap-$fqdn ];then
+    LDAPREPPW=`cat /etc/ldap-$fqdn`
+  fi;
 
-if [ ! "\${LDAPREPPW}" ];then
-  ldapdelete -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z uid=$fqdn,ou=servers,$vsuf
-  LDAPREPPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
-  CRYPT=`slappasswd -c '\$1\$%.8s' -s \${LDAPREPPW}`
+  if [ ! "\${LDAPREPPW}" ];then
+    ldapdelete -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z uid=$fqdn,ou=servers,$vsuf
+    LDAPREPPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
+    CRYPT=`slappasswd -c '\$1\$%.8s' -s \${LDAPREPPW}`
 
-  touch /etc/ldap-$fqdn
-  chmod 400 /etc/ldap-$fqdn
-  chown root.root /etc/ldap-$fqdn
-  echo -n \${LDAPREPPW} > /etc/ldap-$fqdn
-  (cat <<EOF
+    touch /etc/ldap-$fqdn
+    chmod 400 /etc/ldap-$fqdn
+    chown root.root /etc/ldap-$fqdn
+    echo -n \${LDAPREPPW} > /etc/ldap-$fqdn
+    (cat <<EOF
 dn: uid=$fqdn,ou=servers,$vsuf
 uid: $fqdn
 objectClass: device
@@ -1813,6 +1814,7 @@ cn: Priv seperation account (Replication/Local)
 userPassword: \${CRYPT}
 EOF
 ) |/usr/bin/ldapadd -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z
+  fi;
 fi;
 
 __EOF__
@@ -3796,11 +3798,12 @@ syncrepl        rid=$syncreplsid
                 searchbase=""
                 schemachecking=on
                 bindmethod=simple
-                binddn="$ldapserv{'Login'}"
+                binddn="uid=$fqdn,ou=servers"
                 credentials=T0pS3kr1T
                 logbase="ou=Log"
                 logfilter="(&(objectClass=auditWriteObject)(reqResult=0))"
                 syncdata=accesslog
+		tls_reqcert=never
 
 updateref       $repurl
 __EOB__

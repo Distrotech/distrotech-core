@@ -21,6 +21,7 @@ tls_key /etc/openssl/serverkey.pem
 tls_cert /etc/openssl/server.signed.pem
 
 binddn ****
+rootbinddn ****
 bindpw ****
 base ****
 
