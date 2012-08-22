@@ -1860,13 +1860,6 @@ if [ -e slapd.conf ] && [ -e /etc/openldap/slapd.conf ];then
   fi;
 fi;
 
-if [ "$SLDIFF" ] && [ ! -e /etc/.cdrom ] && [ ! -e /tmp/.firstconfig ];then
-  if [ "`pidof slapd`" ];then
-    killall -9 slapd > /dev/null 2>&1
-  fi;
-  /etc/rc.d/rc.ldap
-fi;
-
 if [ -e sqlpasswd ] && [ -e /usr/sbin/sqlpasswd ];then 
   SPDIFF=`diff sqlpasswd /usr/sbin/sqlpasswd`
  else
@@ -1921,6 +1914,13 @@ if [ "$SPDIFF" ] && [ -e networksentry-lite ] && [ ! -e /etc/.install ];then
   if [ -e /tmp/.firstconfig ];then
     rm /usr/sbin/sqlpasswd
   fi;
+fi;
+
+if [ "$SLDIFF" ] && [ ! -e /etc/.cdrom ] && [ ! -e /tmp/.firstconfig ];then
+  if [ "`pidof slapd`" ];then
+    killall -9 slapd > /dev/null 2>&1
+  fi;
+  /etc/rc.d/rc.ldap
 fi;
 
 if [ -e exports ] && [ -e /etc/exports ];then 
