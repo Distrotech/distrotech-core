@@ -1972,13 +1972,6 @@ __EOF__
   if ($syncreplsid != "" ) {
     print SP<<__EOF__;
 
-if [ ! -e "/var/spool/ldap/replica.$syncreplsid" ];then
-  killall -9 slapd
-  rm -rf /var/spool/ldap /var/log/ldap
-  mkdir /var/spool/ldap
-  touch /var/spool/ldap/replica.$syncreplsid
-fi;
-
 __EOF__
   }
 

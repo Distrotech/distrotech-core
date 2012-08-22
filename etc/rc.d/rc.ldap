@@ -14,6 +14,14 @@ if [ ! -d /var/spool/ldap ];then
   /bin/mkdir /var/spool/ldap;
 fi;
 
+if [ -s /var/spool/apache/htdocs/ns/config/ldap.replica ];then
+  REPID=`cat /var/spool/apache/htdocs/ns/config/ldap.replica`
+  if [ ! -e /var/spool/ldap/replica.${REPID} ];then
+    rm -rf /var/spool/ldap/* /var/log/ldap/*
+    touch /var/spool/ldap/replica.${REPID}
+  fi
+fi;
+
 if [ ! -e /var/spool/ldap/DB_CONFIG ];then
 (cat <<__EOF__
 set_cachesize           0 20971520 0
