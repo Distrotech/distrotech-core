@@ -240,7 +240,11 @@ while(<CF>) {
       push(@genroute,@words[0]);
     } elsif (@words[0] eq "LDAP") {
       shift @words;
-      $ldapserv{@words[0]}=@words[1];
+      if ((@words[0] eq "OPassword") || (@words[0] eq "Password")) {
+        $skipline=1;
+      } else {
+        $ldapserv{@words[0]}=@words[1];
+      }
     } elsif (@words[0] eq "FW") {
       shift @words;
       if (@words[0] eq "SourceNetwork") {
