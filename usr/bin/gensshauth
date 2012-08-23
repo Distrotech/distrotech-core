@@ -35,9 +35,9 @@ close(LCON);
 
 open(LSP,"/etc/ldap.secret");
 while(<LSP>) {
-  chop $_;
   $password=$_;
 }
+close(LSP);
 
 $ldap = Net::LDAPS->new($host,port=>"636",verify => 'none',timeout => "10");
 $ldap->bind($binddn,password => $password);

@@ -20,7 +20,6 @@ close(LCON);
 
 open(LSP,"/etc/ldap.secret");
 while(<LSP>) {
-  chop $_;
   $password=$_;
 }
 close(LSP);

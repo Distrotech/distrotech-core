@@ -1682,7 +1682,7 @@ sub printsqlpass(){
     $vsuf.="dc=" . $dndat . ",";
   }
   chop $vsuf;
-  
+
   print SP<<__EOF__;
 #!/bin/bash
 
@@ -1696,8 +1696,6 @@ if [ -e /etc/mail/ldap ];then
   fi;
   rm /etc/mail/ldap
 fi;
-
-ADMINPW="`cat /etc/ldap.secret`";
 
 #Change the password if need be
 if [ -e /var/spool/apache/htdocs/ns/config/ldap.newsecret ];then
@@ -1719,6 +1717,8 @@ EOF
   chmod 400 /etc/ldap.secret
   chown root.root /etc/ldap.secret   
   echo -n "\${ADMINPW}" > /etc/ldap.secret
+ else
+  ADMINPW="`cat /etc/ldap.secret`";
 fi;
 
 /usr/sbin/setsmbpasswd
@@ -1735,11 +1735,7 @@ EOF
 
 /usr/sbin/rebootphone
 
-if [ -e /var/spool/apache/htdocs/ns/config/$limfile ];then
-  LDAPLIMPW=`cat /var/spool/apache/htdocs/ns/config/$limfile`
-fi;
-
-if [ ! "\${LDAPLIMPW}" ];then
+if [ ! -e /var/spool/apache/htdocs/ns/config/$limfile ];then
   ldapdelete -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z $ldapserv{'limited'},$vsuf
   LDAPLIMPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
   CRYPT=`slappasswd -c '\$1\$%.8s' -s \${LDAPLIMPW}`
@@ -1763,13 +1759,11 @@ cn: Priv seperation account (Limited)
 userPassword: \${CRYPT}
 EOF
 ) |/usr/bin/ldapadd -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z
+ else
+  LDAPLIMPW=`cat /var/spool/apache/htdocs/ns/config/$limfile`
 fi;
 
-if [ -e /var/spool/apache/htdocs/ns/config/$conffile ];then
-  LDAPCONFPW=`cat /var/spool/apache/htdocs/ns/config/$conffile`
-fi;
-
-if [ ! "\${LDAPCONFPW}" ];then
+if [ ! -e /var/spool/apache/htdocs/ns/config/$conffile ];then
   ldapdelete -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z $ldapserv{'config'},$vsuf
   LDAPCONFPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
   CRYPT=`slappasswd -c '\$1\$%.8s' -s \${LDAPCONFPW}`
@@ -1788,23 +1782,20 @@ cn: Priv seperation account (Config)
 userPassword: \${CRYPT}
 EOF
 ) |/usr/bin/ldapadd -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z
+ else
+  LDAPCONFPW=`cat /var/spool/apache/htdocs/ns/config/$conffile`
 fi;
 
-if [ -s /var/spool/apache/htdocs/ns/config/ldap.replica ];then
-  if [ -e /etc/ldap-$fqdn ];then
-    LDAPREPPW=`cat /etc/ldap-$fqdn`
-  fi;
+if [ -s /var/spool/apache/htdocs/ns/config/ldap.replica ] && [ ! -e /etc/ldap-$fqdn ];then
+  ldapdelete -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z uid=$fqdn,ou=servers,$vsuf
+  LDAPREPPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
+  CRYPT=`slappasswd -c '\$1\$%.8s' -s \${LDAPREPPW}`
 
-  if [ ! "\${LDAPREPPW}" ];then
-    ldapdelete -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z uid=$fqdn,ou=servers,$vsuf
-    LDAPREPPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
-    CRYPT=`slappasswd -c '\$1\$%.8s' -s \${LDAPREPPW}`
-
-    touch /etc/ldap-$fqdn
-    chmod 400 /etc/ldap-$fqdn
-    chown root.root /etc/ldap-$fqdn
-    echo -n \${LDAPREPPW} > /etc/ldap-$fqdn
-    (cat <<EOF
+  touch /etc/ldap-$fqdn
+  chmod 400 /etc/ldap-$fqdn
+  chown root.root /etc/ldap-$fqdn
+  echo -n \${LDAPREPPW} > /etc/ldap-$fqdn
+  (cat <<EOF
 dn: uid=$fqdn,ou=servers,$vsuf
 uid: $fqdn
 objectClass: device
@@ -1814,7 +1805,6 @@ cn: Priv seperation account (Replication/Local)
 userPassword: \${CRYPT}
 EOF
 ) |/usr/bin/ldapadd -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z
-  fi;
 fi;
 
 __EOF__
