@@ -1711,12 +1711,15 @@ userPassword: \${CRYPT}
 EOF
 ) |/usr/bin/ldapmodify -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z
 	  
-  ADMINPW="\${NEWROOTPW}";
-
-  touch /etc/ldap.secret
-  chmod 400 /etc/ldap.secret
-  chown root.root /etc/ldap.secret   
-  echo -n "\${ADMINPW}" > /etc/ldap.secret
+  if [ \$? == 0 ];then
+    ADMINPW="\${NEWROOTPW}";
+    touch /etc/ldap.secret
+    chmod 400 /etc/ldap.secret
+    chown root.root /etc/ldap.secret   
+    echo -n "\${ADMINPW}" > /etc/ldap.secret
+   else
+    ADMINPW="`cat /etc/ldap.secret`";
+  fi;
  else
   ADMINPW="`cat /etc/ldap.secret`";
 fi;
@@ -1740,15 +1743,6 @@ if [ ! -e /var/spool/apache/htdocs/ns/config/$limfile ];then
   LDAPLIMPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
   CRYPT=`slappasswd -c '\$1\$%.8s' -s \${LDAPLIMPW}`
 
-  touch /var/spool/apache/htdocs/ns/config/$limfile
-  chmod 600 /var/spool/apache/htdocs/ns/config/$limfile
-  chown www.www /var/spool/apache/htdocs/ns/config/$limfile
-  echo -n \${LDAPLIMPW} > /var/spool/apache/htdocs/ns/config/$limfile
-
-  touch /etc/ldap.limited
-  chmod 400 /etc/ldap.limited
-  echo -n "\${LDAPLIMPW}" > /etc/ldap.limited
-
   (cat <<EOF
 dn: $ldapserv{'limited'},$vsuf
 uid: $anonuid
@@ -1759,6 +1753,17 @@ cn: Priv seperation account (Limited)
 userPassword: \${CRYPT}
 EOF
 ) |/usr/bin/ldapadd -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z
+
+  if [ \$? == 0 ];then
+    touch /var/spool/apache/htdocs/ns/config/$limfile
+    chmod 600 /var/spool/apache/htdocs/ns/config/$limfile
+    chown www.www /var/spool/apache/htdocs/ns/config/$limfile
+    echo -n \${LDAPLIMPW} > /var/spool/apache/htdocs/ns/config/$limfile
+
+    touch /etc/ldap.limited
+    chmod 400 /etc/ldap.limited
+    echo -n "\${LDAPLIMPW}" > /etc/ldap.limited
+  fi;
  else
   LDAPLIMPW=`cat /var/spool/apache/htdocs/ns/config/$limfile`
 fi;
@@ -1768,10 +1773,6 @@ if [ ! -e /var/spool/apache/htdocs/ns/config/$conffile ];then
   LDAPCONFPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
   CRYPT=`slappasswd -c '\$1\$%.8s' -s \${LDAPCONFPW}`
 
-  touch /var/spool/apache/htdocs/ns/config/$conffile
-  chmod 600 /var/spool/apache/htdocs/ns/config/$conffile
-  chown www.www /var/spool/apache/htdocs/ns/config/$conffile
-  echo -n \${LDAPCONFPW} > /var/spool/apache/htdocs/ns/config/$conffile
   (cat <<EOF
 dn: $ldapserv{'config'},$vsuf
 uid: $confuid
@@ -1782,6 +1783,13 @@ cn: Priv seperation account (Config)
 userPassword: \${CRYPT}
 EOF
 ) |/usr/bin/ldapadd -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z
+
+  if [ \$? == 0 ];then
+    touch /var/spool/apache/htdocs/ns/config/$conffile
+    chmod 600 /var/spool/apache/htdocs/ns/config/$conffile
+    chown www.www /var/spool/apache/htdocs/ns/config/$conffile
+    echo -n \${LDAPCONFPW} > /var/spool/apache/htdocs/ns/config/$conffile
+  fi;
  else
   LDAPCONFPW=`cat /var/spool/apache/htdocs/ns/config/$conffile`
 fi;
@@ -1791,10 +1799,6 @@ if [ -s /var/spool/apache/htdocs/ns/config/ldap.replica ] && [ ! -e /etc/ldap-$f
   LDAPREPPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
   CRYPT=`slappasswd -c '\$1\$%.8s' -s \${LDAPREPPW}`
 
-  touch /etc/ldap-$fqdn
-  chmod 400 /etc/ldap-$fqdn
-  chown root.root /etc/ldap-$fqdn
-  echo -n \${LDAPREPPW} > /etc/ldap-$fqdn
   (cat <<EOF
 dn: uid=$fqdn,ou=servers,$vsuf
 uid: $fqdn
@@ -1805,6 +1809,12 @@ cn: Priv seperation account (Replication/Local)
 userPassword: \${CRYPT}
 EOF
 ) |/usr/bin/ldapadd -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z
+  if [ \$? == 0 ];then
+    touch /etc/ldap-$fqdn
+    chmod 400 /etc/ldap-$fqdn
+    chown root.root /etc/ldap-$fqdn
+    echo -n \${LDAPREPPW} > /etc/ldap-$fqdn
+  fi;
 fi;
 
 __EOF__
