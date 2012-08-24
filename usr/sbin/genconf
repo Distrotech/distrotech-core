@@ -2461,6 +2461,12 @@ sub printldap(){
     $vsuf.="dc=" . $dndat . ",";
   }
 
+  if ($dnsconf{'Hostname'}) {
+    $fqdn="$dnsconf{'Hostname'}.$dnsconf{'Domain'}";
+  } else {
+    $fqdn=$dnsconf{'Domain'}
+  }
+
   chop $vsuf;
 if ( -d "/etc/openldap/schema" ) {
   print SC<<__EOB__;
