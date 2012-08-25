@@ -78,7 +78,7 @@ if (isset($pbxupdate)) {
   $voipcbset=array("VoipFallover","NatAreaCode","AutoAuth","AutoLock","UNKDEF","DEFRECORD","DialAreaCode","AddExCLI",
              "AutoCLI","MaxAll","mISDNimm","mISDNrr","NoEnum","GSMRoute","GSMTrunk","LocalFwd","Default_9","REMDEF","NoOper","ADVPIN",
              "E1mfcr2_get_ani_first","E1mfcr2_allow_collect_calls","mfcr2_double_answer","E1mfcr2_immediate_accept",
-             "E1mfcr2_forced_relea","E1mfcr2_charge_call","PPDIS","PRIcrc4","DISADDI","NoBridge","AddGroup","FollowDDI");
+             "E1mfcr2_forced_relea","E1mfcr2_charge_call","PPDIS","PRIcrc4","DISADDI","NoBridge","AddGroup","FollowDDI","IFAXD");
 
   for($cbcnt=0;$cbcnt < count($voipcbset);$cbcnt++) {
     $cbval=$voipcbset[$cbcnt];
@@ -753,6 +753,10 @@ if ($origdata['FAXBOX'] == "") {
 %>
       </SELECT>
   </TD>
+</TR>
+<TR CLASS=list-color1>
+  <TD onmouseover="myHint.show('PS23')" onmouseout="myHint.hide()"><%print _("Enable Inbound FAX Detect");%></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=IFAXD<%if ($origdata["IFAXD"] == "1") {print " CHECKED";}%>></TD>
 </TR>
 </TABLE>
 </DIV>

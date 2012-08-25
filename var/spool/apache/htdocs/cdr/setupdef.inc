@@ -54,6 +54,7 @@ $vadmindef=array(
 	"GSMPat" => "(^08[1-47][0-9]{7}$)|(^07[1-4689][0-9]{7}$)",
 	"GSMRoute" => "0",
 	"GSMTrunk" => "0",
+        "IFAXD" => "0",
 	"IPContext" => "6",
 	"IntAccess" => "00",
 	"IntLocal" => "0",
