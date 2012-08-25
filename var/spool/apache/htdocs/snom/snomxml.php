@@ -152,7 +152,7 @@ if ($domain != "") {
     <ldap_port perm="R">389</ldap_port>
     <ldap_base perm="R"></ldap_base>
     <ldap_username perm="R">cn=Snom,ou=Snom</ldap_username>
-    <ldap_password perm="R"><%print $suser["userPassword"][0];%></ldap_password>
+    <ldap_password perm="R"><%print htmlentities($suser["userPassword"][0], ENT_QUOTES, "UTF-8");%></ldap_password>
     <ldap_search_filter perm="R"><%print htmlentities("(&(telephoneNumber=*)(cn=%))");%></ldap_search_filter>
     <ldap_number_filter perm="R"><%print htmlentities("(&(telephoneNumber=%)(cn=*))");%></ldap_number_filter>
     <ldap_name_attributes perm="R">cn</ldap_name_attributes>
