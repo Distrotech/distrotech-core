@@ -80,6 +80,22 @@ printf "%-45s %-50s %-10s defaults%-20s 0 0\n","devpts","/dev/pts","devpts","";
 printf "%-45s %-50s %-10s defaults%-20s 0 0\n","usbfs","/proc/bus/usb","usbfs","";
 printf "%-45s %-50s %-10s defaults%-20s 0 0\n","nfsd","/proc/fs/nfsd","nfsd","";
 
+if ( -e "/tftpboot/Ubuntu/desktop-i386.iso") {
+  printf "%-45s %-50s %-10s defaults%-20s 0 0\n","/tftpboot/Ubuntu/desktop-i386.iso","/tftpboot/Ubuntu/Desktop/","iso9660",",user,loop,ro";
+}
+
+if ( -e "/tftpboot/Ubuntu/server-i386.iso") {
+  printf "%-45s %-50s %-10s defaults%-20s 0 0\n","/tftpboot/Ubuntu/server-i386.iso","/tftpboot/Ubuntu/Server/","iso9660",",user,loop,ro";
+}
+
+if (-e "/etc/fstab.local") {
+  open(LFS,"/etc/fstab.local");
+  while(<LFS>) {
+    print $_;
+  }
+  close(LFS);
+}
+
 if (-e "/etc/fstab.vault") {
   open(EFS,"/etc/fstab.vault");
   while(<EFS>) {
@@ -87,3 +103,4 @@ if (-e "/etc/fstab.vault") {
   }
   close(EFS);
 }
+
