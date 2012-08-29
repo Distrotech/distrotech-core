@@ -319,15 +319,58 @@ EOF
   echo "smbadm::139:" >> mnt/floppy/group
   echo "*.*                                       /dev/tty5" > mnt/floppy/syslog.conf
   echo "telnet          stream  tcp     nowait  root    /usr/sbin/in.telnetd" > mnt/floppy/inetd.conf
-  sed -e "s/^PasswordAuthentication/PasswordAuthentication yes/" etc/sshd_config > mnt/floppy/sshd_config
-  sed -e "s/^\(PasswordAuthentication\) no/\1 yes/" etc/sshd_config > mnt/floppy/sshd_config
+  sed -e "s/^\(PasswordAuthentication\).*/\1 yes/" \
+      -e "s/^\(UsePAM\).*/\1 no/" etc/sshd_config > mnt/floppy/sshd_config
   sed -e "s/^.*agetty.*//" etc/inittab > mnt/floppy/inittab
+  sed -e "s/ecryptfs/permit/" etc/pam.conf > mnt/floppy/pam.conf
   sed -e "s/^#skip-innodb$/skip-innodb/" etc/my.cnf > mnt/floppy/my.cnf
   sed -e "s/\(suggested-size.*\)20011/\1211/" etc/nscd.conf > mnt/floppy/nscd.conf
 
-  for todel in HOSTNAME openssl/ca.conf ifconf/* mtab*;do
+  for todel in HOSTNAME openssl/ca.conf ifconf/* mtab* ppp/ip-up;do
     rm mnt/floppy/${todel} > /dev/null 2>&1
   done
+
+  (cat <<_EOF_
+#!/bin/bash
+
+(flock -w 20 10 || exit
+if [ ! -e /dev/gsmmodem ];then
+  TST=X
+  while [ "${TST}" != "XXXXXXXX" ] && [ ! -e /dev/gsmmodem ];do
+    /usr/bin/sleep 5
+    TST=${TST}X
+  done;
+  if [ ! -e /dev/gsmmodem ];then
+    exit
+  fi;
+fi;
+
+/usr/sbin/pppd /dev/gsmmodem connect "/usr/sbin/chat -v -f /etc/ppp/diald.3g" lock maxfail 5 unit 10 logfile /var/log/pppd.log.3g linkname 3g ipparam 3g defaultroute noauth persist nomultilink usepeerdns
+
+flock -u 10
+) 10>/var/lock/ppp10.lock &
+_EOF_
+) > mnt/floppy/ifconf/pppup.ppp3g
+  chmod 755 mnt/floppy/ifconf/pppup.ppp3g
+
+  (cat <<_EOF_
+#!/bin/bash
+
+grep -v "nameserver" /etc/resolv.conf > /tmp/resolv.conf
+
+if [ "\${DNS1}" ];then
+  echo "nameserver \${DNS1}" >> /tmp/resolv.conf
+fi;
+
+if [ "\${DNS2}" ];then
+  echo "nameserver \${DNS2}" >> /tmp/resolv.conf
+fi;
+
+cp /tmp/resolv.conf /etc/resolv.conf
+
+_EOF_
+) > mnt/floppy/ppp/ip-up
+  chmod 755 mnt/floppy/ppp/ip-up
 
   for totouch in mtab .install .networksentry-lite;do
     touch mnt/floppy/${totouch}
@@ -351,7 +394,7 @@ EOF
   rsync -avHKOn --out-format="%n" --filter=". install/core/core.filter" ./ ${TDIR} |awk '/(^[a-z]+\/)|(^home$)/ {print $0}' |\
       sort > install/core/filelist
   tar --use-compress-program=bzip2 -cf install/core/install.tbz etc/group etc/syslog.conf etc/inetd.conf etc/sshd_config\
-      etc/inittab etc/my.cnf etc/nscd.conf var
+      etc/inittab etc/ppp/ip-up etc/my.cnf etc/nscd.conf etc/pam.conf var
 
   rm root/.bash_history > /dev/null 2>&1
   cd ${CWD}
