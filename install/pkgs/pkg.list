@@ -32,3 +32,4 @@ svn.tbz:var/spool/rsync/programs:bunzip2
 windomadmin.tgz:var/spool/rsync/programs/var/spool/samba/dadmin:gunzip
 extrafw.txz:var/spool/rsync/programs/lib/firmware:unxz
 ecrypt.txz:var/spool/rsync/programs:unxz
+pxelinux.txz:var/spool/rsync/programs:unxz
