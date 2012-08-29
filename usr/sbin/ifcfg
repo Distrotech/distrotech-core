@@ -29,7 +29,9 @@ fi
 eval `cat /etc/ifconf/ifup.${INT}`
 
 #Set Address On Interface
-/sbin/ip -4 addr flush dev ${IFNAME}
+if [ ! -e /etc/.install ] && [ ! -e /etc/.needsreconf ];then
+ /sbin/ip -4 addr flush dev ${IFNAME}
+fi;
 if [ "${CHILLI}" == "0" ] && [ "${NETWORK}" != "169.254.0.0" ];then
   /sbin/ip addr add ${ADDRESS}/${NETMASK} dev ${IFNAME} broadcast ${BROADCAST} > /dev/null 2>&1
   /sbin/ip addr add ::${ADDRESS}/96 dev sit0 > /dev/null 2>&1
