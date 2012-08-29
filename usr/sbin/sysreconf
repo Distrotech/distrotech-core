@@ -85,7 +85,7 @@ if [ -e /etc/.install ];then
   if [ -d /sys/class/net/ethA ] && [ -d /sys/class/net/wlanA ];then
     if [ ! -d /sys/class/net/br0 ];then
       brctl addbr br0
-      brctl addif br0 ethA
+#      brctl addif br0 ethA
       brctl addif br0 wlanA
       brctl stp br0 on
       ip link set br0 up
@@ -651,12 +651,14 @@ interface "${INT_IFACE[1]}" {
 EOF
 ) > /etc/dhclient.conf
 
-  (cat <<EOF
+  if [ ! -e /etc/.install ];then
+    (cat <<EOF
 domain $DOM_ADDR
 search $DOM_ADDR
 nameserver 127.0.0.1
 EOF
 ) > /etc/resolv.conf
+  fi;
 
   (cat <<EOF
 $IP_ADDR            $HN_ADDR.$DOM_ADDR $HN_ADDR
