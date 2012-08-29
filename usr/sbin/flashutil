@@ -798,7 +798,7 @@ Clean_Init() {
 init_rd_drivers() {
   kernel=${3}
 
-  for kdir in drivers drivers-ata drivers-scsi drivers-usb;do
+  for kdir in drivers drivers-ata drivers-scsi drivers-usb nfs drivers-net;do
     mkdir -p ${1}/lib/modules/${kernel}/${kdir}
   done;
 
@@ -812,10 +812,39 @@ init_rd_drivers() {
     cp -r ${2}lib/modules/${kernel}/kernel/drivers/usb/storage/* ${1}/lib/modules/${kernel}/drivers-usb
   fi;
 
+   if [ ! -e ${2}lib/modules/${kernel}/dahdi ];then
+    if [ -d ${2}lib/modules/${kernel}/kernel/drivers/net/ethernet ];then
+      cp -r ${2}lib/modules/${kernel}/kernel/drivers/net/ethernet/* ${1}/lib/modules/${kernel}/drivers-net
+      rm -rf ${1}/lib/modules/${kernel}/drivers-net/sfc*
+      rm -rf ${1}/lib/modules/${kernel}/drivers-net/ti/tlan.ko.gz
+      rm -rf ${1}/lib/modules/${kernel}/drivers-net/i825xx/znet.ko.gz
+    fi;
+  fi;
+
+  for kmod in drivers/net/mdio.ko.gz drivers/uio/uio.ko.gz drivers/net/mii.ko.gz drivers/net/sungem_phy.ko.gz \
+              drivers/net/phy/libphy.ko.gz drivers/dca/dca.ko.gz net/ipv6/ipv6.ko.gz net/unix/unix.ko.gz \
+              net/packet/af_packet.ko.gz;do
+   if [ -f ${2}lib/modules/${kernel}/kernel/${kmod} ];then
+     cp ${2}lib/modules/${kernel}/kernel/${kmod} ${1}/lib/modules/${kernel}/drivers
+    elif [ -d ${2}lib/modules/${kernel}/kernel/${kmod} ];then
+     cp -r ${2}lib/modules/${kernel}/kernel/${kmod} ${1}/lib/modules/${kernel}/drivers
+   fi;
+  done;
+
   for nonata in ata_generic.ko.gz pata_legacy.ko.gz ahci_platform.ko.gz pata_acpi.ko.gz libahci.ko.gz;do
     if [ -f ${1}/lib/modules/${kernel}/drivers-ata/${nonata} ];then
       mv ${1}/lib/modules/${kernel}/drivers-ata/${nonata} ${1}/lib/modules/${kernel}/drivers
     fi;
+  done;
+
+  for kmod in kernel/fs/fscache/fscache.ko.gz kernel/net/sunrpc/sunrpc.ko.gz kernel/fs/lockd/lockd.ko.gz \
+              kernel/net/sunrpc/auth_gss/auth_rpcgss.ko.gz kernel/fs/nfs_common/nfs_acl.ko.gz \
+              /kernel/fs/nfs/nfs.ko.gz;do
+   if [ -f ${2}lib/modules/${kernel}/${kmod} ];then
+     cp ${2}lib/modules/${kernel}/${kmod} ${1}/lib/modules/${kernel}/nfs
+    elif [ -d ${2}lib/modules/${kernel}/${kmod} ];then
+     cp -r ${2}lib/modules/${kernel}/${kmod} ${1}/lib/modules/${kernel}/nfs
+   fi;
   done;
 
   for kmod in block/loop.ko.gz base/firmware_class.ko.gz pcmcia mmc/core \
@@ -885,11 +914,18 @@ initrd_init() {
   cp ${2}/sbin/nash ${1}/bin
   cp ${2}/sbin/losetup.static ${1}/sbin/losetup
   cp ${2}/sbin/mount.static ${1}/bin/mount
+  cp ${2}/sbin/mount.nfs.static ${1}/sbin/mount.nfs
+  mkdir -p ${1}/usr/share/udhcpc/
+  cp ${2}/usr/share/udhcpc/distrotech-nfs.script ${1}/usr/share/udhcpc/default.script
   ln -s /proc/mounts ${1}/etc/mtab
   ln -s /sbin/lvm ${1}/sbin/vgchange
   ln -s /sbin/lvm ${1}/sbin/vgscan
   ln -s /sbin/lvm ${1}/sbin/vgmknodes
   ln -s /linuxrc ${1}/sbin/init
+  ln -s /sbin/mount.nfs ${1}/sbin/mount.nfs4
+  if [ -e ${2}/boot/busybox.tgz ];then
+    tar -C ${1} -xzf ${2}/boot/busybox.tgz
+  fi;
   touch ${1}/etc/fstab) 2>/dev/null
 
   dst=${1}
@@ -1090,7 +1126,8 @@ EOF
     fi;
   fi;
 
-  cat << EOF
+  if [ "${3}" != "nfs" ];then
+    cat << EOF
 sleep 5
 vgchange -a y --sysinit
 mount -t ramfs none /var/lock/lvm
@@ -1105,6 +1142,30 @@ mount -t proc none /proc
 mount -t sysfs none /sys
 /initrd/sbin/mntetc
 EOF
+   else
+    for netint in `ls ${1}/mnt/initrd/lib/modules/${2}/drivers-net/*.ko.gz ${1}/mnt/initrd/lib/modules/${2}/drivers-net/*/*.ko.gz ${1}/mnt/initrd/lib/modules/${2}/drivers-net/*/*/*.ko.gz`;do
+      echo modprobe `basename ${netint} |cut -d. -f1`;
+    done
+
+    cat << EOF
+modprobe unix
+modprobe ipv6
+modprobe af_packet
+
+sleep 5
+
+/bin/ip link set dev eth0 down
+/bin/ip link set dev eth0 name ethA
+/sbin/udhcpc -i ethA
+echo 0x0100 > /proc/sys/kernel/real-root-dev
+/bin/ash
+pivot_root /sysroot /sysroot/initrd
+
+mount -t proc none /proc
+mount -t sysfs none /sys
+/initrd/sbin/mntetc
+EOF
+  fi;
 }
 
 mkbootimg() {
@@ -1115,7 +1176,7 @@ mkbootimg() {
     return 255
   fi;
 
-  (dd if=/dev/zero of=${1}/tmp/initrd bs=1M count=8
+  (dd if=/dev/zero of=${1}/tmp/initrd bs=1M count=16
   losetup ${ILOOP} ${1}/tmp/initrd
   mkfs.ext2 -F -L initrd -i 1024 ${1}/tmp/initrd
   mount ${ILOOP} ${1}/mnt/initrd) > /dev/null 2>&1
@@ -1176,6 +1237,18 @@ EOF
   done;
   e2fsck -Dfy ${ILOOP} > /dev/null 2>&1
   (dd if=${1}/tmp/initrd |gzip -c9 > ${1}/boot/initrd-install-loop) > /dev/null 2>&1
+
+  mount ${ILOOP} ${1}/mnt/initrd
+  mkbootimg_cfg ${1} ${2}-install nfs > ${1}/mnt/initrd/linuxrc
+  chmod 750 ${1}/mnt/initrd/linuxrc
+  sleep 2
+  umount ${1}/mnt/initrd
+  while [ -d ${1}/mnt/initrd/lost+found ];do
+    sleep 2
+    umount ${1}/mnt/initrd > /dev/null 2>&1
+  done;
+  e2fsck -Dfy ${ILOOP} > /dev/null 2>&1
+  (dd if=${1}/tmp/initrd |gzip -c9 > ${1}/boot/initrd-install-nfs) > /dev/null 2>&1
 
   sleep 2
   losetup -d ${ILOOP}
@@ -1646,7 +1719,7 @@ EOF
   fi;
 
   if [ ${NOUP} == 1 ] && [ -e ${1}/install/core/kernel.tar.bz2 ];then
-    if [ ! -e ${1}/boot/initrd-install ] || [ ! -e ${1}/boot/initrd-install-dvd ] || [ ! -e ${1}/boot/initrd-install-loop ] || [ ! -e ${1}/lib/modules/${KERNEL}/modules.dep ];then
+    if [ ! -e ${1}/boot/initrd-install ] || [ ! -e ${1}/boot/initrd-install-dvd ] || [ ! -e ${1}/boot/initrd-install-loop ] || [ ! -e ${1}/boot/initrd-install-nfs ] || [ ! -e ${1}/lib/modules/${KERNEL}/modules.dep ];then
       mkbootimg ${1}/ ${KERNEL}
     fi;
     return 0;
