@@ -23,9 +23,9 @@ export PATH=/sbin:/usr/sbin:/bin:/usr/bin
 /usr/sbin/acpid > /dev/null 2>&1
 
 if [ -e /etc/.install ];then
-  /usr/bin/setsid /sbin/agetty 38400 tty8 linux &
-  /usr/bin/setsid /sbin/agetty 38400 tty9 linux &
-  /usr/bin/setsid /sbin/agetty -nl /bin/bash 38400 tty2 linux &
+  (while [ 1 ];do /usr/bin/setsid /sbin/agetty 38400 tty8 linux;done) &
+  (while [ 1 ];do /usr/bin/setsid /sbin/agetty 38400 tty9 linux;done) &
+  (while [ 1 ];do /usr/bin/setsid /sbin/agetty -nl /bin/bash 38400 tty2 linux;done) &
   /install/sysconfig
   clear
   init 6
