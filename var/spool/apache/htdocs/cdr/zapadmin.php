@@ -143,7 +143,7 @@ if ($zdata['resetinterval'] == "never") {
   $zdata['resetinterval']="0";
 }
 if ($zdata['echocancel'] == "yes") {
-  $zdata['echocancel']="256";
+  $zdata['echocancel']="128";
 }
 
 
