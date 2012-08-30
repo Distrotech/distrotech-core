@@ -2239,6 +2239,7 @@ if [ "${1}" == "iso" ];then
     Umount_Flash
     echo "Sync PXE Boot (Kernel/Initrd)"
     rsync -avP ${CORE}/boot/vmlinuz-install ${CORE}/boot/initrd-install-nfs /tftpboot/Distrotech/
+    rsync -avP ${CORE}/boot/memtest.bin /tftpboot/Distrotech/memtest
    else
     if [ "${3}" ];then
       SERV=${3}
@@ -2255,6 +2256,7 @@ if [ "${1}" == "iso" ];then
     Make_Bootetc ${CORE}
     echo "Sync PXE Boot (Kernel/Initrd)"
     rsync -avP ${CORE}/boot/vmlinuz-install ${CORE}/boot/netsentry-initrd-nfs /tftpboot/Distrotech/
+    rsync -avP ${CORE}/boot/memtest.bin /tftpboot/Distrotech/memtest
     exit ${RET}
   fi
  elif [ "${1}" == "rsync" ];then
@@ -2356,6 +2358,7 @@ if [ "${1}" == "iso" ];then
   if [ -d ${CORE}/install/core ];then
     echo "Sync PXE Boot (Kernel/Initrd)"
     rsync -avP ${CORE}/boot/vmlinuz-install ${CORE}/boot/initrd-install-nfs /tftpboot/Distrotech/
+    rsync -avP ${CORE}/boot/memtest.bin /tftpboot/Distrotech/memtest
   fi;
   exit ${RES}
  elif [ "${1}" == "initrd" ];then
