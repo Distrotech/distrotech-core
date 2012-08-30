@@ -1199,7 +1199,7 @@ sleep 5
 
 /bin/ip link set dev eth0 down
 /bin/ip link set dev eth0 name ethA
-/sbin/udhcpc -i ethA
+/sbin/udhcpc -i ethA -q
 echo 0x0100 > /proc/sys/kernel/real-root-dev
 /bin/ash
 pivot_root /sysroot /sysroot/initrd
