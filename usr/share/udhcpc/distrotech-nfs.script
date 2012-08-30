@@ -6,6 +6,6 @@ case ${1} in
            ;;
 	"bound")
            /bin/ip addr add ${ip}/${subnet} broadcast ${broadcast} dev ${interface}
-           /bin/mount ${router}:/mnt/dev /sysroot
+           /bin/mount -o ro ${router}:/mnt/dev /sysroot
            ;;
 esac
