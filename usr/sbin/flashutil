@@ -954,8 +954,6 @@ initrd_init() {
   (cp ${2}/etc/lvm/lvm.conf ${1}/etc/lvm/
   cp ${2}/usr/sbin/lvm.static ${1}/sbin/lvm
   cp ${2}/usr/bin/modprobe.static ${1}/sbin/modprobe
-  cp ${2}/sbin/nash ${1}/bin
-  cp ${2}/sbin/losetup.static ${1}/sbin/losetup
   cp ${2}/sbin/mount.static ${1}/bin/mount
   cp ${2}/sbin/mount.nfs.static ${1}/sbin/mount.nfs
   mkdir -p ${1}/usr/share/udhcpc/
@@ -1016,11 +1014,13 @@ initrd_config() {
     ROOTDEV=`blkid -s UUID -o value /dev/lvm/root`
   fi;
   cat <<_EOF_
-#!/bin/nash
+#!/bin/ash
 
-mount -t devtmpfs none /dev
-mount -t proc none /proc
-mount -t sysfs none /sys
+echo "Distrotech Linux Starting"
+
+/bin/mount -t devtmpfs none /dev
+/bin/mount -t proc none /proc
+/bin/mount -t sysfs none /sys
 
 _EOF_
 
@@ -1077,14 +1077,14 @@ _EOF_
 /bin/mount -t devtmpfs none /isofs/dev
 /bin/mount -t proc none /isofs/proc
 /bin/mount -t sysfs none /isofs/sys
-pivot_root /isofs /isofs/media
+/sbin/pivot_root /isofs /isofs/media
 /sbin/fsck -TCAa
 /bin/mount / -o remount,rw
 /sbin/losetup /dev/loop0 ${LOOP_FILE}
 umount /proc
 umount /dev
 umount /sys
-pivot_root /media /media/isofs
+/sbin/pivot_root /media /media/isofs
 
 _EOF_
   fi;
@@ -1104,7 +1104,7 @@ umount /var/lock/lvm
 /bin/mount -o ro -t ext4 -U ${ROOTDEV} /sysroot
 echo 0x0100 > /proc/sys/kernel/real-root-dev
 
-pivot_root /sysroot /sysroot/initrd
+/sbin/pivot_root /sysroot /sysroot/initrd
 
 mount -t proc none /proc
 mount -t sysfs none /sys
@@ -1113,11 +1113,13 @@ _EOF_
 
 mkbootimg_cfg() {
   cat << EOF
-#!/bin/nash
+#!/bin/ash
 
-mount -t devtmpfs none /dev
-mount -t proc none /proc
-mount -t sysfs none /sys
+echo "Distrotech Linux Starting"
+
+/bin/mount -t devtmpfs none /dev
+/bin/mount -t proc none /proc
+/bin/mount -t sysfs none /sys
 
 EOF
 
@@ -1179,7 +1181,7 @@ umount /var/lock/lvm
 /bin/mount -n -o ro -t ext4 -L INSTALL /sysroot
 echo 0x0100 > /proc/sys/kernel/real-root-dev
 
-pivot_root /sysroot /sysroot/initrd
+/sbin/pivot_root /sysroot /sysroot/initrd
 
 mount -t proc none /proc
 mount -t sysfs none /sys
@@ -1201,7 +1203,7 @@ sleep 5
 /bin/ip link set dev eth0 name ethA
 /sbin/udhcpc -i ethA -q
 echo 0x0100 > /proc/sys/kernel/real-root-dev
-pivot_root /sysroot /sysroot/initrd
+/sbin/pivot_root /sysroot /sysroot/initrd
 
 mount -t proc none /proc
 mount -t sysfs none /sys
