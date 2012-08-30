@@ -157,7 +157,8 @@ LDAPOpCacheTTL 300
 LDAPTrustedMode SSL
 LDAPVerifyServerCert off
 LanguagePriority en da nl et fr de el it ja kr no pl pt pt-br ru ltz ca es sv tw
-Listen 192.168.1.4:80
+Listen 0.0.0.0:80
+Listen [::]:80
 Listen 443
 Listen 666
 LogFormat "%V %h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
@@ -169,8 +170,8 @@ LogLevel notice
 MIMEMagicFile /opt/apache2/conf/magic
 <IfModule prefork.c>
   ServerLimit          1024
-  StartServers           20
-  MinSpareServers        50
+  StartServers           10
+  MinSpareServers        10
   MaxSpareServers       100
   MaxClients           1024
   MaxRequestsPerChild   256
@@ -243,7 +244,7 @@ User www
   AllowOverride None
 </Directory>
 
-<Directory "/var/spool/apache/htdocs">
+<DirectoryMatch "^/(tftpboot/Ubuntu/Server)|(var/spool/apache/htdocs)">
   Options Indexes MultiViews FollowSymLinks
   AllowOverride AuthConfig Limit Indexes
   php_admin_value safe_mode Off
@@ -266,7 +267,7 @@ User www
       RubyHandler Apache::ERbRun.instance
     </Files>
   </IfModule>
-</Directory>
+</DirectoryMatch>
 
 <DirectoryMatch "^/var/spool/apache/htdocs/(cshop|ccadmin|ticket)">
   php_admin_value register_globals Off
@@ -622,6 +623,10 @@ RewriteRule ^/openvpn/(.*).zip$ /var/spool/apache/htdocs/auth/openvpn.php?euser=
 RewriteRule ^/photo/([a-zA-Z0-9\.-]+).jpg(.*) /var/spool/apache/htdocs/ldap/photo.php?euser=$1$2 [L,T=application/x-httpd-php]
 RewriteRule ^/photo/([a-zA-Z0-9\.-]+)_([0-9]+).jpg(.*) /var/spool/apache/htdocs/ldap/photo.php?euser=$1&pcount=$2$3 [L,T=application/x-httpd-php]
 RewriteRule ^/photo/([a-zA-Z0-9\.-]+)_album.html(.*) /var/spool/apache/htdocs/ldap/album.php?euser=$1$2 [L,T=application/x-httpd-php]
+
+#Ubuntu ISO
+RewriteRule ^/ubuntu/(.*)$ /tftpboot/Ubuntu/Server/$1 [L]
+RewriteRule ^/ubuntu /tftpboot/Ubuntu/Server/ [L]
 
 #Rewrite for /<USERNAME> For non special hosts only Web Folders
 RewriteCond ${lowercase:%{HTTP_HOST}}   ^([^.]*).*$
