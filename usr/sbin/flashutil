@@ -1201,7 +1201,6 @@ sleep 5
 /bin/ip link set dev eth0 name ethA
 /sbin/udhcpc -i ethA -q
 echo 0x0100 > /proc/sys/kernel/real-root-dev
-/bin/ash
 pivot_root /sysroot /sysroot/initrd
 
 mount -t proc none /proc
@@ -2238,6 +2237,8 @@ if [ "${1}" == "iso" ];then
       Local_Sync ${MNTP} ${CORE}
     fi;
     Umount_Flash
+    echo "Sync PXE Boot (Kernel/Initrd)"
+    rsync -avP ${CORE}/boot/vmlinuz-install ${CORE}/boot/initrd-install-nfs /tftpboot/Distrotech/
    else
     if [ "${3}" ];then
       SERV=${3}
@@ -2248,9 +2249,12 @@ if [ "${1}" == "iso" ];then
      else
       echo "Sync Anti Virus / Upgrade"
       rsync ${ROPT_LOC} -u --delete --include=/update --include=/avirus --exclude=/avirus/clamav-* --exclude=/*/.* --exclude=/* /var/spool/ / ${CORE}/install/
+      RET=$?
     fi;
     Tar_Kernel ${CORE} ${2}
     Make_Bootetc ${CORE}
+    echo "Sync PXE Boot (Kernel/Initrd)"
+    rsync -avP ${CORE}/boot/vmlinuz-install ${CORE}/boot/netsentry-initrd-nfs /tftpboot/Distrotech/
     exit ${RET}
   fi
  elif [ "${1}" == "rsync" ];then
@@ -2349,6 +2353,10 @@ if [ "${1}" == "iso" ];then
   fi;
 
   Umount_Flash
+  if [ -d ${CORE}/install/core ];then
+    echo "Sync PXE Boot (Kernel/Initrd)"
+    rsync -avP ${CORE}/boot/vmlinuz-install ${CORE}/boot/initrd-install-nfs /tftpboot/Distrotech/
+  fi;
   exit ${RES}
  elif [ "${1}" == "initrd" ];then
   if [ ! "${2}" ] || [ ! "${3}" ];then
@@ -2389,4 +2397,3 @@ if [ "${1}" == "iso" ];then
  else
   Show_Help
 fi;
-
