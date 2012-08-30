@@ -627,10 +627,10 @@ while [ $RESULT == 0 ];do
     3)Network_Address;;
     4)Date_Time;;
     I)Local_Install;;
-    V){RET=0;
+    V)(RET=0;
        while [ ${RET} == 0 ];do
          View_Menu;
          RET=$?;
-       done};;
+       done);;
   esac;
 done
