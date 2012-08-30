@@ -51,7 +51,7 @@ function getdefval($value) {
 }
 
 $ipgw=array();
-$ipgws=pg_query($db,"SELECT name||' ('||description||')',CASE WHEN (protocol = 'OH323') THEN 'OOH323/'||lpad(trunkprefix,7,'0') ELSE protocol||'/'||providerip||'/' END from provider left outer join trunk using (trunkprefix) WHERE protocol != 'Local' ORDER BY name,description");
+$ipgws=pg_query($db,"SELECT name||' ('||description||')',CASE WHEN (protocol = 'OH323') THEN 'OOH323/'||lpad(CAST(trunkprefix AS VARCHAR),7,'0') ELSE protocol||'/'||providerip||'/' END from provider left outer join trunk using (trunkprefix) WHERE protocol != 'Local' ORDER BY name,description");
 for($ipcnt=0;$ipcnt < pg_num_rows($ipgws);$ipcnt++) {
   $ipgwr=pg_fetch_array($ipgws,$ipcnt,PGSQL_NUM);
   array_push($ipgw,array('name'=>$ipgwr[0],'gw'=>$ipgwr[1]));
