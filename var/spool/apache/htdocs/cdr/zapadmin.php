@@ -19,14 +19,13 @@
 */
 
 $label['signalling']=_("Genral Settings");
-$label['echocancel']=_("Echo Cancelation Settings");
+$label['echocancel']=_("Echo Cancel No Of Taps");
 $label['toneduration']=_("DTMF Settings");
 $label['busydetect']=_("Call Progress Settings");
 $label['usecallerid']=_("Caller ID Settings");
 $label['answeronpolarityswitch']=_("Polarity Reversal Settings");
 $label['switchtype']=_("ISDN Setings (Only Used On PRI Trunk)");
 
-$yesno['echocancel']=1;
 $yesno['echocancelwhenbridged']=1;
 $yesno['relaxdtmf']=1;
 $yesno['busydetect']=1;
@@ -40,7 +39,7 @@ $yesno['restrictcid']=1;
 
 $descrip['signalling']=_("Trunk Line Type");
 $descrip['jitterbuffers']=_("No. Of Jitter Buffers To Use (20ms)");
-$descrip['echocancel']=_("Enable Echo Cancelation");
+$descrip['echocancel']=_("Echo Cancel No Of Taps");
 $descrip['echotraining']=_("Echo Training Time (ms)");
 $descrip['echocancelwhenbridged']=_("Use Echo Cancelation On Bridged Calls");
 $descrip['toneduration']=_("Duration Of Tone Sent");
@@ -125,6 +124,13 @@ $switchtype['qsig']=_("Q.SIG");
 $priindication['inband']=_("In Band");
 $priindication['outofband']=_("Out Of Band");
 
+$echocancel['no']=_("Off");
+$echocancel['32']=_("32");
+$echocancel['64']=_("64");
+$echocancel['128']=_("128");
+$echocancel['256']=_("256");
+$echocancel['512']=_("512");
+
 
 $qgetzdata=pg_query($db,"SELECT signalling,jitterbuffers,echocancel,echotraining,echocancelwhenbridged,toneduration,relaxdtmf,
                                 dtmfduplicatedelay,busydetect,busycount,busypattern,callprogress,progzone,ringtimeout,usecallerid,cidsignalling,
@@ -134,8 +140,12 @@ $qgetzdata=pg_query($db,"SELECT signalling,jitterbuffers,echocancel,echotraining
 
 $zdata=pg_fetch_array($qgetzdata,0,PGSQL_ASSOC);
 if ($zdata['resetinterval'] == "never") {
-     $zdata['resetinterval']="0";
-  }
+  $zdata['resetinterval']="0";
+}
+if ($zdata['echocancel'] == "yes") {
+  $zdata['echocancel']="256";
+}
+
 
 %>
 <INPUT TYPE=HIDDEN NAME=zaptrunk VALUE=<%print $zaptrunk;%>>
