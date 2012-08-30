@@ -7353,6 +7353,16 @@ _EOB_
     print FW "/sbin/iptables -A NFSOUT -j ACCEPT -d @nfsdat[0]\n\n";
   }
 
+  foreach $iface (@ints) {
+    @idata=split(/\|/,$interface{$iface});
+    if ((@idata[1] eq "0.0.0.0") && (@idata[2] eq "32")) {
+      next;
+    }
+    $netip=getnw(@idata[2],@idata[1]);
+    print FW "/sbin/iptables -A NFSIN -j ACCEPT -i @idata[3] -s $netip/@idata[2] -d @idata[1]\n";
+    print FW "/sbin/iptables -A NFSOUT -j ACCEPT -o @idata[3] -d $netip/@idata[2] -s @idata[1]\n";
+  }
+
 #Deny All Other NFS
 #/sbin/iptables -A NFSIN -j DENY
 #/sbin/iptables -A NFSOUT -j DENY
@@ -7371,7 +7381,7 @@ for port in "111" "2049" "32765:32769";do
         iface="-o"
       fi;
       for pflag in "--sport" "--dport";do
-        iptables -A \$direc2 -j NFS\$direc \$iface $ethint -p \$proto \$pflag \$port
+        iptables -A \$direc2 -j NFS\$direc -p \$proto \$pflag \$port
       done;
     done;
   done;
@@ -14558,16 +14568,16 @@ rm /var/spool/backup/osticket.sql.gz
 ln -s /var/spool/backup/osticket-\${BDATE}.sql.gz /var/spool/backup/osticket.sql.gz
 
 
-SYSFILES="var/spool/apache/htdocs/ns/config/netsentry.conf \\
+SYSFILES="var/spool/apache/htdocs/ns/config/netsentry.conf etc/exports.local \\
           var/spool/apache/htdocs/ns/config/server.conf \\
           var/spool/apache/htdocs/ns/config/ca.conf etc/mrtg.conf.local \\
           var/spool/apache/htdocs/mrtg/*old etc/firewall.local etc/rc.local \\
           var/spool/apache/htdocs/mrtg/*log etc/crontab.local etc/nsswitch.conf.local \\
           var/spool/apache/htdocs/mrtg/index.html etc/ppp/mangle \\
           etc/openssl/ etc/ipsec.d/certs etc/custdb etc/rc.d/rc.mangle \\
-          var/lib/asterisk/astdb etc/asterisk/ivrmenu.conf \\
+          var/lib/asterisk/astdb etc/asterisk/ivrmenu.conf etc/fstab.vault \\
           etc/asterisk/local.conf root/slapd.local etc/sogo_ad.conf \\
-          etc/asterisk/iaxtel.conf etc/asterisk/capi.conf \\
+          etc/asterisk/iaxtel.conf etc/asterisk/capi.conf etc/fstab.local \\
           etc/asound.state etc/zebra/Zebra.conf etc/dhcp.conf.local etc/dhcp6.conf.local \\
           etc/ipsec.d/cacerts/cacert.pem /etc/ppp/mangle /etc/dyndnsconf \\
           etc/rc.d/rc.mangle etc/ipsec.secrets etc/*.local etc/ipv6.conf etc/6to4.conf \\
@@ -17111,6 +17121,26 @@ sub printnfsexport() {
     }
     chop $options;
     printf NFE ("%-50s%s(sync,no_subtree_check%s)\n",@nfsdat[1],@nfsdat[0],$options);
+  }
+
+  if ( -e "/tftpboot/Ubuntu/desktop-i386.iso") {
+    printf NFE ("%-50s%s(sync,no_subtree_check%s)\n","/tftpboot/Ubuntu/Desktop","*",",ro,insecure,no_root_squash,insecure_locks");
+  }
+
+  if ( -e "/tftpboot/Ubuntu/server-i386.iso") {
+    printf NFE ("%-50s%s(sync,no_subtree_check%s)\n","/tftpboot/Ubuntu/Server","*",",ro,insecure,no_root_squash,insecure_locks");
+  }
+
+  if ( -d "/mnt/dev/install/core") {
+    printf NFE ("%-50s%s(sync,no_subtree_check%s)\n","/mnt/dev","*",",ro,insecure,no_root_squash,insecure_locks");
+  }
+
+  if ( -e "/etc/exports.local") {
+    open(NFEL,"/etc/exports.local");
+    while(<NFEL>) {
+      print NFE $_;
+    }
+    close(NFEL);
   }
   close(NFE);
 }
