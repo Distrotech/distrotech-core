@@ -2,6 +2,7 @@
 + /boot/grub/background.jpg
 - /boot/grub/*
 + /boot/memtest.bin
++ /boot/busybox.tgz
 - /boot/*
 - /dev
 - /etc/adjtime
