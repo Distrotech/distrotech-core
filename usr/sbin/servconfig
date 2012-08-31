@@ -588,18 +588,7 @@ if [ -e networksentry-lite ] ;then
     fi;
     /usr/sbin/winbindd > /dev/null 2>&1 &
 
-    (/usr/sbin/portmap
-    /usr/sbin/rpc.statd -p 32765 -o 32766
-    /usr/sbin/rpc.lockd
-    /usr/sbin/rpc.mountd -p 32767
-    /usr/sbin/rpc.nfsd
-    /usr/sbin/rpc.rquotad -p 32769)>/dev/null 2>&1
-
     /usr/sbin/named > /dev/null 2>&1
-
-    if [ -x /etc/rc.d/rc.mount ];then
-      /etc/rc.d/rc.mount
-    fi;
 
     if [ ! -d /var/run/proftpd ];then
       mkdir /var/run/proftpd
