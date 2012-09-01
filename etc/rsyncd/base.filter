@@ -2,6 +2,7 @@
 + /install/*
 + /boot
 - /boot/initrd-install*
+- /boot/initrd-dts*
 + /boot/grub
 + /boot/grub/background.jpg
 - /boot/grub/*

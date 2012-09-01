@@ -5,6 +5,7 @@
 - /boot/vmlinuz*
 - /boot/System.map*
 - /boot/initrd-install*
+- /boot/initrd-dts*
 - /install
 - /mnt/update/*
 - /lib/modules

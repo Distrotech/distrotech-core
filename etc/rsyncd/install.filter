@@ -8,6 +8,7 @@
 + /boot/grub/background.jpg
 - /boot/grub/*
 - /boot/initrd-install*
+- /boot/initrd-dts*
 + /install/core
 - /install/core/*
 + /install/avirus
