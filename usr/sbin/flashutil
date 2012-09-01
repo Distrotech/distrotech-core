@@ -2042,20 +2042,20 @@ Sync_Local(){
 
 pxeboot_config() {
   echo "Sync PXE Boot (Kernel/Initrd)"
-  rm /tftpboot/Distrotech/initrd* /tftboot/Distrotech/vmlinuz*
+  rm /tftpboot/Distrotech/initrd* /tftpboot/Distrotech/vmlinuz*
   rsync -avP ${CORE}/boot/vmlinuz-${KSUF} ${CORE}/boot/initrd-${KSUF} /tftpboot/Distrotech/
   rsync -avP ${CORE}/boot/memtest.bin /tftpboot/Distrotech/memtest
   (cat << EOF
 LABEL 1
         MENU LABEL Distrotech Network Install
-        KERNEL Distrotech/vmlinuz-install
-        APPEND initrd=Distrotech/initrd-dts ${KSUF}_opt=nfs vga=0x303
+        KERNEL Distrotech/vmlinuz-${KSUF}
+        APPEND initrd=Distrotech/initrd-${KSUF} ${KSUF}_opt=nfs vga=0x303
         TEXT HELP
         Install Distrotech Over The Network
         ENDTEXT
 LABEL 2
         MENU LABEL Distrotech Network Install (Rescue Mode)
-        KERNEL Distrotech/vmlinuz-install
+        KERNEL Distrotech/vmlinuz-${KSUF}
         APPEND initrd=Distrotech/initrd-${KSUF} S ${KSUF}_opt=nfs vga=0x303
         TEXT HELP
         Distrotech Network Rescue Mode
