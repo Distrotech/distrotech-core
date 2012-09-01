@@ -1118,12 +1118,6 @@ mkbootimg_cfg() {
   cat << EOF
 #!/bin/ash
 
-echo "Distrotech Linux Starting"
-
-/bin/mount -t devtmpfs none /dev
-/bin/mount -t proc none /proc
-/bin/mount -t sysfs none /sys
-
 EOF
 
 for driver in `ls ${1}/mnt/initrd/lib/modules/${2}/drivers-ata |cut -d. -f1`;do
@@ -1250,9 +1244,37 @@ EOF
 ) > ${1}/mnt/initrd/sbin/mntetc
   chmod 750 ${1}/mnt/initrd/sbin/mntetc
 
-  mkbootimg_cfg ${1} ${2}-${KSUF} > ${1}/mnt/initrd/linuxrc
+  (cat << EOF
+#!/bin/ash
+
+echo "Distrotech Linux Starting"
+
+/bin/mount -t devtmpfs none /dev
+/bin/mount -t proc none /proc
+/bin/mount -t sysfs none /sys
+
+for copt in \`cat /proc/cmdline\`;do
+  if [ "\${copt#${KSUF}_opt=}" != "\${copt}" ];then
+    case \${copt#${KSUF}_opt=} in
+      dvd)exec /sbin/linuxrc.dvd;;
+      loop)exec /sbin/linuxrc.loop;;
+      nfs)exec /sbin/linuxrc.nfs;;
+    esac
+  fi;
+done
+
+/sbin/linuxrc
+
+EOF
+) > ${1}/mnt/initrd/linuxrc
   chmod 750 ${1}/mnt/initrd/linuxrc
 
+  mkbootimg_cfg ${1} ${2}-${KSUF} > ${1}/mnt/initrd/sbin/linuxrc
+  mkbootimg_cfg ${1} ${2}-${KSUF} dvd > ${1}/mnt/initrd/sbin/linuxrc.dvd
+  mkbootimg_cfg ${1} ${2}-${KSUF} loop > ${1}/mnt/initrd/sbin/linuxrc.loop
+  mkbootimg_cfg ${1} ${2}-${KSUF} nfs > ${1}/mnt/initrd/sbin/linuxrc.nfs
+
+  chmod 750 ${1}/mnt/initrd/sbin/linuxrc*
   ${1}/sbin/depmod -b ${1}/mnt/initrd -aeF ${1}/boot/System.map-${KSUF} ${2}-${KSUF}
 
   sleep 2
@@ -1266,42 +1288,6 @@ EOF
 
   e2fsck -Dfy ${ILOOP} > /dev/null 2>&1
   (dd if=${1}/tmp/initrd |gzip -c9 > ${1}/boot/initrd-${KSUF}) > /dev/null 2>&1
-
-  mount ${ILOOP} ${1}/mnt/initrd
-  mkbootimg_cfg ${1} ${2}-${KSUF} dvd > ${1}/mnt/initrd/linuxrc
-  chmod 750 ${1}/mnt/initrd/linuxrc
-  sleep 2
-  umount ${1}/mnt/initrd
-  while [ -d ${1}/mnt/initrd/lost+found ];do
-    sleep 2
-    umount ${1}/mnt/initrd > /dev/null 2>&1
-  done;
-  e2fsck -Dfy ${ILOOP} > /dev/null 2>&1
-  (dd if=${1}/tmp/initrd |gzip -c9 > ${1}/boot/initrd-${KSUF}-dvd) > /dev/null 2>&1
-
-  mount ${ILOOP} ${1}/mnt/initrd
-  mkbootimg_cfg ${1} ${2}-${KSUF} loop > ${1}/mnt/initrd/linuxrc
-  chmod 750 ${1}/mnt/initrd/linuxrc
-  sleep 2
-  umount ${1}/mnt/initrd
-  while [ -d ${1}/mnt/initrd/lost+found ];do
-    sleep 2
-    umount ${1}/mnt/initrd > /dev/null 2>&1
-  done;
-  e2fsck -Dfy ${ILOOP} > /dev/null 2>&1
-  (dd if=${1}/tmp/initrd |gzip -c9 > ${1}/boot/initrd-${KSUF}-loop) > /dev/null 2>&1
-
-  mount ${ILOOP} ${1}/mnt/initrd
-  mkbootimg_cfg ${1} ${2}-${KSUF} nfs > ${1}/mnt/initrd/linuxrc
-  chmod 750 ${1}/mnt/initrd/linuxrc
-  sleep 2
-  umount ${1}/mnt/initrd
-  while [ -d ${1}/mnt/initrd/lost+found ];do
-    sleep 2
-    umount ${1}/mnt/initrd > /dev/null 2>&1
-  done;
-  e2fsck -Dfy ${ILOOP} > /dev/null 2>&1
-  (dd if=${1}/tmp/initrd |gzip -c9 > ${1}/boot/initrd-${KSUF}-nfs) > /dev/null 2>&1
 
   sleep 2
   losetup -d ${ILOOP}
@@ -1765,7 +1751,7 @@ EOF
   fi;
 
   if [ ${NOUP} == 1 ] && [ -e ${1}/install/core/kernel.tar.bz2 ];then
-    if [ ! -e ${1}/boot/initrd-${KSUF} ] || [ ! -e ${1}/boot/initrd-${KSUF}-dvd ] || [ ! -e ${1}/boot/initrd-${KSUF}-loop ] || [ ! -e ${1}/boot/initrd-${KSUF}-nfs ] || [ ! -e ${1}/lib/modules/${KERNEL}/modules.dep ];then
+    if [ ! -e ${1}/boot/initrd-${KSUF} ] || [ ! -e ${1}/lib/modules/${KERNEL}/modules.dep ];then
       mkbootimg ${1}/ ${KERNEL}
     fi;
     return 0;
@@ -1877,25 +1863,25 @@ if test -e (flash-install)/boot/initrd-${KSUF} ;then
   if test -e (cd)/flash.hdd ;then
     menuentry "Install" {
   	set root=(flash-install)
-        linux /boot/vmlinuz-${KSUF} root=/dev/flash/install ro quiet vga=0x303
-        initrd /boot/initrd-${KSUF}-dvd
+        linux /boot/vmlinuz-${KSUF} root=/dev/flash/install ro quiet vga=0x303 ${KSUF}_opt=dvd
+        initrd /boot/initrd-${KSUF}
     }
     menuentry "Install (Rescue)" {
 	set root=(flash-install)
-        linux /boot/vmlinuz-${KSUF} root=/dev/flash/install ro single vga=0x303
-        initrd /boot/initrd-${KSUF}-dvd
+        linux /boot/vmlinuz-${KSUF} root=/dev/flash/install ro single vga=0x303 ${KSUF}_opt=dvd
+        initrd /boot/initrd-${KSUF}
     }
    else
     if test -d (install,msdos1)/putty ;then
       menuentry "Install" {
 	set root=(flash-install)
-        linux /boot/vmlinuz-${KSUF} root=/dev/flash/install ro quiet vga=0x303
-        initrd /boot/initrd-${KSUF}-loop
+        linux /boot/vmlinuz-${KSUF} root=/dev/flash/install ro quiet vga=0x303 ${KSUF}_opt=loop
+        initrd /boot/initrd-${KSUF}
       }
       menuentry "Install (Rescue)" {
 	set root=(flash-install)
-        linux /boot/vmlinuz-${KSUF} root=/dev/flash/install ro single vga=0x303
-        initrd /boot/initrd-${KSUF}-loop
+        linux /boot/vmlinuz-${KSUF} root=/dev/flash/install ro single vga=0x303 ${KSUF}_opt=loop
+        initrd /boot/initrd-${KSUF}
       }
      else
       menuentry "Install" {
@@ -2231,7 +2217,7 @@ if [ "${1}" == "iso" ];then
     fi;
     Umount_Flash
     echo "Sync PXE Boot (Kernel/Initrd)"
-    rsync -avP ${CORE}/boot/vmlinuz-${KSUF} ${CORE}/boot/initrd-${KSUF}-nfs /tftpboot/Distrotech/
+    rsync -avP ${CORE}/boot/vmlinuz-${KSUF} ${CORE}/boot/initrd-${KSUF} /tftpboot/Distrotech/
     rsync -avP ${CORE}/boot/memtest.bin /tftpboot/Distrotech/memtest
    else
     if [ "${3}" ];then
@@ -2248,7 +2234,7 @@ if [ "${1}" == "iso" ];then
     Tar_Kernel ${CORE} ${2}
     Make_Bootetc ${CORE}
     echo "Sync PXE Boot (Kernel/Initrd)"
-    rsync -avP ${CORE}/boot/vmlinuz-${KSUF} ${CORE}/boot/initrd-${KSUF}-nfs /tftpboot/Distrotech/
+    rsync -avP ${CORE}/boot/vmlinuz-${KSUF} ${CORE}/boot/initrd-${KSUF} /tftpboot/Distrotech/
     rsync -avP ${CORE}/boot/memtest.bin /tftpboot/Distrotech/memtest
     exit ${RET}
   fi
@@ -2350,7 +2336,7 @@ if [ "${1}" == "iso" ];then
   Umount_Flash
   if [ -d ${CORE}/install/core ];then
     echo "Sync PXE Boot (Kernel/Initrd)"
-    rsync -avP ${CORE}/boot/vmlinuz-${KSUF} ${CORE}/boot/initrd-${KSUF}-nfs /tftpboot/Distrotech/
+    rsync -avP ${CORE}/boot/vmlinuz-${KSUF} ${CORE}/boot/initrd-${KSUF} /tftpboot/Distrotech/
     rsync -avP ${CORE}/boot/memtest.bin /tftpboot/Distrotech/memtest
   fi;
   exit ${RES}
