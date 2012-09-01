@@ -2040,6 +2040,36 @@ Sync_Local(){
   return ${RES}
 }
 
+pxeboot_config() {
+  echo "Sync PXE Boot (Kernel/Initrd)"
+  rm /tftpboot/Distrotech/initrd* /tftboot/Distrotech/vmlinuz*
+  rsync -avP ${CORE}/boot/vmlinuz-${KSUF} ${CORE}/boot/initrd-${KSUF} /tftpboot/Distrotech/
+  rsync -avP ${CORE}/boot/memtest.bin /tftpboot/Distrotech/memtest
+  (cat << EOF
+LABEL 1
+        MENU LABEL Distrotech Network Install
+        KERNEL Distrotech/vmlinuz-install
+        APPEND initrd=Distrotech/initrd-dts ${KSUF}_opt=nfs vga=0x303
+        TEXT HELP
+        Install Distrotech Over The Network
+        ENDTEXT
+LABEL 2
+        MENU LABEL Distrotech Network Install (Rescue Mode)
+        KERNEL Distrotech/vmlinuz-install
+        APPEND initrd=Distrotech/initrd-${KSUF} S ${KSUF}_opt=nfs vga=0x303
+        TEXT HELP
+        Distrotech Network Rescue Mode
+        ENDTEXT
+LABEL 3
+	MENU LABEL Memory Test
+	KERNEL Distrotech/memtest
+        TEXT HELP
+        Memory Test Utility
+        ENDTEXT
+EOF
+) > /tftpboot/Distrotech/Distrotech.menu
+}
+
 if [ "`id -u`" != "0" ];then
   Show_Help
   echo "You are seeing this page as you are trying to run it non root."
@@ -2216,9 +2246,7 @@ if [ "${1}" == "iso" ];then
       Local_Sync ${MNTP} ${CORE}
     fi;
     Umount_Flash
-    echo "Sync PXE Boot (Kernel/Initrd)"
-    rsync -avP ${CORE}/boot/vmlinuz-${KSUF} ${CORE}/boot/initrd-${KSUF} /tftpboot/Distrotech/
-    rsync -avP ${CORE}/boot/memtest.bin /tftpboot/Distrotech/memtest
+    pxeboot_config
    else
     if [ "${3}" ];then
       SERV=${3}
@@ -2233,9 +2261,7 @@ if [ "${1}" == "iso" ];then
     fi;
     Tar_Kernel ${CORE} ${2}
     Make_Bootetc ${CORE}
-    echo "Sync PXE Boot (Kernel/Initrd)"
-    rsync -avP ${CORE}/boot/vmlinuz-${KSUF} ${CORE}/boot/initrd-${KSUF} /tftpboot/Distrotech/
-    rsync -avP ${CORE}/boot/memtest.bin /tftpboot/Distrotech/memtest
+    pxeboot_config
     exit ${RET}
   fi
  elif [ "${1}" == "rsync" ];then
@@ -2335,9 +2361,7 @@ if [ "${1}" == "iso" ];then
 
   Umount_Flash
   if [ -d ${CORE}/install/core ];then
-    echo "Sync PXE Boot (Kernel/Initrd)"
-    rsync -avP ${CORE}/boot/vmlinuz-${KSUF} ${CORE}/boot/initrd-${KSUF} /tftpboot/Distrotech/
-    rsync -avP ${CORE}/boot/memtest.bin /tftpboot/Distrotech/memtest
+    pxeboot_config
   fi;
   exit ${RES}
  elif [ "${1}" == "initrd" ];then
