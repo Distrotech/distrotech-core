@@ -1785,7 +1785,7 @@ EOF
 }
 
 Make_Grubcfg_Head(){
-  for inmod in part_msdos part_gpt ext2 vbe vga video_bochs video_cirrus jpeg gfxterm gettext;do
+  for inmod in part_msdos part_gpt ext2 ntfs vbe vga video_bochs video_cirrus jpeg gfxterm gettext;do
     echo "insmod $inmod";
   done
 
@@ -1798,7 +1798,7 @@ fi
 insmod lvm
 
 if loadfont (flash-install)/usr/share/grub/unicode.pf2 ; then
-  set gfxmode=640x480
+  set gfxmode=auto
   terminal_output gfxterm
   if background_image (flash-install)/boot/grub/background.jpg; then
     set color_normal=white/black
@@ -1829,10 +1829,19 @@ Make_Grubcfg(){
 
   for bdisk in hd0 hd1 hd2 hd3;do
     for mpart in 1 2 3 4;do
+(cat <<  EOF
+if test -e ($bdisk,msdos$mpart)/bootmgr ;then
+  menuentry "$bdisk $mpart (Windows)" {
+	set root=(${bdisk},msdos${mpart})
+        chainloader +1
+  }
+fi
+EOF
+)
       for bpath in /boot/ /;do
 (cat <<  EOF
 if test -e ($bdisk,msdos$mpart)${bpath}grub/grub.cfg ;then
-  menuentry "$bdisk $mpart $bpath" {
+  menuentry "$bdisk $mpart (GRUB $bpath)" {
 	set root=(${bdisk},msdos${mpart})
         configfile ${bpath}grub/grub.cfg
   }
@@ -1846,7 +1855,7 @@ EOF
 
   (cat <<  EOF
 if test -e (lvm-root)/boot/grub/grub.cfg ;then
-  menuentry "LVM" {
+  menuentry "LVM (lvm-root GRUB)" {
 	set root=(lvm-root)
         configfile /boot/grub/grub.cfg
   }
