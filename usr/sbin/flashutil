@@ -255,8 +255,8 @@ Check_Grub() {
     NEED_INITRD=1
   fi;
   if [ ${NEED_INITRD} == 1 ] || \
-     [ ${MNTP}/install/core/kernel.tar.bz2 -nt ${MNTP}/boot/initrd-${KSUF} ] || \
-     [ ${MNTP}/usr/sbin/flashutil -nt ${MNTP}/boot/initrd-${KSUF} ];then
+     [ ${MNTP}/install/core/kernel.tar.bz2 -nt ${MNTP}/boot/initrd.img ] || \
+     [ ${MNTP}/usr/sbin/flashutil -nt ${MNTP}/boot/initrd.img ];then
     Tar_Kernel ${MNTP}
   fi;
 
@@ -470,10 +470,10 @@ Sync_Update() {
   rsync ${ROPT_LOC} --delete --exclude=${KERNEL}-${KSUF}/modules.* ${1}/lib/modules/${KERNEL}-${KSUF} lib/modules/
   echo
   echo "Install Kernel"
-  rsync ${ROPT_LOC} ${1}/boot/vmlinuz-${KSUF} boot/vmlinuz-${KERNEL}-${KSUF}
+  rsync ${ROPT_LOC} ${1}/boot/vmlinuz boot/vmlinuz-${KERNEL}-${KSUF}
   echo
   echo "Install Kernel System Map"
-  rsync ${ROPT_LOC} ${1}/boot/System.map-${KSUF} boot/System.map-${KERNEL}-${KSUF}
+  rsync ${ROPT_LOC} ${1}/boot/System.map boot/System.map-${KERNEL}-${KSUF}
   echo
 
   if [ ! -h var/spool/avirus ] || [ -e var/spool/avirus ];then
@@ -703,7 +703,7 @@ Remote_Sync() {
   if [ ${RERR} == 0 ];then
     echo "Distribution (Non Core)"
     rsync ${ROPT} --delete --exclude=/dev/* --exclude=/sys/* --exclude=/proc/* --exclude=/lost+found --include=/boot/grub/background.jpg \
-               --exclude=/lib/modules/* --exclude=/boot/vmlinuz-${KSUF} --exclude=/boot/System.map-${KSUF}  --exclude=/boot/initrd-${KSUF}* \
+               --exclude=/lib/modules/* --exclude=/boot/vmlinuz --exclude=/boot/System.map --exclude=/boot/initrd.img \
                --exclude=/boot/grub/* --exclude=/mnt/install/* --exclude=/etc/mtab --exclude=/etc/fstab --exclude=/install/avirus/* \
                --exclude=/mnt/update/*  --exclude=/install/update/* --exclude=/install/core/* \
                --exclude=/install/tools/* --exclude=/lib/firmware/* --exclude=/install/netsentry-version rsync://${SERV}/install/ ${1}/
@@ -718,8 +718,8 @@ Remote_Sync() {
     if [ ${ISDTS} == 1 ];then
       echo "Base Files (Local Copy [No Kernel])"
       rsync ${ROPT} -u --include=/install/core/core.filter --exclude=/install/core/* \
-             --exclude=/lib/modules/* --exclude=/boot/vmlinuz-${KSUF} --exclude=/boot/System.map-${KSUF} --exclude=/lib/firmware/* \
-             --exclude=/install/avirus/* --exclude=/install/update/* --exclude=/boot/initrd-${KSUF}* --exclude=/install/tools/* \
+             --exclude=/lib/modules/* --exclude=/boot/vmlinuz --exclude=/boot/System.map --exclude=/lib/firmware/* \
+             --exclude=/install/avirus/* --exclude=/install/update/* --exclude=/boot/initrd.img --exclude=/install/tools/* \
              rsync://${SERV}/base/ ${1}
       RERR=$?
       echo
@@ -764,7 +764,7 @@ Remote_Sync() {
      else
       echo "Base Files (Local Repository Kernel)"
       rsync ${ROPT} -u --include=/install/core/kernel.tar.bz2 --include=/install/netsentry-version --include=/install/core \
-             --exclude=/lib/modules/*/modules.* --exclude=/boot/initrd-${KSUF}* --include=/install/core/core.filter --exclude=/install/core/* \
+             --exclude=/lib/modules/*/modules.* --exclude=/boot/initrd.img --include=/install/core/core.filter --exclude=/install/core/* \
              --exclude=/install/tools --exclude=/install/* rsync://${SERV}/base/ ${1}
       RERR=$?
       echo
@@ -807,7 +807,7 @@ Local_Sync() {
   if [ ${RERR} == 0 ];then
     echo "Distribution"
     rsync ${ROPT_LOC} --inplace --delete --exclude=/proc/* --exclude=/sys/* --exclude=/dev/* --exclude=/lost+found \
-          --exclude=/lib/modules/*/modules.* --exclude=/boot/initrd-${KSUF}* --exclude=/install/tools/* \
+          --exclude=/lib/modules/*/modules.* --exclude=/boot/initrd.img --exclude=/install/tools/* \
           --include=/boot/grub/background.jpg --exclude=/boot/grub/* --exclude=/mnt/install/* \
           --exclude=/mnt/update/* --exclude=/etc/mtab ${1}/* ${2}
     RERR=$?
@@ -1076,7 +1076,7 @@ _EOF_
 
   if [ "${LOOP_FILE}" ] && [ "${LOOP_DEV}" ];then
     cat << _EOF_
-/bin/mount -n -o ro -t `blkid /dev/sda3 -s TYPE -o value` -U `grub-probe -t fs_uuid -d ${LOOP_DEV}` /isofs
+/bin/mount -n -o ro -t `blkid ${LOOP_DEV} -s TYPE -o value` -U `grub-probe -t fs_uuid -d ${LOOP_DEV}` /isofs
 /bin/mount -t devtmpfs none /isofs/dev
 /bin/mount -t proc none /isofs/proc
 /bin/mount -t sysfs none /isofs/sys
@@ -1155,7 +1155,8 @@ sleep 5
 
 EOF
    elif [ "${3}" == "loop" ] && [ -e ${BASE}/flash.hdd ];then
-    LROOT=`grub-probe -t fs_uuid ${BASE}`
+    LBASE=`readlink -f ${BASE}`
+    LROOT=`grub-probe -t fs_uuid ${LBASE}`
     LFLASH=`grub-mkrelpath ${BASE}/flash.hdd`
 
     if [ "${LROOT}" ] && [ ${LFLASH} ];then
@@ -1210,8 +1211,8 @@ EOF
 }
 
 mkbootimg() {
-  if [ -d ${1}/lib/modules/${2}-${KSUF} ] && [ -e ${1}/boot/System.map-${KSUF} ];then
-    ${1}/sbin/depmod -a -F ${1}/boot/System.map-${KSUF} -b ${1} ${2}-${KSUF}
+  if [ -d ${1}/lib/modules/${2}-${KSUF} ] && [ -e ${1}/boot/System.map ];then
+    ${1}/sbin/depmod -a -F ${1}/boot/System.map -b ${1} ${2}-${KSUF}
   fi;
 
   ILOOP=`losetup -f`
@@ -1259,23 +1260,24 @@ for copt in \`cat /proc/cmdline\`;do
       dvd)exec /sbin/linuxrc.dvd;;
       loop)exec /sbin/linuxrc.loop;;
       nfs)exec /sbin/linuxrc.nfs;;
+      install)exec /sbin/linuxrc.install;;
     esac
   fi;
 done
 
-/sbin/linuxrc
+/sbin/linuxrc.install
 
 EOF
 ) > ${1}/mnt/initrd/linuxrc
   chmod 750 ${1}/mnt/initrd/linuxrc
 
-  mkbootimg_cfg ${1} ${2}-${KSUF} > ${1}/mnt/initrd/sbin/linuxrc
+  mkbootimg_cfg ${1} ${2}-${KSUF} > ${1}/mnt/initrd/sbin/linuxrc.install
   mkbootimg_cfg ${1} ${2}-${KSUF} dvd > ${1}/mnt/initrd/sbin/linuxrc.dvd
   mkbootimg_cfg ${1} ${2}-${KSUF} loop > ${1}/mnt/initrd/sbin/linuxrc.loop
   mkbootimg_cfg ${1} ${2}-${KSUF} nfs > ${1}/mnt/initrd/sbin/linuxrc.nfs
 
   chmod 750 ${1}/mnt/initrd/sbin/linuxrc*
-  ${1}/sbin/depmod -b ${1}/mnt/initrd -aeF ${1}/boot/System.map-${KSUF} ${2}-${KSUF}
+  ${1}/sbin/depmod -b ${1}/mnt/initrd -aeF ${1}/boot/System.map ${2}-${KSUF}
 
   sleep 2
   umount ${1}/mnt/initrd
@@ -1284,10 +1286,10 @@ EOF
     umount ${1}/mnt/initrd > /dev/null 2>&1
   done;
 
-  rm ${1}/boot/initrd-* > /dev/null 2>&1
+  rm ${1}/boot/initrd* > /dev/null 2>&1
 
   e2fsck -Dfy ${ILOOP} > /dev/null 2>&1
-  (dd if=${1}/tmp/initrd |gzip -c9 > ${1}/boot/initrd-${KSUF}) > /dev/null 2>&1
+  (dd if=${1}/tmp/initrd |gzip -c9 > ${1}/boot/initrd.img) > /dev/null 2>&1
 
   sleep 2
   losetup -d ${ILOOP}
@@ -1335,12 +1337,6 @@ mk_initrd() {
   init_rd_drivers_scsi ${1} ${2} ${KERNEL}-${KSUF}
   ${2}/sbin/depmod -a -e -F ${2}/boot/System.map-${KERNEL}-${KSUF} -b ${1} ${KERNEL}-${KSUF}
 
-  rm ${2}/boot/vmlinuz-${KSUF} ${2}/boot/System.map-${KSUF} /boot/vmlinuz /boot/System.map > /dev/null 2>&1
-  ln -s vmlinuz-${KERNEL}-${KSUF} ${2}/boot/vmlinuz-${KSUF}
-  ln -s System.map-${KERNEL}-${KSUF} ${2}/boot/System.map-${KSUF}
-  ln -s vmlinuz-${KERNEL}-${KSUF} ${2}/boot/vmlinuz
-  ln -s System.map-${KERNEL}-${KSUF} ${2}/boot/System.map
-
   initrd_config ${1} ${2} ${KERNEL}-${KSUF} > ${1}/linuxrc
   chmod 750 ${1}/linuxrc
 
@@ -1348,9 +1344,12 @@ mk_initrd() {
   losetup -d ${LOOP}
 
   (e2fsck -Dfy ${TINIT}
-  dd if=${TINIT} bs=1k |gzip -c9 > ${2}/boot/initrd-netsentry-$KERNEL
-  rm ${TINIT} ${2}/boot/initrd-netsentry
-  ln -s initrd-netsentry-${KERNEL} ${2}/boot/initrd-netsentry) > /dev/null 2>&1
+  dd if=${TINIT} bs=1k |gzip -c9 > ${2}/boot/initrd-${KERNEL}-${KSUF}
+  rm ${TINIT} ${2}/boot/initrd-netsentry ${2}/boot/initrd.img ${2}/boot/vmlinuz-${KSUF} ${2}/boot/vmlinuz.* ${2}/boot/System.map ${2}/boot/vmlinuz ${2}/boot/System.map > /dev/null 2>&1
+
+  ln -s vmlinuz-${KERNEL}-${KSUF} ${2}/boot/vmlinuz
+  ln -s System.map-${KERNEL}-${KSUF} ${2}/boot/System.map
+  ln -s initrd-${KERNEL}-${KSUF} ${2}/boot/initrd.img) > /dev/null 2>&1
 
   return 0
 }
@@ -1469,10 +1468,10 @@ __EOF__
   #Reinstall Grub/Update initrd if needed
   if [ ! -e /boot/grub/core.img ] || [ /usr/lib/grub/i386-pc/ -nt /boot/grub/core.img ];then
     /usr/sbin/mkgrub
-   elif [ ! -e /boot/initrd-netsentry-${KERNEL} ] || [ /boot/vmlinuz-${KERNEL}-${KSUF} -nt /boot/initrd-netsentry-${KERNEL} ];then
+   elif [ ! -e /boot/initrd-${KERNEL}-${KSUF} ] || [ /boot/vmlinuz-${KERNEL}-${KSUF} -nt /boot/initrd-${KERNEL}-${KSUF} ];then
     mk_initrd /mnt/initrd /
     if [ $? == 0 ];then
-      /usr/sbin/rdev /boot/vmlinuz-${KSUF} /dev/ram0
+      /usr/sbin/rdev /boot/vmlinuz /dev/ram0
       grub-mkconfig  > /boot/grub/grub.cfg
     fi;
   fi
@@ -1746,12 +1745,12 @@ EOF
     fi;
   done
 
-  if [ ! -e ${1}/boot/vmlinuz-${KSUF} ] || [ ! -e ${1}/boot/System.map-${KSUF} ];then
+  if [ ! -e ${1}/boot/vmlinuz ] || [ ! -e ${1}/boot/System.map ];then
     NOUP=0;
   fi;
 
   if [ ${NOUP} == 1 ] && [ -e ${1}/install/core/kernel.tar.bz2 ];then
-    if [ ! -e ${1}/boot/initrd-${KSUF} ] || [ ! -e ${1}/lib/modules/${KERNEL}/modules.dep ];then
+    if [ ! -e ${1}/boot/initrd.img ] || [ ! -e ${1}/lib/modules/${KERNEL}/modules.dep ];then
       mkbootimg ${1}/ ${KERNEL}
     fi;
     return 0;
@@ -1773,10 +1772,10 @@ EOF
       echo
     fi;
     echo "Kernel"
-    rsync ${ROPT_LOC} --inplace /boot/vmlinuz-${KERNEL}-${KSUF} ${1}/boot/vmlinuz-${KSUF}
+    rsync ${ROPT_LOC} --inplace /boot/vmlinuz-${KERNEL}-${KSUF} ${1}/boot/vmlinuz
     echo
     echo "Kernel System Map"
-    rsync ${ROPT_LOC} --inplace /boot/System.map-${KERNEL}-${KSUF} ${1}/boot/System.map-${KSUF}
+    rsync ${ROPT_LOC} --inplace /boot/System.map-${KERNEL}-${KSUF} ${1}/boot/System.map
     echo
     mkbootimg ${1}/ ${KERNEL}
    else
@@ -1832,11 +1831,10 @@ Make_Grubcfg(){
     for mpart in 1 2 3 4;do
       for bpath in /boot/ /;do
 (cat <<  EOF
-if test -e ($bdisk,msdos$mpart)${bpath}initrd-netsentry ;then
+if test -e ($bdisk,msdos$mpart)${bpath}grub/grub.cfg ;then
   menuentry "$bdisk $mpart $bpath" {
 	set root=(${bdisk},msdos${mpart})
-	linux ${bpath}vmlinuz-${KSUF} root=/dev/loop0 ro single vga=0x303
-	initrd ${bpath}initrd-netsentry
+        configfile ${bpath}grub/grub.cfg
   }
 fi
 
@@ -1847,11 +1845,10 @@ EOF
   done;
 
   (cat <<  EOF
-if test -e (lvm-root)/boot/initrd-netsentry ;then
+if test -e (lvm-root)/boot/grub/grub.cfg ;then
   menuentry "LVM" {
 	set root=(lvm-root)
-	linux /boot/vmlinuz-${KSUF} root=/dev/lvm/root ro single vga=0x303
-	initrd /boot/initrd-netsentry
+        configfile /boot/grub/grub.cfg
   }
 fi
 
@@ -1859,40 +1856,55 @@ EOF
 )
 
   (cat <<  EOF
-if test -e (flash-install)/boot/initrd-${KSUF} ;then
+if test -e (flash-install)/boot/initrd.img ;then
   if test -e (cd)/flash.hdd ;then
     menuentry "Install" {
   	set root=(flash-install)
-        linux /boot/vmlinuz-${KSUF} root=/dev/flash/install ro quiet vga=0x303 ${KSUF}_opt=dvd
-        initrd /boot/initrd-${KSUF}
+        linux /boot/vmlinuz root=/dev/flash/install ro quiet vga=0x303 ${KSUF}_opt=dvd
+        initrd /boot/initrd.img
     }
     menuentry "Install (Rescue)" {
 	set root=(flash-install)
-        linux /boot/vmlinuz-${KSUF} root=/dev/flash/install ro single vga=0x303 ${KSUF}_opt=dvd
-        initrd /boot/initrd-${KSUF}
+        linux /boot/vmlinuz root=/dev/flash/install ro single vga=0x303 ${KSUF}_opt=dvd
+        initrd /boot/initrd.img
+    }
+    menuentry "Install (DHCP/NFS)" {
+  	set root=(flash-install)
+        linux /boot/vmlinuz root=/dev/flash/install ro quiet vga=0x303 ${KSUF}_opt=nfs
+        initrd /boot/initrd.img
     }
    else
     if test -d (install,msdos1)/putty ;then
       menuentry "Install" {
 	set root=(flash-install)
-        linux /boot/vmlinuz-${KSUF} root=/dev/flash/install ro quiet vga=0x303 ${KSUF}_opt=loop
-        initrd /boot/initrd-${KSUF}
+        linux /boot/vmlinuz root=/dev/flash/install ro quiet vga=0x303 ${KSUF}_opt=loop
+        initrd /boot/initrd.img
       }
       menuentry "Install (Rescue)" {
 	set root=(flash-install)
-        linux /boot/vmlinuz-${KSUF} root=/dev/flash/install ro single vga=0x303 ${KSUF}_opt=loop
-        initrd /boot/initrd-${KSUF}
+        linux /boot/vmlinuz root=/dev/flash/install ro single vga=0x303 ${KSUF}_opt=loop
+        initrd /boot/initrd.img
+      }
+      menuentry "Install (DHCP/NFS)" {
+	set root=(flash-install)
+	linux /boot/vmlinuz root=/dev/flash/install ro quiet vga=0x303 ${KSUF}_opt=nfs
+	initrd /boot/initrd.img
       }
      else
       menuentry "Install" {
 	set root=(flash-install)
-        linux /boot/vmlinuz-${KSUF} root=/dev/flash/install ro quiet vga=0x303
-        initrd /boot/initrd-${KSUF}
+        linux /boot/vmlinuz root=/dev/flash/install ro quiet vga=0x303 ${KSUF}_opt=install
+        initrd /boot/initrd.img
       }
       menuentry "Install (Rescue)" {
 	set root=(flash-install)
-        linux /boot/vmlinuz-${KSUF} root=/dev/flash/install ro single vga=0x303
-        initrd /boot/initrd-${KSUF}
+        linux /boot/vmlinuz root=/dev/flash/install ro single vga=0x303 ${KSUF}_opt=install
+        initrd /boot/initrd.img
+      }
+      menuentry "Install (DHCP/NFS)" {
+	set root=(flash-install)
+	linux /boot/vmlinuz root=/dev/flash/install ro quiet vga=0x303 ${KSUF}_opt=nfs
+	initrd /boot/initrd.img
       }
     fi;
   fi;
@@ -2043,20 +2055,20 @@ Sync_Local(){
 pxeboot_config() {
   echo "Sync PXE Boot (Kernel/Initrd)"
   rm /tftpboot/Distrotech/initrd* /tftpboot/Distrotech/vmlinuz*
-  rsync -avP ${CORE}/boot/vmlinuz-${KSUF} ${CORE}/boot/initrd-${KSUF} /tftpboot/Distrotech/
+  rsync -avP ${CORE}/boot/vmlinuz ${CORE}/boot/initrd.img /tftpboot/Distrotech/
   rsync -avP ${CORE}/boot/memtest.bin /tftpboot/Distrotech/memtest
   (cat << EOF
 LABEL 1
         MENU LABEL Distrotech Network Install
-        KERNEL Distrotech/vmlinuz-${KSUF}
-        APPEND initrd=Distrotech/initrd-${KSUF} ${KSUF}_opt=nfs vga=0x303
+        KERNEL Distrotech/vmlinuz
+        APPEND initrd=Distrotech/initrd.img ${KSUF}_opt=nfs vga=0x303
         TEXT HELP
         Install Distrotech Over The Network
         ENDTEXT
 LABEL 2
         MENU LABEL Distrotech Network Install (Rescue Mode)
-        KERNEL Distrotech/vmlinuz-${KSUF}
-        APPEND initrd=Distrotech/initrd-${KSUF} S ${KSUF}_opt=nfs vga=0x303
+        KERNEL Distrotech/vmlinuz
+        APPEND initrd=Distrotech/initrd.img S ${KSUF}_opt=nfs vga=0x303
         TEXT HELP
         Distrotech Network Rescue Mode
         ENDTEXT
@@ -2215,8 +2227,8 @@ if [ "${1}" == "iso" ];then
   if [ -e ${MNTP}/boot/grub/core.img ];then
     rm ${MNTP}/boot/grub/core.img
   fi;
-  if [ -e ${MNTP}/boot/initrd-${KSUF} ];then
-    rm ${MNTP}/boot/initrd-${KSUF}
+  if [ -e ${MNTP}/boot/initrd.img ];then
+    rm ${MNTP}/boot/initrd.img
   fi;
   Check_Grub
   Make_Bootetc ${MNTP}

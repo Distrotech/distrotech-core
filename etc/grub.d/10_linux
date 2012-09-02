@@ -19,11 +19,11 @@
 if [ -e ${1}/etc/netsentry-version ];then
   eval `cat ${1}/etc/netsentry-version`
   kernel="${1}/boot/vmlinuz-${KERNEL}-dts"
-  initrd="initrd-netsentry-${KERNEL}"
+  initrd="initrd-${KERNEL}-dts"
  else
   eval `cat ${1}/install/netsentry-version`
-  kernel="${1}/boot/vmlinuz-dts"
-  initrd="initrd-dts"
+  kernel="${1}/boot/vmlinuz"
+  initrd="initrd.img"
 fi;
 
 prefix=/usr

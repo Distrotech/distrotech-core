@@ -2,6 +2,6 @@
 
 flashutil initrd /mnt/initrd /
 
-/usr/sbin/rdev /boot/vmlinuz-dts /dev/ram0
+/usr/sbin/rdev /boot/vmlinuz /dev/ram0
 
 grub-mkconfig  > /boot/grub/grub.cfg
