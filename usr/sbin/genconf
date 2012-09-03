@@ -1736,7 +1736,9 @@ userPassword: \${SNOMPW}
 EOF
 ) |/usr/bin/ldapmodify -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z
 
-/usr/sbin/rebootphone
+if [ -e /var/spool/pgsql/postmaster.pid ] && [ -d /proc/`cat /var/spool/pgsql/postmaster.pid |head -1` ];then
+  /usr/sbin/rebootphone
+fi;
 
 if [ ! -e /var/spool/apache/htdocs/ns/config/$limfile ];then
   ldapdelete -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z $ldapserv{'limited'},$vsuf
@@ -15320,9 +15322,10 @@ foreach $proxy (@sipproxys) {
     if ((@sipreg[1] ne "") && (@sipreg[0] ne "")) {
       print SC "register=>@sipreg[0]:@sipreg[1]\@@sipreg[2]/";
     } elsif ((@sipreg[0] ne "") && (@sipreg[1] eq "")) {
-      print SC "register=>@sipreg[0]\@@sipreg[2]/\n";
+      print SC "register=>@sipreg[0]\@@sipreg[2]/";
     }
-    print SC (@sipreg[4] eq "")?@sipreg[0]:@sipreg[4] . "\n";
+    print SC (@sipreg[4] eq "")?@sipreg[0]:@sipreg[4];
+    print SC "\n";
   }
 }
 
