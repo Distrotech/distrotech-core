@@ -1,6 +1,0 @@
-#!/bin/bash
-
-/sbin/lilo -b /dev/fd0
-/bin/dd if=/dev/ram3 of=/dev/fd0 bs=1k count=1440
-/usr/sbin/rdev /dev/fd0 /dev/fd0
-/usr/sbin/rdev -r /dev/fd0 49152
