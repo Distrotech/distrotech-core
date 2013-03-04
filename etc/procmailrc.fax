@@ -1,3 +1,0 @@
-MAILDIR="/var/spool/mail/shared/.Incoming Faxes"
-DEFAULT=$MAILDIR/
-UMASK=0007

@@ -1,2 +1,0 @@
-# zaptel devices -- for running asterisk as non-root
-zap/*:asterisk:asterisk:660
