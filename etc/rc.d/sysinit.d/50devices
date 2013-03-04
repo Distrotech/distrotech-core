@@ -1,0 +1,88 @@
+#!/bin/bash
+
+#    Copyright (C) 2002  <Gregory Hinton Nietsky>
+#    Copyright (C) 2005  <ZA Telecomunications>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+#Load netfilter / hwmon / acpi / dma modules
+(/sbin/modprobe -a -lt netfilter \*nf_nat* |awk -F/ '{printf "modprobe %s\n",substr($5,0,index($5,".")-1)}' |sh
+/sbin/modprobe -a -lt hwmon |awk -F/ '{printf "modprobe %s\n",substr($4,0,index($4,".")-1)}' |sh
+/sbin/modprobe -a -lt acpi |awk -F/ '{printf "modprobe %s\n",substr($4,0,index($4,".")-1)}' |sh 
+/sbin/modprobe -a -lt dma |awk -F/ '{printf "modprobe %s\n",substr($4,0,index($4,".")-1)}' |sh) > /dev/null 2>&1
+
+#Load modules explicitly
+for loadmod in ppp_generic 8021q ipcomp ip_gre esp4 ah4 tun l2tp_ppp pppoe capability \
+               sr_mod autofs4 psmouse dazuko imq lp fuse;do
+  /sbin/modprobe ${loadmod} >/dev/null 2>&1
+done;
+
+#load the vesa fb if no other fb is loaded
+if [ ! -e /dev/fb1 ];then
+  modprobe uvesafb >/dev/null 2>&1
+fi;
+
+#Start UDEVD
+if [ ! -d /run/udev ];then
+  mkdir -p /run/udev
+fi;
+/libexec/udev/udevd --daemon
+
+#Fire Up Device Discovery And Initilise Devices
+(/bin/udevadm trigger
+/bin/udevadm settle) >/dev/null 2>&1
+
+#Configure And Load Zap Channels
+if [ -x /etc/rc.d/rc.wanpipe ];then
+  /etc/rc.d/rc.wanpipe > /dev/null 2>&1
+ else
+  if [ -e /etc/wanpipe/wanrouter.rc ];then
+    /usr/sbin/wanrouter start > /dev/null 2>&1
+    if [ -e /etc/wanpipe/smg_bri.conf ];then
+      /usr/sbin/smg_ctrl start > /dev/null 2>&1
+    fi;
+  fi
+fi;
+
+if [ -e /lib/modules/${LKERNEL}/dahdi ];then
+  /sbin/modprobe wctdm > /dev/null 2>&1
+fi;
+
+#Setup mIDN DSP
+if [ -e /dev/mISDNtimer ] && [ -x /usr/sbin/lcr ];then
+  (/sbin/modprobe mISDN_dsp
+  /sbin/modprobe mISDN_dsp_oslec ) >/dev/null 2>&1
+fi;
+
+#Remove Unused SATA/PATA Drivers
+ls /lib/modules/${LKERNEL}/kernel/drivers/ata |cut -d. -f1 |grep -vE "(^lib)|(^ahci_platform)" |awk '{printf "if [ -d /sys/module/%s ];then lsmod |grep -E \"^%s \";fi\n",$1,$1}' |sh |awk '$3 == 0 {printf "rmmod %s\n",$1}' |sh
+for atalib in libahci pata_sis libata;do
+  if [ -d /sys/module/${atalib} ];then
+    lsmod |grep -E "^${atalib} " |awk '$3 == 0 {printf "rmmod %s\n",$1}' |sh
+  fi;
+done;
+
+#Load Dummy Sound Card And Set Up Any Found Cards
+if [ -d /lib/modules/${LKERNEL}/kernel/sound/ ];then
+  (/sbin/modprobe snd-dummy
+  /sbin/modprobe snd-pcm-oss
+  /sbin/modprobe snd-opl3-synth
+  /sbin/modprobe snd-opl4-synth
+  /sbin/modprobe snd-emux-synth
+  /sbin/modprobe snd_seq_midi
+  /usr/sbin/alsactl restore)> /dev/null 2>&1
+fi;
+
+

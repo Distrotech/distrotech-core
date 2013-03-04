@@ -1,0 +1,58 @@
+#!/bin/bash
+
+#    Copyright (C) 2002  <Gregory Hinton Nietsky>
+#    Copyright (C) 2005  <ZA Telecomunications>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+#Load Balancing Route Tables
+(/sbin/ip rule add iif lo table Ipsec prio 10
+/sbin/ip rule add table 80 prio 11
+/sbin/ip rule add table Static prio 12
+/sbin/ip rule add table VPN prio 13
+/sbin/ip rule add table zebra prio 14
+/sbin/ip rule add fwmark 1 table 100 prio 90
+/sbin/ip rule add fwmark 2 table 101 prio 91
+/sbin/ip rule add fwmark 3 table 102 prio 92
+/sbin/ip rule add fwmark 4 table 103 prio 93
+/sbin/ip rule add fwmark 5 table 104 prio 94
+/sbin/ip rule add fwmark 6 table 105 prio 95
+/sbin/ip rule add fwmark 7 table 106 prio 96
+/sbin/ip rule add fwmark 8 table 107 prio 97
+/sbin/ip rule add fwmark 9 table 108 prio 98
+/sbin/ip rule add fwmark A table 109 prio 99
+/sbin/ip rule add fwmark 14 table 150 prio 100
+/sbin/ip rule add fwmark 15 table 151 prio 101
+/sbin/ip rule add fwmark 16 table 152 prio 102
+/sbin/ip rule add fwmark 17 table 153 prio 103
+/sbin/ip rule add fwmark 18 table 154 prio 104
+/sbin/ip rule add fwmark 19 table 155 prio 105
+/sbin/ip rule add fwmark 1A table 156 prio 106
+/sbin/ip rule add fwmark 1B table 157 prio 107
+/sbin/ip rule add fwmark 1C table 158 prio 108
+/sbin/ip rule add fwmark 1D table 159 prio 109
+/sbin/ip rule add fwmark 1E table eth_0 prio 110
+/sbin/ip rule add fwmark 1F table eth_1 prio 111
+/sbin/ip rule add fwmark 20 table eth_2 prio 112
+/sbin/ip rule add fwmark 21 table eth_3 prio 113
+/sbin/ip rule add fwmark 22 table eth_4 prio 114
+/sbin/ip rule add fwmark 23 table eth_5 prio 115
+/sbin/ip rule add fwmark 24 table eth_6 prio 116
+/sbin/ip rule add fwmark 25 table eth_7 prio 117
+/sbin/ip rule add fwmark 26 table eth_8 prio 118
+/sbin/ip rule add fwmark 27 table eth_9 prio 119
+/sbin/ip rule add table 90 prio 120
+/sbin/ip rule add table 150 prio 130 
+/sbin/ip rule add table 95 prio 140) > /dev/null 2>&1

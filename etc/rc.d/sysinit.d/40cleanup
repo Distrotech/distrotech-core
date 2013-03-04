@@ -1,0 +1,85 @@
+#!/bin/bash
+
+#    Copyright (C) 2002  <Gregory Hinton Nietsky>
+#    Copyright (C) 2005  <ZA Telecomunications>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+rm /var/log/pppd.log.* /etc/mrtg.conf_l* > /dev/null 2>&1
+chmod 1777 /var/run
+
+#Housekeeping Delete Orphaned Files
+if [ -e /etc/nologin ];then
+  rm /etc/nologin
+fi;
+
+if [ -e /etc/shutdownpid ];then
+  rm /etc/shutdownpid
+fi;
+
+if [ ! -d /var/lock/LCK..tts ];then
+  mkdir /var/lock/LCK..tts
+  chmod 1777 /var/lock/LCK..tts
+fi;
+
+if [ ! -d /var/lock/subsys ];then
+  mkdir /var/lock/subsys
+  chmod 777 /var/lock/subsys
+fi;
+
+if [ -e /fastboot ];then
+  rm /fastboot
+fi;
+
+#VPN
+if [ ! -d /usr/var/racoon/ ];then
+  mkdir /usr/var/racoon
+fi;
+
+#NSCD
+if [ ! -d /var/run/nscd ] || [ ! -d /var/db/nscd ];then
+  mkdir -p /var/run/nscd/ /var/db/nscd/
+  chmod 700 /var/run/nscd/ /var/db/nscd/
+fi;
+rm /var/db/nscd/* > /dev/null 2>&1
+
+#Create Proftp Run Directory
+if [ ! -d /var/run/proftpd ];then
+  mkdir /var/run/proftpd
+fi;
+
+#Asterisk Config Fixup
+if [ -x /usr/sbin/asterisk ];then
+  if [ ! -e /etc/asterisk/ivrmenu.conf ];then
+    cp /etc/asterisk/ivrmenu.conf.orig /etc/asterisk/ivrmenu.conf
+  fi;
+  if [ ! -e /etc/asterisk/local.conf ];then
+    touch /etc/asterisk/local.conf
+  fi;
+  if [ ! -e /etc/asterisk/providers.conf ];then
+    touch /etc/asterisk/providers.conf
+  fi;
+  if [ ! -e /etc/asterisk/meetme.conf ];then
+    touch /etc/asterisk/meetme.conf
+  fi;
+  if [ -h /var/lib/asterisk/sounds/voicemail ];then
+    rm /var/lib/asterisk/sounds/voicemail
+  fi;
+fi;
+
+#PostGRE SQL Server
+if [ -e /var/spool/pgsql/postmaster.pid ];then
+  rm /var/spool/pgsql/postmaster.pid
+fi;

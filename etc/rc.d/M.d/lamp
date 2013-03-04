@@ -1,0 +1,47 @@
+#!/bin/bash
+
+#    Copyright (C) 2002  <Gregory Hinton Nietsky>
+#    Copyright (C) 2005  <ZA Telecomunications>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+#Fire up web FUSE
+if [ ! -d /var/web ];then
+  mkdir /var/web
+fi;
+/usr/bin/bindfs --create-for-regex="././([^/]+)" --create-with-perms=660,770 /var/home /var/web
+
+#Start Webserver
+if [ -d /var/spool/apache/htdocs/ns/config ];then
+  chown -R www.www /var/spool/apache/htdocs/ns/config
+  chown -R nobody.nogroup /etc/squid
+fi;
+if [ -d /var/spool/apache/htdocs/mrtg ];then
+  chown -R www.www /var/spool/apache/htdocs/mrtg
+fi;
+if [ ! -e /etc/.install ];then
+   if [ -x /usr/sbin/webserver ];then
+     /usr/sbin/webserver start >/dev/null 2>&1
+   fi;
+fi;
+TST="";
+while [ "${TST}" != "XXXXXX" ] && [ ! -e /tmp/mysql.sock ];do
+  sleep 1;
+  TST=${TST}X;
+done
+
+if [ -e /tmp/mysql.sock ];then
+  /usr/sbin/ulogd -d > /dev/null 2>&1
+fi

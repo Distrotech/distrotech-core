@@ -1,0 +1,130 @@
+#!/bin/bash
+
+#    Copyright (C) 2002  <Gregory Hinton Nietsky>
+#    Copyright (C) 2005  <ZA Telecomunications>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+#Rescan / Activcate VG's
+/bin/mount -t ramfs none /var/lock/lvm
+/usr/sbin/vgchange -a y --sysinit
+/sbin/dmsetup mknodes
+/usr/sbin/vgmknodes
+/bin/umount /var/lock/lvm
+
+#Run File System Check On All Devices
+fsck -TCAa
+RES=$?
+if [ ${RES} == 2 ];then
+  echo "REBOOT REQUIRED"
+  reboot -fn
+ elif [ ${RES} == 8 ] || [ ${RES} == 128 ];then
+  ROOTDEV=`grub-probe -t device /`
+  MNTRRW=0
+  if [ "${ROOTDEV}" ];then
+    fsck -TCa ${ROOTDEV}
+    if (( $? <  2));then
+      mount -n ${ROOTDEV} / -o remount,rw
+      if [ $? == 0 ];then
+        echo "/ (${ROOTDEV}) has been remounted read/write"
+        MNTRRW=1;
+      fi;
+    fi;
+  fi;
+  echo "A problem was detected please login and fix !!"
+  sulogin
+  if [ ${MNTRRW} == 1 ];then
+    sync
+    mount -n ${ROOTDEV} / -o remount,ro
+  fi;
+  reboot -fn
+ elif (( ${RES} > 2 )) && [ ${RES} != 32 ];then
+  echo "FILE SYSTEM ERROR"
+  halt -fn
+fi;
+
+#Remount Root Device Read Write
+mount -n -o remount,rw /
+
+if [ -e /etc/mtab ];then
+  rm /etc/mtab
+fi;
+touch /etc/mtab
+mount / -f
+
+#Set the basic NSS conf
+if [ -e /etc/nsswitch.conf.boot ] && [ -e /etc/nsswitch.conf.ldap ];then
+  cp /etc/nsswitch.conf.boot /etc/nsswitch.conf
+fi;
+
+#Clean Out /tmp
+(rm -rf /tmp
+mkdir /tmp
+grep -E "^MemTotal" /proc/meminfo |awk '$2 >= 1048576 {print "mount -t tmpfs none /tmp\n"}' |sh
+chmod 1777 /tmp)>/dev/null 2>&1
+
+#Mount All Mount Points
+mount -at nonfs,noecryptfs > /dev/null 2>&1
+
+/usr/sbin/vgchange -a y --poll y --monitor y > /dev/null 2>&1
+
+#Format crypted swap space 
+if [ -e /etc/crypttab ];then
+  (awk '/cryptswap/ {printf "\
+        dd if=/dev/zero of=%s bs=512b count=1;\
+        cryptsetup -d %s create %s %s;\
+        mkswap -f /dev/mapper/%s\n",$2,$3,$1,$2,$1}' /etc/crypttab |sh) > /dev/null 2>&1
+fi;
+
+#run mkswap on partitions that do not have a UUID
+blkid -g
+blkid -t TYPE=swap -o device |awk '{printf "\
+  if [ ! \"`blkid %s -s UUID`\" ];then\
+    touch /tmp/.fstab.new\
+    mkswap %s;\
+  fi;\n",$1,$1}' |sh > /dev/null 2>&1
+
+#write swap partitions to fstab
+if [ -e /tmp/.fstab.new ];then
+  rm /tmp/.fstab.new
+  /usr/sbin/mkfstab > /etc/fstab
+fi;
+
+#Turn Swap On
+/sbin/swapon -a
+
+#init utmp/wtmp/lastlog/ppplog
+rm /var/run/* /var/run/*/* /var/lock/* /var/lock/LCK*/* >/dev/null 2>&1
+cat /dev/null > /var/run/utmp
+if [ ! -e /var/log/wtmp ];then
+  touch /var/log/wtmp
+fi;
+if [ ! -e /var/log/lastlog ]; then
+  touch /var/log/lastlog
+fi;
+
+if [ -d /initrd/isofs/boot ] && [ -d /media ];then
+  mount --move /initrd/isofs /media > /dev/null 2>&1
+fi;
+
+#Unmount And Cleanup Initial Ram Disk
+(umount /initrd/dev
+umount /initrd/sys
+umount /initrd/proc
+umount /initrd) > /dev/null 2>&1
+
+if [ ! -e /initrd/linuxrc ];then
+  blockdev --flushbufs /dev/ram0
+fi;

@@ -1,0 +1,73 @@
+#!/bin/bash
+
+#    Copyright (C) 2002  <Gregory Hinton Nietsky>
+#    Copyright (C) 2005  <ZA Telecomunications>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+#File Server
+if [ -d /etc/samba ];then
+  rm /etc/samba/winbindd_*.tdb > /dev/null 2>&1
+fi;
+if [ -d /etc/samb/winbindd_cache.tdba ];then
+  rm /etc/samba/winbindd_cache.tdb
+fi;
+if [ -e /etc/samba/winbindd_idmap.tdb ];then
+  rm /etc/samba/winbindd_idmap.tdb
+fi;
+
+#Create File Server Structue
+if [ ! -d /var/spool/samba/share ];then
+  mkdir -p /var/spool/samba/share
+  chown 0.139 /var/spool/samba/share
+  chmod 2777 /var/spool/samba/share
+fi
+if [ ! -d /var/spool/samba/netlogon ];then
+  mkdir -p /var/spool/samba/netlogon
+  chown 0.139 /var/spool/samba/netlogon
+  chmod 2775 /var/spool/samba/netlogon
+fi
+if [ ! -d /var/spool/samba/ftp ];then
+  mkdir -p /var/spool/samba/ftp
+  chown 65535.65535 /var/spool/samba/ftp
+  chmod 6770 /var/spool/samba/ftp
+fi
+if [ ! -e /var/spool/samba/ftp/welcome.txt ];then
+  (cat << EOF
+
+welcome.txt
+-----------
+
+Place Your Login Message Here.
+
+A File welcome.txt in any directory is displayed when a user changes
+to that directory.
+
+
+EOF
+)> /var/spool/samba/ftp/welcome.txt
+  chmod 664 /var/spool/samba/ftp/welcome.txt
+  chown 65535.65535 /var/spool/samba/ftp/welcome.txt
+fi
+
+#SAMBA
+if [ ! -e /etc/samba/private/secrets.tdb.bak ];then
+  /usr/bin/tdbbackup /etc/samba/private/secrets.tdb > /dev/null 2>&1
+ elif [ -e /etc/samba/private/secrets.tdb ];then
+  /usr/bin/tdbbackup -v /etc/samba/private/secrets.tdb  > /dev/null 2>&1
+fi;
+/usr/sbin/winbindd &
+/usr/sbin/nmbd -D &
+/usr/sbin/smbd -D &
