@@ -82,8 +82,8 @@ EOF
   tar -C ${INST_BASE} -xJf /install/pkgs/ecrypt.txz > /dev/null 2>&1
   tar -C ${INST_BASE} -xJf /install/pkgs/pxelinux.txz > /dev/null 2>&1
   rsync -a /lib/modules/* ${INST_BASE}/lib/modules/ > /dev/null 2>&1
-  rsync -a /boot/vmlinuz-install ${INST_BASE}/boot/vmlinuz-${KERNEL}-install
-  rsync -a /boot/System.map-install ${INST_BASE}/boot/System.map-${KERNEL}-install
+  rsync -a /boot/vmlinuz ${INST_BASE}/boot/vmlinuz-${KERNEL}-dts
+  rsync -a /boot/System.map ${INST_BASE}/boot/System.map-${KERNEL}-dts
   rsync -a /boot/memtest.bin /boot/ > /dev/null 2>&1
   rsync -a /install/update ${INST_BASE}/var/spool/ > /dev/null 2>&1
   rsync -a /install/avirus ${INST_BASE}/var/spool/ > /dev/null 2>&1
