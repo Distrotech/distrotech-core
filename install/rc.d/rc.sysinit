@@ -1,0 +1,104 @@
+#!/bin/bash
+
+#    Copyright (C) 2002  <Gregory Hinton Nietsky>
+#    Copyright (C) 2005  <ZA Telecomunications>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+mount -f -t ext4 /dev/flash/install / > /dev/null 2>&1
+mount -f -t ext3 /dev/ram5 /etc > /dev/null 2>&1
+mount -t ramfs none /var > /dev/null 2>&1
+mount -t ramfs none /root > /dev/null 2>&1
+mount -t tmpfs none /tmp > /dev/null 2>&1
+mount -t ramfs none /run/udev
+
+for vardir in log run lock tmp lib spool home state empty logs db db/nscd run/nscd;do
+  mkdir /var/$vardir
+done;
+
+if [ ! -d /var/spool/apache/htdocs/ns/config ];then
+  mkdir -p /var/spool/apache/htdocs/ns/config
+  mkdir /var/spool/apache/htdocs/ns/config/sslconf
+  mkdir /var/spool/apache/htdocs/ns/config/zones
+fi;
+
+chmod 750 /var/spool/apache/htdocs/ns/config
+chmod 750 /var/spool/apache/htdocs/ns/config/zones
+chmod 1777 /var/run
+chmod 1777 /tmp
+chmod -R 755 /var/log
+
+chown www.www /var/spool/apache/htdocs/ns/config
+chown www.www /var/spool/apache/htdocs/ns/config/zones
+
+echo "clear" > /root/.bash_logout
+touch /etc/iftab
+
+mount -a
+
+#Mount utilities partition
+(DTSU=`findfs LABEL=DISTROTECH`
+if [ ! "${DTSU}" ];then
+  DTSU=`findfs LABEL=DTSUTIL`
+fi;
+if [ "${DTSU}" ];then
+  mount ${DTSU} /install/tools -o ro
+fi;) >/dev/null 2>&1
+
+if [ -d /initrd/isofs/boot ] && [ -d /media ];then
+  mount --move /initrd/isofs /media > /dev/null 2>&1
+fi;
+   
+#Unmount And Cleanup Initial Ram Disk
+(umount /initrd/dev
+umount /initrd/sys 
+umount /initrd/proc
+umount /initrd) > /dev/null 2>&1
+
+if [ ! -e /initrd/linuxrc ];then
+  blockdev --flushbufs /dev/ram0
+fi;
+
+/usr/sbin/syslogd &
+/usr/sbin/klogd -c 1 &
+
+if [ -x /libexec/udev/udevd ];then
+  /libexec/udev/udevd --daemon
+fi;
+(/bin/udevadm trigger
+/bin/udevadm settle) >/dev/null 2>&1
+
+#ACPI Deamon
+/usr/sbin/acpid > /dev/null 2>&1
+
+ssh-keygen -t rsa1 -f /etc/ssh_host_key -N "" > /dev/null 2>&1
+ssh-keygen -t dsa -f /etc/ssh_host_dsa_key -N "" > /dev/null 2>&1
+ssh-keygen -t rsa -f /etc/ssh_host_rsa_key -N "" > /dev/null 2>&1
+ssh-keygen -t ecdsa -f /etc/ssh_host_ecdsa_key -N "" > /dev/null 2>&1
+
+/usr/sbin/sshd > /dev/null 2>&1
+
+#Rename any stray network cards
+for etype in eth wlan;do
+  cifname=0;
+  for nifname in A B C D;do
+    /sbin/ip link set dev ${etype}${cifname} down > /dev/null 2>&1
+    if [ $? == 0 ];then
+      (/sbin/ifrename -i ${etype}${cifname} -n ${etype}${nifname}
+      /sbin/ip link set dev ${etype}${nifname} up) > /dev/null 2>&1
+    fi;
+    let cifname++;
+  done;
+done;
