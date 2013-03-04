@@ -396,3 +396,12 @@ dn: cn=Domain
 objectClass: device
 cn: Domain
 
+dn: ou=snom
+objectClass: organizationalUnit
+ou: snom
+
+dn: cn=Snom,ou=snom
+objectClass: person
+cn: snom
+sn: Snom Global Phone Book
+userPassword:: e0NSWVBUfSQxJHJ2eFBWNHZBJE5hblFocmUwc1oycEE5UzhsRDByay4=
