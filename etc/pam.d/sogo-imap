@@ -1,0 +1,4 @@
+auth       sufficient pam_permit.so
+auth       required   pam_succeed_if.so uid >= 500
+account    required   pam_permit.so
+session    required   pam_mkhomedir.so skel=/etc/skel umask=0022

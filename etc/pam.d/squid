@@ -1,0 +1,7 @@
+auth       [success=3 default=ignore] pam_succeed_if.so quiet user ingroup fullwebaccess
+auth       required   pam_succeed_if.so quiet user notingroup nowebaccess
+auth       required   pam_succeed_if.so quiet user notingroup mailbox
+auth       required   pam_succeed_if.so quiet user notingroup pctrust
+auth       sufficient pam_winbind.so cached_login
+auth       required   pam_ldap.so
+account    required   pam_permit.so
