@@ -1,13 +1,13 @@
 #!/bin/bash
 
-pg_dump -U pgsql -h 127.0.0.1 -Cds asterisk |grep -vE "(^--)|(^$)" > astschema.psql
-pg_dump -U pgsql -h 127.0.0.1 -dat country asterisk |grep -vE "(^$)|(^--)" >> astschema.psql
-pg_dump -U pgsql -h 127.0.0.1 -dat countryprefix asterisk |grep -vE "(^$)|(^--)" >> astschema.psql
+pg_dump -U pgsql -h 127.0.0.1 --inserts -Cs asterisk |grep -vE "(^--)|(^$)" > astschema.psql
+pg_dump -U pgsql -h 127.0.0.1 --inserts -at country asterisk |grep -vE "(^$)|(^--)" >> astschema.psql
+pg_dump -U pgsql -h 127.0.0.1 --inserts -at countryprefix asterisk |grep -vE "(^$)|(^--)" >> astschema.psql
 
-pg_dump -U pgsql -h 127.0.0.1 -dat exchanges asterisk |grep -vE "(^$)|(^--)" >> astschema.psql
-pg_dump -U pgsql -h 127.0.0.1 -dat exchangeinfo asterisk |grep -vE "(^$)|(^--)" >> astschema.psql
-pg_dump -U pgsql -h 127.0.0.1 -dat localrates asterisk |grep -vE "(^$)|(^--)" >> astschema.psql
-pg_dump -U pgsql -h 127.0.0.1 -dat intrates asterisk |grep -vE "(^$)|(^--)" >> astschema.psql
+pg_dump -U pgsql -h 127.0.0.1 --inserts -at exchanges asterisk |grep -vE "(^$)|(^--)" >> astschema.psql
+pg_dump -U pgsql -h 127.0.0.1 --inserts -at exchangeinfo asterisk |grep -vE "(^$)|(^--)" >> astschema.psql
+pg_dump -U pgsql -h 127.0.0.1 --inserts -at localrates asterisk |grep -vE "(^$)|(^--)" >> astschema.psql
+pg_dump -U pgsql -h 127.0.0.1 --inserts -at intrates asterisk |grep -vE "(^$)|(^--)" >> astschema.psql
 
 (cat << EOF
 SELECT pg_catalog.setval('officehours_index_seq', 397, true);
