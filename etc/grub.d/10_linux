@@ -128,8 +128,6 @@ fi
 
 if [ "$KERNOPTS" ];then
   KERNOPTS=" ${KERNOPTS}";
- else
-  KERNOPTS=" vga=0x303";
 fi;
 
 linux_entry "${OS}" "${major_version}" false \
