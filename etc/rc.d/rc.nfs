@@ -1,7 +1,33 @@
 #!/bin/bash
 
-#Run RPC Portmap
-portmap
+#Cleanup
+if [ -e /var/lib/nfs/rmtab ];then
+  rm /var/lib/nfs/rmtab
+fi;
+touch /var/lib/nfs/rmtab
+if [ ! -d /var/lib/nfs/v4recovery ];then
+  mkdir /var/lib/nfs/v4recovery
+fi;
+if [ ! -d /var/lib/nfs/rpc_pipefs ];then
+  mkdir /var/lib/nfs/rpc_pipefs
+fi;
+if [ ! -d /var/lib/nfs/rpc_pipefs/nfs ];then
+  mount -t rpc_pipefs none /var/lib/nfs/rpc_pipefs > /dev/null 2>&1
+fi;  
+if [ ! -e /proc/fs/nfsd/exports ];then
+  mount -t nfsd none /proc/fs/nfsd > /dev/null 2>&1
+fi;
+
+if [ -x /etc/rc.d/rc.nfs.local ];then
+  /etc/rc.d/rc.nfs.local
+fi;
+
+#Run RPC Portbind/portmap
+if [ -x /usr/bin/rpcbind ];then
+  /usr/bin/rpcbind
+ else
+  portmap
+fi;
 
 #Start RPC
 #On boot 180224 / 131071
@@ -14,3 +40,10 @@ chown -R 99 /var/lib/nfs/sm.bak
 /usr/sbin/rpc.statd -p 32765 -o 32766
 /usr/sbin/rpc.mountd -p 32767
 /usr/sbin/rpc.nfsd -p 2049 8
+
+#Mount Remote File Blocks
+if [ -x /etc/rc.d/rc.mount ];then 
+  /etc/rc.d/rc.mount
+fi;
+/usr/sbin/exportfs -a
+mount -t nfs -a

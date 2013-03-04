@@ -109,7 +109,14 @@ if [ -e /var/spool/ldap/id2entry.bdb ] && [ -e /var/spool/ldap/dn2id.bdb ];then
   /usr/libexec/safe_slapd &
 fi;
 
-/usr/bin/sleep 2
+while ! /usr/sbin/socktest  127.0.0.1 389 && [ "${DCNT}" != "XXXX" ];do
+  sleep 2
+  DCNT=${DCNT}X;
+done
+
+if [ "${DCNT}" = "XXXX" ];then
+  exit 1
+fi;
 
 if [ ! -e /etc/ldap.limited ] && [ -x /usr/sbin/sqlpasswd ];then
   /usr/sbin/sqlpasswd
@@ -128,6 +135,7 @@ if [ -e /etc/nsswitch.conf.local ];then
   diff /etc/nsswitch.conf.ldap /etc/nsswitch.conf > /dev/null 2>&1
   STRET=$?
 fi;
+
 if [ ${STRET} != 0 ];then
   while [ ${STRET} != 0 ] && [ "${NSSTRY}" != "XXXXXX" ];do
     /usr/sbin/socktest 127.0.0.1 389 >/dev/null 2>&1

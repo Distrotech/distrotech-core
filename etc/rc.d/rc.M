@@ -19,224 +19,57 @@
 
 export PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
-#ACPI Deamon
-/usr/sbin/acpid > /dev/null 2>&1
-
 if [ -e /etc/.install ];then
-  (while [ 1 ];do /usr/bin/setsid /sbin/agetty 38400 tty8 linux;done) &
-  (while [ 1 ];do /usr/bin/setsid /sbin/agetty 38400 tty9 linux;done) &
-  (while [ 1 ];do /usr/bin/setsid /sbin/agetty -nl /bin/bash 38400 tty2 linux;done) &
-  /install/sysconfig
-  clear
-  init 6
- else
-  #Start LDAP
-  /etc/rc.d/rc.ldap > /dev/null 2>&1
-
-  if [ -x /etc/rc.d/rc.nfs.local ];then
-    /etc/rc.d/rc.nfs.local
-   elif [ -x /etc/rc.d/rc.nfs ];then
-    /etc/rc.d/rc.nfs
-  fi;
-
-  if [ -x /etc/rc.d/rc.ipv6 ];then
-    /etc/rc.d/rc.ipv6 > /dev/null 2>&1
-  fi;
-
-  if [ -x /etc/rc.d/rc.network ];then
-    /etc/rc.d/rc.network
-  fi;
-
-  #Mount Remote File Blocks
-  if [ -x /etc/rc.d/rc.mount ];then
-    /etc/rc.d/rc.mount
-  fi;
-  /usr/sbin/exportfs -a
-  mount -t nfs -a
-
-  /usr/sbin/ippoold >/tmp/ippool.out 2>&1
-  (/usr/bin/sleep 1
-  for ippool in /etc/ippool/* ;do
-    /usr/bin/ippoolconfig "config  restore  file=${ippool}"
-  done) > /dev/null 2>&1
-
-  if [ ! -e /etc/openl2tpd.conf ] && [ -e /etc/openl2tpd.conf.orig ];then
-    cp /etc/openl2tpd.conf.orig /etc/openl2tpd.conf
-  fi;
-  if [ -e /var/run/openl2tpd.pid ];then
-    rm /var/run/openl2tpd.pid
-  fi;
-  if [ -e /etc/openl2tpd.conf ];then
-    openl2tpd -p ipsec.so > /dev/null 2>&1
-  fi;
-
-  #Start UP TDM Channels
-  if [ ! -e /etc/.networksentry-lite ];then
-    if [ -e /usr/sbin/dahdi_cfg ];then
-      TDM_CFG="/usr/sbin/dahdi_cfg"
-      TDM_REV="/etc/dahdi/systemr.conf";
-     else
-      TDM_CFG="/sbin/ztcfg"
-      TDM_REV="/etc/zaptelr.conf";
-    fi
-    if [ -s ${TDM_REV} ];then
-      (${TDM_CFG}
-      /usr/bin/sleep 30
-      ${TDM_CFG} -c ${TDM_REV}
-      /usr/bin/sleep 30
-      ${TDM_CFG}) > /dev/null 2>&1 &
-     else
-     ${TDM_CFG} > /dev/null 2>&1
-    fi
-  fi;
-
-  #Start Webserver
-  if [ -d /var/spool/apache/htdocs/ns/config ];then
-    chown -R www.www /var/spool/apache/htdocs/ns/config
-    chown -R nobody.nogroup /etc/squid
-  fi;
-  if [ -d /var/spool/apache/htdocs/mrtg ];then
-    chown -R www.www /var/spool/apache/htdocs/mrtg
-  fi;
-  if [ ! -e /etc/.install ];then
-     if [ -x /usr/sbin/webserver ];then
-       /usr/sbin/webserver start >/dev/null 2>&1
-     fi;
-  fi;
-  TST="";
-  while [ "${TST}" != "XXXXXX" ] && [ ! -e /tmp/mysql.sock ];do
-    sleep 1;
-    TST=${TST}X;
-  done
-  if [ -e /tmp/mysql.sock ];then
-    /usr/sbin/ulogd -d > /dev/null 2>&1
-  fi
-
-  #Start Up Proxy Server
-  if [ ! -d /var/spool/squid/00 ];then
-    if [ ! -d /var/spool/squid ];then
-      mkdir /var/spool/squid
-    fi;
-    chown nobody.nogroup /var/spool/squid
-    /usr/bin/squid -z > /dev/null 2>&1
-   else
-    /usr/bin/squid -z > /dev/null 2>&1
-  fi;
-  /usr/bin/RunCache > /dev/null 2>&1&
-#  /usr/sbin/frox > /dev/null 2>&1 &
-
-  #Run PGSQL And Start AGI Agent
-  if [ ! -e /etc/.networksentry-lite ];then
-    chmod 700 /etc/rc.d/rc.exchange
-    /etc/rc.d/rc.exchange > /dev/null 2>&1
-    if [ -x /usr/sbin/asterisk ];then
-      /var/lib/asterisk/agi-bin/phpagi-fast.php > /dev/null 2>&1
-    fi;
-    if [ ! -e /tmp/op_buttons.cfg.new ] || [ ! -e /tmp/op_style.cfg.new ];then
-      /etc/asterisk/pannel/genbut.pl > /dev/null 2>&1 
-    fi
-  fi;
-
-  #Start Email
-  if [ -x /etc/rc.d/rc.mail ];then
-    if [ ! -d /var/spool/mqueue.in ];then
-      mkdir /var/spool/mqueue.in;
-      chmod 750 /var/spool/mqueue.in
-      chown root.root /var/spool/mqueue.in
-    fi;
-    if [ -e /var/run/dovecot/master.pid ];then
-      rm /var/run/dovecot/master.pid
-    fi;
-    /etc/rc.d/rc.mail > /dev/null 2>&1 &
-   else
-    /usr/sbin/sendmail -bd > /dev/null 2>&1 &
-    /usr/sbin/popper > /dev/null 2>&1
-  fi;
-
-  #SAMBA
-  if [ ! -e /etc/samba/private/secrets.tdb.bak ];then
-    /usr/bin/tdbbackup /etc/samba/private/secrets.tdb > /dev/null 2>&1
-   elif [ -e /etc/samba/private/secrets.tdb ];then
-    /usr/bin/tdbbackup -v /etc/samba/private/secrets.tdb  > /dev/null 2>&1
-  fi;
-  /usr/sbin/winbindd &
-  /usr/sbin/nmbd -D &
-  /usr/sbin/smbd -D &
-
-  #Set Echo Coefficients
-  if [ -d /proc/dahdi ];then
-    if [  "`cat /proc/dahdi/* 2>/dev/null |grep FXSKS`" ];then
-      if [ -e /etc/fxotune.conf ];then
-        /usr/sbin/fxotune -s > /dev/null 2>&1
-       else
-        echo "Initiating ZAP FXO Coefficients";
-        /usr/sbin/fxotune -i 0
-      fi;
-    fi;
-  fi;
-
-  (/usr/sbin/cfrestore;
-  /usr/sbin/genconf;
-  if [ -x /etc/rc.d/rc.ppp ];then
-    /etc/rc.d/rc.ppp &
-   else
-    /usr/sbin/servconfig
-  fi
-  while [ "`pidof racoon`" ] && [ "${RKCNT}" != "XXXXXX" ];do
-    /usr/bin/killall racoon
-    /usr/bin/sleep 1
-    RKCNT=${RKCNT}X
-  done;
-  if [ "`/bin/pidof racoon`" ];then 
-    /usr/bin/killall -9 racoon
-  fi;
-  rm /var/racoon/racoon.sock;)>/dev/null 2>&1
-  rm /var/spool/cron/crontabs/* >/dev/null 2>&1
-  if [ -e /usr/libexec/startcron ];then
-    /usr/libexec/startcron &
-   else
-    /usr/sbin/crond >> /var/log/cron 2>&1
-  fi;
-  if [ -e /root/crontab ];then
-    /usr/bin/crontab /root/crontab -u root
-  fi;
-  killall -9 squid > /dev/null 2>&1
-  /usr/sbin/clamupdate >/dev/null 2>&1 &
-  if [ -e /etc/no-ip2.conf ];then
-    /usr/sbin/noip2 > /dev/null 2>&1
-  fi;
-  #Start Super Daemon
-  if [ ! "`pidof inetd`" ];then
-    if [ -x /usr/sbin/inetd ];then
-      (ulimit -n 65535;/usr/sbin/inetd) > /dev/null 2>&1
-     else
-      (ulimit -n 65535;/usr/libexec/inetd) > /dev/null 2>&1
-    fi;
-  fi;
-  (/usr/sbin/conntrack -F
-  /usr/sbin/conntrack -F expect) > /dev/null 2>/dev/null
-
-  #Start Linux Call Router
-#  if [ -x /usr/sbin/lcr ];then
-#    /usr/sbin/lcr fork > /dev/null 2>&1
-#  fi;
-
-  #Enable Advanced Routing
-  if [ ! -e /etc/zebra/Quagga.conf ];then
-    cp /etc/zebra/Zebra.conf.orig /etc/zebra/Quagga.conf
-  fi;
-  (for prog in zebra ripd ripngd ospfd ospf6d babeld bgpd isisd;do
-    rm /var/run/$prog.*
-    $prog -d
-  done;
-  /usr/bin/vtysh -b) > /dev/null 2>&1
-
-  if [ -x /etc/rc.d/rc.local ];then
-    /etc/rc.d/rc.local
-  fi;
-  if [ -x /etc/rc.d/rc.fix ];then
-    /etc/rc.d/rc.fix
-    rm /etc/rc.d/rc.fix
-  fi;
-  reset -Q
+  exec /install/rc.d/rc.M
 fi;
+
+#Core services
+for cservice in ipv6 ldap nfs interface;do
+  if [ -x /etc/rc.d/rc.${cservice} ];then
+    /etc/rc.d/rc.${cservice} > /dev/null 2>&1
+  fi;
+done
+
+for mservice in /etc/rc.d/M.d/*;do
+  ${mservice}
+done
+
+(/etc/rc.d/rc.hfax;/usr/libexec/t38modem_start) > /dev/null 2>&1 &
+
+#Run AGI Agent
+if [ -x /usr/sbin/asterisk ];then
+   /var/lib/asterisk/agi-bin/phpagi-fast.php > /dev/null 2>&1
+fi;
+if [ ! -e /tmp/op_buttons.cfg.new ] || [ ! -e /tmp/op_style.cfg.new ];then
+  /etc/asterisk/pannel/genbut.pl > /dev/null 2>&1 
+fi
+
+(/usr/sbin/cfrestore;
+/usr/sbin/genconf;
+if [ -x /etc/rc.d/rc.ppp ];then
+  /etc/rc.d/rc.ppp &
+ else
+  /usr/sbin/servconfig
+fi
+
+while [ "`pidof racoon`" ] && [ "${RKCNT}" != "XXXXXX" ];do
+  /usr/bin/killall racoon
+  /usr/bin/sleep 1
+  RKCNT=${RKCNT}X
+done;
+if [ "`/bin/pidof racoon`" ];then 
+  /usr/bin/killall -9 racoon
+fi;
+rm /var/racoon/racoon.sock;)>/dev/null 2>&1
+
+(/usr/sbin/conntrack -F
+/usr/sbin/conntrack -F expect) > /dev/null 2>/dev/null
+
+if [ -x /etc/rc.d/rc.local ];then
+  /etc/rc.d/rc.local
+fi;
+
+#Start Cron Post Cleanup
+/usr/libexec/startcron &
+
+reset -Q
