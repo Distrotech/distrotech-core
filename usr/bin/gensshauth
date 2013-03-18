@@ -54,7 +54,7 @@ $admincnt=0;
 open(WA,">/tmp/webauth");
 foreach $auser (@memadmin) {
   $mesg = $ldap->search(base=>"$auser",filter =>"(&(uid=*)(userCertificate=*)(|(objectclass=inetorgperson)(objectclass=usercertstore)))",attrs=>['userCertificate','uid','cn']);
-  if ($mesg->count > 0) {
+  if (($auser ne "") && ($mesg->count > 0)) {
     $admincnt++;
     while($entry=$mesg->shift_entry) {
       $dn=$entry->dn;
