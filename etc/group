@@ -34,3 +34,4 @@ floppy::56:root
 cdrom::57:root
 tape::58:root
 avahi::59:
+messagebus::60:
