@@ -92,7 +92,11 @@ if [ -e /etc/HOSTNAME ];then
 fi;
 
 if [ ! -e /etc/resolv.conf ];then
-  echo "domain company.co.za" > /etc/resolv.conf
+  (cat <<EOF
+domain company.co.za
+nameserver ::1
+EOF
+) > /etc/resolv.conf
 fi;
 
 #Set Screen Saver On Console
