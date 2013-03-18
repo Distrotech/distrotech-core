@@ -17,11 +17,39 @@
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-(while [ 1 ];do /usr/bin/setsid /sbin/agetty 38400 tty8 linux;done) &
-(while [ 1 ];do /usr/bin/setsid /sbin/agetty 38400 tty9 linux;done) &
-(while [ 1 ];do /usr/bin/setsid /sbin/agetty -nl /bin/bash 38400 tty2 linux;done) &
+#Start cacheing resolver
+if [ ! -e /etc/rndc.key ];then
+  rndc-confgen -a -r /dev/urandom >/dev/null 2>&1
+fi;
+named
 
-/install/sysconfig
-clear
-init 6
+#Start dbus
+if [ -e /var/run/dbus/pid ];then
+  rm /var/run/dbus/pid
+fi;
+dbus-daemon --system
 
+#Setup from the install config
+/usr/sbin/sysreconf /install/default.conf.sysvars
+cp /tmp/netsentry.conf /var/spool/apache/htdocs/ns/config
+
+#Start Auto IP's
+if [ -d /sys/class/net/br0 ];then
+  IFACE=br0
+ elif [ -d /sys/class/net/ethA ];then
+  IFACE=ethA
+fi;
+
+dhclient -nw ${IFACE}
+dhclient -6 -nw ${IFACE}
+
+if [ -e /var/run//avahi-autoipd.${IFACE}.pid ];then
+  avahi-autoipd --force-bind -D -w ${IFACE}
+fi
+avahi-autoipd --force-bind -D -w ${IFACE} &
+
+#Avahi Daemon
+if [ -e /var/run/avahi-daemon/pid ];then
+  rm /var/run/avahi-daemon/pid
+fi;
+avahi-daemon -D
