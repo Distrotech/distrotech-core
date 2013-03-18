@@ -849,7 +849,7 @@ init_rd_drivers() {
     mkdir -p ${1}/lib/modules/${kernel}/${kdir}
   done;
 
-  for atadrv in ata mmc/host;do
+  for atadrv in ata mmc/host memstick/host memstick/core mfd ;do
     if [ -d ${2}lib/modules/${kernel}/kernel/drivers/${atadrv} ];then
       cp -r ${2}lib/modules/${kernel}/kernel/drivers/${atadrv}/* ${1}/lib/modules/${kernel}/drivers-ata
     fi;
@@ -869,7 +869,8 @@ init_rd_drivers() {
   for kmod in drivers/net/mdio.ko.gz drivers/uio/uio.ko.gz drivers/net/mii.ko.gz drivers/net/sungem_phy.ko.gz \
               drivers/net/phy/libphy.ko.gz net/ipv6/ipv6.ko.gz net/unix/unix.ko.gz \
               net/packet/af_packet.ko.gz drivers/ptp drivers/pps/pps_core.ko.gz drivers/dca \
-              net/ipv4/inet_lro.ko.gz drivers/misc/eeprom/eeprom_93cx6.ko.gz;do
+              net/ipv4/inet_lro.ko.gz drivers/misc/eeprom/eeprom_93cx6.ko.gz drivers/base/regmap/regmap-i2c.ko.gz \
+              sound/ac97_bus.ko.gz;do
    if [ -f ${2}lib/modules/${kernel}/kernel/${kmod} ];then
      cp ${2}lib/modules/${kernel}/kernel/${kmod} ${1}/lib/modules/${kernel}/drivers
     elif [ -d ${2}lib/modules/${kernel}/kernel/${kmod} ];then
@@ -896,7 +897,7 @@ init_rd_drivers() {
   for kmod in block/loop.ko.gz base/firmware_class.ko.gz pcmcia mmc/core \
            mmc/card misc/cb710 misc/tifm_core.ko.gz cdrom/cdrom.ko.gz ssb \
            usb/host md/ usb/wusbcore uwb usb/misc/ftdi-elan.ko.gz connector/cn.ko.gz \
-           hid/hid.ko.gz hid/usbhid;do
+           hid/hid.ko.gz hid/usbhid bcma/bcma.ko.gz;do
    if [ -f ${2}lib/modules/${kernel}/kernel/drivers/${kmod} ];then
      cp ${2}lib/modules/${kernel}/kernel/drivers/${kmod} ${1}/lib/modules/${kernel}/drivers
     elif [ -d ${2}lib/modules/${kernel}/kernel/drivers/${kmod} ];then
@@ -904,7 +905,7 @@ init_rd_drivers() {
    fi;
   done;
 
-  for kmod in isofs/isofs.ko.gz nls/nls_iso8859-1.ko.gz ext3 ext4 jbd jbd2;do
+  for kmod in isofs/isofs.ko.gz nls/nls_iso8859-1.ko.gz ext3 ext4 jbd jbd2 squashfs;do
     if [ -f ${2}lib/modules/${kernel}/kernel/fs/${kmod} ];then
       cp ${2}lib/modules/${kernel}/kernel/fs/${kmod} ${1}/lib/modules/${kernel}/drivers
      elif [ -d ${2}lib/modules/${kernel}/kernel/fs/${kmod} ];then
@@ -912,7 +913,8 @@ init_rd_drivers() {
     fi
   done;
 
-  for klib in zlib_deflate raid6 lzo libcrc32c.ko.gz crc16.ko.gz crc-t10dif.ko.gz;do
+  for klib in zlib_deflate raid6 lzo libcrc32c.ko.gz crc16.ko.gz crc-t10dif.ko.gz \
+	crc-itu-t.ko.gz crc7.ko.gz crc-ccitt.ko.gz;do
     if [ -f ${2}lib/modules/${kernel}/kernel/lib/${klib} ];then
       cp ${2}lib/modules/${kernel}/kernel/lib/${klib} ${1}/lib/modules/${kernel}/drivers
      elif [ -d ${2}lib/modules/${kernel}/kernel/lib/${klib} ];then
@@ -956,8 +958,16 @@ initrd_init() {
 
   (cp ${2}/etc/lvm/lvm.conf ${1}/etc/lvm/
   cp ${2}/usr/sbin/lvm.static ${1}/sbin/lvm
-  cp ${2}/usr/bin/modprobe.static ${1}/sbin/modprobe
-  cp ${2}/sbin/mount.static ${1}/bin/mount
+  if [ -x ${2}/sbin/modprobe.static ];then
+    cp ${2}/sbin/modprobe.static ${1}/sbin/modprobe
+   else
+    cp ${2}/usr/bin/modprobe.static ${1}/sbin/modprobe
+  fi
+  if [ -x ${2}/bin/mount.static ];then
+    cp ${2}/bin/mount.static ${1}/bin/mount
+   else
+    cp ${2}/sbin/mount.static ${1}/bin/mount
+  fi;
   cp ${2}/sbin/mount.nfs.static ${1}/sbin/mount.nfs
   mkdir -p ${1}/usr/share/udhcpc/
   cp ${2}/usr/share/udhcpc/distrotech-nfs.script ${1}/usr/share/udhcpc/default.script
@@ -1167,29 +1177,10 @@ sleep 5
 
 EOF
     fi;
-  fi;
-
-  if [ "${3}" != "nfs" ];then
-    cat << EOF
-sleep 5
-vgchange -a y --sysinit
-mount -t ramfs none /var/lock/lvm
-vgmknodes
-umount /var/lock/lvm
-/bin/mount -n -o ro -t ext4 -L INSTALL /sysroot
-echo 0x0100 > /proc/sys/kernel/real-root-dev
-
-/sbin/pivot_root /sysroot /sysroot/initrd
-
-mount -t proc none /proc
-mount -t sysfs none /sys
-/initrd/sbin/mntetc
-EOF
-   else
+   elif [ "${3}" == "nfs" ];then
     for netint in `ls ${1}/mnt/initrd/lib/modules/${2}/drivers-net/*.ko.gz ${1}/mnt/initrd/lib/modules/${2}/drivers-net/*/*.ko.gz ${1}/mnt/initrd/lib/modules/${2}/drivers-net/*/*/*.ko.gz`;do
       echo modprobe `basename ${netint} |cut -d. -f1`;
     done
-
     cat << EOF
 modprobe unix
 modprobe ipv6
@@ -1201,6 +1192,52 @@ sleep 5
 /bin/ip link set dev eth0 name ethA
 /sbin/udhcpc -i ethA -q
 echo 0x0100 > /proc/sys/kernel/real-root-dev
+/sbin/pivot_root /sysroot /sysroot/initrd
+
+mount -t proc none /proc
+mount -t sysfs none /sys
+/initrd/sbin/mntetc
+EOF
+   elif [ "${3}" == "rootfs" ];then
+    cat << EOF
+sleep 10
+vgchange -a y --sysinit
+mount -t ramfs none /var/lock/lvm
+vgmknodes
+umount /var/lock/lvm
+/bin/mount -n -o ro \${rootfs} /sysroot
+echo 0x0100 > /proc/sys/kernel/real-root-dev
+
+/sbin/pivot_root /sysroot /sysroot/initrd
+
+mount -t proc none /proc
+mount -t sysfs none /sys
+/initrd/sbin/mntetc
+EOF
+   elif [ "${3}" == "squashfs" ];then
+    cat << EOF
+/bin/mount -n -o ro -L DTS_INSTALL /isofs
+/sbin/losetup /dev/loop0 /isofs/distrotech/x86_64/install.img
+/bin/mount -n -o ro /dev/loop0 /sysroot
+
+echo 0x0100 > /proc/sys/kernel/real-root-dev
+
+/sbin/pivot_root /sysroot /sysroot/initrd
+
+mount -t proc none /proc
+mount -t sysfs none /sys
+/initrd/sbin/mntetc
+EOF
+   else
+    cat << EOF
+sleep 10
+vgchange -a y --sysinit
+mount -t ramfs none /var/lock/lvm
+vgmknodes
+umount /var/lock/lvm
+/bin/mount -n -o ro -t ext4 -L INSTALL /sysroot
+echo 0x0100 > /proc/sys/kernel/real-root-dev
+
 /sbin/pivot_root /sysroot /sysroot/initrd
 
 mount -t proc none /proc
@@ -1256,16 +1293,23 @@ echo "Distrotech Linux Starting"
 
 for copt in \`cat /proc/cmdline\`;do
   if [ "\${copt#${KSUF}_opt=}" != "\${copt}" ];then
-    case \${copt#${KSUF}_opt=} in
-      dvd)exec /sbin/linuxrc.dvd;;
-      loop)exec /sbin/linuxrc.loop;;
-      nfs)exec /sbin/linuxrc.nfs;;
-      install)exec /sbin/linuxrc.install;;
-    esac
+    ${KSUF}_opt=\${copt#${KSUF}_opt=}
+  fi;
+  if [ "\${copt#root=}" != "\${copt}" ];then
+    rootfs=\${copt#root=}
+    export rootfs	
   fi;
 done
 
-/sbin/linuxrc.install
+case \$${KSUF}_opt in
+  dvd)exec /sbin/linuxrc.dvd;;
+  loop)exec /sbin/linuxrc.loop;;
+  nfs)exec /sbin/linuxrc.nfs;;
+  install)exec /sbin/linuxrc.install;;
+  squashfs)exec /sbin/linuxrc.squashfs;;
+esac
+
+exec /sbin/linuxrc.rootfs
 
 EOF
 ) > ${1}/mnt/initrd/linuxrc
@@ -1275,6 +1319,8 @@ EOF
   mkbootimg_cfg ${1} ${2}-${KSUF} dvd > ${1}/mnt/initrd/sbin/linuxrc.dvd
   mkbootimg_cfg ${1} ${2}-${KSUF} loop > ${1}/mnt/initrd/sbin/linuxrc.loop
   mkbootimg_cfg ${1} ${2}-${KSUF} nfs > ${1}/mnt/initrd/sbin/linuxrc.nfs
+  mkbootimg_cfg ${1} ${2}-${KSUF} rootfs > ${1}/mnt/initrd/sbin/linuxrc.rootfs
+  mkbootimg_cfg ${1} ${2}-${KSUF} squashfs > ${1}/mnt/initrd/sbin/linuxrc.squashfs
 
   chmod 750 ${1}/mnt/initrd/sbin/linuxrc*
   ${1}/sbin/depmod -b ${1}/mnt/initrd -aeF ${1}/boot/System.map ${2}-${KSUF}
@@ -1869,50 +1915,50 @@ if test -e (flash-install)/boot/initrd.img ;then
   if test -e (cd)/flash.hdd ;then
     menuentry "Install" {
   	set root=(flash-install)
-        linux /boot/vmlinuz root=/dev/flash/install ro quiet vga=0x303 ${KSUF}_opt=dvd
+        linux /boot/vmlinuz root=/dev/flash/install ro quiet ${KSUF}_opt=dvd
         initrd /boot/initrd.img
     }
     menuentry "Install (Rescue)" {
 	set root=(flash-install)
-        linux /boot/vmlinuz root=/dev/flash/install ro single vga=0x303 ${KSUF}_opt=dvd
+        linux /boot/vmlinuz root=/dev/flash/install ro single ${KSUF}_opt=dvd
         initrd /boot/initrd.img
     }
     menuentry "Install (DHCP/NFS)" {
   	set root=(flash-install)
-        linux /boot/vmlinuz root=/dev/flash/install ro quiet vga=0x303 ${KSUF}_opt=nfs
+        linux /boot/vmlinuz root=/dev/flash/install ro quiet ${KSUF}_opt=nfs
         initrd /boot/initrd.img
     }
    else
     if test -d (install,msdos1)/putty ;then
       menuentry "Install" {
 	set root=(flash-install)
-        linux /boot/vmlinuz root=/dev/flash/install ro quiet vga=0x303 ${KSUF}_opt=loop
+        linux /boot/vmlinuz root=/dev/flash/install ro quiet ${KSUF}_opt=loop
         initrd /boot/initrd.img
       }
       menuentry "Install (Rescue)" {
 	set root=(flash-install)
-        linux /boot/vmlinuz root=/dev/flash/install ro single vga=0x303 ${KSUF}_opt=loop
+        linux /boot/vmlinuz root=/dev/flash/install ro single ${KSUF}_opt=loop
         initrd /boot/initrd.img
       }
       menuentry "Install (DHCP/NFS)" {
 	set root=(flash-install)
-	linux /boot/vmlinuz root=/dev/flash/install ro quiet vga=0x303 ${KSUF}_opt=nfs
+	linux /boot/vmlinuz root=/dev/flash/install ro quiet ${KSUF}_opt=nfs
 	initrd /boot/initrd.img
       }
      else
       menuentry "Install" {
 	set root=(flash-install)
-        linux /boot/vmlinuz root=/dev/flash/install ro quiet vga=0x303 ${KSUF}_opt=install
+        linux /boot/vmlinuz root=/dev/flash/install ro quiet ${KSUF}_opt=install
         initrd /boot/initrd.img
       }
       menuentry "Install (Rescue)" {
 	set root=(flash-install)
-        linux /boot/vmlinuz root=/dev/flash/install ro single vga=0x303 ${KSUF}_opt=install
+        linux /boot/vmlinuz root=/dev/flash/install ro single ${KSUF}_opt=install
         initrd /boot/initrd.img
       }
       menuentry "Install (DHCP/NFS)" {
 	set root=(flash-install)
-	linux /boot/vmlinuz root=/dev/flash/install ro quiet vga=0x303 ${KSUF}_opt=nfs
+	linux /boot/vmlinuz root=/dev/flash/install ro quiet ${KSUF}_opt=nfs
 	initrd /boot/initrd.img
       }
     fi;
@@ -1952,11 +1998,16 @@ if test -e (hd0,msdos3)/boot/syslinux/ldlinux.sys ;then
 	chainloader +1
   }
 fi;
-if test -e (hd0,msdos3)/tinycore ;then
-  menuentry "Tiny Core" {
+if test -d (hd0,msdos3)/dtsrescue ;then
+  menuentry "Tiny Core (Distrotech Desktop)" {
 	set root=(hd0,msdos3)
-	linux /tinycore/vmlinuz loglevel=3 cde
-	initrd /tinycore/core.gz
+	linux /dtsrescue/tinycore/vmlinuz loglevel=3 protect tce=LABEL=BOOTISO
+	initrd /dtsrescue/tinycore/core.gz
+  }
+  menuentry "Tiny Core (Distrotech Rescue)" {
+	set root=(hd0,msdos3)
+	linux /dtsrescue/tinycore/vmlinuz loglevel=3 tce=LABEL=BOOTISO/dtsrescue/tce
+	initrd /dtsrescue/tinycore/core.gz
   }
 fi;
 EOF
@@ -2076,14 +2127,14 @@ pxeboot_config() {
 LABEL 1
         MENU LABEL Distrotech Network Install
         KERNEL Distrotech/vmlinuz
-        APPEND initrd=Distrotech/initrd.img ${KSUF}_opt=nfs vga=0x303
+        APPEND initrd=Distrotech/initrd.img ${KSUF}_opt=nfs
         TEXT HELP
         Install Distrotech Over The Network
         ENDTEXT
 LABEL 2
         MENU LABEL Distrotech Network Install (Rescue Mode)
         KERNEL Distrotech/vmlinuz
-        APPEND initrd=Distrotech/initrd.img S ${KSUF}_opt=nfs vga=0x303
+        APPEND initrd=Distrotech/initrd.img S ${KSUF}_opt=nfs
         TEXT HELP
         Distrotech Network Rescue Mode
         ENDTEXT
