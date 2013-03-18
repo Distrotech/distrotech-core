@@ -4,8 +4,7 @@
 # Set the values for some environment variables:
 export TERMINFO=/usr/share/terminfo
 export MINICOM="-c on"
-export MANPATH=/share/man:/man:/usr/share/man:/usr/man/preformat:/usr/man:/usr/X11R6/man
-#export HOSTNAME="`cat /etc/HOSTNAME`"
+export MANPATH=/share/man:/man:/usr/share/man:/usr/man/preformat:/usr/man:/usr/X11R7/share/man
 export LESSOPEN="|lesspipe.sh %s"
 export LESS="-M"
 export MOZILLA_HOME=/usr/lib/netscape
@@ -14,27 +13,19 @@ export EDITOR=pico
 export LOCATE_PATH=/var/db/locate
 export PGDATA=/var/spool/pgsql
 export SDL_FBDEV=/dev/fb1
+export LANG=en_ZA.UTF-8
 
 # Set the default system $PATH:
-export PATH="/usr/local/bin:/usr/bin:/bin:/usr/X11R6/bin:/opt/sophos/bin"
+export PATH="/usr/bin:/bin:/usr/X11R7/bin:/opt/xfce/bin:/opt/qt-4/bin"
 
 if [ -d /install ];then
   export PATH="$PATH:/install"
 fi;
 
-# For root users, ensure that /usr/local/sbin, /usr/sbin, and /sbin are in
-# the $PATH.  Some means of connection don't add these by default (sshd comes
-# to mind).
 if [ "`id -u`" = "0" ]; then
-  echo $PATH | grep /usr/local/sbin 1> /dev/null 2> /dev/null
-  if [ ! $? = 0 ]; then
-    PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
-  fi
-fi
-
-# For non-root users, add the current directory to the search path:
-if [ ! "`id -u`" = "0" ]; then
- PATH="$PATH:."
+  PATH=/usr/sbin:/sbin:$PATH
+ else
+  PATH="$PATH:."
 fi
 
 # I had problems using 'eval tset' instead of 'TERM=', but you might want to 
@@ -85,4 +76,4 @@ alias ldapsearch='ldapsearch -U admin -Y PLAIN -y /etc/ldap.secret -LLL'
 alias ldapadd='ldapadd -U admin -Y PLAIN -y "`cat /etc/ldap.secret'
 alias ldappasswd='ldappasswd -U admin -Y PLAIN -y /etc/ldap.secret'
 alias ldapdelete='ldapdelete -U admin -Y PLAIN -y /etc/ldap.secret'
-
+alias pstree='pstree -U'
