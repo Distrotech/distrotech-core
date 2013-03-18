@@ -243,8 +243,8 @@ EOF
   mkdir -p ${INST_BASE}/var/run/nscd ${INST_BASE}/var/db/nscd > /dev/null 2>&1
 
   chroot ${INST_BASE} /sbin/ldconfig
-  chroot ${INST_BASE} /sbin/hwclock --systohc --utc
-  chroot ${INST_BASE} /usr/sbin/rndc-confgen -a > /dev/null 2> /dev/null
+  chroot ${INST_BASE} /sbin/hwclock --systohc --utc >/dev/tty4 2>&1
+  chroot ${INST_BASE} /usr/sbin/rndc-confgen -a -r /dev/urandom > /dev/null 2> /dev/null
   chroot ${INST_BASE} /usr/bin/rebuild-info
 
 #  /usr/bin/dialog --backtitle "$BT" --title "Locate Database" --infobox "Updating File Locate Database" 7 35
@@ -320,7 +320,9 @@ Fdisk_Do() {
   if [ -b ${DISK_FD}3 ];then
     pvcreate -ff -y ${DISK_FD}3
     if [ ! -d /dev/${1} ];then
-      vgcreate -f ${1} ${DISK_FD}3
+      if vgcreate -f ${1} ${DISK_FD}3;then
+        mkdir /dev/${1}
+      fi
      else
       vgextend -f ${1} ${DISK_FD}3
     fi;
@@ -329,22 +331,32 @@ Fdisk_Do() {
 
 Format_LVM() {
   (lvcreate $1 -n $2 -l 100%VG
+  if [ "${3}" ];then
+    if ! lvcreate $1 -n $2 -l 100%VG -i ${3} -I 64;then
+      lvcreate $1 -n $2 -l 100%VG
+    fi;
+   else
+    lvcreate $1 -n $2 -l 100%VG
+  fi;
   vgchange -a y $1
   mkfs.ext4 -L $2 -j -v /dev/$1/$2 -L $2) >/dev/tty4 2>/dev/tty4
 }
 
 Fdisk() {
   if [ "${DSKS}" == "" ];then
-    sleep 5
     MDDSK=`ls /dev/md[a-z] 2>/dev/null`
     if [ "$MDDSK" ];then
       DSKS=$MDDSK
     fi;
     for hdd in `ls /dev/[hs]d[a-z] 2>/dev/null`;do
-      if [ ! "`pvdisplay -c 2>/dev/null |grep -E "${hdd}[0-9]:flash:"`" ];then
+      HDD_LABEL=$(blkid ${hdd}1 -s LABEL -o value)
+      if [ ! "`pvdisplay -c 2>/dev/null |grep -E "${hdd}[0-9]:flash:"`" ] && [ "${HDD_LABEL}" != "DTS_INSTALL" ];then
         DSKS="${DSKS} $hdd"
       fi;
     done
+    if [ ! "${DSKS}" ];then
+      return
+    fi;
   fi;
 
   DISK="";
@@ -366,13 +378,15 @@ Fdisk() {
   rm /tmp/menu.tmp.$$;
 
   if [ $RETVAL == "0" ] && [ "$FD_CHOICE" ];then
+    LVSTRIPE=0;
     for DISK_FD in $FD_CHOICE;do
       /usr/bin/dialog --backtitle "$BT" --title "Fdisk" --infobox "Creating partitions and assiging to PV/VG" 4 35
       Fdisk_Do lvm ${DISK_FD} > /dev/tty4 2>/dev/tty4
+      let LVSTRIPE++;
     done;
 
     /usr/bin/dialog --backtitle "$BT" --title "Formating Root LV" --infobox "Formating Linux Partition" 4 35
-    Format_LVM lvm root
+    Format_LVM lvm root ${LVSTRIPE}
     echo "/ /dev/lvm/root" >> /tmp/fstab.new
     Mount_All
     Local_Install
@@ -529,13 +543,13 @@ Date_Time() {
 
   RETVAL=$?;
   if [ $RETVAL == "0" ];then
-    /usr/bin/date `cat /tmp/datetime` > /dev/null 2>&1
+    /usr/bin/date `cat /tmp/datetime` > /dev/tty4 2>&1
     DATEOK=$?
     if [ $DATEOK != "0" ];then
       /usr/bin/dialog --backtitle "$BT" --clear --title "Date/Time Error"\
         --msgbox "Invalid Date Format"  9 40
      else
-      /sbin/hwclock --systohc --utc
+      /sbin/hwclock --systohc --utc >/dev/tty4 2>&1
       /usr/bin/dialog --backtitle "$BT" --clear --title "Date/Time Ok"\
         --msgbox "`date`"  9 40
     fi;
@@ -554,7 +568,7 @@ Local_Install(){
 }
 
 Main_Menu() {
-  /usr/bin/dialog --backtitle "$BT" --clear --title "Main Menu" --menu "Read Documentation For More Information." 12 70 6\
+  /usr/bin/dialog --backtitle "$BT" --clear --title "Main Menu" --menu "Read Documentation For More Information." 13 70 7\
            "1" "Fdisk/Format Drive(s)"\
            "2" "Configure Mounts"\
            "3" "Configure Server Name And Address"\
@@ -567,11 +581,20 @@ Main_Menu() {
 }
 
 Network_Address()  {
-  /usr/sbin/sysreconf
-  if [ ! -d /var/spool/apache/htdocs/ns/config ];then
-    mkdir -p /var/spool/apache/htdocs/ns/config
+  if [ -x /usr/sbin/sysreconf ];then
+    /usr/sbin/sysreconf
+    if [ ! -d /var/spool/apache/htdocs/ns/config ];then
+      mkdir -p /var/spool/apache/htdocs/ns/config
+    fi;
+    cp /tmp/netsentry.conf /var/spool/apache/htdocs/ns/config
+    if [ -d /sys/class/net/br0 ];then
+       dhclient -nw br0
+       dhclient -6 -nw br0
+     elif [ -d /sys/class/net/ethA ];then
+       dhclient -nw ethA
+       dhclient -6 -nw ethA
+    fi;
   fi;
-  cp /tmp/netsentry.conf /var/spool/apache/htdocs/ns/config
 }
 
 if [ "${1}" == "install" ];then
@@ -588,7 +611,7 @@ if [ "${1}" == "install" ];then
   done;
   exit
  elif [ "${1}" == "format" ];then
-  Format_LVM ${2} ${3}
+  Format_LVM ${2} ${3} ${4}
   exit
 fi;
 
@@ -602,16 +625,14 @@ if [ "$MDDSK" ];then
   DSKS=$MDDSK
 fi;
 for hdd in `ls /dev/[hs]d[a-z] 2>/dev/null`;do
-  if [ ! "`pvdisplay -c 2>/dev/null |grep -E "${hdd}[0-9]:flash:"`" ];then
+  HDD_LABEL=$(blkid ${hdd}1 -s LABEL -o value)
+  if [ ! "`pvdisplay -c 2>/dev/null |grep -E "${hdd}[0-9]:flash:"`" ] && [ "${HDD_LABEL}" != "DTS_INSTALL" ];then
     DSKS="${DSKS} $hdd"
   fi;
 done
 
 DISK="";
 DCNT=1;
-
-(/usr/sbin/sysreconf /install/default.conf.sysvars
-cp /tmp/netsentry.conf /var/spool/apache/htdocs/ns/config) > /dev/tty4 2>&1
 
 Date_Time;
 Fdisk;
