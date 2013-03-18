@@ -199,11 +199,9 @@ fi;
 if [ "${BRIDGE}" ];then
   if [ ! -d /proc/sys/net/ipv4/neigh/${BRIDGE} ];then
    (ip link add dev ${BRIDGE} type bridge
-    ip link set dev ${BRIDGE} up) > /dev/null 2>&1
-#    brctl setfd ${BRIDGE} 0
-#    brctl stp ${BRIDGE} on
+    ip link set dev ${BRIDGE} up
+    echo 1 > /sys/class/net/br0/bridge/stp_state) > /dev/null 2>&1
   fi;
   sleep 5
   ip link set dev ${IFNAME} master ${BRIDGE} > /dev/null 2>&1
-#  brctl addif ${BRIDGE} ${IFNAME}) > /dev/null 2>&1
 fi;
