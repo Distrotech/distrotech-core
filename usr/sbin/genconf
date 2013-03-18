@@ -1736,7 +1736,7 @@ userPassword: \${SNOMPW}
 EOF
 ) |/usr/bin/ldapmodify -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z
 
-if [ -e /var/spool/pgsql/postmaster.pid ] && [ -d /proc/`cat /var/spool/pgsql/postmaster.pid |head -1` ];then
+if [ ! -e /etc/.install ] && [-e /var/spool/pgsql/postmaster.pid ] && [ -d /proc/`cat /var/spool/pgsql/postmaster.pid |head -1` ];then
   /usr/sbin/rebootphone
 fi;
 
@@ -1772,7 +1772,7 @@ fi;
 
 if [ ! -e /var/spool/apache/htdocs/ns/config/$conffile ];then
   ldapdelete -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z $ldapserv{'config'},$vsuf
-  LDAPCONFPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
+  LDAPCONFPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",/'`
   CRYPT=`slappasswd -c '\$1\$%.8s' -s \${LDAPCONFPW}`
 
   (cat <<EOF
@@ -1886,12 +1886,12 @@ EOF
 chmod 600 /var/spool/apache/htdocs/ldap/ldapcon.inc
 chown 80.80 /var/spool/apache/htdocs/ldap/ldapcon.inc
 
-sed -e "s/^binddn.*****\$/binddn $ldapserv{'limited'}/" \\
-    -e "s/^rootbinddn.*****\$/rootbinddn $ldapserv{'Login'}/" \\
-    -e "s/^bindpw.*****\$/bindpw \${LDAPLIMPW}/" \\
-    -e "s/^base.*****\$/base $vsuf/" \\
+sed -e "s/^binddn.*\$/binddn $ldapserv{'limited'}/" \\
+    -e "s/^rootbinddn.*\$/rootbinddn $ldapserv{'Login'}/" \\
+    -e "s/^bindpw.*\$/bindpw \${LDAPLIMPW}/" \\
+    -e "s/^base.*\$/base $vsuf/" \\
     -e "s/^port.*/port 389/" \\
-    -e "s/^uri.*****\$/uri ldap\\:\\/\\/$ldapserv{'Server'}/" \\
+    -e "s/^uri.*\$/uri ldap\\:\\/\\/$ldapserv{'Server'}/" \\
     -e "s/^master_host.*\$/master_host $repmaster/" /etc/ldap.conf.orig >  /etc/ldap.conf
 
 chmod 644 /etc/ldap.conf
@@ -2028,13 +2028,13 @@ EOF
 
 sed -e "s/^\\\$whereami.*/\\\$whereami = \\\"$dnsconf{'Domain'}\\\";/" /var/spool/majordomo/majordomo.cf.orig  > /var/spool/majordomo/majordomo.cf
 
-sed -e "s/^binddn.*****\$/binddn $ldapserv{'limited'}/" \\
-    -e "s/^rootbinddn.*****\$/rootbinddn $ldapserv{'Login'}/" \\
-    -e "s/^bindpw.*****\$/bindpw \${LDAPLIMPW}/" \\
-    -e "s/^base.*****\$/base $vsuf/" \\
+sed -e "s/^binddn.*\$/binddn $ldapserv{'limited'}/" \\
+    -e "s/^rootbinddn.*\$/rootbinddn $ldapserv{'Login'}/" \\
+    -e "s/^bindpw.*\$/bindpw \${LDAPLIMPW}/" \\
+    -e "s/^base.*\$/base $vsuf/" \\
     -e "s/^port.*/port 636/" \\
     -e "s/^master_host.*\$/master_host $repmaster/" \\
-    -e "s/^uri.*****\$/uri ldaps:\\/\\/$ldapserv{'Server'} ldaps:\\/\\/$repmaster/" /etc/ldap.conf.orig >  /etc/ldap.conf
+    -e "s/^uri.*\$/uri ldaps:\\/\\/$ldapserv{'Server'} ldaps:\\/\\/$repmaster/" /etc/ldap.conf.orig >  /etc/ldap.conf
 
 chmod 644 /etc/ldap.conf
 chown root.smbadm /etc/ldap.conf
@@ -2320,8 +2320,8 @@ fi;
 #  mysql -u admin -p$sqladminpass < /usr/bin/mysql_sfront.sql
 #fi;
 
-sed -e "s/.*[^_]server.*=.******/                server  = $ldapserv{'Server'}/" \\
-  -e "s/.*identity.*=.******/                identity = $ldapserv{'Login'}/" \\
+sed -e "s/.*[^_]server.*=.*/                server  = $ldapserv{'Server'}/" \\
+  -e "s/.*identity.*=.*/                identity = $ldapserv{'Login'}/" \\
   -e "s/.*password.*=.*/                password = \${ADMINPW}/" \\
   -e "s/.*basedn.*=.*/                basedn = $vsuf/" \\
  /etc/raddb/radiusd.conf.orig > /etc/raddb/radiusd.conf
@@ -10450,7 +10450,7 @@ foreach $netip (@pbypass) {
 print SC<<__EOB__;
 acl authenticate proxy_auth REQUIRED
 acl all src all
-acl manager proto cache_object
+#acl manager proto cache_object
 acl localhost src 127.0.0.1/32
 acl SSL_ports port 443 563 666 990 5222 1863
 acl Safe_ports port 80 21 990 443 563 70 210 3128 3129 8080 5222 1863
@@ -17132,6 +17132,10 @@ sub printnfsexport() {
 
   if ( -e "/tftpboot/Ubuntu/server-i386.iso") {
     printf NFE ("%-50s%s(sync,no_subtree_check%s)\n","/tftpboot/Ubuntu/Server","*",",ro,insecure,no_root_squash,insecure_locks");
+  }
+
+  if ( -d "/tftpboot/TinyCore") {
+    printf NFE ("%-50s%s(sync,no_subtree_check%s)\n","/tftpboot/TinyCore","*",",ro,insecure,no_root_squash,insecure_locks");
   }
 
   if ( -d "/mnt/dev/install/core") {
