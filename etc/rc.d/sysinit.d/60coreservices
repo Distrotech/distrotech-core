@@ -37,7 +37,7 @@ fi;
 
 #Startup DNS Server
 if [ ! -e /etc/rndc.key ];then
-  /usr/sbin/rndc-confgen -a > /dev/null 2>&1
+  /usr/sbin/rndc-confgen -a -r /dev/urandom > /dev/null 2>&1
 fi;
 (ulimit -n 65535;/usr/sbin/named > /dev/null 2>&1) &
 
