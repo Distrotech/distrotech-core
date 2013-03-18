@@ -34,7 +34,11 @@ install_mysqld() {
     mkdir /var/spool/mysql
   fi;
   chown mysql.mysql /var/spool/mysql
-  /usr/bin/mysql_install_db $mysql_args
+  if [ -x /usr/scripts/mysql_install_db ];then
+    /usr/scripts/mysql_install_db $mysql_args
+   else
+    /usr/bin/mysql_install_db $mysql_args
+  fi;
   /usr/bin/mysqld_safe $mysql_args --pid-file=$pid_file >/dev/null 2>&1 &
   sleep 5
 
