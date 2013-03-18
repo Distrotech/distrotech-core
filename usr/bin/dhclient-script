@@ -84,6 +84,10 @@ EOF
 
 if [ -e /etc/ifconf/ifup.${interface} ];then
   eval `cat /etc/ifconf/ifup.${interface}`
+  RTABLE=90
+ elif [ -e /etc/.install ];then
+  FIREWALL="INTERNAL";
+  RTABLE=254
  else
   echo "no interface config found";
   exit -1;
@@ -155,9 +159,9 @@ if [ x$reason = xBOUND ] || [ x$reason = xRENEW ] || \
     if [ "${FIREWALL}" != "OTHER" ];then
       for router in $new_routers; do
         if [ "x$new_subnet_mask" = "x255.255.255.255" ] ; then
-          ip route add $router src $new_ip_address dev ${interface}:dhcp table 90
+          ip route add $router src $new_ip_address dev ${interface}:dhcp table ${RTABLE}
         fi
-        ip route add default via $router src $new_ip_address $metric_arg dev ${interface} table 90
+        ip route add default via $router src $new_ip_address $metric_arg dev ${interface} table ${RTABLE}
       done
     fi
   else
@@ -167,13 +171,13 @@ if [ x$reason = xBOUND ] || [ x$reason = xRENEW ] || \
       if [ x$new_routers != x ] && [ x$new_routers != x$old_routers ] ; then
         # if we've changed routers delete the old and add the new.
         for router in $old_routers; do
-          ip route del default via $router table 90
+          ip route del default via $router table ${RTABLE}
         done
         for router in $new_routers; do
           if [ "x$new_subnet_mask" = "x255.255.255.255" ] ; then
-            ip route add $router src $new_ip_address dev $interface table 90
+            ip route add $router src $new_ip_address dev $interface table ${RTABLE}
 	  fi
-          ip route add default via $router src $new_ip_address $metric_arg dev $interface table 90
+          ip route add default via $router src $new_ip_address $metric_arg dev $interface table ${RTABLE}
         done
       fi;
     fi
@@ -185,7 +189,7 @@ if [ x$reason = xBOUND ] || [ x$reason = xRENEW ] || \
   if [ "${FIREWALL}" != "OTHER" ];then
     add_dnsfwd
     if [ "${FIREWALL}" == "INTERNAL" ];then
-      if [ -x /usr/bin/dhclient-fw ];then
+      if [ -x /usr/bin/dhclient-fw ] && [ ! -e /etc/.install ];then
         /usr/bin/dhclient-fw $new_network_number $new_subnet_mask $new_ip_address $new_broadcast_address
       fi;
     fi;
@@ -234,13 +238,13 @@ if [ x$reason = xTIMEOUT ]; then
     if [ "${FIREWALL}" != "OTHER" ];then
       for router in $new_routers; do
         if [ "x$new_subnet_mask" = "x255.255.255.255" ] ; then
-	  ip route add $router src $new_ip_address dev $interface table 90
+	  ip route add $router src $new_ip_address dev $interface table ${RTABLE}
         fi
-        ip route add default via $router src $new_ip_address $metric_arg dev $interface table 90
+        ip route add default via $router src $new_ip_address $metric_arg dev $interface table ${RTABLE}
       done
       add_dnsfwd
       if [ "${FIREWALL}" == "INTERNAL" ];then
-        if [ -x /usr/bin/dhclient-fw ];then
+        if [ -x /usr/bin/dhclient-fw ] && [ ! -e /etc/.install ];then
           /usr/bin/dhclient-fw $new_network_number $new_subnet_mask $new_ip_address $new_broadcast_address
         fi;
       fi;
