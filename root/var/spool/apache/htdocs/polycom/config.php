@@ -9,6 +9,10 @@ TLS
 TCPOnly
 */
 
+if ($mac == "") {
+  exit;
+}
+
 if ($proxy == "") {
   $proxy=$SERVER_NAME;
 }

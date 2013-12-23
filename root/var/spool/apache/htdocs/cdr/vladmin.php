@@ -92,7 +92,7 @@ $langs=array("es","fr");
 $langn=array(_("Spanish"),_("French"));
 
 $poscb=array("CDND","DRING","WAIT","RECORD","NOPRES","DFEAT","NOVOIP","CRMPOP","IAXLine","H323Line","Locked",
-             "FAXMAIL","DISPNAME","SNOMLOCK","POLYDIRLN","DDIPASS");
+             "FAXMAIL","DISPNAME","SNOMLOCK","POLYDIRLN","DDIPASS","authreg");
 $negcb=array("NOVMAIL");
 $yesnocb=array("faxgateway");
 
@@ -100,7 +100,7 @@ $featarr=array("CDND","CFBU","CFIM","CFNA","CFFAX","ALTC","OFFICE","WAIT","RECOR
                 "ALOCK","NOPRES","DFEAT","NOVOIP","CRMPOP","NOVMAIL","FAXMAIL","DISPNAME","SNOMLOCK","POLYDIRLN","EFAXD",
                 "TOUT","DGROUP","ZAPLine","DDIPASS","ZAPProto","ZAPRXGain","ZAPTXGain","CLI","TRUNK","ACCESS",
                 "AUTHACCESS","IAXLine","H323Line","FWDU","Locked","SNOMMAC","VLAN","REGISTRAR","PTYPE","PURSE",
-                "DRING","SRING0","SRING1","SRING2","SRING3","faxgateway");
+                "DRING","SRING0","SRING1","SRING2","SRING3","faxgateway","ipnet","authreg");
 $lsysarr=array("profile","stunsrv","hostname","rxgain","txgain","vlan","nat");
 
 if ((isset($pbxupdate)) && ($pbxupdate == "Save Changes")) {
@@ -442,6 +442,8 @@ $def['record']="DEFRECORD";
 $def['alock']="DEFALOCK";
 $def['fwdu']="REMDEF";
 $def['novmail']="DEFNOVMAIL";
+$def['authreg']="DEFAUTHREG";
+$def['ipnet']="DEFIPNET";
 
 for($dcnt=0;$dcnt < count($dbdef);$dcnt++) {
   if ($origdata[$dbdef[$dcnt]] == "") {
@@ -1086,8 +1088,13 @@ if ($SUPER_USER == 1) {
 %>
 <DIV id=sip CLASS=formpart>
 <TABLE CLASS=formtable>
-
 <TR CLASS=list-color2>
+  <TD onmouseover=myHint.show('ES30') ONMOUSEOUT=myHint.hide()><%print _("Authorise Calls From This Subnet Only (Requires Only Authorise If Registered)");%></TD>
+  <TD>
+     <INPUT TYPE=TEXT NAME=ipnet VALUE="<%print $origdata["ipnet"];%>">
+  </TD>
+</TR>
+<TR CLASS=list-color1>
   <TD onmouseover=myHint.show('ES34') ONMOUSEOUT=myHint.hide()><%print _("NAT Handling");%></TD>
   <TD>
     <SELECT NAME=nat>
@@ -1097,7 +1104,7 @@ if ($SUPER_USER == 1) {
       <OPTION VALUE=route <%if ($nat == "route") {print " SELECTED";}%>><%print _("Assume NAT Dont Send Port");%></OPTION>
     </SELECT>
 </TR>
-<TR CLASS=list-color1>
+<TR CLASS=list-color2>
   <TD onmouseover=myHint.show('ES35') ONMOUSEOUT=myHint.hide()><%print _("DTMF Handling");%></TD>
   <TD>
     <SELECT NAME=dtmfmode>
@@ -1106,7 +1113,7 @@ if ($SUPER_USER == 1) {
       <OPTION VALUE=inband <%if ($dtmfmode == "inband") {print " SELECTED";}%>><%print _("Send DTMF Inband");%></OPTION>
     </SELECT>
 </TR>
-<TR CLASS=list-color2>
+<TR CLASS=list-color1>
   <TD onmouseover=myHint.show('ES36') ONMOUSEOUT=myHint.hide()><%print _("Relaxed Authentication");%></TD>
   <TD>
     <SELECT NAME=insecure>
@@ -1117,7 +1124,7 @@ if ($SUPER_USER == 1) {
     </SELECT>
   </TD>
 </TR>
-<TR CLASS=list-color1>
+<TR CLASS=list-color2>
   <TD onmouseover=myHint.show('ES39') ONMOUSEOUT=myHint.hide()><%print _("SRTP Encryption");%></TD>
   <TD>
     <SELECT NAME=encryption>
@@ -1129,21 +1136,25 @@ if ($SUPER_USER == 1) {
     </SELECT>
   </TD>
 </TR>
-<TR CLASS=list-color2>
+<TR CLASS=list-color1>
   <TD onmouseover=myHint.show('ES37') ONMOUSEOUT=myHint.hide()><%print _("Allow Peer To Peer Connections (Reinvite)");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=canreinvite <%if ($canreinvite == "yes") {print "CHECKED";}%>></TD>
 </TR>
-<TR CLASS=list-color1>
+<TR CLASS=list-color2>
   <TD onmouseover=myHint.show('ES39') ONMOUSEOUT=myHint.hide()><%print _("Send Nat Keep Alive Packets");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=qualify <%if ($qualify == "yes") {print "CHECKED";}%>></TD>
 </TR>
-<TR CLASS=list-color2>
+<TR CLASS=list-color1>
   <TD onmouseover=myHint.show('ES39') ONMOUSEOUT=myHint.hide()><%print _("Pass DDI To Extension (Set To Header)");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=DDIPASS <%if ($origdata["ddipass"] == "1") {print "CHECKED";}%>></TD>
 </TR>
-<TR CLASS=list-color1>
+<TR CLASS=list-color2>
   <TD onmouseover=myHint.show('ES39') ONMOUSEOUT=myHint.hide()><%print _("Allow T.38 Support");%></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=t38pt_udptl <%if ($t38pt_udptl != "no") {print "CHECKED";}%>></TD>
+</TR>
+<TR CLASS=list-color1>
+  <TD onmouseover=myHint.show('ES39') ONMOUSEOUT=myHint.hide()><%print _("Only Authorise If Registered");%></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=authreg <%if ($origdata["authreg"] == "1") {print "CHECKED";}%>></TD>
 </TR>
 </TABLE>
 </DIV>

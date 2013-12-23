@@ -165,8 +165,8 @@
         $totcdrtq.=" LEFT OUTER JOIN astdb as bgrp ON (accountcode=bgrp.family AND key='BGRP')";
       }
 
-      $totcdrtq.=" WHERE disposition='ANSWERED' AND (trunkcost.cost >= 0 OR (trunkcost.cost IS NULL AND dst != 's' AND dst ~ '^[0-9]{4}[0-9]+')) AND
-                        dstchannel ~ '" . $tchans[$prov] . "' AND " . $time;
+      $totcdrtq.=" WHERE disposition='ANSWERED' AND (trunkcost.cost >= 0 AND dst ~ '^[0-9]{4}[0-9]+' OR (trunkcost.cost IS NOT NULL AND dst ~ '^[0-9]{4}[0-9]+' AND 
+			dst != 's' AND dst ~ '^[0-9]{4}[0-9]+')) AND dstchannel ~ '" . $tchans[$prov] . "' AND " . $time;
       if (($SUPER_USER != 1) && ($TMS_USER == 1)) {
         $totcdrtq.=" AND " . $clogacl;
       }
@@ -190,8 +190,8 @@
     if ($TMS_USER == 1) {
       $totcdrtq.=" LEFT OUTER JOIN astdb as bgrp ON (accountcode=bgrp.family AND key='BGRP')";
     }
-    $totcdrtq.=" WHERE disposition='ANSWERED' AND (trunkcost.cost >= 0 OR (trunkcost.cost IS NULL AND dst != 's' AND dst ~ '^[0-9]{4}[0-9]+')) AND
-                        dstchannel ~ '" . $trunkchan . "' AND " . $time;
+    $totcdrtq.=" WHERE disposition='ANSWERED' AND (trunkcost.cost >= 0 AND dst ~ '^[0-9]{4}[0-9]+' OR (trunkcost.cost IS NOT NULL AND dst ~ '^[0-9]{4}[0-9]+' AND 
+			dst != 's' AND dst ~ '^[0-9]{4}[0-9]+')) AND dstchannel ~ '" . $trunkchan . "' AND " . $time;
     if (($SUPER_USER != 1) && ($TMS_USER == 1)) {
       $totcdrtq.=" AND " . $clogacl;
     }
@@ -216,8 +216,8 @@
         $totcdrq.=" LEFT OUTER JOIN astdb as bgrp ON (cdr.accountcode=bgrp.family AND key='BGRP')";
       }
 
-      $totcdrq.="WHERE disposition='ANSWERED' AND (trunkcost.cost >= 0 OR (trunkcost.cost IS NULL AND dst != 's' AND  dst ~ '^[0-9]{4}[0-9]+')) AND 
-                        dstchannel ~ '" . $tchans[$prov] . "' AND " . $time;
+      $totcdrq.="WHERE disposition='ANSWERED' AND (trunkcost.cost >= 0 AND dst ~ '^[0-9]{4}[0-9]+' OR (trunkcost.cost IS NOT NULL AND dst ~ '^[0-9]{4}[0-9]+' AND 
+		 	dst != 's' AND dst ~ '^[0-9]{4}[0-9]+')) AND dstchannel ~ '" . $tchans[$prov] . "' AND " . $time;
       if (($SUPER_USER != 1) && ($TMS_USER == 1)) {
         $totcdrq.=" AND " . $clogacl;
       }
@@ -277,7 +277,7 @@
   if ($TMS_USER == 1) {
     $totcdruq.=" LEFT OUTER JOIN astdb AS bgrp ON (bgrp.family=name AND bgrp.key='BGRP')";
   } 
-  $totcdruq.=" WHERE disposition='ANSWERED' AND users.name IS NOT NULL AND (trunkcost.cost >= 0 OR (trunkcost.cost IS NULL AND dst != 's'  AND  dst ~ '^[0-9]{4}[0-9]+')) AND
+  $totcdruq.=" WHERE disposition='ANSWERED' AND users.name IS NOT NULL AND (trunkcost.cost >= 0 AND dst ~ '^[0-9]{4}[0-9]+' OR (trunkcost.cost IS NOT NULL AND dst != 's' AND dst ~ '^[0-9]{4}[0-9]+')) AND
                     dstchannel ~ '" . $trunkchan . "' AND " . $time;
   if (($SUPER_USER != 1) && ($TMS_USER == 1)) {
     $totcdruq.=" AND " . $clogacl;
@@ -302,9 +302,9 @@
                     FROM cdr 
                       LEFT OUTER JOIN trunkcost USING (uniqueid)
                       LEFT OUTER JOIN users ON (cdr.accountcode=name)
-                    WHERE disposition='ANSWERED' AND users.name IS NULL AND (trunkcost.cost >= 0 OR (trunkcost.cost IS NULL AND dst != 's' AND  dst ~ '^[0-9]{4}[0-9]+')) AND
+                    WHERE disposition='ANSWERED' AND users.name IS NULL AND (trunkcost.cost >= 0 AND dst ~ '^[0-9]{4}[0-9]+' OR (trunkcost.cost IS NOT NULL AND dst != 's' AND dst ~ '^[0-9]{4}[0-9]+')) AND
                       dstchannel ~ '" . $trunkchan . "' AND " . $time;
-//    print $totcdroq . "<P>";
+    print $totcdroq . "<P>";
     $totcdro=pg_query($db,$totcdroq);
     if ($_POST['print'] < 2) {
       print "<TR CLASS=list-color" . (($ccnt % 2)+1) . ">";
@@ -333,7 +333,7 @@
                     LEFT OUTER JOIN localrates ON (trunkcost.price=localrates.index)
                     LEFT OUTER JOIN users ON (cdr.accountcode=name) 
                     LEFT OUTER JOIN astdb AS bgrp ON (cdr.accountcode=family AND bgrp.key='BGRP') ";
-  $totcdruq.=" WHERE disposition='ANSWERED' AND users.name IS NOT NULL AND (trunkcost.cost >= 0 OR (trunkcost.cost IS NULL AND dst != 's' AND dst ~ '^[0-9]{4}[0-9]+')) AND
+  $totcdruq.=" WHERE disposition='ANSWERED' AND users.name IS NOT NULL AND (trunkcost.cost >= 0 AND dst ~ '^[0-9]{4}[0-9]+' OR (trunkcost.cost IS NOT NULL AND dst != 's' AND dst ~ '^[0-9]{4}[0-9]+')) AND
                     dstchannel ~ '" . $trunkchan . "' AND " . $time;
   if (($SUPER_USER != 1) && ($TMS_USER == 1)) {
     $totcdruq.=" AND " . $clogacl;
@@ -367,7 +367,7 @@
                       LEFT OUTER JOIN localrates ON (trunkcost.price=localrates.index)
                       LEFT OUTER JOIN USERS ON (cdr.accountcode=name)
                       LEFT OUTER JOIN astdb AS bgrp ON (family=name AND key='BGRP')
-                    WHERE disposition='ANSWERED' AND (trunkcost.cost >= 0 OR (trunkcost.cost IS NULL AND dst != 's' AND  dst ~ '^[0-9]{4}[0-9]+')) AND 
+                    WHERE disposition='ANSWERED' AND (trunkcost.cost >= 0 AND dst ~ '^[0-9]{4}[0-9]+' OR (trunkcost.cost IS NOT NULL AND dst != 's' AND dst ~ '^[0-9]{4}[0-9]+')) AND 
                       " . $time . " AND value = '" . $groups[$gcnt] . "' AND dstchannel ~ '" . $trunkchan . "'";
     $totcdrq.=" GROUP BY localrates.description,trunkcost.price
                     ORDER BY sum(trunkcost.cost) DESC";
@@ -421,8 +421,8 @@
                       LEFT OUTER JOIN localrates ON (trunkcost.price=localrates.index)
                       LEFT OUTER JOIN users ON (cdr.accountcode=name)
                       LEFT OUTER JOIN astdb AS bgrp ON (family=name AND key='BGRP')
-                    WHERE disposition='ANSWERED' AND users.name IS NOT NULL AND (trunkcost.cost >= 0 OR (trunkcost.cost IS NULL AND dst != 's'  AND  dst ~ '^[0-9]{4}[0-9]+')) AND
-                      dstchannel ~ '" . $trunkchan . "' AND " . $time . " AND value = '" . $groups[$gcnt] . "' 
+                    WHERE disposition='ANSWERED' AND users.name IS NOT NULL AND (trunkcost.cost >= 0 AND dst ~ '^[0-9]{4}[0-9]+' OR (trunkcost.cost IS NOT NULL AND dst != 
+		      's' AND dst ~ '^[0-9]{4}[0-9]+')) AND dstchannel ~ '" . $trunkchan . "' AND " . $time . " AND value = '" . $groups[$gcnt] . "' 
                     GROUP BY users.fullname,cdr.accountcode
                     ORDER BY " . $sortby;
     $totcdru=pg_query($db,$totcdruq);
@@ -450,8 +450,8 @@
     if ($TMS_USER == 1) {
       $getcdrq.=" LEFT OUTER JOIN astdb AS bgrp ON (bgrp.family=name AND bgrp.key='BGRP')";
     }
-    $getcdrq.=" WHERE disposition='ANSWERED' AND users.name IS NOT NULL AND (trunkcost.cost >= 0 OR (trunkcost.cost IS NULL AND dst != 's'  AND  dst ~ '^[0-9]{4}[0-9]+')) AND
-                    dstchannel ~ '" . $trunkchan . "' AND " . $time;
+    $getcdrq.=" WHERE disposition='ANSWERED' AND users.name IS NOT NULL AND (trunkcost.cost >= 0 AND dst ~ '^[0-9]{4}[0-9]+' OR (trunkcost.cost IS NOT NULL AND dst != 's' AND dst ~ '^[0-9]{4}[0-9]+')) 
+		    AND dstchannel ~ '" . $trunkchan . "' AND " . $time;
   if (($SUPER_USER != 1) && ($TMS_USER == 1)) {
     $getcdrq.=" AND " . $clogacl;
   }
@@ -524,7 +524,7 @@
                     LEFT OUTER JOIN trunkcost USING (uniqueid)
                     LEFT OUTER JOIN localrates ON (trunkcost.price=localrates.index)
                     LEFT OUTER JOIN users ON (cdr.accountcode=name)
-                  WHERE disposition='ANSWERED' AND users.name IS NULL AND (trunkcost.cost >= 0 OR (trunkcost.cost IS NULL AND dst != 's'  AND  dst ~ '^[0-9]{4}[0-9]+')) AND 
+                  WHERE disposition='ANSWERED' AND users.name IS NULL AND (trunkcost.cost >= 0 AND dst ~ '^[0-9]{4}[0-9]+' OR (trunkcost.cost IS NOT NULL AND dst != 's' AND dst ~ '^[0-9]{4}[0-9]+')) AND 
                     dstchannel ~ '" . $trunkchan . "' AND" . $time . "
                   GROUP BY localrates.description,trunkcost.price
                   ORDER BY " . $sortby;

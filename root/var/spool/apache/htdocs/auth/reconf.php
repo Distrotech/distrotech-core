@@ -432,6 +432,8 @@ if (isset($saved)) {
 
   if ($_POST['LCRDTMF'] == "on") {
     $_POST['LCRDTMF']="info";
+  } else {
+    $_POST['LCRDTMF']="rfc2833";
   }
 
   if (($MDM_CONN == "3G") || ($MDM_CONN == "3GIPW") || ($MDM_CONN == "Dialup") || ($MDM_CONN == "Leased")) {

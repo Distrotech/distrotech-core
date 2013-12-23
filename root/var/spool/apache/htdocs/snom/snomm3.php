@@ -4,6 +4,10 @@ include "../cdr/autoadd.inc";
 
 $mac=strtoupper($mac);
 
+if ($mac == "") {
+  exit;
+}
+
 $getphoneq="SELECT name,secret,fullname,registrar,snomlock,nat,dtmfmode,vlan,cdnd from users 
                LEFT OUTER JOIN features ON (name=exten) WHERE snommac='" . $mac . "' LIMIT 1";
 $getphone=pg_query($db,$getphoneq);

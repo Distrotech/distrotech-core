@@ -1,5 +1,6 @@
 <%
-include "auth.inc";
+include "/var/spool/apache/htdocs/auth/auth.inc";
+
 include "csvfunc.inc";
 
 $defcodec[0][0]="g729";

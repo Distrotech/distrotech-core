@@ -4,6 +4,10 @@ include "../cdr/autoadd.inc";
 
 $mac=strtoupper($mac);
 
+if ($mac == "") {
+  exit;
+}
+
 $getphoneq="SELECT name,secret,fullname,registrar,snomlock,nat,vlan,cdnd from users 
               LEFT OUTER JOIN features ON (exten=name) WHERE snommac='" . $mac . "' ORDER BY name";
 

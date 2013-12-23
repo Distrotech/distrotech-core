@@ -142,22 +142,25 @@ if (($_POST['nomenu'] == 1) && (isset($_SESSION['poppage']))) {
   $showpage=$_SESSION['disppage'];
 }
 
-if (ereg("([a-zA-Z]+)\/",$showpage,$dispdata)) {
+if (ereg("(^[a-zA-Z]+)\/",$showpage,$dispdata)) {
+  if ((!isset($_SERVER['PHP_AUTH_USER'])) || (!isset($_SERVER['PHP_AUTH_PW']))) {
+    exit;
+  }
   if (($dispdata[1] != "cshop") && ($dispdata[1] != "ccadmin")) {
     if (($ambox == "") && ($newambox != "") && (isset($amboxup)) || ($showpage == "ldap/adduser.php")) {
       $getuid=true;
     }
-    include "../ldap/auth.inc";
+    include "/var/spool/apache/htdocs/ldap/auth.inc";
     if ($dispdata[1] == "cdr") {
-      include "../cdr/uauth.inc";
+      include "/var/spool/apache/htdocs/cdr/uauth.inc";
       if ((!$cdrauthok[$showpage]) && ($ADMIN_USER == "pleb")) {
         $showpage="";
       }
     }
     $laction=$_SESSION['server'] . "auth/";
   }
-} else if (!is_file(".." . $_SERVER['SCRIPT_URL'] . "index.php")) {
-  $laction=$_SESSION['server'] . "auth/";
+} else if (!ereg("(^[a-zA-Z]+)",$showpage,$dispdata)) {
+  exit;
 }
 
 /*

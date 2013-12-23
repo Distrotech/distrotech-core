@@ -39,6 +39,28 @@ function getdefvars() {
   }
 }
 
+
+function setdefaults($newexten) {
+  global $db;
+
+  $defaults=pg_query($db,"SELECT key,value FROM astdb where family='Setup' and 
+                  (key='DEFNOVMAIL' OR key='Timeout' OR key='Context' OR key='AuthContext' OR key='DEFALOCK' OR key='DEFRECORD' OR key='DEFIPNET' OR key='DEFAUTHREG')");
+
+  $setdef['Timeout']="TOUT";
+  $setdef['DEFNOVMAIL']="NOVMAIL";
+  $setdef['Context']="ACCESS";
+  $setdef['AuthContext']="AUTHACCESS";
+  $setdef['DEFALOCK']="ALOCK";
+  $setdef['DEFRECORD']="RECORD";
+  $setdef['DEFIPNET']="ipnet";
+  $setdef['DEFAUTHREG']="authreg";
+
+  for($def=0;$def < pg_num_rows($defaults);$def++) {
+    $r=pg_fetch_array($defaults,$def,PGSQL_NUM);
+    pg_query($db,"UPDATE features SET " . $setdef[$r[0]] . "='" . $r[1] . "' where exten=" . $newexten);
+  }
+}
+
 function createexten($mac,$phonetype,$prefix,$start,$tdmport) {
   global $db,$autovars;
   $ret="";
@@ -98,20 +120,8 @@ function createexten($mac,$phonetype,$prefix,$start,$tdmport) {
       pg_query($db,"DELETE FROM astdb where family=" . $newexten);
       pg_query($db,"DELETE FROM features where exten=" . $newexten);
       pg_query($db,"INSERT INTO features (exten) VALUES (" . $newexten . ")");
-      $defaults=pg_query($db,"SELECT key,value FROM astdb where family='Setup' and 
-                      (key='DEFNOVMAIL' OR key='Timeout' OR key='Context' OR key='AuthContext' OR key='DEFALOCK' OR key='DEFRECORD')");
 
-      $setdef['Timeout']="TOUT";
-      $setdef['DEFNOVMAIL']="NOVMAIL";
-      $setdef['Context']="ACCESS";
-      $setdef['AuthContext']="AUTHACCESS";
-      $setdef['DEFALOCK']="ALOCK";
-      $setdef['DEFRECORD']="RECORD";
-
-      for($def=0;$def < pg_num_rows($defaults);$def++) {
-        $r=pg_fetch_array($defaults,$def,PGSQL_NUM);
-        pg_query($db,"UPDATE features SET " . $setdef[$r[0]] . "='" . $r[1] . "' where exten=" . $newexten);
-      }
+      setdefaults($newexten);
 
       if ($autovars['AutoVLAN'] > 1) {
         pg_query("UPDATE features SET vlan='" . $autovars['AutoVLAN'] . "' where exten=" . $newexten);

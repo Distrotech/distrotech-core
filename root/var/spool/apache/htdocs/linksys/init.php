@@ -7,7 +7,13 @@ include "/var/spool/apache/htdocs/cdr/autoadd.inc";
 //$mac="000e08e84c63";
 
 $pwlen=8;
+
+if ($mac == "") {
+  exit;
+}
+
 $mac=ereg_replace(":","",$mac);
+
 
 $mac=strtoupper($mac);
 

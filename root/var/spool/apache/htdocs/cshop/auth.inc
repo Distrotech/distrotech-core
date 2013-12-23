@@ -64,8 +64,8 @@ if (($_POST['vboxlogoff'] == $sessid) && ($_POST['vboxlogoff'] != "")) {
       $usrcntr=pg_fetch_row($usercntq,0);
       $_SESSION['usrcnt']=$usrcntr[0];
       if ($r[1] == "0") {
-        if (($r[7] == "") && ($owner != "")) {
-          pg_query($db,"INSERT INTO realm (id,domain,description) VALUES ('" .$r[2] . "','" . $owner . "','" . $owner . "')");
+        if (($r[7] == "") && ($rdom != "")) {
+          pg_query($db,"INSERT INTO realm (id,domain,description) VALUES ('" .$r[2] . "','" . $rdom . "','" . $rdom . "')");
         }
         if ($r[6] != "A") {
           $countryq="INSERT INTO tariffrate (tariffcode,countrycode,subcode,rate,trunkprefix) SELECT DISTINCT 'A',countryprefix.countrycode,countryprefix.subcode,0,countryprefix.trunkprefix 

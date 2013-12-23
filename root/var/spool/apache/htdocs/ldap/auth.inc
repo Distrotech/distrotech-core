@@ -54,8 +54,4 @@
 //  @ldap_unbind($ds);
     $r=@ldap_bind($ds,$ldn,$_SERVER['PHP_AUTH_PW']);
   }
-/*
-  if ((!isset($PHP_AUTH_USER)) || (! $r) || (!isset($PHP_AUTH_PW))) {
-    authenticate();
-  }*/
 %>

@@ -66,6 +66,7 @@ if ((isset($_POST['pbxupdate'])) && ($_POST['exten'] == "") && (($_POST['prefix'
                                      '" . $rndpin . "','" . $_POST['prefix'] . $_POST['cno'] . "','0','Exten " . $_POST['prefix'] . $_POST['cno'] . "','','1','1','yes')";
     $exadd=pg_query($db,$exaddq);
     pg_query($db,"INSERT INTO features (exten) VALUES ('" . $_POST['prefix'] . $_POST['cno'] . "')");
+    setdefaults($_POST['prefix'] . $_POST['cno']);
     include "vladmin.php";
   }
 } else if ((isset($_POST['pbxupdate'])) && ($_POST['exten'] != "")) {

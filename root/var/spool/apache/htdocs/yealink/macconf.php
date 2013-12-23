@@ -5,6 +5,10 @@ include "../ldap/ldapbind.inc";
 
 $mac=strtoupper($mac);
 
+if ($mac == "") {
+  exit;
+}
+
 $auth_ussr=ldap_search($ds,"ou=snom","(&(objectClass=person)(cn=snom))");
 
 if (ldap_count_entries($ds,$auth_ussr) <= 0 ) {

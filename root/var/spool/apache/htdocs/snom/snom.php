@@ -7,33 +7,33 @@ header('Content-type: text/xml');
 
 $mac=strtoupper($mac);
 
-$auth_ussr=ldap_search($ds,"ou=snom","(&(objectClass=person)(cn=snom))");
+$auth_ussr=@ldap_search($ds,"ou=snom","(&(objectClass=person)(cn=snom))");
 
 $uadata=explode(";",$_SERVER['HTTP_USER_AGENT']);
 $pdata=explode(" ",trim($uadata[1]));
 $sipver=explode(".",trim($pdata[1]));
 
-if (ldap_count_entries($ds,$auth_ussr) <= 0 ) {
+if (@ldap_count_entries($ds,$auth_ussr) <= 0 ) {
   $dn="cn=Snom,ou=Snom";
   $info["objectclass"][0]="person";
   $info["cn"]="snom";
   $info["sn"]="Snom Global Phone Book";
   $info["userpassword"]="snom";
 
-  ldap_add($ds,$dn,$info);
+  @ldap_add($ds,$dn,$info);
 
-  if (ldap_errno($ds) == "32") {
+  if (@ldap_errno($ds) == "32") {
     $info2["objectclass"][0]="organizationalUnit";
     $info2["ou"]="snom";
     $dn2="ou=snom";
-    ldap_add($ds,$dn2,$info2);
-    ldap_add($ds,$dn,$info);
+    @ldap_add($ds,$dn2,$info2);
+    @ldap_add($ds,$dn,$info);
   }
-  $auth_ussr=ldap_search($ds,"ou=snom","(&(objectClass=person)(cn=snom))");
+  $auth_ussr=@ldap_search($ds,"ou=snom","(&(objectClass=person)(cn=snom))");
 }
 
-$auth_ures=ldap_first_entry($ds,$auth_ussr);
-$suser=ldap_get_attributes($ds,$auth_ures);
+$auth_ures=@ldap_first_entry($ds,$auth_ussr);
+$suser=@ldap_get_attributes($ds,$auth_ures);
 
 $pwlen=8;
 $getphoneq="SELECT name,secret,fullname,registrar,snomlock,nat,dtmfmode,vlan,cdnd,
