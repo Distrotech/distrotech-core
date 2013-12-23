@@ -87,7 +87,7 @@ fi;
 if [ -e /etc/.install ];then
   if [ -d /sys/class/net/ethA ] && [ -d /sys/class/net/wlanA ];then
     if [ ! -d /sys/class/net/br0 ];then
-      ip link add br0 type bridge   
+      ip link add br0 type bridge
       ip link set ethA master br0
 #      ip link set wlanA master br0
       ip link set br0 up
@@ -134,6 +134,10 @@ if [ -e /etc/.install ];then
   FWALL_EXT="${INT_IFACE[1]}";
 
   HN_ADDR=${HN_ADDR}-`cat /sys/class/net/ethA/address  |tr 'a-f:' 'A-F\-'`
+  /usr/sbin/avahi-autoipd -c ethA
+  if [ $? != 0 ];then
+    /usr/sbin/avahi-autoipd --force-bind -D -w ethA
+  fi;
 fi;
 
 MAX_IF=${#INT_IFACE[@]};
@@ -640,6 +644,7 @@ EOF
 if [ -e /etc/.install ];then
   /usr/bin/hostname $HN_ADDR >/dev/null 2>&1
   /bin/domainname $DOM_ADDR >/dev/null 2>&1
+  /usr/sbin/avahi-daemon -D
 
   (cat<<EOF
 interface "${INT_IFACE[1]}" {
