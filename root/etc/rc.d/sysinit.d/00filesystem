@@ -61,7 +61,7 @@ mount -n -o remount,rw /
 if [ -e /etc/mtab ];then
   rm /etc/mtab
 fi;
-ln -s /proc/self/mounts
+ln -s /proc/self/mounts /etc/mtab
 
 #Set the basic NSS conf
 if [ -e /etc/nsswitch.conf.boot ] && [ -e /etc/nsswitch.conf.ldap ];then
