@@ -4555,7 +4555,9 @@ sub printhosts() {
 #      printf EH ("%-20s%s\n",@idata[1],$web);
 #    }
     foreach $reweb (@rewww) {
-      printf EH ("%-20s%s\n",$rewip{$reweb},$reweb);
+      if (index($rewip{$reweb}, "/") < 0) {
+        printf EH ("%-20s%s\n",$rewip{$reweb},$reweb);
+      }
     }
     if ($dnsconf{'DynZone'} ne "") {
       printf EH ("%-20s%s\n",@idata[1],$dnsconf{'DynZone'});
@@ -6000,6 +6002,7 @@ if ($sysconf{'External'} eq $sysconf{'Internal'}) {
 /sbin/iptables -t nat -N SYSNAT
 
 /sbin/iptables -t nat -A PREROUTING -j DNAT -t nat -p tcp ! -d $localip --to-destination $localip --sport 1024:65535 --dport 80
+/sbin/iptables -t nat -A PREROUTING -j REDIRECT -p tcp --dport 80 --to-port 3129
 /sbin/iptables -t nat -A PREROUTING -j SIPMAP
 /sbin/iptables -t nat -A PREROUTING -j NATMAPI
 /sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p udp -s $localip --sport 5000 --dport 1024:65535
@@ -8177,8 +8180,10 @@ __EOR__
     $rewfint=$rewint{$rewfw};
     if ($rewfint ne "-") {
       @rewidata=split(/\|/,$interface{$rewfint});
-      print FW "#Allow Redirect For $rewfw To $rewip{$rewfw}/32\n";
-      print FW "/sbin/iptables -A PROXYOUT -j ACCEPT -o $rewint{$rewfw} -p tcp -s 0/0 --sport 1024:65535 -d $rewip{$rewfw}/32 --dport 80 $sfnew\n\n";
+      if (index($rewip{$rewfw}, "/") < 0) {
+        print FW "#Allow Redirect For $rewfw To $rewip{$rewfw}/32\n";
+        print FW "/sbin/iptables -A PROXYOUT -j ACCEPT -o $rewint{$rewfw} -p tcp -s 0/0 --sport 1024:65535 -d $rewip{$rewfw}/32 --dport 80 $sfnew\n\n";
+      }
     }
   }
 
@@ -10421,7 +10426,11 @@ print SC "acl local_sites dst 127.0.0.1/32\n";
 
 $rdircnt=0;
 foreach $redirsite (@rewww) {
-  print SC "acl redirect dst $rewip{$redirsite}/32\n";
+  print SC "acl redirect dst $rewip{$redirsite}";
+  if (index($rewip{$redirsite}, "/") < 0) {
+    print SC "/32";
+  }
+  print SC "\n";
   $rdircnt++;
 }
 
