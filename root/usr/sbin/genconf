@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 
+#$testing = "1";
+
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
 #
@@ -27,22 +29,24 @@ $x509cmd{'Email'}="EMAIL";
 
 use Fcntl qw(:flock);
 
-open($lockfh, ">>", "/var/run/netsentry-config") or die "Cannot open lock file $!";
-flock($lockfh, LOCK_EX | LOCK_NB) or die "Cannot obtain lock $!";
-print $lockfh $$;
+if ($testing ne "1") {
+  open($lockfh, ">>", "/var/run/netsentry-config") or die "Cannot open lock file $!";
+  flock($lockfh, LOCK_EX | LOCK_NB) or die "Cannot obtain lock $!";
+  print $lockfh $$;
 
-open(NC,">/var/run/netsentry-update");
-print NC $$;
-close(NC);
-chdir "/var/spool/apache/htdocs/ns/config";
+  open(NC,">/var/run/netsentry-update");
+  print NC $$;
+  close(NC);
+  chdir "/var/spool/apache/htdocs/ns/config";
+}
 
 use Socket;
 use MIME::Base64;
 use Net::LDAPS;
 use Net::LDAP;
 use SNMP;
-use Digest::MD5  qw(md5_hex);
-use Crypt::PasswdMD5;
+use Digest::MD5 qw(md5_hex);
+use Crypt::PasswdMD5; 
 use DBI;
 use NetAddr::IP;
 use Dahdi;
@@ -81,6 +85,7 @@ $svlcr{'LCRSRTP'}="false";
 $tuncnt=0;
 $tblcnt=0;
 $vparent=0;
+$tdmgw=0;
 $ppplcnt=0;
 open(SV,">sysvars");
 while(<CF>) {
@@ -131,7 +136,7 @@ while(<CF>) {
           print SV "INT_NAMEV\[" . $vliface . "\]=\"" . @words[0]  . "\";\n";
           print SV "INT_PARV\[" . $vliface . "\]=\"" . $2 . "\";\n";
         }
-      } elsif (@words[3] =~ m/^(eth[ABCD0-9\.]+:[0-9])$/) {
+      } elsif (@words[3] =~ m/^([a-zA-Z0-9\.]+:[0-9]+)$/) {
         $aiface=$1;
         if ($aliface eq "") {
           $aliface=1;
@@ -158,7 +163,14 @@ while(<CF>) {
           print "/sbin/iptables  -t mangle -I CMARK -j MARK -i " . @words[3] . " -d " . getnw(@words[2],@words[1]) . "/" . @words[2] . " --set-mark " . ($tblcnt  + 30) . "\n";
           $tblcnt++;
         }
-#        @words[9]="";
+      } else {
+        @words[9]="";
+      }
+      @words[10]= getnw(@words[2],@words[1]);
+      @words[11]= getbc(@words[2],@words[1]);
+
+      if (@words[0] eq "Phones") {
+        $polyvlan=substr(@words[3],index(@words[3],".")+1);
       }
 
       $intdata=join("\|",@words);
@@ -362,7 +374,9 @@ while(<CF>) {
         $fwdnumber=@words[0];
       } elsif (@words[0] eq "VBOX") {
         shift(@words);
-        $vparent++;
+        if (@words[2] ne "") {
+          $vparent++;
+        }
         if (@words == 2) {
           push(@words,"voip.zatelecom.co.za");
           push(@words,"plaintext");
@@ -587,7 +601,9 @@ __EOB__
        if (@words[2] ne "true") {
          push(@hosted,@words[0]);
          push(@islaves,@words[0]);
-         $allowtx{@words[0]}=",127.0.0.2";
+         if ($sysconf{'Internal'} ne $sysconf{'External'}) {
+           $allowtx{@words[0]}=",127.0.0.2";
+         }
        } else {
          push(@ihosted,@words[0]);
        }
@@ -796,10 +812,6 @@ __EOB__
       shift(@words);
       $smboption{$optname}=join(" ",@words);
     } elsif (@words[0] eq "Controler") {
-      push(@smbconf,"domain logons = Yes");
-      push(@smbconf,"logon drive = @words[1]:");
-      push(@smbconf,"logon script = logon.bat");
-      push(@smbconf,"logon path = \\\\%L\\%U\\.ntprofile");
 #      push(@smbconf,"logon home = \\\\%L\\%U\\.winprofile");
       $dcontroller="@words[1]:@words[2]";
       if (! -d "/etc/samba") {
@@ -950,8 +962,6 @@ __EOB__
       $pgadminpass=@words[1];
     } elsif(@words[0] eq "PGExchange") {
       $exchangepass=@words[1];
-    } elsif (@words[0] eq "Cubit") {
-      $sqlcubitpass=@words[1];
     } elsif (@words[0] eq "Asterisk") {
       $sqlvoippass=@words[1];
     } elsif (@words[0] eq "AsteriskServ") {
@@ -1016,9 +1026,9 @@ print SV "DOM_DC=\"" . $smboption{'ADSServer'} . "\";\n";
 print SV "GW_ADDR=\"" . $sysconf{'Nexthop'} . "\";\n";
 
 if ($dcontroller ne "") {
-  print SV "DOMC=\"0\";\n";
-} else {
   print SV "DOMC=\"1\";\n";
+} else {
+  print SV "DOMC=\"0\";\n";
 }
 print SV "DNS_SERV1=\"" . $sysconf{'PrimaryDns'} . "\";\n";
 print SV "DNS_SERV2=\"" . $sysconf{'SecondaryDns'} . "\";\n";
@@ -1197,6 +1207,9 @@ if ($wirelessint == "") {
 }
 
 
+$tcctl{'Egress'}=($tcctl{'Egress'} eq "") ? "0" : $tcctl{'Egress'};
+$tcctl{'Ingress'}=($tcctl{'Ingress'} eq "") ? "0" : $tcctl{'Ingress'};
+
 if ($tcctl{'Egress'} ne "") {
   $tcctl{'Egress50'}=$tcctl{'Egress'}*0.5;
   $tcctl{'Egress30'}=$tcctl{'Egress'}*0.3;
@@ -1235,7 +1248,7 @@ if ($ldapserv{'Login'} eq "") {
 }
 
 if ($dnsconf{'Hostname'} ne "") {
-  $ldapserv{'limited'}="uid=ldap_limted_" . $dnsconf{'Hostname'} . "," . $ldapserv{'Login'};
+  $ldapserv{'limited'}="uid=ldap_limited_" . $dnsconf{'Hostname'} . "," . $ldapserv{'Login'};
   $ldapserv{'config'}="uid=ldap_config_" . $dnsconf{'Hostname'} . "," . $ldapserv{'Login'};
 } else {
   $ldapserv{'limited'}="uid=ldap_limited," . $ldapserv{'Login'};
@@ -1599,14 +1612,14 @@ __EOF__
   }
 } elsif (($clamdmount ne "") && ( ! -e "/dev/dazukofs.ctrl")) {
   chop $clamdmount;
-  print AV<<__EOF__;
-ClamukoScanOnAccess yes
-ClamukoScanOnOpen yes
-ClamukoScanOnClose no
-ClamukoScanOnExec no
-ClamukoMaxFileSize $smbclam{'AVMaxSize'}
-$clamdmount
-__EOF__
+#  print AV<<__EOF__;
+#ClamukoScanOnAccess yes
+#ClamukoScanOnOpen yes
+#ClamukoScanOnClose no
+#ClamukoScanOnExec no
+#ClamukoMaxFileSize $smbclam{'AVMaxSize'}
+#$clamdmount
+#__EOF__
 }
   print DFT <<__EOF__;
 
@@ -1700,7 +1713,6 @@ fi;
 #Change the password if need be
 if [ -e /var/spool/apache/htdocs/ns/config/ldap.newsecret ];then
   NEWROOTPW="`cat /var/spool/apache/htdocs/ns/config/ldap.newsecret`";
-  rm /var/spool/apache/htdocs/ns/config/ldap.newsecret
   CRYPT=`slappasswd -c '\$1\$%.8s' -s \${NEWROOTPW}`
 
   (cat <<EOF
@@ -1717,6 +1729,7 @@ EOF
     chmod 400 /etc/ldap.secret
     chown root.root /etc/ldap.secret   
     echo -n "\${ADMINPW}" > /etc/ldap.secret
+    rm /var/spool/apache/htdocs/ns/config/ldap.newsecret
    else
     ADMINPW="`cat /etc/ldap.secret`";
   fi;
@@ -1726,7 +1739,7 @@ fi;
 
 /usr/sbin/setsmbpasswd
 
-SNOMPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
+SNOMPW=`apg -M NCL -n 1 -m 12`
 
 (cat <<EOF
 dn: cn=Snom,ou=snom,$vsuf
@@ -1736,13 +1749,13 @@ userPassword: \${SNOMPW}
 EOF
 ) |/usr/bin/ldapmodify -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z
 
-if [ ! -e /etc/.install ] && [-e /var/spool/pgsql/postmaster.pid ] && [ -d /proc/`cat /var/spool/pgsql/postmaster.pid |head -1` ];then
-  /usr/sbin/rebootphone
+if [ ! -e /etc/.install ] && [ -e /var/spool/pgsql/postmaster.pid ] && [ -d /proc/`cat /var/spool/pgsql/postmaster.pid |head -1` ];then
+  /usr/sbin/rebootphone &
 fi;
 
 if [ ! -e /var/spool/apache/htdocs/ns/config/$limfile ];then
   ldapdelete -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z $ldapserv{'limited'},$vsuf
-  LDAPLIMPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
+  LDAPLIMPW=`apg -M NCL -n 1 -m 12`
   CRYPT=`slappasswd -c '\$1\$%.8s' -s \${LDAPLIMPW}`
 
   (cat <<EOF
@@ -1772,7 +1785,7 @@ fi;
 
 if [ ! -e /var/spool/apache/htdocs/ns/config/$conffile ];then
   ldapdelete -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z $ldapserv{'config'},$vsuf
-  LDAPCONFPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",/'`
+  LDAPCONFPW=`apg -M NCL -n 1 -m 12`
   CRYPT=`slappasswd -c '\$1\$%.8s' -s \${LDAPCONFPW}`
 
   (cat <<EOF
@@ -1798,7 +1811,7 @@ fi;
 
 if [ -s /var/spool/apache/htdocs/ns/config/ldap.replica ] && [ ! -e /etc/ldap-$fqdn ];then
   ldapdelete -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z uid=$fqdn,ou=servers,$vsuf
-  LDAPREPPW=`apg -M SNCL -n 1 -m 10 -E '!\$%^~|\\`\\",'`
+  LDAPREPPW=`apg -M NCL -n 1 -m 12`
   CRYPT=`slappasswd -c '\$1\$%.8s' -s \${LDAPREPPW}`
 
   (cat <<EOF
@@ -1965,10 +1978,6 @@ __EOF__
 
   if ($sqlcrmpass eq "") {
     $sqlcrmpass="SugarCRM";
-  }
-
-  if ($sqlcubitpass eq "") {
-     $sqlcubitpass="i56kfm";
   }
 
   if ($syncreplsid != "" ) {
@@ -2155,16 +2164,11 @@ echo "ALTER USER radius WITH PASSWORD '$sqlradiuspass';" |/usr/bin/psql -h 127.0
 echo "ALTER USER pgsql WITH PASSWORD '$pgadminpass';" |/usr/bin/psql -h 127.0.0.1 -U pgsql template1 -f - > /dev/null 2>&1
 echo "UPDATE realm SET domain='$dnsconf{'Domain'}' WHERE id=0;" |/usr/bin/psql -h 127.0.0.1 -U pgsql asterisk -f - > /dev/null 2>&1
 
-if [ -d /var/spool/cubit ];then 
-  echo "ALTER USER postgres WITH PASSWORD '$sqlcubitpass';" |/usr/bin/psql -p 5433 -h 127.0.0.1 -U postgres template1 -f - > /dev/null 2>&1
-fi;
-
 (cat << EOF
 127.0.0.1:5432:*:pgsql:$pgadminpass
 127.0.0.1:5432:*:exchange:$exchangepass
 127.0.0.1:5432:*:asterisk:$sqlvoippass
 127.0.0.1:5432:*:phpgw:phpgw
-127.0.0.1:5433:*:postgres:$sqlcubitpass
 EOF
 )> /root/.pgpass
 chmod 600 /root/.pgpass
@@ -2571,12 +2575,6 @@ TLSVerifyClient never
 __EOB__
 }
 
-
-if ($sysconfig{'Type'} eq "full") {
-  $ldap = Net::LDAPS->new($repmaster,port=>"636",verify => 'none',timeout => "10");
-} else {
-  $ldap = Net::LDAP->new($repmaster,timeout => "10");
-}
 
 if ($ldapread eq "true") {
   $ureadaccess="by dn=\"$confdn\"\n    none\n  by dn.regex=\"^uid=.*,ou=Users\"\n    read\n  by dn.regex=\"^sambaSID=.*,ou=Idmap\"";
@@ -3666,17 +3664,8 @@ __EOB__
     print SC "include /root/slapd.local\n\n";
   }
 
-  if ($repurl eq "" ){
-    print SC<<__EOB__;
-database        $dbtype
-__EOB__
-  } else {
-    print SC<<__EOB__;
-database        hdb
-__EOB__
-  }
-
   print SC<<__EOB__;
+database        hdb
 suffix		""
 directory	/var/spool/ldap
 lastmod         on
@@ -3825,6 +3814,7 @@ sub printrcmail(){
   open(PMRP,">procmailrc.pub");
   chmod(0600,"procmailrc.pub");
 
+  $emusr="daemon";
 
   print PMRP<<__EOB__;
 MAILDIR=/var/spool/mail/shared/.Administrators/
@@ -3841,44 +3831,50 @@ fi
 DROPACL=0;
 
 #Create Public Mail Folders
-if [ ! -d /var/spool/mail/shared ] || [ "`ls -ld /var/spool/mail/shared |awk '{print \$3"."\$4}'`" != "bin.users" ];then
+if [ ! -d /var/spool/mail/shared ] || [ "`ls -ld /var/spool/mail/shared |awk '{print \$3"."\$4}'`" != "$emusr.users" ];then
   if [ ! -d /var/spool/mail/shared ];then
     mkdir -m 2775 /var/spool/mail/shared
   fi;
-  chown 1.100 /var/spool/mail/shared
+  chown $emusr.users /var/spool/mail/shared
   touch /var/spool/mail/shared/dovecot-shared
-  chown 1.100 /var/spool/mail/shared/dovecot-shared
+  chown $emusr.users /var/spool/mail/shared/dovecot-shared
   chmod 660 /var/spool/mail/shared/dovecot-shared
 fi;
 
-if [ ! -d /var/spool/mail/shared/.Administrators ] || [ "`ls -ld /var/spool/mail/shared/.Administrators |awk '{print \$3"."\$4}'`" != "bin.smbadm" ];then
-  if [ ! -d /var/spool/mail/shared/.Administrators ];then
-    mkdir -m 2770 /var/spool/mail/shared/.Administrators
+if [ ! -d "/var/spool/mail/shared/.Administrators" ] || [ "`ls -ld "/var/spool/mail/shared/.Administrators" |awk '{print \$3"."\$4}'`" != "$emusr.smbadm" ];then
+  if [ ! -d "/var/spool/mail/shared/.Administrators" ];then
+    mkdir -m 2770 "/var/spool/mail/shared/.Administrators"
   fi;
-  chown 1.139 /var/spool/mail/shared/.Administrators
+  chown $emusr.smbadm "/var/spool/mail/shared/.Administrators"
 
-  touch /var/spool/mail/shared/.Administrators/dovecot-shared
-  chown 1.139 /var/spool/mail/shared/.Administrators/dovecot-shared
-  chmod 660 /var/spool/mail/shared/.Administrators/dovecot-shared
+  touch "/var/spool/mail/shared/.Administrators/dovecot-shared"
+  chown $emusr.smbadm "/var/spool/mail/shared/.Administrators/dovecot-shared"
+  chmod 660 "/var/spool/mail/shared/.Administrators/dovecot-shared"
 
   for mbox in cur new tmp;do
-    if [ ! -d /var/spool/mail/shared/.Administrators/\${mbox} ];then
-      mkdir -m 2770 /var/spool/mail/shared/.Administrators/\${mbox}
+    if [ ! -d "/var/spool/mail/shared/.Administrators/\${mbox}" ];then
+      mkdir -m 2770 "/var/spool/mail/shared/.Administrators/\${mbox}"
     fi;
-    chown 1.139 /var/spool/mail/shared/.Administrators/\${mbox}
+    chown $emusr.smbadm "/var/spool/mail/shared/.Administrators/\${mbox}"
   done;
-  if [ -e /var/spool/mail/shared/.Administrators/dovecot-acl ];then
-    rm /var/spool/mail/shared/.Administrators/dovecot-acl
+  if [ -e "/var/spool/mail/shared/.Administrators/dovecot-acl" ];then
+    rm "/var/spool/mail/shared/.Administrators/dovecot-acl"
   fi;
 fi;
 
-if [ ! -e /var/spool/mail/shared/.Administrators/dovecot-acl ];then
-  echo "group=smbadm lrwstipex" > /var/spool/mail/shared/.Administrators/dovecot-acl
-  chown 1.139 /var/spool/mail/shared/.Administrators/dovecot-acl
+if [ ! -e "/var/spool/mail/shared/.Administrators/dovecot-acl" ];then
+  echo "group=smbadm lrwstipex" > "/var/spool/mail/shared/.Administrators/dovecot-acl"
+  chown $emusr.smbadm "/var/spool/mail/shared/.Administrators/dovecot-acl"
   DROPACL=1
 fi;
 
 __EOB__
+
+  if ($sysconfig{'Type'} eq "full") {
+    $ldap = Net::LDAPS->new($ldapserv{'Server'}, port=>"636",verify => 'none',timeout => "10");
+  } else {
+    $ldap = Net::LDAP->new($ldapserv{'Server'} ,timeout => "10");
+  }
 
   if (($ldap ne "") && ( -d "/var/spool/ldap")) {
     $ldap->bind($ldapserv{'limited'},password => $ldaplimpw);
@@ -3894,21 +3890,21 @@ __EOB__
 "/var/spool/mail/shared/.@mbdat[0]/"
 __EOB__
       print RM<<__EOB__;
-if [ ! -d "/var/spool/mail/shared/.@mbdat[0]" ] || [ "`ls -ld "/var/spool/mail/shared/.@mbdat[0]" |awk '{print \$3"."\$4}'`" != "bin.@mbdat[1]" ];then
+if [ ! -d "/var/spool/mail/shared/.@mbdat[0]" ] || [ "`ls -ld "/var/spool/mail/shared/.@mbdat[0]" |awk '{print \$3"."\$4}'`" != "$emusr.@mbdat[1]" ];then
   if [ ! -d "/var/spool/mail/shared/.@mbdat[0]" ];then
     mkdir -m 2770 "/var/spool/mail/shared/.@mbdat[0]"
   fi;
-  chown bin.@mbdat[1] "/var/spool/mail/shared/.@mbdat[0]"
+  chown $emusr.@mbdat[1] "/var/spool/mail/shared/.@mbdat[0]"
 
   touch "/var/spool/mail/shared/.@mbdat[0]/dovecot-shared"
-  chown bin.@mbdat[1] "/var/spool/mail/shared/.@mbdat[0]/dovecot-shared"
+  chown $emusr.@mbdat[1] "/var/spool/mail/shared/.@mbdat[0]/dovecot-shared"
   chmod 660 "/var/spool/mail/shared/.@mbdat[0]/dovecot-shared"
 
   for mbox in cur new tmp;do
     if [ ! -d "/var/spool/mail/shared/.@mbdat[0]/\${mbox}" ];then
       mkdir -m 2770 "/var/spool/mail/shared/.@mbdat[0]/\${mbox}"
     fi;
-    chown bin.@mbdat[1] "/var/spool/mail/shared/.@mbdat[0]/\${mbox}"
+    chown $emusr.@mbdat[1] "/var/spool/mail/shared/.@mbdat[0]/\${mbox}"
   done;
   if [ -e "/var/spool/mail/shared/.@mbdat[0]/dovecot-acl" ];then
     rm "/var/spool/mail/shared/.@mbdat[0]/dovecot-acl"
@@ -3917,7 +3913,7 @@ fi;
 
 if [ ! -e "/var/spool/mail/shared/.@mbdat[0]/dovecot-acl" ];then
   echo "group=@mbdat[1] lrwstipex" > "/var/spool/mail/shared/.@mbdat[0]/dovecot-acl"
-  chown bin.@mbdat[1] "/var/spool/mail/shared/.@mbdat[0]/dovecot-acl"
+  chown $emusr.@mbdat[1] "/var/spool/mail/shared/.@mbdat[0]/dovecot-acl"
   DROPACL=1
 fi;
 
@@ -4066,7 +4062,7 @@ sub printrcppp(){
         chop $ppptun{$pppdev};
 	@ppptdat=split(/ /,$ppptun{$pppdev});
         foreach $ppptdev (@ppptdat) {
-          print PUE "\n/sbin/ip tun del " . $ppptdev;
+          print PUE "\n#Disable Tunnels\n/sbin/ip tun del " . $ppptdev . "\n";
         }
         print PUE "\n";
         if (@ldata[6] ne $sysconf{'Internal'}) {
@@ -4080,7 +4076,7 @@ sub printrcppp(){
           $dslint=@ldata[6];
         }
         print PUE "date > /var/log/pppd.log.$lcnt\n";
-        print PUE "/usr/sbin/pppd sync plugin rp-pppoe.so $dslint unit $lcnt logfile /var/log/pppd.log.$lcnt mru $mdmconf{'MTU'} mtu $mdmconf{'MTU'} linkname @ldata[0] user @ldata[1] ipparam @ldata[0] nodefaultroute noauth persist nomultilink$servname nodetach";
+        print PUE "/usr/sbin/pppd sync plugin rp-pppoe.so $dslint unit $lcnt logfile /var/log/pppd.log.$lcnt linkname @ldata[0] user @ldata[1] ipparam @ldata[0] nodefaultroute noauth persist nomultilink$servname nodetach";
         if (@ldata[8] ne "") {
           print PUE " endpoint IP:@ldata[8]";
         }
@@ -4159,7 +4155,8 @@ __EOB__
   chop $ppptun{'ppp0'};
   @ppptdat=split(/ /,$ppptun{'ppp0'});
   foreach $ppptdev (@ppptdat) {
-    print PU "\n/sbin/ip tun del " . $ppptdev;
+    print PU "\n#Disable Tunnels\n";
+    print PU "/sbin/ip tun del " . $ppptdev . "\n\n";
   }
 
   if (($mdmconf{'Connection'} eq "ADSL") && ($sysconf{'External'} eq "Dialup")) {
@@ -4186,8 +4183,7 @@ __EOB__
     }
 
     print PU "date > /var/log/pppd.log.0\n";
-    print PU "/usr/sbin/pppd sync plugin rp-pppoe.so $dslint unit 0 logfile /var/log/pppd.log.0 linkname main user $mdmconf{'Username'} nodefaultroute noauth persist nomultilink usepeerdns$servname nodetach\n";
-    &startexadsl();
+    print PU "/usr/sbin/pppd sync plugin rp-pppoe.so $dslint unit 0 logfile /var/log/pppd.log.0 linkname main user $mdmconf{'Username'} nodefaultroute noauth persist nomultilink $servname nodetach usepeerdns\n";
   } elsif (($mdmconf{'Connection'} eq "3GIPW") && ($sysconf{'External'} eq "Dialup")) {
     $mdmconf{'ComPort'}="/dev/tts/IPW0";
     $usbport=0;
@@ -4200,7 +4196,6 @@ __EOB__
 
     print PU "date > /var/log/pppd.log.0\n";
     print PU "/usr/sbin/pppd $mdmconf{'ComPort'} connect \"/usr/sbin/chat -v -f /etc/ppp/diald.scr\" lock unit 0 logfile /var/log/pppd.log.0 mru $mdmconf{'MTU'} mtu $mdmconf{'MTU'} linkname main user $mdmconf{'Username'} defaultroute noauth persist nomultilink usepeerdns nodetach\n";
-    &startexadsl();
   } elsif (($mdmconf{'Connection'} eq "3G") && ($sysconf{'External'} eq "Dialup")) {
     $mdmconf{'ComPort'}="/dev/gsmmodem";
     $usbport=0;
@@ -4213,7 +4208,6 @@ __EOB__
 
     print PU "date > /var/log/pppd.log.0\n";
     print PU "/usr/sbin/pppd $mdmconf{'ComPort'} connect \"/usr/sbin/chat -v -f /etc/ppp/diald.scr\" lock unit 0 logfile /var/log/pppd.log.0 mru $mdmconf{'MTU'} mtu $mdmconf{'MTU'} linkname main defaultroute noauth persist nomultilink usepeerdns nodetach\n";
-    &startexadsl();
 
   } elsif (($mdmconf{'Connection'} eq "Dialup") && ($sysconf{'External'} eq "Dialup")) {
     $cportmap{'Com1'}="/dev/tts/0";
@@ -4235,13 +4229,15 @@ __EOB__
 #      print RP "\n#Starting Link\n";
 #      print RP "exec /usr/sbin/pppd sync plugin capiplugin /dev/null number $mdmconf{'Number'} $mdmconf{'Address'}:$mdmconf{'Gateway'} ipcp-accept-local noauth defaultroute";
 #    }
-  } elsif ($sysconf{'External'} ne "Dialup") {
-    &startexadsl();
-    print RP "/usr/sbin/servconfig\n";
-  } else {
-    print RP "#PPP Not Required On This System\n";
+  }
+
+  &startexadsl();
+
+  if (($sysconf{'External'} eq "Dialup") || ($mdmconf{'Connection'} eq "ADSL")){
+    print RP "#Apply System Config\n";
     print RP "/usr/sbin/servconfig\n";
   }
+
   print PU "flock -u 10\n";
   print PU ") 10>/var/lock/ppp0.lock\n\n";
   close(PU);
@@ -4587,7 +4583,7 @@ sub printhosts() {
       @lidata=split(/\|/,$interface{$iface});
       if ((index($iface,"gtun") eq -1) && ($iface ne $sysconf{'External'}) && ($iface ne $mdmconf{'ComPort'}) && ($iface ne $sysconf{'Internal'})){
         if (@lidata[1] ne "0.0.0.0") {
-          printf EH ("%-20s%s.%s %s\n",@idata[1],@lidata[0],$dnsconf{'Domain'},@lidata[0]);
+          printf EH ("%-20s%s.%s %s\n",@lidata[1],@lidata[0],$dnsconf{'Domain'},@lidata[0]);
         }
       }
     }
@@ -5058,16 +5054,17 @@ __EOB__
 #}
 #__EOB__
 #  }
-  if ($wirelessrange ne "") {
-    @wrdat=split(/\//,$wirelessrange);
+  if ($sysconf{'VPNNet'} ne "") {
+    @wrdat=split(/\//,$sysconf{'VPNNet'});
     $wnumip=getsncount(@wrdat[1])-3;
     $wrsn=getsn(@wrdat[1]);
     $intint=$sysconf{'Internal'};
     @iipdat=split(/\|/,$interface{$intint});
+    $ipsecnw = getnw(@wrdat[1],@wrdat[0]);
 
     print RC <<__EOB__;
 mode_cfg {
-        network4 @wrdat[0];
+        network4 $ipsecnw;
         pool_size $wnumip;
         netmask4 $wrsn;
         auth_source system;
@@ -5575,7 +5572,7 @@ sub printtables() {
       } else {
         ($ifnme)=split(/:/,@ifdata[3]);
       }
-      if ($nw == $rnw) {
+      if ($nw eq $rnw) {
         $sroutes{$ifnme} .="@idata[1]/@idata[2]:@idata[3] ";
         break;
       }
@@ -5638,6 +5635,7 @@ __EOI__
       if ($ifnme eq $sysconf{'Internal'}) {
         print IFUP "FIREWALL=\"INTERNAL\";\n";
         print IFUP "FORWARD=1;\n";
+        print IFUP "ZCONFIP=\"" . $zcipaddr . "\";\n";
       } elsif ($ifnme eq $sysconf{'External'}) {
         print IFUP "FIREWALL=\"EXTERNAL\";\n";
       } else {
@@ -5662,7 +5660,7 @@ __EOI__
         }
 
         print IFUP <<__EOI__;
-TXPOWER=@wifidat[5];
+POWER=@wifidat[5];
 CHANNEL=@wifidat[4];
 REGDOM=@wifidat[3];
 __EOI__
@@ -5696,16 +5694,16 @@ __EOI__
         print IFUP "RP_FIL=0;\n";
       }
       if (($iface ne $sysconf{'External'}) && ($iface ne $sysconf{'Internal'})) {
-        print IFUP "OLIMIT=@idata[6]\n";
-        print IFUP "OLIMITK=" . (@idata[6]/8)*1024 . "\n";
-        print IFUP "OLIMIT50=" . @idata[6]*0.5 . "\n";
-        print IFUP "OLIMIT30=" . @idata[6]*0.3 . "\n";
-        print IFUP "OLIMIT20=" . @idata[6]*0.2 . "\n";
-        print IFUP "ILIMIT=@idata[7]\n";
-        print IFUP "ILIMITK=" . (@idata[7]/8)*1024 . "\n";
-        print IFUP "ILIMIT50=" . @idata[7]*0.5 . "\n";
-        print IFUP "ILIMIT30=" . @idata[7]*0.3 . "\n";
-        print IFUP "ILIMIT20=" . @idata[7]*0.2 . "\n";
+        print IFUP "OLIMIT=@idata[6];\n";
+        print IFUP "OLIMITK=" . (@idata[6]/8)*1024 . ";\n";
+        print IFUP "OLIMIT50=" . @idata[6]*0.5 . ";\n";
+        print IFUP "OLIMIT30=" . @idata[6]*0.3 . ";\n";
+        print IFUP "OLIMIT20=" . @idata[6]*0.2 . ";\n";
+        print IFUP "ILIMIT=@idata[7];\n";
+        print IFUP "ILIMITK=" . (@idata[7]/8)*1024 . ";\n";
+        print IFUP "ILIMIT50=" . @idata[7]*0.5 . ";\n";
+        print IFUP "ILIMIT30=" . @idata[7]*0.3 . ";\n";
+        print IFUP "ILIMIT20=" . @idata[7]*0.2 . ";\n";
       }
       close(IFUP);
     }
@@ -5754,10 +5752,13 @@ __EOB__
 
 __EOB__
         for($sncnt=1;$sncnt <= $fwbwcnt{@idata[3]};$sncnt++) {
-          $classcnt=50+$sncnt;
           @bwdata=split(/\|/,$fwbwsrc{@idata[3]}[$sncnt-1]);
+          if (@bwdata[4] eq "") {
+            next;
+          }
+          $classcnt=50+$sncnt;
           print BWM <<__EOB__;
-#Limit Data For @bwdata[0] to @bwdata[4]/@bwdata[5]kbs
+#Limit Data For @bwdata[0] @bwdata[3] to @bwdata[4]kbs
 /sbin/tc class add dev @idata[3] parent 1:1 classid 1:$classcnt htb rate @bwdata[4]Kbit ceil @idata[7]Kbit
 /sbin/tc qdisc add dev @idata[3] parent 1:$classcnt handle $classcnt: sfq perturb 10
 /sbin/tc filter add dev @idata[3] parent 1: protocol ip prio $sncnt u32 match ip dst @bwdata[1]/@bwdata[2] flowid 1:$classcnt
@@ -6032,13 +6033,15 @@ __EOB__
       @idata=split(/\|/,$interface{$iface});
       $linkip=@idata[1];
       if (index($iface,":") ne -1) {
-        $iface=substr($iface,0,index($iface,":"));
+        $biface=substr($iface,0,index($iface,":"));
+      } else {
+        $biface=$iface;
       }
       if ((@idata[1] ne "0.0.0.0") || (@idata[2] ne "32")) {
         $linknw=getnw(@idata[2],@idata[1]);
         print FW "#SIP/RTP Proxy For $iface @idata[1]\n";
-#        print FW "/sbin/iptables -t nat -A SIPMAP -j DEFPROXY -i $iface -d $linkip/32\n";
-        print FW "/sbin/iptables -t nat -I SIPNAT -j SNAT -o $iface -d $linknw/@idata[2] --to-source @idata[1]\n\n";
+#        print FW "/sbin/iptables -t nat -A SIPMAP -j DEFPROXY -i $biface -d $linkip/32\n";
+        print FW "/sbin/iptables -t nat -I SIPNAT -j SNAT -o $biface -d $linknw/@idata[2] --to-source @idata[1]\n\n";
       }
     }
   }
@@ -6208,7 +6211,7 @@ __EOB__
   /sbin/tc qdisc del dev \$INT_NAME root > /dev/null 2>&1
   /sbin/tc qdisc del dev imq0 root > /dev/null 2>&1
 
-  if [ "$tcctl{'Ingress'}" != "" ];then
+  if [ "$tcctl{'Ingress'}" != "0" ];then
     #Apply ingress limit
     if [ ! -e /var/spool/apache/htdocs/mrtg/bw-imq0.rrd ];then
       /usr/bin/rrdtc $sysconf{'External'}
@@ -6228,7 +6231,7 @@ __EOB__
     /sbin/tc filter add dev imq0 parent 1: protocol ip handle 0x103 fw flowid 1:30
   fi;
 
-  if [ "$tcctl{'Egress'}" != "" ] && [ "\$INT_NAME" != "lo" ];then
+  if [ "$tcctl{'Egress'}" != "0" ] && [ "\$INT_NAME" != "lo" ];then
     #Apply egress limit
     if [ ! -e /var/spool/apache/htdocs/mrtg/bw-\${INT_NAME}.rrd ];then
       /usr/bin/rrdtc $sysconf{'External'}
@@ -6522,15 +6525,17 @@ __EOB__
       next;
     }
     if (index(@idata[3],":") ne -1) {
-        @idata[3]=substr(@idata[3],0,index(@idata[3],":"));
+      $biface=substr(@idata[3],0,index(@idata[3],":"));
+    } else {
+      $biface=@idata[3];
     }
     $nwaddr=getnw(@idata[2],@idata[1]);
     $bcaddr=getbc(@idata[2],@idata[1]);
 
-    print FW "/sbin/iptables -A DENY -j DROP -i @idata[3] -s $nwaddr/@idata[2] -d $bcaddr\n";
-    print FW "/sbin/iptables -A DENY -j DROP -i @idata[3] -d $bcaddr -p udp --sport 137 --dport 137\n";
-    print FW "/sbin/iptables -A DENY -j DROP -i @idata[3] -s $nwaddr/@idata[2] -d 255.255.255.255\n";
-    print FW "/sbin/iptables -A DENY -j DROP -i @idata[3] -s $nwaddr/@idata[2] -d 224.0.0.0/3\n";
+    print FW "/sbin/iptables -A DENY -j DROP -i $biface -s $nwaddr/@idata[2] -d $bcaddr\n";
+    print FW "/sbin/iptables -A DENY -j DROP -i $biface -d $bcaddr -p udp --sport 137 --dport 137\n";
+    print FW "/sbin/iptables -A DENY -j DROP -i $biface -s $nwaddr/@idata[2] -d 255.255.255.255\n";
+    print FW "/sbin/iptables -A DENY -j DROP -i $biface -s $nwaddr/@idata[2] -d 224.0.0.0/3\n";
   }
 
   print FW<<__EOB__;
@@ -6560,6 +6565,7 @@ __EOB__
 /sbin/iptables -A OUTPUT -j IP6RDDSL -p 41
 
 /sbin/iptables -A VOIPIN -j ACCEPT -p udp $sfnew --dport 5000
+/sbin/iptables -A VOIPIN -j ACCEPT -p udp $sfnew --dport 4555
 /sbin/iptables -A VOIPIN -j ACCEPT -p udp $sfnew --dport 5060
 /sbin/iptables -A VOIPIN -j ACCEPT -p tcp $sfnew --dport 5060:5061
 /sbin/iptables -A VOIPIN -j ACCEPT -p udp $sfnew --dport 4569
@@ -6567,6 +6573,7 @@ __EOB__
 /sbin/iptables -A VOIPIN -j ACCEPT -p udp $sfnew --dport 10000:20000
 
 /sbin/iptables -A VOIPOUT -j ACCEPT -p udp $sfnew --sport 5000
+/sbin/iptables -A VOIPOUT -j ACCEPT -p udp $sfnew --sport 4555
 /sbin/iptables -A VOIPOUT -j ACCEPT -p udp $sfnew --sport 5060
 /sbin/iptables -A VOIPOUT -j ACCEPT -p tcp $sfnew --sport 5060:5061
 /sbin/iptables -A VOIPOUT -j ACCEPT -p udp $sfnew --sport 4569
@@ -6838,8 +6845,10 @@ __EOB__
   print FW "\n#Allow Higer Speed To Local Network From Wireless Range\n";
   foreach $iface (@ints) {
     @idata=split(/\|/,$interface{$iface});
-    $locallan=getnw(@idata[2],@idata[1]);
-    print FW "/sbin/iptables -t mangle -A PPPOECLAS -j CLASSIFY -s $locallan/@idata[2] --set-class 1:5\n";
+    if ((@idata[1] ne "0.0.0.0") and (@idata[2] ne "32")) {
+      $locallan=getnw(@idata[2],@idata[1]);
+      print FW "/sbin/iptables -t mangle -A PPPOECLAS -j CLASSIFY -s $locallan/@idata[2] --set-class 1:5\n";
+    }
   }
   print FW<<__EOB__;
 
@@ -7003,6 +7012,9 @@ __EOB__
 
     foreach $iface (@ints) {
       @idata=split(/\|/,$interface{$iface});
+      if ((@idata[1] eq "0.0.0.0") || (@idata[2] eq "32")) {
+        next;
+      }
       $ifnw=getnw(@idata[2],@idata[1]);
       if (index($iface,":") ne -1) {
         $int=substr($iface,0,index($iface,":"));
@@ -7090,7 +7102,7 @@ __EOB__
   }
 
   if ($sysconf{'SecondaryDns'} ne "" ) { 
-     print FW "#NAT Access To Specified Primary Domain Server\n";
+     print FW "#NAT Access To Specified Secondary Domain Server\n";
      print FW "/sbin/iptables -A SYSNAT -t nat -j NATOUT -p udp --sport 1024:65535 -d $sysconf{'SecondaryDns'} --dport 53\n";
      print FW "/sbin/iptables -A SYSNAT -t nat -j NATOUT -p udp --sport 53 -d $sysconf{'SecondaryDns'} --dport 53\n";
      print FW "/sbin/iptables -A SYSNAT -t nat -j NATOUT -p tcp --sport 1024:65535 -d $sysconf{'SecondaryDns'} --dport 53\n\n";
@@ -7112,13 +7124,13 @@ __EOB__
       $denint=@ipdat[3];
     }
     if (@ipdat[1] ne "0.0.0.0") {
+      $nwaddr=getnw(@ipdat[2],@ipdat[1]);
       print FW "/sbin/iptables -A LOOPOUT -j ACCEPT -o lo -d @ipdat[1]/32  -s  @ipdat[1]/32\n";
-      print FW "/sbin/iptables -A LOOPOUT -j ACCEPT -o lo -p tcp --tcp-flags RST,SYN RST -m length --length 40 -d @ipdat[1]/32 -s @ipdat[1]/@ipdat[2]\n";
+      print FW "/sbin/iptables -A LOOPOUT -j ACCEPT -o lo -p tcp --tcp-flags RST,SYN RST -m length --length 40 -d @ipdat[1]/32 -s $nwaddr/@ipdat[2]\n";
       print FW "/sbin/iptables -A LOOPIN -j ACCEPT -i lo -s @ipdat[1]/32  -d @ipdat[1]/32\n";
       if (@ipdat[2] ne "32") {
-        @ipdat[1]=getnw(@ipdat[2],@ipdat[1]);
-        print FW "/sbin/iptables -A INPUT -j DENY ! -i $denint -s @ipdat[1]/@ipdat[2]\n";
-        print FW "/sbin/iptables -A OUTPUT -j DENY ! -o $denint -d @ipdat[1]/@ipdat[2]\n";
+        print FW "/sbin/iptables -A INPUT -j DENY ! -i $denint -s $nwaddr/@ipdat[2]\n";
+        print FW "/sbin/iptables -A OUTPUT -j DENY ! -o $denint -d $nwaddr/@ipdat[2]\n";
       }
     }
   }
@@ -7156,7 +7168,7 @@ _EOB_
   print FW "/sbin/iptables -A LOOPOUT -j ACCEPT -o lo -p 34\n\n";
 
   foreach $iface (@ints) {
-    if (((index($iface,"gtun") < 0) && ($iface ne $sysconf{'External'}) && ($iface ne $mdmconf{'ComPort'})) || ($sysconf{'External'} eq $sysconf{'Internal'}) || ($sysconf{'Internal'} eq $mdmconf{'ComPort'})){
+    if (((index($iface,"gtun") < 0) && ($iface ne $sysconf{'External'})) || ($sysconf{'External'} eq $sysconf{'Internal'}) || ($sysconf{'Internal'} eq $mdmconf{'ComPort'})){
       @idata=split(/\|/,$interface{$iface});
       if ((@idata[1] ne "0.0.0.0") && (@idata[2] ne  "32")) {
         @idata[0]=join(" ",split(/_/,@idata[0]));
@@ -7164,12 +7176,16 @@ _EOB_
         $linksn=@idata[2];
         $linknw=getnw(@idata[2],@idata[1]);
         $linkbc=getbc(@idata[2],@idata[1]);
-
+        if (index($iface,":") eq -1) {
+          $biface=$iface;
+        } else {
+          ($biface)=split(/:/,$iface);
+        }
         print FW "#Allow Nmb/Wins Requests For " . @idata[0] . " (" . @idata[3] . ")\n";
-        print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $iface -p udp --sport 137:138 -d $linkbc/32 --dport 137:138\n";
-        print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $iface -p udp --sport 1024:65535 -d $linkbc/32 --dport 137:138\n";
-        print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $iface -p udp --sport 137:138 -d $linkbc/32 --dport 137:138\n\n";
-        print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $iface -p udp --sport 1024:65535 -d $linkbc/32 --dport 137:138\n";
+        print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $biface -p udp --sport 137:138 -d $linkbc/32 --dport 137:138\n";
+        print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $biface -p udp --sport 1024:65535 -d $linkbc/32 --dport 137:138\n";
+        print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $biface -p udp --sport 137:138 -d $linkbc/32 --dport 137:138\n";
+        print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $biface -p udp --sport 1024:65535 -d $linkbc/32 --dport 137:138\n\n";
       }
     }
   }
@@ -7208,59 +7224,23 @@ _EOB_
         $adsdc=$adsdc . "." . $smboption{'ADSRealm'};
       }
 
-      print FW "#Allow Connections To ADS Server $dcnme\n";
-      print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $ethint -p tcp -m state --state ESTABLISHED -d $localip/32 --sport 389 -s $adsdc --dport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $ethint -p udp -m state --state ESTABLISHED -d $localip/32 --sport 389 -s $adsdc --dport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $ethint -p udp -m state --state ESTABLISHED -d $localip/32 --sport 88 -s $adsdc --dport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $ethint -p tcp -m state --state ESTABLISHED -d $localip/32 --sport 88 -s $adsdc --dport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $ethint -p udp -m state --state ESTABLISHED -d $localip/32 --sport 88 -s $adsdc --dport 88\n";
-      print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $ethint -p udp -m state --state ESTABLISHED -d $localip/32 --sport 464 -s $adsdc --dport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $ethint -p udp -m state --state ESTABLISHED -d $localip/32 --sport 500 -s $adsdc --dport 1024:65535\n";
-
-
-      print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $ethint -p tcp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 389 -d $adsdc --sport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $ethint -p udp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 389 -d $adsdc --sport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $ethint -p udp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 88 -d $adsdc --sport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $ethint -p tcp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 88 -d $adsdc --sport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $ethint -p udp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 88 -d $adsdc --sport 88\n";
-      print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $ethint -p udp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 464 -d $adsdc --sport 1024:65535\n\n";
-      print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $ethint -p udp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 500 -d $adsdc --sport 1024:65535\n\n";
-
-      print FW "#Allow Connections To ADS Server $dcnme\n";
-      print FW "/sbin/iptables -A SMBIN -j ACCEPT -i gtun+ -p tcp -m state --state ESTABLISHED -d $localip/32 --sport 389 -s $adsdc --dport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBIN -j ACCEPT -i gtun+ -p udp -m state --state ESTABLISHED -d $localip/32 --sport 389 -s $adsdc --dport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBIN -j ACCEPT -i gtun+ -p udp -m state --state ESTABLISHED -d $localip/32 --sport 88 -s $adsdc --dport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBIN -j ACCEPT -i gtun+ -p tcp -m state --state ESTABLISHED -d $localip/32 --sport 88 -s $adsdc --dport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBIN -j ACCEPT -i gtun+ -p udp -m state --state ESTABLISHED -d $localip/32 --sport 88 -s $adsdc --dport 88\n";
-      print FW "/sbin/iptables -A SMBIN -j ACCEPT -i gtun+ -p udp -m state --state ESTABLISHED -d $localip/32 --sport 464 -s $adsdc --dport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBIN -j ACCEPT -i gtun+ -p udp -m state --state ESTABLISHED -d $localip/32 --sport 500 -s $adsdc --dport 1024:65535\n";
-
-
-      print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o gtun+ -p tcp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 389 -d $adsdc --sport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o gtun+ -p udp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 389 -d $adsdc --sport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o gtun+ -p udp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 88 -d $adsdc --sport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o gtun+ -p tcp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 88 -d $adsdc --sport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o gtun+ -p udp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 88 -d $adsdc --sport 88\n";
-      print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o gtun+ -p udp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 464 -d $adsdc --sport 1024:65535\n\n";
-      print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o gtun+ -p udp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 500 -d $adsdc --sport 1024:65535\n\n";
-
-
-      print FW "/sbin/iptables -A SMBIN -j ACCEPT -i vpn+ -p tcp -m state --state ESTABLISHED -d $localip/32 --sport 389 -s $adsdc --dport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBIN -j ACCEPT -i vpn+ -p udp -m state --state ESTABLISHED -d $localip/32 --sport 389 -s $adsdc --dport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBIN -j ACCEPT -i vpn+ -p udp -m state --state ESTABLISHED -d $localip/32 --sport 88 -s $adsdc --dport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBIN -j ACCEPT -i vpn+ -p tcp -m state --state ESTABLISHED -d $localip/32 --sport 88 -s $adsdc --dport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBIN -j ACCEPT -i vpn+ -p udp -m state --state ESTABLISHED -d $localip/32 --sport 88 -s $adsdc --dport 88\n";
-      print FW "/sbin/iptables -A SMBIN -j ACCEPT -i vpn+ -p udp -m state --state ESTABLISHED -d $localip/32 --sport 464 -s $adsdc --dport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBIN -j ACCEPT -i vpn+ -p udp -m state --state ESTABLISHED -d $localip/32 --sport 500 -s $adsdc --dport 1024:65535\n";
-
-
-      print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o vpn+ -p tcp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 389 -d $adsdc --sport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o vpn+ -p udp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 389 -d $adsdc --sport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o vpn+ -p udp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 88 -d $adsdc --sport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o vpn+ -p tcp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 88 -d $adsdc --sport 1024:65535\n";
-      print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o vpn+ -p udp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 88 -d $adsdc --sport 88\n";
-      print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o vpn+ -p udp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 464 -d $adsdc --sport 1024:65535\n\n";
-      print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o vpn+ -p udp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 500 -d $adsdc --sport 1024:65535\n\n";
+      foreach $iface (($ethint,"gtun+","vpn+")) {
+        print FW "#Allow Connections To ADS Server $dcnme ($iface)\n";
+        print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $iface -p tcp -m state --state ESTABLISHED -d $localip/32 --sport 389 -s $adsdc --dport 1024:65535\n";
+        print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $iface -p udp -m state --state ESTABLISHED -d $localip/32 --sport 389 -s $adsdc --dport 1024:65535\n";
+        print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $iface -p udp -m state --state ESTABLISHED -d $localip/32 --sport 88 -s $adsdc --dport 1024:65535\n";
+        print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $iface -p tcp -m state --state ESTABLISHED -d $localip/32 --sport 88 -s $adsdc --dport 1024:65535\n";
+        print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $iface -p udp -m state --state ESTABLISHED -d $localip/32 --sport 88 -s $adsdc --dport 88\n";
+        print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $iface -p udp -m state --state ESTABLISHED -d $localip/32 --sport 464 -s $adsdc --dport 1024:65535\n";
+        print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $iface -p udp -m state --state ESTABLISHED -d $localip/32 --sport 500 -s $adsdc --dport 1024:65535\n";
+        print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $iface -p tcp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 389 -d $adsdc --sport 1024:65535\n";
+        print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $iface -p udp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 389 -d $adsdc --sport 1024:65535\n";
+        print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $iface -p udp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 88 -d $adsdc --sport 1024:65535\n";
+        print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $iface -p tcp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 88 -d $adsdc --sport 1024:65535\n";
+        print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $iface -p udp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 88 -d $adsdc --sport 88\n";
+        print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $iface -p udp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 464 -d $adsdc --sport 1024:65535\n";
+        print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $iface -p udp -m state --state NEW,ESTABLISHED -s $localip/32 --dport 500 -d $adsdc --sport 1024:65535\n";
+      }
     }
   }
 
@@ -7268,9 +7248,9 @@ _EOB_
     @wrdat=split(/\//,$wirelessrange);
     $bcaddr=getbc(@wrdat[1],@wrdat[0]);
     print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $ethint -p udp -s $wirelessrange --sport 137:138 -d $localip/32 --dport 137:138\n";
-    print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $ethint -p udp -s $wirelessrange --sport 137:138 -d $bcaddr/32 --dport 137:138\n";
-    print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $ethint -p udp -s $wirelessrange --sport 1024:65535 -d $bcaddr/32 --dport 137:138\n";
-    print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $ethint -p udp -s $wirelessrange --sport 137:138 -d $bcaddr/32 --dport 137:138\n";
+#    print FW "/sbin/iptables -A SMBIN -j ACCEPT -i $ethint -p udp -s $wirelessrange --sport 137:138 -d $bcaddr/32 --dport 137:138\n";
+#    print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $ethint -p udp -s $wirelessrange --sport 1024:65535 -d $bcaddr/32 --dport 137:138\n";
+#    print FW "/sbin/iptables -A SMBOUT -j ACCEPT -o $ethint -p udp -s $wirelessrange --sport 137:138 -d $bcaddr/32 --dport 137:138\n";
   }
 
 
@@ -7360,9 +7340,14 @@ _EOB_
     if ((@idata[1] eq "0.0.0.0") && (@idata[2] eq "32")) {
       next;
     }
+    if (index($iface,":") eq -1) {
+      $biface=$iface;
+    } else {
+      ($biface)=split(/:/,$iface);
+    }
     $netip=getnw(@idata[2],@idata[1]);
-    print FW "/sbin/iptables -A NFSIN -j ACCEPT -i @idata[3] -s $netip/@idata[2] -d @idata[1]\n";
-    print FW "/sbin/iptables -A NFSOUT -j ACCEPT -o @idata[3] -d $netip/@idata[2] -s @idata[1]\n";
+    print FW "/sbin/iptables -A NFSIN -j ACCEPT -i $biface -s $netip/@idata[2] -d @idata[1]\n";
+    print FW "/sbin/iptables -A NFSOUT -j ACCEPT -o $biface -d $netip/@idata[2] -s @idata[1]\n";
   }
 
 #Deny All Other NFS
@@ -7790,12 +7775,13 @@ __EOR__
   print FW "/sbin/iptables -A MCASTIN -j ACCEPT $sfnew -p udp --sport 520 --dport 520 -d 224.0.0.9\n\n";
 
   print FWP "  /sbin/iptables -A LOCALIN -j DEFIN $rin -d $extip\n";
+  print FWP "  /sbin/iptables -A LOCALIN -j VOIPIN $rin -d $extip\n";
   print FWP "  /sbin/iptables -A LOCALIN -j VOIPIN $rin -d $localip -p udp --sport 1024:65535\n\n";
 
   print FWP "  /sbin/iptables -A LOCALOUT -j DEFOUT $rout -s $extip\n";
   print FWP "  /sbin/iptables -A LOCALOUT -j VOIPOUT $rout -s $localip -p udp $sfnew --dport 1024:65535\n\n";
 
-  print FW "#Allow Access To STUN Remotely\n";
+  print FWP "  #Allow Access To STUN Remotely\n";
   print FWP "  /sbin/iptables -A LOCALIN -j ACCEPT $rin-p udp $sfnew -s $locallan/$locallnm --sport 1024:65535 -d $extip --dport 3478:3479\n";
   print FWP "  /sbin/iptables -A LOCALOUT -j ACCEPT $rout-p udp $sfnew -s $extip --sport 3478:3479 -d $extip --dport 10000:65535\n";
 #  print FWP "  /sbin/iptables -A EXTIN -j ACCEPT $rin-p udp $sfold -s $extip --dport 3478:3479 -d $extip --sport 10000:65535\n";
@@ -7809,8 +7795,8 @@ __EOR__
 #  print FW "/sbin/iptables -A DEFOUT -j ACCEPT ! -p tcp -m state --state ESTABLISHED,RELATED\n\n";
 
   print FW "#Allow Access To External Nameservers For DNS ServerIP UDP Mode\n";
-  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p udp $sfnew -d 0/0 --dport 53 --sport 53\n\n";
-  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p udp $sfnew -d 0/0 --dport 53 --sport 1024:65535\n\n";
+  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p udp $sfnew -d 0/0 --dport 53 --sport 53\n";
+  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p udp $sfnew -d 0/0 --dport 53 --sport 1024:65535\n";
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfnew -d 0/0 --dport 53 --sport 1024:65535\n\n";
 
 #  print FW6 "#Allow Access To External Nameservers For DNS ServerIP UDP Mode\n";
@@ -7839,7 +7825,7 @@ __EOR__
   print FW6 "\n";
 
   print FW "#SSH Access\n";
-  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfnew -d 0/0 --dport 22 --sport 1024:65535\n\n";
+  print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfnew -d 0/0 --dport 22 --sport 1024:65535\n";
   print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -s 0/0 --dport 22 --sport 1024:65535\n\n";
 
   print FW "#OVPN Access\n";
@@ -7850,7 +7836,7 @@ __EOR__
   print FW "/sbin/iptables -A DEFIN -j ACCEPT -p esp -m state --state RELATED\n";
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p udp -m state --state NEW --dport 1024:65535 --sport 1024:65535\n\n";
 
-  $tserv="0.0.0.0/0";
+  $tserv="0/0";
   print FW "#Allow Access To Time Server\n";
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p udp $sfnew -d $tserv --dport 123 --sport 123\n";
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p udp $sfnew -d $tserv --dport 123 --sport 1024:65535\n";
@@ -7871,11 +7857,11 @@ __EOR__
   print FW "/sbin/iptables -A DEFIN -j ACCEPT -p udp $sfnew -s 0/0 --sport 1024:65535 --dport 3478:3479\n\n";
 
   print FW "#Allow Remote SIP/IAX2/FOP\n";
-  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -s 0/0 --sport 1024:65535 --dport 4445\n";
-  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p udp $sfnew -s 0/0 --sport 1024:65535 --dport 5000\n";
-  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p udp $sfnew -s 0/0 --sport 1024:65535 --dport 5060\n";
-  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -s 0/0 --sport 1024:65535 --dport 5060:5061\n";
-  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p udp $sfnew -s 0/0 --sport 1024:65535 --dport 4569\n";
+#  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -s 0/0 --sport 1024:65535 --dport 4445\n";
+#  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p udp $sfnew -s 0/0 --sport 1024:65535 --dport 5000\n";
+#  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p udp $sfnew -s 0/0 --sport 1024:65535 --dport 5060\n";
+#  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p tcp $sfnew -s 0/0 --sport 1024:65535 --dport 5060:5061\n";
+#  print FW "/sbin/iptables -A DEFIN -j ACCEPT -p udp $sfnew -s 0/0 --sport 1024:65535 --dport 4569\n";
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p udp $sfnew -d 0/0 --sport 5000 --dport 1024:65535\n";
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p udp $sfnew -d 0/0 --sport 5060 --dport 1024:65535\n";
   print FW "/sbin/iptables -A DEFOUT -j ACCEPT -p tcp $sfnew -d 0/0 --sport 5060:5061 --dport 1024:65535\n";
@@ -8130,18 +8116,20 @@ __EOR__
          print FW "/sbin/iptables -A WEBACCESSO -j ACCEPT -p tcp --sport 80 --dport 1024:65535 -s $localip/32 -d $netaddr/@idata2[2]\n\n";
 
          if (index($iface,":") ne -1) {
-           $iface=substr($iface,0,index($iface,":"));
+           $biface=substr($iface,0,index($iface,":"));
+         } else {
+           $biface=$iface;
          }
 
          print FW "#SIP/RTP Proxy For @idata2[3]\n";
-         print FW "/sbin/iptables -t nat -A SIPMAP -j DEFPROXY -i $iface -d $linkip/32\n\n";
+         print FW "/sbin/iptables -t nat -A SIPMAP -j DEFPROXY -i $biface -d $linkip/32\n";
          $linknw=getnw(@idata2[2],@idata2[1]);
-         print FW "/sbin/iptables -t nat -I SIPNAT -j SNAT -o $iface -d $linknw/@idata[2] --to-source $linkip\n\n";
+         print FW "/sbin/iptables -t nat -I SIPNAT -j SNAT -o $biface -d $linknw/@idata2[2] --to-source $linkip\n\n";
       }
     }
   }
 
-  print FW "#SIP/RTP Proxy For $iface @idata[1]\n";
+  print FW "#SIP/RTP Proxy For $ethint $zcipaddr\n";
   print FW "/sbin/iptables -t nat -A SIPMAP -j DEFPROXY -i $ethint -d $zcipaddr\n";
   print FW "/sbin/iptables -t nat -I SIPNAT -j SNAT -o $ethint -d 169.254.0.0/16 --to-source $zcipaddr\n\n";
 
@@ -8167,8 +8155,8 @@ __EOR__
     $lnknm=@wdata[2];
     $lnksn=@wdata[1];  
 
-    print FW "#Allow $lnknme Wan Access To Local Web Server Port $webport\n";
-    print FW "/sbin/iptables -A PROXYBYPASS -j ACCEPT -t nat -p tcp $sfnew -i $ethint -s $lnksn/$lnknm --sport 1024:65535 -d $localip/32\n";
+    print FW "#Allow $lnknme Wan Access To Local Web Server\n";
+    print FW "/sbin/iptables -A PROXYBYPASS -j ACCEPT -t nat -p tcp $sfnew -i $ethint -s $lnksn/$lnknm --sport 1024:65535 -d $localip/32\n\n";
   }
 
 
@@ -8190,7 +8178,7 @@ __EOR__
     if ($rewfint ne "-") {
       @rewidata=split(/\|/,$interface{$rewfint});
       print FW "#Allow Redirect For $rewfw To $rewip{$rewfw}/32\n";
-      print FW "/sbin/iptables -A PROXYOUT -j ACCEPT -o $rewint{$rewfw}  -p tcp -s @rewidata[1]/32 --sport 1024:65535 -d $rewip{$rewfw}/32 --dport 80 $sfnew\n\n";
+      print FW "/sbin/iptables -A PROXYOUT -j ACCEPT -o $rewint{$rewfw} -p tcp -s 0/0 --sport 1024:65535 -d $rewip{$rewfw}/32 --dport 80 $sfnew\n\n";
     }
   }
 
@@ -8216,7 +8204,7 @@ __EOR__
       $fint=$int;
     }
 
-    if ((@idata[1] ne "0.0.0.0") && ($sysconf{'External'} ne $fint)) {
+    if ($sysconf{'External'} ne $int) {
       print FW "#SIP For @idata[1]\n";
 #      print FW "/sbin/iptables -I SIPOUT -j ACCEPT -p udp -o $fint -m state --state NEW,ESTABLISHED --sport 10000:20000 -s @idata[1]/32 --dport 1024:65535\n";
 #      print FW "/sbin/iptables -I SIPIN -j ACCEPT -p udp -i $fint -m state --state NEW,ESTABLISHED --dport 10000:20000 -d @idata[1]/32 --sport 1024:65535\n";
@@ -8226,7 +8214,7 @@ __EOR__
       print FW "/sbin/iptables -I SIPOUT -j ACCEPT -p udp -o $fint -m state --state NEW,ESTABLISHED --sport 5060 -s $localip/32 --dport 1024:65535\n";
       print FW "/sbin/iptables -I SIPOUT -j ACCEPT -p tcp -o $fint -m state --state NEW,ESTABLISHED --sport 5060:5061 -s $localip/32 --dport 1024:65535\n";
 
-      if ($fint ne $sysconf{'Internal'}) {
+      if ($int ne $sysconf{'Internal'}) {
         print FW "/sbin/iptables -I SIPOUT -j ACCEPT -p udp -o $fint -m state --state NEW,RELATED,ESTABLISHED --sport 10000:20000 -s @idata[1]/32 --dport 1024:65535\n";
         print FW "/sbin/iptables -I SIPOUT -j ACCEPT -p udp -o $fint -m state --state NEW,ESTABLISHED --sport 5000 -s @idata[1]/32 --dport 1024:65535\n";
         print FW "/sbin/iptables -I SIPOUT -j ACCEPT -p udp -o $fint -m state --state NEW,ESTABLISHED --sport 5060 -s @idata[1]/32 --dport 1024:65535\n";
@@ -8396,7 +8384,7 @@ _EOB_
 
   print FWP "  #Allow Transparent Proxy For External Connections\n";
   print FWP "  /sbin/iptables -t nat -A LOCALPROXY -j REDIRECT \$INT_IN -p tcp -s 0.0.0.0/0 -d \$EXT_IP --dport 80 --to-port 8080\n";
-  print FWP "  /sbin/iptables -t nat -A LOCALPROXY -j EXTPROXY \$INT_IN -d \$EXT_IP\n\n";
+  print FWP "  /sbin/iptables -t nat -A LOCALPROXY -j EXTPROXY\n\n";
 
   ($proxyip,$webcatch)=split(/:/,$proxyconf{'Parent'});
   if ($webcatch ne "") {
@@ -8637,13 +8625,14 @@ _EOB_
     }
 
     if ($dcipaddr ne "") {
-      $dcipaddr=$dcipaddr . "/32";
+      $dcipaddr=$dcipaddr;
     } else {
       $dcnme=$adsdc;
       $dcipaddr=$dcfqdn;
     }
+    $dcipaddr .= "/32";
 
-    print FWP "#Allow Mail/DNS To DC " . $dcnme . " " . $dcipaddr . "/32\n";
+    print FWP "#Allow Mail/DNS To DC " . $dcnme . " " . $dcipaddr . "\n";
     print FWP "/sbin/iptables -A SBSRULESI -j ACCEPT -p tcp -m state --state NEW,RELATED -i " . $sysconf{'Internal'} . " -d $localip/32 --dport 1024:65535 -s $dcipaddr --sport 25\n";
     print FWP "/sbin/iptables -A SBSRULESI -j ACCEPT -p tcp ! --syn -m state --state ESTABLISHED -i " . $sysconf{'Internal'} . " -d $localip/32 --dport 1024:65535 -s $dcipaddr --sport 25\n";
     print FWP "/sbin/iptables -A SBSRULESO -j ACCEPT -p tcp -m state --state NEW,ESTABLISHED -o " . $sysconf{'Internal'} . " -s $localip/32 --sport 1024:65535 -d $dcipaddr --dport 25\n";
@@ -8659,6 +8648,7 @@ _EOB_
     print FWP "/sbin/iptables -A SBSRULESI -j ACCEPT -p udp -m state --state NEW,RELATED -i " . $sysconf{'Internal'} . " -d $localip/32 --dport 53 -s $dcipaddr --sport 53\n";
     print FWP "/sbin/iptables -A SBSRULESI -j ACCEPT -p udp -m state --state ESTABLISHED -i " . $sysconf{'Internal'} . " -d $localip/32 --dport 53 -s $dcipaddr --sport 53\n";
     print FWP "/sbin/iptables -A SBSRULESO -j ACCEPT -p udp -m state --state NEW,ESTABLISHED -o " . $sysconf{'Internal'} . " -s $localip/32 --sport 53 -d $dcipaddr --dport 53\n";
+    print FWP "\n";
   }
 
 ###User Rules
@@ -8774,7 +8764,7 @@ _EOB_
     @rdata[7]="@rdata[7]:@rdata[9]";
 
     @ipdat=split(/\|/,$interface{@rdata[9]});
-    if (@rdata[5] eq "Local") {
+    if ((@rdata[5] eq "Local") || (@rdata[5] eq "Proxy")) {
       $localip="@ipdat[1]/32";
     } else {
       $localip=@ipdat[1];
@@ -8849,8 +8839,8 @@ _EOB_
 #        print FWP "  /sbin/iptables -A SYSTOS -j TOS -t mangle$proto$stateout -o $outint -d $fwsource{@rdata[7]} -s $localip --set-tos @rdata[12]\n"
       }
     } elsif ((@rdata[5] eq "NAT") && (@rdata[9] ne "Modem")) {
-      print FWP "  #NAT @rdata[6] $rname $fwsource{@rdata[7]}:@rdata[2] --> @rdata[1]:@rdata[3]\n";
       if (($proto eq " -p tcp") || ($proto eq " -p udp")) {
+        print FWP "  #NAT @rdata[6] $rname $fwsource{@rdata[7]}:@rdata[2] --> @rdata[1]:@rdata[3]\n";
         if (@rdata[11] eq "Out") {
           print FWP "  /sbin/iptables -A LOCALFWD -j $rpolicy$statein $rout-i @rdata[9] -s $fwsource{@rdata[7]} --sport @rdata[2] -d @rdata[1] --dport @rdata[3]\n";
         } else {
@@ -8861,15 +8851,11 @@ _EOB_
           print FWP "  /sbin/iptables -t mangle -A LOCALOUT -j MARK$proto -m mark --mark 0x102 --set-mark @rdata[13] -o @rdata[9] -d $fwsource{@rdata[7]} --dport @rdata[2] -s @rdata[1] --sport @rdata[3]\n";
           print FWP "  /sbin/iptables -t mangle -A LOCALIN -j MARK$proto -m mark --mark 0x102 --set-mark @rdata[13] $rin-d $dest --dport @rdata[2] -s @rdata[1] --sport @rdata[3]\n";
           print FWP "  /sbin/iptables -t mangle -A LOCALOUT -j MARK$proto -m mark --mark 0x102 --set-mark @rdata[13] $rout-s $dest --sport @rdata[2] -d @rdata[1] --dport @rdata[3]\n";
-          if ($fwnat eq $nat) {
-            print FW "/sbin/iptables -A SYSNAT -j NATOUT -t nat $proto -s $fwsource{@rdata[7]} --sport @rdata[2] -d @rdata[1] --dport @rdata[3]\n";
-          } else {
-            print FWP "  /sbin/iptables -A EXTNAT -j $fwnat -t nat $rout$proto$statein -s $fwsource{@rdata[7]} --sport @rdata[2] -d @rdata[1] --dport @rdata[3]\n";
-          }
+          print FWP "  /sbin/iptables -A EXTNAT -j $fwnat -t nat $rout$proto$statein -s $fwsource{@rdata[7]} --sport @rdata[2] -d @rdata[1] --dport @rdata[3]\n";
           print FWP "  /sbin/iptables -A LOCALTOS -j TOS -t mangle$proto$statein -i @rdata[9] -s $fwsource{@rdata[7]} --sport @rdata[2] -d @rdata[1] --dport @rdata[3] --set-tos @rdata[12]\n"
         }
-        print FWP "\n";
       } else {
+        print FWP "  #NAT @rdata[6] $rname $fwsource{@rdata[7]} --> @rdata[1]\n";
         if (@rdata[11] eq "Out") {
           print FWP "  /sbin/iptables -A LOCALFWD -j $rpolicy$statein $rout-i @rdata[9] -s $fwsource{@rdata[7]} -d @rdata[1]\n";
         } else {
@@ -8880,25 +8866,20 @@ _EOB_
           print FWP "  /sbin/iptables -t mangle -A LOCALOUT -j MARK$proto -m mark --mark 0x102 --set-mark @rdata[13] -o @rdata[9] -d $fwsource{@rdata[7]} -s @rdata[1]\n";
           print FWP "  /sbin/iptables -t mangle -A LOCALIN -j MARK$proto -m mark --mark 0x102 --set-mark @rdata[13] $rin-d $dest -s @rdata[1]\n";
           print FWP "  /sbin/iptables -t mangle -A LOCALOUT -j MARK$proto -m mark --mark 0x102 --set-mark @rdata[13] $rout-s $dest -d @rdata[1]\n";
-          if ($fwnat eq $nat) {
-            print FW "/sbin/iptables -A SYSNAT -j NATOUT -t nat $proto -s $fwsource{@rdata[7]} -d @rdata[1]\n";
-          } else {
-            print FWP "  /sbin/iptables -A EXTNAT -j $fwnat -t nat $rout$proto$statein -s $fwsource{@rdata[7]} -d @rdata[1]\n";
-          }
+          print FWP "  /sbin/iptables -A EXTNAT -j $fwnat -t nat $rout$proto$statein -s $fwsource{@rdata[7]} -d @rdata[1]\n";
           print FWP "  /sbin/iptables -A LOCALTOS -j TOS -t mangle$proto$statein -i @rdata[9] -s $fwsource{@rdata[7]} -d @rdata[1] --set-tos @rdata[12]\n"
         }
-        print FWP "\n";
       }
-      print FWP "  \n";
+      print FWP "\n";
     } elsif ((@rdata[5] eq "Forward") && (@rdata[9] ne "Modem")) {
       if (($proto eq " -p tcp") || ($proto eq " -p udp")) {
         print FWP "  #Forward @rdata[6] $rname $fwsource{@rdata[7]}:@rdata[2] --> @rdata[1]:@rdata[3]\n";
 #        print FWP "  /sbin/iptables -A LOCALIN -j $rpolicy$statein -i @rdata[9] -s $fwsource{@rdata[7]} --sport @rdata[2] -d @rdata[1] --dport @rdata[3]\n";
 #        print FWP "  /sbin/iptables -A LOCALOUT -j $rpolicy$stateout -o @rdata[9] -d $fwsource{@rdata[7]} --dport @rdata[2] -s @rdata[1] --sport @rdata[3]\n";
         if (@rdata[11] eq "Out") {
-          print FWP "  /sbin/iptables -A LOCALFWD -j $rpolicy$statein -i @rdata[9] $rout$tsynin -s $fwsource{@rdata[7]} --sport @rdata[2] -d @rdata[1] --dport @rdata[3]\n";
+          print FWP "  /sbin/iptables -A LOCALFWD -j $rpolicy$statein -i @rdata[9] $rout-s $fwsource{@rdata[7]} --sport @rdata[2] -d @rdata[1] --dport @rdata[3]\n";
         } else {
-          print FWP "  /sbin/iptables -A LOCALFWD -j $rpolicy$stateout -o @rdata[9] $rin$tsynout -d $fwsource{@rdata[7]} --dport @rdata[2] -s @rdata[1] --sport @rdata[3]\n";
+          print FWP "  /sbin/iptables -A LOCALFWD -j $rpolicy$stateout -o @rdata[9] $rin-d $fwsource{@rdata[7]} --dport @rdata[2] -s @rdata[1] --sport @rdata[3]\n";
         }
         if (@rdata[6] eq "Accept") {
 #          print FWP "  /sbin/iptables -t nat -A NOFWDNAT -j ACCEPT $proto$statein -i @rdata[9] -s $fwsource{@rdata[7]} --sport @rdata[2] -d @rdata[1] --dport @rdata[3]\n";
@@ -8911,9 +8892,12 @@ _EOB_
         print FWP "  #Forward @rdata[6] $rname $fwsource{@rdata[7]} --> @rdata[1]\n";
 #        print FWP "  /sbin/iptables -A LOCALIN -j $rpolicy$statein -i @rdata[9] -s $fwsource{@rdata[7]} -d @rdata[1]\n";
 #        print FWP "  /sbin/iptables -A LOCALOUT -j $rpolicy$stateout -o @rdata[9] -d $fwsource{@rdata[7]} -s @rdata[1]\n";
+        if (@rdata[11] eq "Out") {
+          print FWP "  /sbin/iptables -A LOCALFWD -j $rpolicy$statein -i @rdata[9] $rout-s $fwsource{@rdata[7]} -d @rdata[1]\n";
+        } else {
+          print FWP "  /sbin/iptables -A LOCALFWD -j $rpolicy$stateout -o @rdata[9] $rin-d $fwsource{@rdata[7]} -s @rdata[1]\n";
+        }
         if (@rdata[6] eq "Accept") {
-          print FWP "  /sbin/iptables -A LOCALFWD -j $rpolicy$statein -i @rdata[9] $rout$tsynin -s $fwsource{@rdata[7]} -d @rdata[1]\n";
-          print FWP "  /sbin/iptables -A LOCALFWD -j $rpolicy$stateout -o @rdata[9] $rin$tsynout -d $fwsource{@rdata[7]} -s @rdata[1]\n";
 #          print FWP "  /sbin/iptables -t nat -A NOFWDNAT -j ACCEPT $proto$statein -i @rdata[9] -s $fwsource{@rdata[7]} -d @rdata[1]\n";
           print FWP "  /sbin/iptables -t nat -A NOFWDNAT -j ACCEPT $proto$statein -o @rdata[9] -d $fwsource{@rdata[7]} -s @rdata[1]\n";
           print FWP "  /sbin/iptables -A LOCALTOS -j TOS -t mangle$proto$statein -i @rdata[9] -s $fwsource{@rdata[7]} -d @rdata[1] --set-tos @rdata[12]\n";
@@ -8921,7 +8905,7 @@ _EOB_
           print FWP "  /sbin/iptables -t mangle -A LOCALIN -j MARK$proto -m mark --mark 0x102 --set-mark @rdata[13] -i @rdata[9] -s $fwsource{@rdata[7]} -d @rdata[1]\n";
         }
       }
-      print FWP "  \n";
+      print FWP "\n";
     } elsif ((@rdata[5] eq "Proxy") && (@rdata[9] ne "Modem")) {
       @idata=split(/\|/,$interface{@rdata[8]});
       @xdata=split(/\|/,$interface{$outint});
@@ -8935,8 +8919,8 @@ _EOB_
       } else {
         $extip_rt=@rdata[1];
       }
-      print FWP "  #Proxy @rdata[6] $rname $fwsource{@rdata[7]}:@rdata[2] --> @rdata[1]:@rdata[3]\n";
       if (($proto eq " -p tcp") || ($proto eq " -p udp")) {
+        print FWP "  #Proxy @rdata[6] $rname $fwsource{@rdata[7]}:@rdata[2] --> @rdata[1]:@rdata[3]\n";
         if (@rdata[6] eq "Accept") {
           if ($ishostip{@rdata[1]} ne "") {
             print FWP "  /sbin/iptables -A LOCALIN -j $rpolicy$statein -i @rdata[9] -s $fwsource{@rdata[7]} --sport @rdata[2] -d @rdata[1] --dport $int_port\n";
@@ -8945,30 +8929,26 @@ _EOB_
             print FWP "  /sbin/iptables -t mangle -A LOCALOUT -j MARK$proto -m mark --mark 0x102 --set-mark @rdata[13] -o @rdata[9] -d $fwsource{@rdata[7]} --dport @rdata[2] -s @rdata[1] --sport $int_port\n";
             print FWP "  /sbin/iptables -t mangle -A LOCALIN -j MARK$proto -m mark --mark 0x102 --set-mark @rdata[13] -i @rdata[9] -s $fwsource{@rdata[7]} --sport @rdata[2] -d @rdata[1] --dport $int_port\n";
           }
-          if (@rdata[9] eq "ppp+") {
-            print FWP "  /sbin/iptables -A EXTPROXY -i ppp+ -j DNAT -t nat$proto $statein --to-destination @rdata[1]:$int_port -s $fwsource{@rdata[7]} --sport @rdata[2] --dport $ext_port_orig\n";
-          } else {
-            print FWP "  /sbin/iptables -A EXTPROXY -j DNAT -t nat$proto $statein --to-destination @rdata[1]:$int_port -s $fwsource{@rdata[7]} -d $extip_rt --sport @rdata[2] --dport $ext_port_orig\n";
-          }
+          print FWP "  /sbin/iptables -A EXTPROXY -i @rdata[9] -j DNAT -t nat$proto$statein --to-destination @rdata[1]:$int_port -s $fwsource{@rdata[7]} -d $localip --sport @rdata[2] --dport $ext_port_orig\n";
         }
         print FWP "  /sbin/iptables -A LOCALTOS -j TOS -t mangle$proto$statein -i @rdata[8] -d $fwsource{@rdata[7]} --dport @rdata[2] -s @rdata[1]/32 --sport $int_port --set-tos @rdata[12]\n" ;
       } else {
-        print FWP "  /sbin/iptables -A LOCALIN -j $rpolicy$statein -i @rdata[9] -s $fwsource{@rdata[7]} -d $extip_rt\n";
-        print FWP "  /sbin/iptables -A LOCALOUT -j $rpolicy$stateout -o @rdata[9] -d $fwsource{@rdata[7]} -s $extip_rt\n";
+        print FWP "  #Proxy @rdata[6] $rname $fwsource{@rdata[7]} --> @rdata[1]\n";
         if (@rdata[6] eq "Accept") {
-          if ($local_proxy ne "true") {
+          if ($ishostip{@rdata[1]} ne "") {
+            print FWP "  /sbin/iptables -A LOCALIN -j $rpolicy$statein -i @rdata[9] -s $fwsource{@rdata[7]} -d @rdata[1]\n";
+          } else {
             print FWP "  /sbin/iptables -A LOCALFWD -j $rpolicy$statein $rout-i @rdata[9] -s $fwsource{@rdata[7]} -d @rdata[1]\n";
-            print FWP "  /sbin/iptables -A LOCALFWD -j $rpolicy$stateout $rin-o @rdata[9] -d $fwsource{@rdata[7]} -s @rdata[1]\n";
             print FWP "  /sbin/iptables -t mangle -A LOCALOUT -j MARK$proto -m mark --mark 0x102 --set-mark @rdata[13] -o @rdata[9] -d $fwsource{@rdata[7]} -s @rdata[1]\n";
             print FWP "  /sbin/iptables -t mangle -A LOCALIN -j MARK$proto -m mark --mark 0x102 --set-mark @rdata[13] -i @rdata[9] -s $fwsource{@rdata[7]} -d @rdata[1]\n";
           }
-          print FWP "  /sbin/iptables -A EXTPROXY -j DNAT -t nat$proto $statein --to-destination @rdata[1] -s $fwsource{@rdata[7]}\n";
+          print FWP "  /sbin/iptables -A EXTPROXY -i @rdata[9] -j DNAT -t nat$proto$statein --to-destination @rdata[1] -s $fwsource{@rdata[7]} -d $localip\n";
         }
+        print FWP "  /sbin/iptables -A LOCALTOS -j TOS -t mangle$proto$statein -i @rdata[8] -d $fwsource{@rdata[7]} -s @rdata[1]/32 --set-tos @rdata[12]\n" ;
       }
-      print FWP "  \n";
+      print FWP "\n";
     }
   }
-
 
   if ($sysconf{'External'} ne "Dialup") {
      $ethext=$sysconf{'External'};
@@ -9003,7 +8983,6 @@ _EOB_
     print FWP "/sbin/iptables -A NONAT -t nat -j ACCEPT -s $wirelessrange -m state --state NEW,ESTABLISHED\n\n";
   }
 
-
   if (@hotspots) {
     print FW "#Hotspot NAT\n";
     foreach $hspot (@hotspots) {
@@ -9012,7 +8991,7 @@ _EOB_
       print FW "/sbin/iptables -A SYSFWD -j GWOUT -i tun+ -s $nwaddr/@idata[2] -d 0/0 -m state --state NEW,ESTABLISHED\n";
       print FW "/sbin/iptables -A SYSFWD -j GWIN -o tun+ -d $nwaddr/@idata[2] -s 0/0 -m state --state RELATED,ESTABLISHED\n";
       print FW "/sbin/iptables -t nat -A SYSNAT -j NATOUT -s $nwaddr/@idata[2]\n";
-      print FW "/sbin/iptables -A TXPROXY -t nat -j REDIRECT -p tcp --to-port 3129 -i @idata[3] -s $nwaddr/@idata[2]\n\n";
+      print FW "/sbin/iptables -A TXPROXY -t nat -j REDIRECT -p tcp --to-port 3129 -i @idata[3] -s $nwaddr/@idata[2]\n";
       print FW "/sbin/iptables -A TXPROXY -t nat -j REDIRECT -p tcp --to-port 3129 -i tun+ -s $nwaddr/@idata[2]\n\n";
     }
   }
@@ -9073,7 +9052,7 @@ _EOB_
   print FW "/sbin/iptables -A FORWARD -j DROP -p udp -s 0/0 --sport 137 -d 0/0 --dport 137\n";
   print FW "/sbin/iptables -A FORWARD -j DENY\n\n";
 
-    print FWP "\n  if [ \"\$0\" == \"/etc/ppp/ip-down\" ];then\n";
+    print FWP "  if [ \"\$0\" == \"/etc/ppp/ip-down\" ];then\n";
     print FWP "    cp /etc/mail/sendmail.cf.orig /etc/mail/sendmail.cf\n";
     print FWP "    if [ \"\$4\" != \"hotplug\" ];then\n"; 
     print FWP "      EMAIL_PID=`/bin/pidof sendmail`\n";
@@ -9158,7 +9137,7 @@ print FWP<<__EOB__;
           /etc/rc.d/rc.mail sendmail
       fi;
     fi;
-    i6prefix=\$(printf '%02x%02x:%02x%02x\\n' \$(echo \${EXT_IP_ADDR} | sed 's/\\./ /g'))
+    i6prefix=\$(printf \"%02x%02x:%02x%02x\\n\" \$(echo \${EXT_IP_ADDR} | sed \"s/\\./ /g\"))
 
 (cat <<EOF
 server $dnsconf{'DynServ'}
@@ -9255,7 +9234,7 @@ __EOB__
 
     print FWP " elif [ \$6 == \"$adslvl\" ];then\n";
 
-  print FWP "    ip6prefix=\"\$(printf '%02x%02x:%02x%02x\\n' \$(echo \${EXT_IP_ADDR} | sed 's/\\./ /g'))\"\n";
+  print FWP "    ip6prefix=\"\$(printf \"%02x%02x:%02x%02x\\n\" \$(echo \${EXT_IP_ADDR} | sed \"s/\\./ /g\"))\"\n";
   print FWP "    LOCALIP=";
   print FWP $intlocalip . "\n";
   print FWP "    MARK=";
@@ -9376,8 +9355,6 @@ __EOS__
   /sbin/iptables -I MANGLEIN -j VOIPIN -i \$INT_NAME -d \${LOCALIP} -p udp --sport 1024:65535
   /sbin/iptables -I MANGLEIN -j DEFIN -i \$INT_NAME -d \$EXT_IP_ADDR
   /sbin/iptables -I IP6RDDSL -j ACCEPT -i \$INT_NAME -d \$EXT_IP_ADDR
-#  /sbin/iptables -A MANGLEIN\${FILID} -j ACCEPT -i \$INT_NAME -m state --state RELATED,ESTABLISHED
-#  /sbin/iptables -A MANGLEOUT\${FILID} -j ACCEPT -o \$INT_NAME -s \$EXT_IP_ADDR -m state --state NEW,RELATED,ESTABLISHED
 
   /sbin/iptables -I MANGLEOUT -j ACCEPT -m mark --mark \${MARK}
   /sbin/iptables -I MANGLEOUT -j ACCEPT -o \$INT_NAME -m mark --mark \${MARK}
@@ -9390,14 +9367,7 @@ __EOS__
   #Allow Proxy Requests 
   /sbin/iptables -I MANGLEPROXY -j DEFPROXY -t nat -i \$INT_NAME -d \$EXT_IP_ADDR
 
-  #Set Rules To Allow IAX/SIP Requests
-#  /sbin/iptables -t nat -A SIPMAP -j DNAT \$INT_IN -p udp -s 0.0.0.0/0 -d \$EXT_IP --sport 1024:65535 --dport 5000 --to-destination $localip:5000
-#  /sbin/iptables -t nat -A SIPMAP -j DNAT \$INT_IN -p udp -s 0.0.0.0/0 -d \$EXT_IP --sport 1024:65535 --dport 5060 --to-destination $localip
-#  /sbin/iptables -t nat -A SIPMAP -j DNAT \$INT_IN -p tcp -s 0.0.0.0/0 -d \$EXT_IP --sport 1024:65535 --dport 5060:5061 --to-destination $localip
-#  /sbin/iptables -t nat -A SIPMAP -j DNAT \$INT_IN -p udp -d \$EXT_IP --dport 10000:20000 -s 0/0 --sport 1024:65535 --to-destination $localip
-
   #Clear TOS Values on marked packets
-#  /sbin/iptables -t mangle -A MANGLEO\${FILID} -j TOS -o ${extint} -m tos ! --tos 0 --set-tos 0 -m mark ! --mark 0x0 ! -d \$EXT_IP_ADDR
   /sbin/iptables -t mangle -A MANGLEF\${FILID} -j TOS -o ${extint} -m tos ! --tos 0 --set-tos 0 -m mark ! --mark 0x0 ! -d \$EXT_IP_ADDR
   /sbin/iptables -t mangle -A MANGLEP\${FILID} -j TOS ! -i ppp+ -m tos ! --tos 0 --set-tos 0 -m mark ! --mark 0x0 ! -d \$EXT_IP_ADDR
 __EOS__
@@ -9460,6 +9430,10 @@ __EOS__
   print FWP "  /sbin/ip route flush cache\n";
   $lcnt++;
   }
+
+  $radopt{'Egress'}=($radopt{'Egress'} eq "") ? "0" : $radopt{'Egress'};
+  $radopt{'Ingress'}=($radopt{'Ingress'} eq "") ? "0" : $radopt{'Ingress'};
+
   $radopt{'Egress50'}=$radopt{'Egress'}*0.5;
   $radopt{'Egress30'}=$radopt{'Egress'}*0.3;
   $radopt{'Egress20'}=$radopt{'Egress'}*0.2;
@@ -9480,7 +9454,7 @@ __EOS__
   /sbin/tc qdisc del dev \$INT_NAME root > /dev/null 2>&1
   /sbin/tc qdisc del dev \$INT_NAME handle ffff: ingress > /dev/null 2>&1
 
-  if [ "$radopt{'Ingress'}" != "" ];then
+  if [ "$radopt{'Ingress'}" != "0" ];then
     #Apply ingress limit
     /sbin/tc qdisc add dev \$INT_NAME handle ffff: ingress
     /sbin/tc filter add dev \$INT_NAME parent ffff: protocol ip u32 match ip dst $wirelessrange police rate 100Mbit burst 1500 drop flowid :60
@@ -9488,7 +9462,7 @@ __EOS__
     /sbin/tc filter add dev \$INT_NAME parent ffff: protocol ip u32 match ip dst 0/0 police rate $radopt{'Ingress'}Kbit burst 1500 drop flowid :80
   fi;
 
-  if [ "$radopt{'Egress'}" != "" ];then
+  if [ "$radopt{'Egress'}" != "0" ];then
     #Apply egress limit
     /sbin/tc qdisc add dev \$INT_NAME root handle 1: htb default 20 r2q 1
     /sbin/tc class add dev \$INT_NAME parent 1: classid 1:1 htb rate 100Mbit
@@ -9502,12 +9476,7 @@ __EOS__
     /sbin/tc qdisc add dev \$INT_NAME parent 1:20 handle 20: sfq perturb 10
     /sbin/tc qdisc add dev \$INT_NAME parent 1:30 handle 30: sfq perturb 10
 
-#    /sbin/tc filter add dev \$INT_NAME parent 1: prio 0 protocol ip handle 0x101 fw flowid 1:10
-#    /sbin/tc filter add dev \$INT_NAME parent 1: prio 1 protocol ip handle 0x102 fw flowid 1:20
-#    /sbin/tc filter add dev \$INT_NAME parent 1: prio 2 protocol ip handle 0x103 fw flowid 1:30
   fi;
-
-#  MAC_ADDR=`/usr/sbin/getmacfromip \$5`
 
   /sbin/ip route add  \${5}/32 dev \${1} src \${4} table Link
   /sbin/iptables -t nat -I NOPPPNAT -j ACCEPT -o \${1}
@@ -9566,7 +9535,7 @@ EOF
   /sbin/iptables -I PPPIN -j SYSIN -i \${1} -d @idata[1] -s \${5}/32
   /sbin/iptables -I PPPOUT -j SYSOUT -o \${1} -s @idata[1] -d \${5}/32
   /sbin/iptables -I PPPFWD -j ACCEPT -i \${1} -o @idata[3]
-  /sbin/iptables -I PPPFWD -j ACCEPT -o \${1} -i @idata[3] 
+  /sbin/iptables -I PPPFWD -j ACCEPT -o \${1} -i @idata[3]
   /sbin/iptables -I PPPIN -j MCASTIN -i \${1} -d 224.0.0.0/3 -s \$5/32
   /sbin/iptables -I PPPOUT -j MCASTOUT -o \${1} -s 224.0.0.0/3 -d \$5/32
   /sbin/iptables -I PPPOUT -j MCASTOUT -o \${1} -s \${4} -d 224.0.0.0/3
@@ -9588,7 +9557,7 @@ LOCALIP="$intlocalip"
 
 /usr/bin/awk -F\\| -v LINK=\$1 '\$6 == LINK {printf "spddelete %s %s any -P out;\\nspddelete %s %s any -P in;\\n\",\$2,\$3,\$3,\$2}' /etc/vpnconf |/usr/sbin/setkey -c
 /sbin/ip addr del ::\${4}/96 dev sit0 > /dev/null 2>&1
-i6prefix=\$(printf '%02x%02x:%02x%02x\\n' \$(echo \${4} | sed 's/\\./ /g'))
+i6prefix=\$(printf \"%02x%02x:%02x%02x\\n\" \$(echo \${4} | sed \"s/\\./ /g\"))
 /sbin/ip addr del 2002:\${i6prefix}::1/128 dev sit0 > /dev/null 2>&1
 __EOS__
 
@@ -9922,7 +9891,7 @@ __EOF__
     print PS "ABORT 'ERROR'\n";
   }
 
-  if ($mdmconf{'Init1'} == "") {
+  if ($mdmconf{'Init1'} eq "") {
     $mdmconf{'Init1'}="ATZ";
   }
 
@@ -9946,7 +9915,7 @@ __EOB__
 #__EOB__
 #    }
 
-  if ($mdmconf{'DialString'} == "") {
+  if ($mdmconf{'DialString'} eq "") {
     $mdmconf{'DialString'}="ATD";
   }
   print PS<<__EOB__;
@@ -10062,6 +10031,7 @@ sub printfconf() {
   }
   if (@elallow[0] ne "") {
     print SFC "  expressionlist local_allow_exp\n";
+    print SFSC "  expressionlist local_allow_exp\n";
   }
   if (@dlallow[0] ne "") {
     print SFC "  domainlist local_allow_domains\n";
@@ -10078,6 +10048,7 @@ sub printfconf() {
   }
   if (@eldeny[0] ne "") {
     print SFC "  expressionlist local_deny_exp\n";
+    print SFSC "  expressionlist local_deny_exp\n";
   }
   if (@dldeny[0] ne "") {
     print SFC "  domainlist local_deny_domains\n";
@@ -10088,20 +10059,25 @@ sub printfconf() {
 
   foreach $sfilter (@flists) {
     print SFC "dest $sfilter {\n";
+    print SFSC "dest $sfilter {\n";
     if ( -e "/var/db/squid/blacklists/$sfilter/domains") {
       print SFC "  domainlist blacklists/$sfilter/domains\n";
+      print SFSC "  domainlist blacklists/$sfilter/domains\n";
     }
     if ( -e "/var/db/squid/blacklists/$sfilter/urls") {
       print SFC "  urllist blacklists/$sfilter/urls\n";
+      print SFSC "  urllist blacklists/$sfilter/urls\n";
     }
     if ( -e "/var/db/squid/blacklists/$sfilter/expressions") {
       print SFC "  expressionlist blacklists/$sfilter/expressions\n";
+      print SFSC "  expressionlist blacklists/$sfilter/expressions\n";
     }
-    print SFC "}\n\n";
+    print SFSC "}\n\n";
   }
 
   foreach $timezone (@timegroup) {
     print SFC "time $timezone {\n";
+    print SFSC "time $timezone {\n";
     chop $cachetg{$timezone};
     @tspec=split(/;/,$cachetg{$timezone});
     foreach $spec (@tspec) {
@@ -10109,13 +10085,17 @@ sub printfconf() {
       shift(@ts);
       $cnt=2;
         print SFC "  weekly ";
+        print SFSC "  weekly ";
       while(@ts[$cnt] ne "") {
         print SFC "@ts[$cnt] ";
+        print SFSC "@ts[$cnt] ";
         $cnt++;
       }
       print SFC "@ts[0]-@ts[1]\n";
+      print SFSC "@ts[0]-@ts[1]\n";
     }
     print SFC "}\n\n";
+    print SFSC "}\n\n";
   }
 
 #  if ( -e "/var/db/squid/norestrict") {
@@ -10126,14 +10106,17 @@ sub printfconf() {
 
   foreach $source (@sourcegroup) {
     print SFC "src $source {\n";
+    print SFSC "src $source {\n";
     chop $cachesg{$source};
     @sspec=split(/;/,$cachesg{$source});
     foreach $srcnw (@sspec) {
       @sn=split(/\|/,$srcnw);
       shift(@sn);
       print SFC "  ip @sn[0]/@sn[1]\n";
+      print SFSC "  ip @sn[0]/@sn[1]\n";
     }
     print SFC "}\n\n";
+    print SFSC "}\n\n";
   }
 
   print SFC "acl {\n";
@@ -10151,9 +10134,12 @@ sub printfconf() {
       $intime="outside";
     }
     print SFC "  $source $intime $time {\n";
+    print SFSC "  $source $intime $time {\n";
     chop $cacheacl{$acl};
     print SFC "    pass $cacheacl{$acl}$acldef{$acl}\n";
+    print SFSC "    pass $cacheacl{$acl}$acldef{$acl}\n";
     print SFC "  }\n";
+    print SFSC "  }\n";
   }
   if (index($proxyconf{'Redirect'},"http") eq "-1") {
     if ($dnsconf{'Hostname'} eq "") {
@@ -10171,6 +10157,7 @@ sub printfconf() {
 
   print SFSC "  default {\n";
   print SFSC "    pass all\n";
+  print SFSC "    redirect $proxyconf{'Redirect'}\n";
   print SFSC "  }\n";
   print SFSC "}\n";
 
@@ -10290,7 +10277,8 @@ foreach $wnode (@wans) {
 
 foreach $hspot (@hotspots) {
   @ipdat=split(/\|/,$interface{$hspot});
-  push(@paccess,@ipdat[1] . "/" . @ipdat[2]);  
+  $nwaddr=getnw(@ipdat[2],@ipdat[1]);
+  push(@paccess,$nwaddr . "/" . @ipdat[2]);  
 }
 
 if ($proxyconf{'CacheSize'} < 8) {
@@ -10374,7 +10362,7 @@ acl duplicate max_user_ip -s 1
 __EOB__
 foreach $pden (@pdeny) {
   print SC "acl squiddeny src $pden\n";
-  print FC "ACL Deny @pden - *\n";
+  print FC "ACL Deny $pden - *\n";
 }
 
 
@@ -10416,7 +10404,7 @@ if ($sysconf{'L2TPNet'} ne "") {
   $ifnw=getnw(@ipdat[1],@ipdat[0]);
   print SC "acl squidaccess src $ifnw/@ipdat[1]\n";
   @ipdat[1]=getsn(@ipdat[1]);
-  print FC "ACL Allow $ifnw/@wrdat[1] - *\n";
+  print FC "ACL Allow $ifnw/@ipdat[1] - *\n";
 }
 
 
@@ -10450,7 +10438,7 @@ foreach $netip (@pbypass) {
 print SC<<__EOB__;
 acl authenticate proxy_auth REQUIRED
 acl all src all
-#acl manager proto cache_object
+acl manager proto cache_object
 acl localhost src 127.0.0.1/32
 acl SSL_ports port 443 563 666 990 5222 1863
 acl Safe_ports port 80 21 990 443 563 70 210 3128 3129 8080 5222 1863
@@ -10594,7 +10582,7 @@ __EOB__
       }
     } else {
       print FC<<__EOB__;
-poll @mdata[0] no dns proto $proto@mdata[5]:
+poll @mdata[0] proto $proto@mdata[5] no dns:
   user "@mdata[1]", with pass "@mdata[2]", is "@mdata[3]" here,$mdopt
 __EOB__
     }
@@ -10709,6 +10697,19 @@ __EOF__
     print SMB "        $sconf\n";
   }
 
+  if ($dcontroller eq "" ) {
+    print SMB "        logon drive = U:\n";
+    print SMB "        logon path = \\\\%L\\%U\\.ntprofile\n";
+    print SMB "        logon script = logon.bat\n";
+    print SMB "        domain logons = No\n";
+  } else {
+    ($hd,$sd)=split(/:/,$dcontroller);
+    print SMB "        domain logons = Yes\n";
+    print SMB "        logon drive = $hd:\n";
+    print SMB "        logon script = logon.bat\n";
+    print SMB "        logon path = \\\\%L\\%U\\.ntprofile\n";
+  }
+
   if ($smboption{'Security'} eq "ADS") {
     $alladsserv=join(", ",split(/ /,$smboption{'ADSServer'}));
     print SMB "        password server = " . $alladsserv . "\n";
@@ -10730,13 +10731,6 @@ __EOF__
 
   if ($smboption{'Security'} eq "ADS") {
     print SMB "        realm = $defdom\n";
-  }
-
-  if ($dcontroller eq "" ) {
-    print SMB "        logon drive = U:\n";
-    print SMB "        logon path = \\\\%L\\%U\\.ntprofile\n";
-    print SMB "        logon script = logon.bat\n";
-    print SMB "        domain logons = No\n";
   }
 
   if (($sysconf{'PrimaryWins'} eq @iipdat[1]) || ($sysconf{'PrimaryWins'} eq "")) {
@@ -11464,9 +11458,7 @@ sub printcrontab() {
       printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","*/20","*","*","/usr/sbin/linkup");
       printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","*/10","*","*","/usr/bin/nsupdate /tmp/dnsup.ppp");
 
-      if (-f "/etc/dyndnsconf") {
-        printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","*/10","*","*","/usr/sbin/dnsupdate");
-      }
+      printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","*/10","*","*","if [ -e /etc/dyndnsconf ];then /usr/sbin/dnsupdate;fi");
     }
     foreach $dsll (@vadsllink) {
       printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","*/10","*","*","/usr/bin/nsupdate /tmp/dnsup.$dsll.ppp");
@@ -11490,20 +11482,25 @@ sub printcrontab() {
   printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","9,12,18,23","*","/usr/sbin/clamupdate");
 
   if ($smboption{'Security'} ne "USER") {
+    print CT "#Update IDMAP\n";
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","*","*","/usr/sbin/idmapsync");
   }
 
 
   if ($sysconfig{'Type'} eq "full") {
-    print CT "\n#Trend Update\n";
+    if (@crlurl) {
+      print CT "\n#Fetch CRL's\n";
+    }
     foreach $url (@crlurl) {
       printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","*/4","*","/usr/sbin/crlget $url");
     }
   }
 
-  if ( -d "/var/spool/asterisk/monitor.bak") {
-      printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","*/10","*","*","/usr/bin/rsync -a --exclude=*-in.WAV --exclude=*-out.WAV /var/spool/asterisk/monitor/\`/usr/bin/date +%Y-%m-%d\` /var/spool/asterisk/monitor.bak/");
-  }
+  print CT<<__EOB__;
+
+#Backup Asterisk Recordings
+*/10  *      * * *        if [ -d /var/spool/asterisk/monitor.bak ];then /usr/bin/rsync -a --exclude=*-in.WAV --exclude=*-out.WAV /var/spool/asterisk/monitor/`/usr/bin/date +%Y-%m-%d` /var/spool/asterisk/monitor.bak/;fi > /dev/null 2>&1
+__EOB__
 
   if ( -e "/etc/crontab.local") {
     print CT "\n#Local Configuration\n\n";
@@ -11689,49 +11686,13 @@ __EOB__
     $snmask=getsn(@iipdat[2]);
     $nwaddr=getnw(@iipdat[2],@iipdat[1]);
     $bcaddr=getbc(@iipdat[2],@iipdat[1]);
-
-    @nwipq=split(/\./,$nwaddr);  
  
     if (((($iface ne $sysconf{'External'}) && ($gretun{$iface} eq "")) || ($sysconf{'External'} eq $sysconf{'Internal'})) && (@iipdat[2] >= 8) && (@iipdat[2] < 32)) {
       if (( ! $dnsall) && ($dnsext{$iface} != "1")) {
         print DNS "               $nwaddr/@iipdat[2];\n";
       }
-      if (@iipdat[2] >= 24) {
-        $revblk="@nwipq[2].@nwipq[1].@nwipq[0].in-addr.arpa";
-        if (! $isrev{$revblk}) {
-          $isrev{$revblk}=true;
-          push(@revs,$revblk);
-        }
-      } elsif (@iipdat[2] > 16) {
-        $cnum=(2**(24-@iipdat[2]));
-        for($cnt=@nwipq[2];$cnt < (@nwipq[2]+$cnum);$cnt++){
-          $revblk="$cnt.@nwipq[1].@nwipq[0].in-addr.arpa";
-          if (! $isrev{$revblk}) {
-            $isrev{$revblk}=true;
-            push(@revs,$revblk);
-          }
-        }
-      } elsif (@iipdat[2] eq 16 ) {
-        $revblk="@nwipq[1].@nwipq[0].in-addr.arpa";
-        if (! $isrev{$revblk}) {
-          $isrev{$revblk}=true;
-          push(@revs,$revblk);
-        }
-      } elsif (@iipdat[2] > 8) {
-        $cnum=(2**(16-@iipdat[2]));
-        for($cnt=@nwipq[1];$cnt < (@nwipq[1]+$cnum);$cnt++){
-          $revblk="$cnt.@nwipq[0].in-addr.arpa";
-          if (! $isrev{$revblk}) {
-            $isrev{$revblk}=true;
-            push(@revs,$revblk);
-          }
-        }
-      } elsif (@iipdat[2] eq 8 ) {
-        $revblk="@nwipq[0].in-addr.arpa";
-        if (! $isrev{$revblk}) {
-          $isrev{$revblk}=true;
-          push(@revs,$revblk);
-        }
+      if (index($iface,"gtun") < 0) {
+        setrevdns(@iipdat[1],@iipdat[2]);
       }
     } elsif ($iface eq $sysconf{'Internal'}) {
       if (( ! $dnsall) && ($dnsext{$iface} != "1")) {
@@ -11770,45 +11731,7 @@ foreach $wanl (@wans){
   if ( ! $dnsall ) {
     print DNS "               $nwaddr/@idata[2];\n";
   }
-  @nwipq=split(/\./,$nwaddr);  
-
-  if (@idata[2] >= 24) {
-    $revblk="@nwipq[2].@nwipq[1].@nwipq[0].in-addr.arpa";
-    if (! $isrev{$revblk}) {
-      $isrev{$revblk}=true;
-      push(@revs,$revblk);
-    }
-  } elsif (@idata[2] > 16 ) {
-    $cnum=(2**(24-@idata[2]));
-    for($cnt=@nwipq[2];$cnt < (@nwipq[2]+$cnum);$cnt++){
-      $revblk="$cnt.@nwipq[1].@nwipq[0].in-addr.arpa";
-      if (! $isrev{$revblk}) {
-        $isrev{$revblk}=true;
-        push(@revs,$revblk);
-      }
-    }
-  } elsif (@idata[2] eq 16 ) {
-    $revblk="@nwipq[1].@nwipq[0].in-addr.arpa";
-    if (! $isrev{$revblk}) {
-      $isrev{$revblk}=true;
-      push(@revs,$revblk);
-    }
-  } elsif (@idata[2] > 8 ) {
-    $cnum=(2**(16-@idata[2]));
-    for($cnt=@nwipq[1];$cnt < (@nwipq[1]+$cnum);$cnt++){
-      $revblk="$cnt.@nwipq[0].in-addr.arpa";
-      if (! $isrev{$revblk}) {
-        $isrev{$revblk}=true;
-        push(@revs,$revblk);
-      }
-    }
-  } elsif (@idata[2] eq 8 ) {
-    $revblk="@nwipq[0].in-addr.arpa";
-    if (! $isrev{$revblk}) {
-      $isrev{$revblk}=true;
-      push(@revs,$revblk);
-    }
-  }
+  setrevdns(@idata[1],@idata[2]);
 }
 
   if ( ! $dnsall ) {
@@ -11843,12 +11766,12 @@ print DNS "       };\n";
 print DNS "       include \"/etc/bind/forwarders.conf\";\n";
 
 if (($sysconf{'PrimaryDns'} ne "") || ($sysconf{'SecondaryDns'} ne "")) {
-  $fwdstat="forward first;\nforwarders {";
+  $fwdstat="forward first;\nforwarders {\n";
   if ($sysconf{'PrimaryDns'} ne "") {
-    $fwdstat=$fwdstat . $sysconf{'PrimaryDns'} . ";";
+    $fwdstat=$fwdstat . "       " . $sysconf{'PrimaryDns'} . ";\n";
   }
   if ($sysconf{'SecondaryDns'} ne "") {
-    $fwdstat=$fwdstat . $sysconf{'SecondaryDns'} . ";";
+    $fwdstat=$fwdstat . "       " . $sysconf{'SecondaryDns'} . ";\n";
   }
   $fwdstat=$fwdstat . "};\n";
 }
@@ -11926,6 +11849,19 @@ __EOB__
       }
     }
   }
+  foreach $iface (@ints) {
+    @intdat=split(/\|/,$interface{$iface});
+    if ((@intdat[2] ne "32") && (@intdat[1] ne "0.0.0.0") && ($iface ne $sysconf{'Internal'}) && 
+        ($iface ne $sysconf{'External'}) && ($revmatch{@intdat[1]} ne "")) {
+     @ipq=split(/\./,@intdat[1]);
+     print DUP "zone " . $revmatch{@intdat[1]} . "\n";
+     print DUP "update add " . $revmatch{@intdat[1]} . ". 3600 NS " . $fqdn . ".\n";
+     print DUP "update delete " . @ipq[3] . "." . $revmatch{@intdat[1]} . ". PTR\n";
+     print DUP "update add " . @ipq[3] . "." . $revmatch{@intdat[1]} . ". " . $dnsconf{'DefaultTTL'} . " PTR ";
+     print DUP lc(@intdat[0]) . "." . $dnsconf{'Domain'} . ".\n";
+     print DUP "send\n";
+    }
+  }
   push(@idnszones,"$dnsconf{'Domain'}");
   open(ZONE,">zones/$dnsconf{'Domain'}");
   chmod(0600,"zones/$dnsconf{'Domain'}");
@@ -11957,8 +11893,7 @@ update delete _kpasswd._udp.$smboption{'ADSRealm'}. SRV
 send
 __EOB__
     @adsservs=split(/ /,$smboption{'ADSServer'});
-    $priority=@adsservs;
-    $priority--;
+    $priority=50;
     foreach $adsdc (@adsservs) {
       $adsdc=lc($adsdc);
 #update add _kerberos._tcp.dc._msdcs.$smboption{'ADSRealm'}. $dnsconf{'DefaultTTL'} SRV $priority 10 88 $adsdc.$smboption{'ADSRealm'}.
@@ -11981,7 +11916,7 @@ __EOB__
     }
   }
   print DUP "zone $dnsconf{'Domain'}\n";
-  print DUP "key $dnsconf{'Domain'} $tsigint\n";
+#  print DUP "key $dnsconf{'Domain'} $tsigint\n";
   print DUP "update delete $dnsconf{'Domain'}\. A\n";
   print DUP "update delete $dnsconf{'Domain'}\. MX\n";
   print DUP "update delete wpad.$dnsconf{'Domain'}\. CNAME\n";
@@ -11997,11 +11932,13 @@ __EOB__
   push(@adsdpre,"forestdnszones");
   push(@adsdpre,"domaindnszones");
 
-  foreach $adsdom (@adsdpre) {
-    print DUP "update delete $adsdom.$dnsconf{'Domain'}\. NS\n";
-    foreach $adsdc (@adsservs) {
-      $adsdc=lc($adsdc);
-      print DUP "update add $adsdom.$dnsconf{'Domain'}\. $dnsconf{'DefaultTTL'} NS $adsdc.$dnsconf{'Domain'}\.\n";
+  if ($smboption{'ADSServer'} ne "") {
+    foreach $adsdom (@adsdpre) {
+      print DUP "update delete $adsdom.$dnsconf{'Domain'}\. NS\n";
+      foreach $adsdc (@adsservs) {
+        $adsdc=lc($adsdc);
+        print DUP "update add $adsdom.$dnsconf{'Domain'}\. $dnsconf{'DefaultTTL'} NS $adsdc.$dnsconf{'Domain'}\.\n";
+      }
     }
   }
 
@@ -12028,6 +11965,8 @@ __EOB__
     }
     print DUP "update add $dnsconf{'Domain'}. $dnsconf{'DefaultTTL'} A @iipdat[1]\n";
   }
+  print DUP "update delete $dnsconf{'Hostname'}.$dnsconf{'Domain'}. AAAA\n";
+  print DUP "update delete $dnsconf{'Domain'}. AAAA\n";
   if ($i6addr{$iiface} ne "") {
     @i6dat=split(/\|/,$i6addr{$iiface});
     print DUP "update delete $fqdn. AAAA\n";
@@ -12084,10 +12023,20 @@ __EOB__
     }
   }
 
+  foreach $iface (@ints) {
+    @intdat=split(/\|/,$interface{$iface});
+    if ((@intdat[2] ne "32") && (@intdat[1] ne "0.0.0.0") && ($iface ne $sysconf{'Internal'}) && 
+        ($iface ne $sysconf{'External'})) {
+      $hname=lc(@intdat[0]);
+      print DUP "update delete $hname.$dnsconf{'Domain'}. A\n";
+      print DUP "update add $hname.$dnsconf{'Domain'}. $dnsconf{'DefaultTTL'} A @intdat[1]\n";
+    }
+  }
+
   print DUP "send\n";
   if ($ddnslocal eq "0") {
     print DUP "zone $dnsconf{'DynZone'}\n";
-    print DUP "key $dnsconf{'Domain'} $tsigint\n";
+#    print DUP "key $dnsconf{'Domain'} $tsigint\n";
     print DUP "update delete $dnsconf{'DynZone'}\. A\n";
     if (@iipdat[1] ne "") {
       print DUP "update add $dnsconf{'DynZone'}. $dnsconf{'DefaultTTL'} A @iipdat[1]\n";
@@ -12137,10 +12086,14 @@ __EOB__
               type master;
               notify yes;
               file "domain.dyn";
+              also-notify {
+                     127.0.0.1;
+                     ::1;
+              };
               allow-update {
-                     $intupsrc;
-                     key rndc-key;
                      key $dnsconf{'DynZone'};
+                     key rndc-key;
+                     $intupsrc;
               };
               check-names ignore;
        };
@@ -12359,7 +12312,7 @@ view "external" {
        };
 __EOB__
 
-  if (($dnsconf{'ExtServ'}) || ($sysconf{'Internal'} eq $sysconf{'External'})) {
+  if (($dnsconf{'ExtServ'} eq "true") || ($sysconf{'Internal'} eq $sysconf{'External'})) {
     if ((($sysconf{'PrimaryDns'} ne "") || ($sysconf{'SecondaryDns'} ne "")) && ($dnsconf{'Usepeer'} ne "true")) {
       print DNS<<__EOB__;
          forward first;
@@ -12374,8 +12327,6 @@ __EOB__
       print DNS<<__EOB__;
        };
 __EOB__
-    } elsif (($sysconf{'External'} eq "Dialup") && ($dnsconf{'Usepeer'} ne "true")) {
-      print DNS "#FWD\n";
     }
     print DNS<<__EOB__;
        recursion yes;
@@ -12552,14 +12503,24 @@ option wpad-url code 252 = text;
 option tftp-cisco-server-name code 150 = ip-address;
 option polycom-vlanid code 251 = unsigned integer 16;
 option yealink-url code 250 = string;
-
 __EOL__
+
+if ($polyvlan ne "") {
+  print DHCP "option polycom-vlanid $polyvlan;\n";
+}
 
 print DHCP6<<__EOL__;
 option wpad-url code 252 = text;
 option tftp-cisco-server-name code 150 = ip-address;
 option polycom-vlanid code 251 = unsigned integer 16;
 option yealink-url code 250 = string;
+__EOL__
+
+if ($polyvlan ne "") {
+  print DHCP6 "option polycom-vlanid $polyvlan;\n";
+}
+
+print DHCP6<<__EOL__;
 
 option domain-name "$dnsconf{'Domain'}";
 option nis-domain "$dnsconf{'Domain'}";
@@ -12609,6 +12570,7 @@ ddns-update-style interim;
 ddns-updates on;
 ddns-domainname "$dnsconf{'Domain'}";
 ddns-rev-domainname "ip6.arpa";
+include "/etc/rndc.key";
 allow client-updates;
 
 update-conflict-detection false;
@@ -12638,51 +12600,10 @@ foreach $iface (@ints){
     $bcaddr=getbc(@idata[2],@idata[1]);
     $intip=@idata[1];
 
-    @nwipq=split(/\./,$nwaddr);  
-
+    if (index($iface,"gtun") < 0) {
+      setrevdns(@idata[1],@idata[2]);
+    }
     if ((@idata[4] ne "") && (@idata[4] ne "-")) {
-      if (@idata[2] >= 24) {
-        $revblk="@nwipq[2].@nwipq[1].@nwipq[0].in-addr.arpa";
-        if (! $isrev{$revblk}) {
-          $isrev{$revblk}=true;
-          push(@revs,$revblk);
-          $intduip{$revblk}=@idata[1];
-        }
-      } elsif (@idata[2] > 16 ) {
-        $cnum=(2**(24-@idata[2]));
-        for($cnt=@nwipq[2];$cnt < (@nwipq[2]+$cnum);$cnt++){
-          $revblk="$cnt.@nwipq[1].@nwipq[0].in-addr.arpa";
-          if (! $isrev{$revblk}) {
-            $isrev{$revblk}=true;
-            push(@revs,$revblk);
-            $intduip{$revblk}=@idata[1];
-          }
-        }
-      } elsif (@idata[2] eq 16 ) {
-        $revblk="@nwipq[1].@nwipq[0].in-addr.arpa";
-        if (! $isrev{$revblk}) {
-          $isrev{$revblk}=true;
-          push(@revs,$revblk);
-          $intduip{$revblk}=@idata[1];
-        }
-      } elsif (@idata[2] > 8 ) {
-        $cnum=(2**(16-@idata[2]));
-        for($cnt=@nwipq[1];$cnt < (@nwipq[1]+$cnum);$cnt++){
-          $revblk="$cnt.@nwipq[0].in-addr.arpa";
-          if (! $isrev{$revblk}) {
-            $isrev{$revblk}=true;
-            push(@revs,$revblk);
-            $intduip{$revblk}=@idata[1];
-          }
-        }
-      } elsif (@idata[2] eq 8 ) {
-        $revblk="@nwipq[0].in-addr.arpa";
-        if (! $isrev{$revblk}) {
-          $isrev{$revblk}=true;
-          push(@revs,$revblk);
-          $intduip{$revblk}=@idata[1];
-        }
-      }
       if ($isslaverev{$revblk}) {
         $intduip{$revblk}=$isslaverev{$revblk};
       }
@@ -12726,7 +12647,7 @@ foreach $iface (@ints){
       }
 
   if ($sysconf{'PrimaryWins'} eq "") {
-    $lwins="\n  option netbios-name-servers @iipdat[1];";
+    $lwins="\n  option netbios-name-servers @idata[1];";
   } else {
     $lwins="";
   }
@@ -12776,20 +12697,17 @@ subnet6 @i6data[1]::/@i6data[3] {
   range6 @i6data[1]::@i6data[4] @i6data[1]::@i6data[5];
   option dhcp6.name-servers @i6data[1]@i6data[2];
   option ntp-servers $fqdn;
-  option tftp-server-name "$tftpserv";
+  option tftp-server-name "http://@idata[1]";
   option yealink-url "http://$fqdn";
   option tftp-cisco-server-name @idata[1];
 }
 __EOL__
-      } elsif ($i6addr{@idata[3]} ne "") {
+      }
+    } elsif (index(@idata[3],"gtun") < 0)  {
         print DHCP6<<__EOL__;
 
-#@idata[0]
-subnet6 @i6data[1]::/@i6data[3] { 
-  not authoritative;
-}
+#@idata[0] (@idata[3]) Not authoritative
 __EOL__
-      }
     }
   }
 }
@@ -12807,69 +12725,30 @@ foreach $wanl (@wans){
   $snmask=getsn(@idata[2]);
   $nwaddr=getnw(@idata[2],@idata[1]);
   $bcaddr=getbc(@idata[2],@idata[1]);
-
-  @nwipq=split(/\./,$nwaddr);  
-
+  $wlname=join(" ",split(/_/,@idata[0]));
   if (@idata[5] ne "") {
-    if (@idata[2] >= 24) {
-      $revblk="@nwipq[2].@nwipq[1].@nwipq[0].in-addr.arpa";
-      if (! $isrev{$revblk}) {
-        $isrev{$revblk}=true;
-        push(@revs,$revblk);
-        $intduip{$revblk}=$intipa;
-      }
-    } elsif ((@idata[2] >= 16 ) && (@idata[2] < 24)) {
-      $cnum=(2**(8-(@idata[2] % 8)));
-      for($cnt=@nwipq[2];$cnt < (@nwipq[2]+$cnum);$cnt++){
-        $revblk="$cnt.@nwipq[1].@nwipq[0].in-addr.arpa";
-        if (! $isrev{$revblk}) {
-          $isrev{$revblk}=true;
-          push(@revs,$revblk);
-          $intduip{$revblk}=$intipa;
-        }
-      }
-    } elsif ((@idata[2] >= 8 ) && (@idata[2] < 16)) {
-      $cnum=(2**(8-(@idata[2] % 8)));
-      for($cnt=@nwipq[1];$cnt < (@nwipq[1]+$cnum);$cnt++){
-        for ($cnt1=0;$cnt1 < 256;$cnt1++) {
-          $revblk="$cnt1.$cnt.@nwipq[0].in-addr.arpa";
-          if (! $isrev{$revblk}) {
-            $isrev{$revblk}=true;
-            push(@revs,$revblk);
-            $intduip{$revblk}=$intipa;
-          }
-        }
-      }
-    }
+    setrevdns(@idata[1],@idata[2]);
   print DHCP<<__EOL__;
 
-#@idata[0] Wan Link
+#$wlname Wan Link
 subnet $nwaddr netmask $snmask { 
   authoritative;
   range @idata[5] @idata[6];
+  option routers @idata[4];
   option domain-name "$dnsconf{'Domain'}";
   option nis-domain "$dnsconf{'Domain'}";
   option time-offset 7200;
   option domain-name-servers $dns;
-  option routers @idata[4];
   option subnet-mask $snmask;
   option broadcast-address $bcaddr;
   option wpad-url "http://$fqdn/proxy.pac";
   option tftp-server-name "http://$fqdn";
 }
 __EOL__
-  print DHCP6<<__EOL__;
-
-#@idata[0] Wan Link
-subnet6 $nwaddr netmask $snmask { 
-  authoritative;
-  range @idata[5] @idata[6];
-}
-__EOL__
   } elsif ($nwaddr ne "0.0.0.0") {
   print DHCP<<__EOL__;
 
-#@idata[0]
+#@idata[0] Wan Link
 subnet $nwaddr netmask $snmask { 
   not authoritative;
 }
@@ -12948,7 +12827,6 @@ $ddnsauth
 }
 __EOL__
     print DHCP6<<__EOL__;
-
 zone $dnsconf{'Domain'}. {
 $ddnsauth
 }
@@ -12985,13 +12863,15 @@ __EOL__
 }
 
 foreach $cclass (@revs) {
-  print DHCP<<__EOL__;
+  if ($cclass ne "0.0.0.0.in-addr.arpa") {
+    print DHCP<<__EOL__;
 
 zone $cclass. {
   primary 127.0.0.1;
   key rndc-key;
 }
 __EOL__
+  }
 }
 
 foreach $cclass (@ip6rev) {
@@ -13080,7 +12960,7 @@ sub check_ip {
   }
 }
 
-sub getnw() {
+sub getnw {
   local($maskbits,$ipaddr)=@_;
   local($nwaddr);
   @ipq=split(/\./,$ipaddr);
@@ -13241,7 +13121,7 @@ __EOB__
 if (($mailconf{'AntiSpam'} eq "true") && ($sysconfig{'Type'} eq "full")) {
 print SMMC<<__EOB__;
 FEATURE(`delay_checks')dnl
-FEATURE(`dnsbl',`dnsbl.sorbs.net',`"554 Rejected " $&{client_addr} " found in dnsbl.sorbs.net"')dnl
+FEATURE(`dnsbl',`dnsbl.sorbs.net',`"554 Rejected " \$&{client_addr} " found in dnsbl.sorbs.net"')dnl
 __EOB__
 }
 #FEATURE(\`dnsbl', \`relays.ordb.org', \`550 Rejected - see http://ordb.org/')dnl
@@ -13950,7 +13830,7 @@ print RC<<__EOB__;
 client @rcdat[1] {
 	secret      = $radssecret       
 	proto       = *
-	shortname   = internal
+	shortname   = @rcdat[0]
 	nastype     = other
 }
 
@@ -14571,7 +14451,7 @@ ln -s /var/spool/backup/osticket-\${BDATE}.sql.gz /var/spool/backup/osticket.sql
 
 
 SYSFILES="var/spool/apache/htdocs/ns/config/netsentry.conf etc/exports.local \\
-          var/spool/apache/htdocs/ns/config/server.conf \\
+          var/spool/apache/htdocs/ns/config/server.conf var/spool/apache/htdocs/ns/config/netsentry.xml \\
           var/spool/apache/htdocs/ns/config/ca.conf etc/mrtg.conf.local \\
           var/spool/apache/htdocs/mrtg/*old etc/firewall.local etc/rc.local \\
           var/spool/apache/htdocs/mrtg/*log etc/crontab.local etc/nsswitch.conf.local \\
@@ -15256,6 +15136,7 @@ encryption=try
 tcpenable=yes
 transport=udp,tcp,tls
 t38pt_udptl=yes,redundancy
+t38pt_usertpsource=yes
 callcounter=yes
 faxdetect=no
 t38pt_rtp=yes
@@ -15264,8 +15145,14 @@ rtptimeout=60
 rtpholdtimeout=300
 alwaysauthreject=yes
 prematuremedia=no
-
+insecure=no
 __EOF__
+
+if ( -e "/etc/asterisk/res_stun_monitor.conf") {
+  print SC "subscribe_network_change_event=yes\n";
+} else {
+  print SC "subscribe_network_change_event=no\n";
+}
 
 if ( -d "/etc/openssl/voipca") {
   print SC "tlscertfile=/etc/openssl/voipca/server.pem\n";
@@ -15380,10 +15267,14 @@ __EOB__
 fromdomain=@sipreg[2]
 host=@sipreg[2]
 context=sipddi
-nat=yes
-qualify=yes
+__EOB__
+      if ( -e "/etc/asterisk/res_stun_monitor.conf") {
+        print SC "nat=no\nqualify=no\n";
+      } else {
+        print SC "nat=yes\nqualify=yes\n";
+      }
+      print SC<<__EOB__;
 directmedia=no
-nat=yes
 insecure=port,invite$sipcodec
 sendrpid=yes
 trustrpid=yes
@@ -15392,7 +15283,6 @@ t38pt_rtp=yes
 dtmfmode=$dtmfmode
 encryption=$sipsrtp
 videosupport=$sipvideo
-t38pt_usertpsource=yes
 __EOB__
     if (@siphost[1] ne "") {
       print SC "port=@siphost[1]\n";
@@ -15424,6 +15314,7 @@ __EOB__
 
   print SC <<__EOB__;
 [guest]
+insecure=invite
 type=user
 context=ddi
 __EOB__
@@ -15438,8 +15329,6 @@ sub printastcli() {
   @ipdat=split(/\|/,$interface{$intif});
 
   print PRO<<__EOF__;
-IAXTELNUM=$iaxtelnum
-FWDTELNUM=$fwdnumber
 PARENTNUM=$parentnumber
 HOSTNAME=$dnsconf{'Hostname'}
 PARENTDIAL=$parentdial
@@ -15447,10 +15336,9 @@ PARENTCNT=$vparent
 TDMGWDIAL=$tdmdial
 TDMGWCNT=$tdmgw
 AGISERVER=$sqlmvoipserv
-GOSSIPTEL=$gossipnum
-FRESHNUM=$freshtelnum
 DOMAIN=$dnsconf{'Domain'}
 IPADDR=@ipdat[1]
+FAX_CODEC=alaw
 __EOF__
   close(PRO);
 }
@@ -17440,19 +17328,14 @@ sub gen_tftpboot_tmpl() {
     open(TFTP,">tftptmpl/" . $model . ".cfg");
     chmod(0600,"tftptmpl/" . $model . ".cfg");
 print TFTP <<__EOF__;
+<?xml version="1.0"?>
 <flat-profile>
-<Profile_Rule>http://$fqdn/init-\$MA.cfg
-	</Profile_Rule>
-<Enable_Web_Server>yes
-	</Enable_Web_Server>
-<User_Password>0000
-	</User_Password>
-<Admin_Passwd>0000
-	</Admin_Passwd>
-<Enable_WAN_Web_Server>yes
-	</Enable_WAN_Web_Server>
-<Resync_Periodic>10
-	</Resync_Periodic>
+  <Profile_Rule>http://$fqdn/init-\$MA.cfg</Profile_Rule>
+  <Enable_Web_Server>yes</Enable_Web_Server>
+  <User_Password>0000</User_Password>
+  <Admin_Passwd>0000</Admin_Passwd>
+  <Enable_WAN_Web_Server>yes</Enable_WAN_Web_Server>
+  <Resync_Periodic>10</Resync_Periodic>
 </flat-profile>
 __EOF__
     close(TFTP);
@@ -17461,35 +17344,22 @@ __EOF__
   open(TFTP,">tftptmpl/spa8000.cfg");
   chmod(0600,"tftptmpl/spa8000.cfg");
 print TFTP <<__EOF__;
+<?xml version="1.0"?>
 <flat-profile>
-<Profile_Rule>http://$fqdn/init-\$MA.cfg
-        </Profile_Rule>
-<Enable_Web_Server>yes
-        </Enable_Web_Server>
-<User_Password>0000
-        </User_Password>
-<Admin_Passwd>0000
-        </Admin_Passwd>
-<Enable_WAN_Web_Server>yes
-        </Enable_WAN_Web_Server>
-<Resync_Periodic>10
-        </Resync_Periodic>
-<Trunk_Group_1_>1
-        </Trunk_Group_1_>
-<Trunk_Group_2_>1
-        </Trunk_Group_2_>
-<Trunk_Group_3_>1
-        </Trunk_Group_3_>
-<Trunk_Group_4_>1
-        </Trunk_Group_4_>
-<Trunk_Group_5_>1
-        </Trunk_Group_5_>
-<Trunk_Group_6_>1
-        </Trunk_Group_6_>
-<Trunk_Group_7_>1
-        </Trunk_Group_7_>
-<Trunk_Group_8_>1
-        </Trunk_Group_8_>
+  <Profile_Rule>http://$fqdn/init-\$MA.cfg</Profile_Rule>
+  <Enable_Web_Server>yes</Enable_Web_Server>
+  <User_Password>0000</User_Password>
+  <Admin_Passwd>0000</Admin_Passwd>
+  <Enable_WAN_Web_Server>yes</Enable_WAN_Web_Server>
+  <Resync_Periodic>10</Resync_Periodic>
+  <Trunk_Group_1_>1</Trunk_Group_1_>
+  <Trunk_Group_2_>1</Trunk_Group_2_>
+  <Trunk_Group_3_>1</Trunk_Group_3_>
+  <Trunk_Group_4_>1</Trunk_Group_4_>
+  <Trunk_Group_5_>1</Trunk_Group_5_>
+  <Trunk_Group_6_>1</Trunk_Group_6_>
+  <Trunk_Group_7_>1</Trunk_Group_7_>
+  <Trunk_Group_8_>1</Trunk_Group_8_>
 </flat-profile>
 __EOF__
 close(TFTP);
@@ -17744,7 +17614,7 @@ sub printradvd {
   if (($extint eq "") || ($extint eq "ppp0")) {
     $extip="\${1}";
     $sitip=$extip;
-    $ip6prefix="\$(printf '%02x%02x:%02x%02x\\n' \$(echo $extip | sed 's/\\./ /g'))";
+    $ip6prefix="\$(printf \"%02x%02x:%02x%02x\\n\" \$(echo $extip | sed \"s/\\./ /g\"))";
     $base6to4="\n		Base6to4Interface ppp0;";
     $baseprefix="0:0:0";
     $extrad=0;
@@ -17804,7 +17674,7 @@ __EOB__
     }
 
     if ($nodefault) {
-      print SIX24 "\n/sbin/ip -6 route add 2002::/16 dev sit0 metric 1 > /dev/null 2>&1\n";
+      print SIX24 "/sbin/ip -6 route add 2002::/16 dev sit0 metric 1 > /dev/null 2>&1\n";
     }
 
     print SIX24 <<__EOB__;
@@ -18013,7 +17883,7 @@ interface "$iface" {
 }
 
 __EOB__
-    } else {
+    } elsif (index($iface,"gtun") eq -1) {
       print DHC<<__EOB__;
 interface "$iface" {
   script "/usr/bin/dhclient-script";
@@ -18072,7 +17942,7 @@ sub unixcrypt {
 }
 
 sub apgget {
-  open(APG,"apg -M SNCL -n 1 -m 10 -E '!$%^~|`\",'|");
+  open(APG,"apg -M SNCL -n 1 -m 10 -E '!$%^~|`\",'\\\'|");
   while(<APG>) {
     chop $_;
     $apg=$_;
@@ -18098,6 +17968,81 @@ sub checkanonuser {
   return $newpw;
 }
 
-flock($lockfh, LOCK_UN);
-close($lockfh);
-unlink("/var/run/netsentry-config");
+sub setrevdns {
+  local($ipaddr, $snet) = @_;
+
+  $nwaddr=getnw($snet,$ipaddr);
+  @nwipq=split(/\./,$nwaddr);  
+  @ipm=split(/\./,$ipaddr);  
+
+  if ($snet > 24) {
+    $cnum=(2**(32-$snet));
+    for($cnt=@nwipq[3];$cnt < (@nwipq[3]+$cnum);$cnt++){
+      $revblk="$cnt.@nwipq[2].@nwipq[1].@nwipq[0].in-addr.arpa";
+      if ($cnt eq @ipm[3]) {
+        $revmatch{$ipaddr}=$revblk;
+      }
+      if (! $isrev{$revblk}) {
+        $isrev{$revblk}=true;
+        push(@revs,$revblk);
+        $intduip{$revblk}=$ipaddr;
+      }
+    }
+  } elsif ($snet = 24) {
+    $revblk="@nwipq[2].@nwipq[1].@nwipq[0].in-addr.arpa";
+    $revmatch{$ipaddr}=$revblk;
+    if (! $isrev{$revblk}) {
+      $isrev{$revblk}=true;
+      push(@revs,$revblk);
+      $intduip{$revblk}=$ipaddr;
+    }
+  } elsif ($snet > 16 ) {
+    $cnum=(2**(24-$snet));
+    for($cnt=@nwipq[2];$cnt < (@nwipq[2]+$cnum);$cnt++){
+      $revblk="$cnt.@nwipq[1].@nwipq[0].in-addr.arpa";
+      if ($cnt eq @ipm[2]) {
+        $revmatch{$ipaddr}=$revblk;
+      }
+      if (! $isrev{$revblk}) {
+        $isrev{$revblk}=true;
+        push(@revs,$revblk);
+        $intduip{$revblk}=$ipaddr;
+      }
+    }
+  } elsif ($snet eq 16 ) {
+    $revblk="@nwipq[1].@nwipq[0].in-addr.arpa";
+    $revmatch{$ipaddr}=$revblk;
+    if (! $isrev{$revblk}) {
+      $isrev{$revblk}=true;
+      push(@revs,$revblk);
+      $intduip{$revblk}=$ipaddr;
+    }
+  } elsif ($snet > 8 ) {
+    $cnum=(2**(16-$snet));
+    for($cnt=@nwipq[1];$cnt < (@nwipq[1]+$cnum);$cnt++){
+      $revblk="$cnt.@nwipq[0].in-addr.arpa";
+      if ($cnt eq @ipm[1]) {
+        $revmatch{$ipaddr}=$revblk;
+      }
+      if (! $isrev{$revblk}) {
+        $isrev{$revblk}=true;
+        push(@revs,$revblk);
+        $intduip{$revblk}=$ipaddr;
+      }
+    }
+  } elsif ($snet eq 8 ) {
+    $revblk="@nwipq[0].in-addr.arpa";
+    $revmatch{$ipaddr}=$revblk;
+    if (! $isrev{$revblk}) {
+      $isrev{$revblk}=true;
+      push(@revs,$revblk);
+      $intduip{$revblk}=$ipaddr;
+    }
+  }
+}
+
+if ($testing ne "1") {
+  flock($lockfh, LOCK_UN);
+  close($lockfh);
+  unlink("/var/run/netsentry-config");
+}
