@@ -132,11 +132,11 @@ if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstco
   if [ ! "$NTPDPID" ];then
     /usr/bin/ntpd -b -g
   fi;
-#  su pgsql -c "pg_ctl status -D /var/spool/pgsql" > /dev/null 2>&1
-#  if [ $? == 1 ] || [ ! -d /proc/`cat /var/spool/pgsql/postmaster.pid  |head -1` ];then
-#    /etc/rc.d/rc.exchange
-#    sleep 10;
-#  fi;
+
+  #Check PgSQL
+  if ! socktest 127.0.0.1 5432;then
+    /etc/rc.d/M.d/postgresql
+  fi;
 
   #Check Squid
   RCPID=`ps ax |grep RunCache |grep -v grep`
@@ -383,6 +383,9 @@ fi;
 
 if [ -e netsentry-sysvars ] && [ -e sysvars ] && [ ! -e /install/default.conf.full ] && [ "`diff sysvars netsentry-sysvars`" ];then
   /usr/sbin/sysreconf netsentry-sysvars;
+  if [ -d /var/log/ldap ];then
+    rm -rf /var/log/ldap
+  fi;
   /sbin/reboot
  elif [ -e netsentry-sysvars ] && [ -e sysvars ] && [ ! -e /install/default.conf.full ];then
   /usr/sbin/genconf
@@ -485,8 +488,9 @@ if [ -e /var/run/netsentry-update ];then
   chmod -R u+rw,g-rwx,o-rwx /var/spool/apache/htdocs/ns/config
   chown -R www.www /var/spool/apache/htdocs/ns/config
  else
-  if [ -e ldap.newsecret ];then
+  if [ ! -e /var/spool/apache/htdocs/ns/config/ldap_$(hostname).limited ] || [ -e ldap.newsecret ];then
     /usr/sbin/sqlpasswd
+    killall rebootphone > /dev/null 2>&1
   fi;
 
   rm /var/run/netsentry-config
@@ -572,7 +576,7 @@ if [ -e networksentry-lite ] ;then
   if [ -e /etc/.networksentry-lite ] || [ -e /tmp/.firstconfig ];then
     /sbin/modprobe dazuko > /dev/null 2>&1
     /sbin/ifconfig lo:0 127.0.0.2 netmask 255.255.255.255
-    /etc/rc.d/rc.exchange > /dev/null 2>&1 &
+    /etc/rc.d/M.d/postgresql > /dev/null 2>&1 &
     rm /etc/clamav.conf
     if [ -e /etc/mail/sendmail.mc ];then
       rm /etc/mail/sendmail.mc
@@ -1880,6 +1884,7 @@ if [ -e networksentry-full ] && [ ! -e /tmp/.firstconfig ];then
     else
       /bin/sh sqlpasswd > /dev/null 2>&1
     fi;
+    killall rebootphone > /dev/null 2>&1
     kill -1 `pidof inetd` >/dev/null 2>&1
     kill -9 `pidof ulogd` >/dev/null 2>&1
     sleep 2
@@ -1900,6 +1905,7 @@ if [ "$SPDIFF" ] && [ -e networksentry-lite ] && [ ! -e /etc/.install ];then
   else
     sh sqlpasswd
   fi;
+  killall rebootphone > /dev/null 2>&1
   if [ -e /tmp/.firstconfig ];then
     rm /usr/sbin/sqlpasswd
   fi;
@@ -2976,7 +2982,7 @@ if [ "$WEB_RESTART" ] || [ -e /tmp/.sslrestart ];then
   /etc/rc.d/rc.tunnels;
   sleep 2;
   /usr/sbin/setkey -F) > /dev/null 2>&1
-  /etc/rc.d/rc.exchange;
+  /etc/rc.d/M.d/postgresql
   Gen_CRL_Cert;
 fi;
 
@@ -2998,6 +3004,7 @@ rm /var/run/netsentry-config
 
 if [ -e ldap.newsecret ];then
   /usr/sbin/sqlpasswd
+  killall rebootphone > /dev/null 2>&1
 fi;
 
 if [ -e /tmp/.firstconfig ];then
