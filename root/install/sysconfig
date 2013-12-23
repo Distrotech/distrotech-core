@@ -330,20 +330,18 @@ Fdisk_Do() {
 }
 
 Format_LVM() {
-  (lvcreate $1 -n $2 -l 100%VG
   if [ "${3}" ];then
-    if ! lvcreate $1 -n $2 -l 100%VG -i ${3} -I 64;then
-      lvcreate $1 -n $2 -l 100%VG
-    fi;
+    (lvcreate $1 -n $2 -l 100%VG -i ${3} -I 64) >/dev/tty4 2>/dev/tty4
    else
-    lvcreate $1 -n $2 -l 100%VG
+    (lvcreate $1 -n $2 -l 100%VG) >/dev/tty4 2>/dev/tty4
   fi;
-  vgchange -a y $1
+  (vgchange -a y $1
   mkfs.ext4 -L $2 -j -v /dev/$1/$2 -L $2) >/dev/tty4 2>/dev/tty4
 }
 
 Fdisk() {
   if [ "${DSKS}" == "" ];then
+    sleep 5
     MDDSK=`ls /dev/md[a-z] 2>/dev/null`
     if [ "$MDDSK" ];then
       DSKS=$MDDSK
