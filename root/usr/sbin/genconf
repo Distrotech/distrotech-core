@@ -8765,7 +8765,11 @@ _EOB_
 
     @ipdat=split(/\|/,$interface{@rdata[9]});
     if ((@rdata[5] eq "Local") || (@rdata[5] eq "Proxy")) {
-      $localip="@ipdat[1]/32";
+      if (@ipdat[1] eq "") {
+        $localip="0/0";
+      } else {
+        $localip="@ipdat[1]/32";
+      }
     } else {
       $localip=@ipdat[1];
     }
