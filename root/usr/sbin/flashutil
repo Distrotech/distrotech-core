@@ -905,7 +905,7 @@ init_rd_drivers() {
    fi;
   done;
 
-  for kmod in isofs/isofs.ko.gz nls/nls_iso8859-1.ko.gz ext3 ext4 jbd jbd2 squashfs;do
+  for kmod in isofs/isofs.ko.gz nls/nls_iso8859-1.ko.gz ext3 ext4 jbd jbd2 squashfs fat nls/nls_cp437.ko.gz;do
     if [ -f ${2}lib/modules/${kernel}/kernel/fs/${kmod} ];then
       cp ${2}lib/modules/${kernel}/kernel/fs/${kmod} ${1}/lib/modules/${kernel}/drivers
      elif [ -d ${2}lib/modules/${kernel}/kernel/fs/${kmod} ];then
@@ -1216,6 +1216,7 @@ mount -t sysfs none /sys
 EOF
    elif [ "${3}" == "squashfs" ];then
     cat << EOF
+modprobe vfat
 /bin/mount -n -o ro -L DTS_INSTALL /isofs
 /sbin/losetup /dev/loop0 /isofs/distrotech/x86_64/install.img
 /bin/mount -n -o ro /dev/loop0 /sysroot
