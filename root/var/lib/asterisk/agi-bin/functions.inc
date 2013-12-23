@@ -157,6 +157,8 @@ function play_credit($usertoget) {
 function makenumint($phonenumber){
   if (substr($phonenumber,0,2) == "00") {
     $phonenumber=substr($phonenumber,2);
+  } else if (substr($phonenumber,0,1) == "+") {
+    $phonenumber=substr($phonenumber,1);
   } else if ((strlen($phonenumber) == "10") && (substr($phonenumber,0,2) != "00")){
     $phonenumber="27" . substr($phonenumber,1,9);
   } else if ((strlen($phonenumber) < 6) && (substr($phonenumber,0,2) != "00")){
