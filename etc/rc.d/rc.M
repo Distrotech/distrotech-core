@@ -30,6 +30,8 @@ for cservice in ipv6 ldap nfs interface;do
   fi;
 done
 
+dbus-daemon --system
+
 for mservice in /etc/rc.d/M.d/*;do
   ${mservice}
 done
