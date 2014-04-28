@@ -20,8 +20,8 @@
 export PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/libexec
 export LKERNEL=`/usr/bin/uname -r`
 
-#Mount PTY multiplexer  
-if [ ! -d /dev/pts ];then 
+#Mount PTY multiplexer
+if [ ! -d /dev/pts ];then
   mkdir /dev/pts
 fi;
 mount -t devpts none /dev/pts > /dev/null 2>&1
@@ -30,28 +30,28 @@ mount -t devpts none /dev/pts > /dev/null 2>&1
 if [ ! -d /dev/shm ];then
   mkdir /dev/shm
 fi;
-mount -t tmpfs none /dev/shm > /dev/null 2>&1  
-  
-#Link FD  
-if [ ! -e /dev/fd ];then  
+mount -t tmpfs none /dev/shm > /dev/null 2>&1
+
+#Link FD
+if [ ! -e /dev/fd ];then
   ln -s /proc/self/fd /dev
 fi;
 
 #Bring Up Loopback Device
 /sbin/ip addr add 127.0.0.1/8 dev lo
-/sbin/ip addr add 127.0.0.2/32 dev lo   
+/sbin/ip addr add 127.0.0.2/32 dev lo
 /sbin/ip link set dev lo up
- 
+
 #Setup Dummy Default Gateway
 (/sbin/modprobe dummy
-/sbin/ip addr add 127.255.255.253/30 dev dummy0  
+/sbin/ip addr add 127.255.255.253/30 dev dummy0
 /sbin/ip link set dev dummy0 up
 /sbin/ip route add 127.255.255.252/30 src 127.255.255.253 dev dummy0 scope link table 80) > /dev/null 2>&1
 
 if [ -e /etc/.install ];then
   /install/rc.d/rc.sysinit
  else
-  for startfile in /etc/rc.d/sysinit.d/*;do 
+  for startfile in /etc/rc.d/sysinit.d/*;do
     ${startfile}
   done
 fi;
