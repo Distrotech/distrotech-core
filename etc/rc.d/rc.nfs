@@ -45,5 +45,7 @@ chown -R 99 /var/lib/nfs/sm.bak
 if [ -x /etc/rc.d/rc.mount ];then 
   /etc/rc.d/rc.mount
 fi;
-/usr/sbin/exportfs -a
+if [ -e /etc/exports ];then
+  /usr/sbin/exportfs -a
+fi;
 mount -t nfs -a
