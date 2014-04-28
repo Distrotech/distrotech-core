@@ -18,7 +18,9 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #Start up firewall
-/etc/rc.d/rc.firewall startup > /dev/null 2>&1
+if [ -x /etc/rc.d/rc.firewall ];then
+  /etc/rc.d/rc.firewall startup > /dev/null 2>&1
+fi;
 
 #Start SSHD
 if [ ! -e /etc/ssh_host_key ];then
@@ -39,14 +41,18 @@ fi;
 if [ ! -e /etc/rndc.key ];then
   /usr/sbin/rndc-confgen -a -r /dev/urandom > /dev/null 2>&1
 fi;
-(ulimit -n 65535;/usr/sbin/named > /dev/null 2>&1) &
+if [ -e /etc/named.conf ];then
+  (ulimit -n 65535;/usr/sbin/named > /dev/null 2>&1) &
+fi;
 
 #Start DHCP As Soon As Posible
 if [ ! -d /var/state/dhcp ];then
   mkdir -p /var/state/dhcp
 fi;
 touch /var/state/dhcp/dhcpd.leases /var/state/dhcp/dhcpd6.leases
-(ulimit -n 65535;/usr/sbin/dhcpd > /dev/null 2>&1) &
+if [ -e /etc/dhcpd.conf ];then
+  (ulimit -n 65535;/usr/sbin/dhcpd > /dev/null 2>&1) &
+fi;
 
 #Start SNMP
 /usr/sbin/snmpd -c /etc/snmpd.conf UDP:161 UDP6:161

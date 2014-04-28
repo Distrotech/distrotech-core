@@ -20,7 +20,11 @@
 #Rescan / Activcate VG's
 /bin/mount -t ramfs none /var/lock/lvm
 /usr/sbin/vgchange -a y --sysinit
-/sbin/dmsetup mknodes
+if [ -x /usr/sbin/dmsetup ];then
+  /usr/sbin/dmsetup mknodes
+ elif [ -x /sbin/dmsetup ];then
+  /sbin/dmsetup mknodes
+fi;
 /usr/sbin/vgmknodes
 /bin/umount /var/lock/lvm
 
@@ -102,7 +106,9 @@ if [ -e /tmp/.fstab.new ];then
 fi;
 
 #Turn Swap On
-/sbin/swapon -a
+if [ -e /etc/fstab ];then
+  /sbin/swapon -a
+fi;
 
 #init utmp/wtmp/lastlog/ppplog
 rm /var/run/* /var/run/*/* /var/lock/* /var/lock/LCK*/* >/dev/null 2>&1
@@ -124,6 +130,6 @@ umount /initrd/sys
 umount /initrd/proc
 umount /initrd) > /dev/null 2>&1
 
-if [ ! -e /initrd/linuxrc ];then
+if [ ! -e /initrd/linuxrc ] && [ -e /dev/ram0 ];then
   blockdev --flushbufs /dev/ram0
 fi;

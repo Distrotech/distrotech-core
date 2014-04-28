@@ -38,11 +38,19 @@ fi;
 if [ ! -d /run/udev ];then
   mkdir -p /run/udev
 fi;
-/libexec/udev/udevd --daemon
+
+if [ ! -d /etc/udev ];then
+  mkdir -p /etc/udev
+fi;
+
+if [ -x /usr/lib/systemd/systemd-udevd ];then
+  /usr/lib/systemd/systemd-udevd --daemon
+ elif [ -x /libexec/udev/udevd ];then
+  /libexec/udev/udevd --daemon
+fi;
 
 #Fire Up Device Discovery And Initilise Devices
-(/bin/udevadm trigger
-/bin/udevadm settle) >/dev/null 2>&1
+(udevadm trigger && udevadm settle) >/dev/null 2>&1
 
 #Configure And Load Zap Channels
 if [ -x /etc/rc.d/rc.wanpipe ];then
