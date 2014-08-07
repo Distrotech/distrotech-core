@@ -2169,6 +2169,14 @@ echo "UPDATE realm SET domain='$dnsconf{'Domain'}' WHERE id=0;" |/usr/bin/psql -
 127.0.0.1:5432:*:exchange:$exchangepass
 127.0.0.1:5432:*:asterisk:$sqlvoippass
 127.0.0.1:5432:*:phpgw:phpgw
+local:5432:*:pgsql:$pgadminpass
+local:5432:*:exchange:$exchangepass
+local:5432:*:asterisk:$sqlvoippass
+local:5432:*:phpgw:phpgw
+localhost:5432:*:pgsql:$pgadminpass
+localhost:5432:*:exchange:$exchangepass
+localhost:5432:*:asterisk:$sqlvoippass
+localhost:5432:*:phpgw:phpgw
 EOF
 )> /root/.pgpass
 chmod 600 /root/.pgpass
@@ -7439,7 +7447,7 @@ __EOB__
 /sbin/iptables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 3306
 
 #PGSQL
-/sbin/iptables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 5432
+/sbin/iptables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 5432:5439
 
 #Orb
 /sbin/iptables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 2809
@@ -7584,7 +7592,7 @@ __EOR__
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 3306
 
 #PGSQL
-/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 5432
+/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 5432:5439
 
 #Orb
 /sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 2809
@@ -7687,6 +7695,13 @@ __EOR__
   push(@bludp,"123");
   push(@bltcp,"3306");
   push(@bltcp,"5432");
+  push(@bltcp,"5433");
+  push(@bltcp,"5434");
+  push(@bltcp,"5435");
+  push(@bltcp,"5436");
+  push(@bltcp,"5437");
+  push(@bltcp,"5438");
+  push(@bltcp,"5439");
   push(@bltcp,"2809");
   push(@bludp,"520");
   push(@bltcp,"179");
@@ -14450,8 +14465,8 @@ BDATE=`date +%Y-%m-%d`
 BFILE=/var/spool/backup/backup-\${BDATE}.tar
 
 if [ `"whoami"` == "root" ] || [ `"whoami"` == "admin" ];then
-  /usr/bin/pg_dump -U asterisk -h 127.0.0.1 -aDt users -t interbranch -t atatable -t qfeatures -t features -t astdb -t queues -t queue_members \
-                   -t queue_table -t dynspan -t zapspan -t zapchan -t zapgroup -t gsmchannels -t provider -t speed_dial \
+  /usr/bin/pg_dump -U asterisk -h 127.0.0.1 -cDt users -t interbranch -t atatable -t qfeatures -t features -t astdb -t queues -t queue_members \\
+                   -t queue_table -t dynspan -t zapspan -t zapchan -t zapgroup -t gsmchannels -t provider -t speed_dial \\
                    -t trunk -t officehours -t cc_callerid |/usr/bin/grep -vE "(^\$)|(^--)" |/usr/bin/gzip -c > /var/spool/backup/pbxdata-\${BDATE}.sql.gz
 fi;
 
@@ -17687,7 +17702,7 @@ __EOB__
     }
 
     if ($nodefault) {
-      print SIX24 "/sbin/ip -6 route add 2002::/16 dev sit0 metric 1 > /dev/null 2>&1\n";
+      print SIX24 "/sbin/ip -6 route add 2002::/16 dev sit1 metric 1 > /dev/null 2>&1\n";
     }
 
     print SIX24 <<__EOB__;
