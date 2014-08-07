@@ -25,47 +25,65 @@ fi;
 TZ=`ls -l /etc/localtime |awk -F/ '{printf "%s/%s\n",$7,$8}'`
 export TZ
 
-if [ "$1" ];then
-  export PGDATA=$1
+if [ ! -e /etc/pgpool/pgpool.conf ];then
+  PGPORT=5432;
  else
-  export PGDATA=/var/spool/pgsql
+  PGPORT=5433;
 fi;
+PGDATA=/var/spool/pgsql
+
+export PGDATA PGPORT
 
 Create_HBA() {
   (cat <<__EOF__
-host    exchange        exchange        127.0.0.1       255.255.255.255 md5
-host    asterisk        asterisk        127.0.0.1       255.255.255.255 md5
-host    horde           horde           127.0.0.1       255.255.255.255 md5
-host    radius          radius          127.0.0.1       255.255.255.255 md5
-host    phpgw           phpgw           127.0.0.1       255.255.255.255 md5
-host    all             pgsql           127.0.0.1       255.255.255.255 md5
-hostssl asterisk        asterisk        0.0.0.0         0.0.0.0         md5
-hostssl horde           horde           0.0.0.0         0.0.0.0         md5
-hostssl radius          radius          0.0.0.0         0.0.0.0         md5
-local   all             pgsql                                           md5
-local   asterisk        asterisk                                        md5
+host    exchange        exchange        127.0.0.1/32 password
+host    asterisk        asterisk        127.0.0.1/32 password
+host    horde           horde           127.0.0.1/32 password
+host    radius          radius          127.0.0.1/32 password
+host    phpgw           phpgw           127.0.0.1/32 password
+host    all             pgsql           127.0.0.1/32 password
+hostssl asterisk        asterisk        0.0.0.0/0    password
+hostssl horde           horde           0.0.0.0/0    password
+hostssl radius          radius          0.0.0.0/0    password
+local   all             pgsql                        password
+local   asterisk        asterisk                     password
+local   replication     pgsql                        trust
+hostssl replication     pgsql           127.0.0.1/32 trust
+hostssl replication     pgsql           ::1/128      trust
 __EOF__
 if [ -e /etc/asterisk/pgsql.access ];then
   for accessip in `cat /etc/asterisk/pgsql.access`;do
     cat <<__EOF__
-hostssl    exchange        exchange        $accessip   255.255.255.255 md5
-hostssl    asterisk        asterisk        $accessip   255.255.255.255 md5
-hostssl    horde           horde           $accessip   255.255.255.255 md5
-hostssl    radius          radius          $accessip   255.255.255.255 md5
-hostssl    phpgw           phpgw           $accessip   255.255.255.255 md5
-hostssl    all             pgsql           $accessip   255.255.255.255 md5
+hostssl    exchange        exchange        ${accessip}/32 password
+hostssl    asterisk        asterisk        ${accessip}/32 password
+hostssl    horde           horde           ${accessip}/32 password
+hostssl    radius          radius          ${accessip}/32 password
+hostssl    phpgw           phpgw           ${accessip}/32 password
+hostssl    all             pgsql           ${accessip}/32 password
 __EOF__
   done;
 fi;
 if [ -e /etc/asterisk/pgsql.local ];then
   cat /etc/asterisk/pgsql.local
 fi;
-) > "$PGDATA/pg_hba.conf"
+) > ${PGDATA}/pg_hba.conf
 }
 
-TIME=`date +%s`
+setup_dbs() {
+  if [ ! -e ${PGDATA}/asterisk.db ] && [ -e /etc/asterisk/astschema.psql.gz ];then
+    zcat /etc/asterisk/astschema.psql.gz |psql -p ${PGPORT} -U pgsql -f - template1 >/dev/null 2>&1 && touch ${PGDATA}/asterisk.db
+  fi;
 
-if [ -d $PGDATA ];then
+  if [ -e /etc/sogo.sql ] && [ ! -e ${PGDATA}/exchange.db ];then
+    cat /etc/sogo.sql |psql -p ${PGPORT} -U pgsql -d exchange -f - template1 > /dev/null 2>&1 && touch ${PGDATA}/exchange.db
+  fi;
+
+  if [ ! -e ${PGDATA}/radius.db ] && [ -e /etc/raddb/db_postgresql.sql.gz ];then
+    zcat /etc/raddb/db_postgresql.sql.gz |psql -p ${PGPORT} -U pgsql -f - template1 > /dev/null 2>&1 && touch ${PGDATA}/radius.db
+  fi;
+}
+
+check_sslcert() {
   if [ ! -e $PGDATA/server.crt ] || [ ! -e $PGDATA/server.key ] || [ "`diff /etc/openssl/server.signed.pem $PGDATA/server.crt`" ] || [ "`diff /etc/openssl/serverkey.pem $PGDATA/server.key`" ];then
     cp /etc/openssl/server.signed.pem $PGDATA/server.crt
     cp /etc/openssl/serverkey.pem $PGDATA/server.key
@@ -73,28 +91,99 @@ if [ -d $PGDATA ];then
     chmod 400 $PGDATA/server.crt $PGDATA/server.key
   fi;
   if [ ! "`openssl verify -CApath /etc/ipsec.d/certs $PGDATA/server.crt |grep OK`" ];then
-    exit;
+    return 1
   fi;
+}
 
-  su pgsql -c "/usr/bin/pg_ctl status" >/dev/null 2>&1
+setup_pgpass() {
+  (cat <<__EOF__
+127.0.0.1:5432:*:pgsql:pgadmin
+127.0.0.1:5432:*:exchange:exchange
+127.0.0.1:5432:*:asterisk:asterisk
+127.0.0.1:5432:*:horde:horde
+127.0.0.1:5432:*:radius:radius
+127.0.0.1:5432:*:phpgw:phpgw
+local:5432:*:pgsql:pgadmin
+local:5432:*:exchange:exchange
+local:5432:*:asterisk:asterisk
+local:5432:*:horde:horde
+local:5432:*:radius:radius
+local:5432:*:phpgw:phpgw
+localhost:5432:*:pgsql:pgadmin
+localhost:5432:*:exchange:exchange
+localhost:5432:*:asterisk:asterisk
+localhost:5432:*:horde:horde
+localhost:5432:*:radius:radius
+localhost:5432:*:phpgw:phpgw
+__EOF__
+) > /root/.pgpass
+  chmod 600 /root/.pgpass
+  chown root.root /root/.pgpass
+}
+
+do_stop_db() {
+  su pgsql -c "/usr/bin/pg_ctl -D ${1} status" >/dev/null 2>&1
   if [ $? == 0 ];then
-    su pgsql -c "/usr/bin/pg_ctl -m immediate stop" > /dev/null 2>&1
+    su pgsql -c "/usr/bin/pg_ctl -D ${1} -m immediate stop" > /dev/null 2>&1
+    sleep 2;
+  fi;
+}
+
+stop_db() {
+  if [ -e /etc/pgpool/pgpool.conf ];then
+    pgpool -m i stop
+  fi;
+  if [ -d /srv/pgsql ];then
+    for SERVDIR in /srv/pgsql/slave*;do
+      do_stop_db ${SERVDIR}
+    done
+  fi;
+  do_stop_db ${PGDATA}
+}
+
+start_db() {
+  Create_HBA ${PGDATA}
+  su pgsql -c "/usr/bin/pg_ctl -D $PGDATA start" > /dev/null 2>&1
+  if [ -d /srv/pgsql ];then
+    for SERVDIR in /srv/pgsql/slave*;do
+      Create_HBA ${SERVDIR}
+      su pgsql -c "pg_ctl -D ${SERVDIR} start" > /dev/null 2>&1
+    done;
+  fi;
+  if [ -e /etc/pgpool/pgpool.conf ];then
+    sleep 5
+    pgpool
+  fi;
+}
+
+create_db() {
+  if [ ! -d ${PGDATA} ];then
+    mkdir $PGDATA
+    chown pgsql.pgsql $PGDATA
+  fi;
+  su pgsql -c /usr/bin/initdb > /dev/null 2>&1
+ 
+  check_sslcert
+  if [ $? != 0 ];then
+    rm -rf ${PGDATA}
+    exit
   fi;
 
-  (ps ax |grep "python Server.pyc" |awk '{print "kill -9 "$1}'  |sh)>/dev/null 2>&1
-  NEWCFG=0
- else
-  mkdir $PGDATA
-  chown pgsql.pgsql $PGDATA
+  (cat <<__EOF__
+port = ${PGPORT}
+wal_level = 'hot_standby'
+max_wal_senders = 5
+hot_standby = on
+listen_addresses = '*'
+ssl= on
+__EOF__
+) >> ${PGDATA}/postgresql.conf
 
-  su pgsql -c /usr/bin/initdb > /dev/null 2>&1
-
-  rm /tmp/.s.PGSQL* > /dev/null 2>&1
-
-  cp /etc/openssl/server.signed.pem $PGDATA/server.crt
-  cp /etc/openssl/serverkey.pem $PGDATA/server.key
-  chown pgsql $PGDATA/server.crt $PGDATA/server.key
-  chmod 400 $PGDATA/server.crt $PGDATA/server.key
+  (cat <<__EOF__
+host    all             pgsql           127.0.0.1       255.255.255.255 trust
+local   all             pgsql                                           trust
+__EOF__
+) > "$PGDATA/pg_hba.conf"
 
   su pgsql -c "/usr/bin/pg_ctl -D $PGDATA start" > /dev/null 2>&1
   sleep 2
@@ -112,136 +201,21 @@ CREATE DATABASE radius WITH OWNER = radius;
 CREATE DATABASE horde WITH OWNER = horde;
 ALTER USER pgsql WITH PASSWORD 'pgadmin';
 __EOF__
-) |/usr/bin/psql -U pgsql -f - template1> /dev/null 2>&1
+) |/usr/bin/psql -p ${PGPORT} -U pgsql -f - template1> /dev/null 2>&1
 
-  sed -e "s/#listen_addresses.*/listen_addresses = '*'/" -e "s/#ssl.*/ssl= on/" "$PGDATA/postgresql.conf" > /tmp/pg.cnf
-  cp /tmp/pg.cnf "$PGDATA/postgresql.conf"
-  rm /tmp/pg.cnf
+  setup_pgpass
+  setup_dbs
 
-  (cat <<__EOF__
-host    exchange        exchange        127.0.0.1       255.255.255.255 trust
-host    template1       exchange        127.0.0.1       255.255.255.255 trust
-host    asterisk        asterisk        127.0.0.1       255.255.255.255 trust
-host    horde           horde           127.0.0.1       255.255.255.255 trust
-host    radius          radius          127.0.0.1       255.255.255.255 trust
-host    phpgw           phpgw           127.0.0.1       255.255.255.255 trust
-host    all             pgsql           127.0.0.1       255.255.255.255 trust
-local   all             pgsql                                           trust
-__EOF__
-  ) > "$PGDATA/pg_hba.conf"
+  stop_db
+  start_db
+}
 
-  su pgsql -c "/usr/bin/pg_ctl -D $PGDATA reload" > /dev/null 2>&1
+if [ -e ${PGDATA}/postgresql.conf ];then
+  check_sslcert || exit
 
-  echo "127.0.0.1:5432:*:pgsql:pgadmin" > /root/.pgpass
-  echo "127.0.0.1:5432:*:exchange:exchange" >> /root/.pgpass
-  echo "127.0.0.1:5432:*:asterisk:asterisk" >> /root/.pgpass
-  echo "127.0.0.1:5432:*:horde:horde" >> /root/.pgpass
-  echo "127.0.0.1:5432:*:radius:radius" >> /root/.pgpass
-  echo "127.0.0.1:5432:*:phpgw:phpgw" >> /root/.pgpass
-  chmod 600 /root/.pgpass
-  chown root.root /root/.pgpass
-
-  su pgsql -c "/usr/bin/pg_ctl -D $PGDATA stop" > /dev/null 2>&1
-  rm /tmp/.s.PGSQL.5432* > /dev/null 2>&1
-  NEWCFG=1
-fi;
-
-Create_HBA;
-su pgsql -c "/usr/bin/pg_ctl -D $PGDATA start" > /dev/null 2>&1
-
-if [ ! -e /var/spool/pgsql/asterisk.db ];then
-  sleep 2
-  (cat <<__EOF__
-host    asterisk        asterisk        127.0.0.1       255.255.255.255 trust
-local   asterisk        asterisk                                        trust
-local   all             pgsql                                           trust
-__EOF__
-) > "$PGDATA/pg_hba.conf"
-
-  su pgsql -c "/usr/bin/pg_ctl -D $PGDATA reload" > /dev/null 2>&1
-
-  if [ ! "`grep asterisk /root/.pgpass`" ];then
-    echo "127.0.0.1:5432:*:asterisk:asterisk" >> /root/.pgpass
-  fi;
-
-  if [ -e /etc/asterisk/astschema.psql.gz ];then
-    zcat /etc/asterisk/astschema.psql.gz |psql -U pgsql -f - template1 > /dev/null 2>&1
-    touch /var/spool/pgsql/asterisk.db
-  fi;
-
-  if [ -e /etc/sogo.sql ];then
-    cat /etc/sogo.sql |psql -U pgsql -d exchange -f - template1 > /dev/null 2>&1
-    touch /var/spool/pgsql/exchange.db
-  fi;
-
-  Create_HBA
-  su pgsql -c "/usr/bin/pg_ctl -D $PGDATA reload" > /dev/null 2>&1
-  sleep 2
-fi;
-
-if [ ! -e /var/spool/pgsql/radius.db ];then
-  sleep 2
-  (cat <<__EOF__
-host    radius          radius          127.0.0.1       255.255.255.255 trust
-local   radius          radius                                          trust
-local   all             pgsql                                           trust
-__EOF__
-) > "$PGDATA/pg_hba.conf"
-
-  su pgsql -c "/usr/bin/pg_ctl -D $PGDATA reload" > /dev/null 2>&1
-
-  if [ ! "`grep radius /root/.pgpass`" ];then
-    echo "127.0.0.1:5432:*:radius:radius" >> /root/.pgpass
-  fi;
-
-  if [ -e /etc/raddb/db_postgresql.sql.gz ];then
-    zcat /etc/raddb/db_postgresql.sql.gz |psql -U pgsql -f - template1 > /dev/null 2>&1
-    touch /var/spool/pgsql/radius.db
-  fi;
-
-  Create_HBA
-  su pgsql -c "/usr/bin/pg_ctl -D $PGDATA reload" > /dev/null 2>&1
-  sleep 2
-fi;
-
-
-if [ ! -e /var/spool/pgsql/phpgw.db ];then
-  sleep 2
-  (cat <<__EOF__
-host    asterisk        phpgw           127.0.0.1       255.255.255.255 trust
-local   asterisk        phpgw                                           trust
-local   all             pgsql                                           trust
-__EOF__
-) > "$PGDATA/pg_hba.conf"
-
-  su pgsql -c "/usr/bin/pg_ctl -D $PGDATA reload" > /dev/null 2>&1
-
-  (cat <<__EOF__
-CREATE USER phpgw WITH ENCRYPTED PASSWORD 'phpgw';
-CREATE DATABASE phpgw WITH OWNER = phpgw;
-__EOF__
-) | psql -U pgsql -f - template1
-
-if [ ! "`grep phpgw /root/.pgpass`" ];then
-  echo "127.0.0.1:5432:*:phpgw:phpgw" >> /root/.pgpass
-fi;
-
-  touch /var/spool/pgsql/phpgw.db
-  Create_HBA
-  su pgsql -c "/usr/bin/pg_ctl -D $PGDATA reload" > /dev/null 2>&1
-  sleep 2;
-fi;
-
-if [ "`pidof asterisk`" ] && [ -e "/root/.odbc.ini" ];then
-  asterisk -rx "odbc connect Asterisk";
-fi
-
-if [ "${NEWCFG}" == "1" ];then
-  sed -e "s/^\(max_connections =\) [0-9]\+\(.*\)/\1 512\2/" -e "s/^\(shared_buffers =\) [0-9]\+\(.*\)/\1 18\2/" \
-      -e "s/^#\(escape_string_warning\).*/\1 = off/" ${INST_BASE}/var/spool/pgsql/postgresql.conf > /tmp/postgresql.conf
-  if [ -s /tmp/postgresql.conf ];then
-    mv /tmp/postgresql.conf ${INST_BASE}/var/spool/pgsql/postgresql.conf
-   else
-    rm /tmp/postgresql.conf
-  fi;
+  stop_db
+  start_db
+  setup_dbs
+ else
+  create_db
 fi;
