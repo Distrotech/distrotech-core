@@ -3945,7 +3945,12 @@ fi;
 if [ ! \"`/bin/pidof sendmail`\" ];then
   #Check Statistics File
   if [ ! -e /var/db/sendmail.statistics ];then
-    mv /etc/mail/statistics /var/db/sendmail.statistics
+    if [ ! -h /etc/mail/statistics ];then
+      mv /etc/mail/statistics /var/db/sendmail.statistics
+     else
+      rm /var/db/sendmail.statistics
+      touch /var/db/sendmail.statistics
+    fi;
     ln -s /var/db/sendmail.statistics /etc/mail/statistics
   fi;
 __EOB__
@@ -3960,7 +3965,6 @@ __EOB__
       print RM "  /usr/sbin/sendmail -bd -ODeliveryMode=$qm -OQueueDirectory=/var/spool/mqueue.in > /dev/null 2>&1 &";
     }
   }
-
 
   if ( -e "/usr/sbin/dovecot") {
     print RM "\n\nfi;\n\n#Startup POP3/IMAP Service\n";
