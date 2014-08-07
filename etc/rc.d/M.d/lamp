@@ -31,11 +31,13 @@ fi;
 if [ -d /var/spool/apache/htdocs/mrtg ];then
   chown -R www.www /var/spool/apache/htdocs/mrtg
 fi;
+
 if [ ! -e /etc/.install ];then
    if [ -x /usr/sbin/webserver ];then
      /usr/sbin/webserver start >/dev/null 2>&1
    fi;
 fi;
+
 TST="";
 while [ "${TST}" != "XXXXXX" ] && [ ! -e /tmp/mysql.sock ];do
   sleep 1;
