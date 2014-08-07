@@ -2501,24 +2501,22 @@ modulepath /usr/libexec/openldap
 __EOB__
 
   if ($repurl eq "" ){
-    if ((( ! -e "/var/spool/ldap/usehdb" ) || (! -e "/var/spool/ldap/id2entry.bdb")) && ( -d "/var/spool/ldap" )) {
-      print SC "moduleload back_bdb.la\n";
+    if (( ! -e "/var/spool/ldap/usehdb" ) && (-e "/var/spool/ldap/id2entry.bdb") && ( -d "/var/spool/ldap" )) {
       $dbtype="bdb";
+    } elsif ((-e "/var/spool/ldap/usemdb" ) || (-e "/var/spool/ldap/data.mdb")) {
+      $dbtype="mdb";
     } else {
       $dbtype="hdb";
     }
-    print SC<<__EOB__;
-moduleload back_hdb.la
-moduleload syncprov.la
-moduleload accesslog.la
-__EOB__
   } else {
-    print SC<<__EOB__;
-moduleload back_hdb.la
+    $dbtype="mdb";
+  }
+
+  print SC<<__EOB__;
+moduleload back_${dbtype}.la
 moduleload syncprov.la
 moduleload accesslog.la
 __EOB__
-  }
 
 $rootdn=$ldapserv{'Login'} . "," . $vsuf;
 $anondn=$ldapserv{'limited'};
@@ -3653,13 +3651,18 @@ __EOB__
 
 #  if ($repurl eq "" ){
     print SC<<__EOB__;
-database        hdb
+database        ${dbtype}
 suffix          "ou=Log"
 directory       /var/log/ldap
 rootdn          uid=admin,ou=Log
 index           default eq
 index           entryCSN,objectClass,reqEnd,reqResult,reqStart eq
 index           reqDN               eq
+__EOB__
+  if (${dbtype} eq "mdb") {
+    print SC "maxsize         2097152\n";
+  }
+  print SC<<__EOB__;
 
 overlay syncprov
 syncprov-nopresent TRUE
@@ -3673,14 +3676,18 @@ __EOB__
   }
 
   print SC<<__EOB__;
-database        hdb
+database        ${dbtype}
 suffix		""
 directory	/var/spool/ldap
 lastmod         on
 rootdn          $ldapserv{'Login'}
-cachesize	10000
-cachefree	10
-idlcachesize	30000
+__EOB__
+  if (${dbtype} eq "mdb") {
+    print SC "maxsize         2097152\n";
+  } else {
+    print SC "cachesize      10000\ncachefree      10\nidlcachesize   30000\n";
+  }
+  print SC<<__EOB__;
 
 index           uid                     pres,sub,eq
 index           uidNumber               pres,eq
@@ -3994,7 +4001,7 @@ __EOB__
     print RM "  killall -9 dovecot-sogo) > /dev/null 2>&1\n";
     print RM "fi\n\n";
 
-    print RM "if [ -e /etc/dovecot/dovecot-sogo.conf ] && [ ! \"`/bin/pidof dovecot-sogo`\" ] && [ \"\$1\" != \"sendmail\" ];then\n";
+    print RM "if [ ! -e /etc/.lowmem ] && [ -e /etc/dovecot/dovecot-sogo.conf ] && [ ! \"`/bin/pidof dovecot-sogo`\" ] && [ \"\$1\" != \"sendmail\" ];then\n";
     print RM "  if [ -e /var/run/dovecot-sogo/master.pid ];then\n";
     print RM "    rm /var/run/dovecot-sogo/master.pid\n";
     print RM "  fi;\n\n";
@@ -10326,6 +10333,8 @@ if ( -d "/usr/share/squid/errors/en") {
   $squiderrdir="/usr/share/squid/errors/en";
 } elsif ( -d "/usr/share/squid/errors/English") {
   $squiderrdir="/usr/share/squid/errors/English";
+} elsif ( -d "/usr/share/squid/errors/templates/") {
+  $squiderrdir="/usr/share/squid/errors/templates/";
 } else {
   $squiderrdir="/etc/squid/errors"
 }
