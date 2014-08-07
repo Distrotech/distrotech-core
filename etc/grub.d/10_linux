@@ -17,6 +17,13 @@ set -e
 # You should have received a copy of the GNU General Public License
 # along with GRUB.  If not, see <http://www.gnu.org/licenses/>.
 
+if [ -e ${1}/etc/netsentry-version ];then
+  eval `cat ${1}/etc/netsentry-version`
+ else
+  eval `cat ${1}/install/netsentry-version`
+fi;
+GRUB_DISTRIBUTOR=${BRAND}
+
 prefix=/usr
 exec_prefix=${prefix}
 bindir=${exec_prefix}/bin
@@ -72,7 +79,7 @@ linux_entry ()
   fi
   printf "menuentry '${title}' ${CLASS} {\n" "${os}" "${version}"
   if ! ${recovery} ; then
-      save_default_entry | sed -e "s/^/\t/"
+      save_default_entry | sed -e "s/^/        /"
   fi
 
   # Use ELILO's generic "efifb" when it's known to be available.
@@ -104,12 +111,12 @@ EOF
 
   if [ x$dirname = x/ ]; then
     if [ -z "${prepare_root_cache}" ]; then
-      prepare_root_cache="$(prepare_grub_to_access_device ${GRUB_DEVICE} | sed -e "s/^/\t/")"
+      prepare_root_cache="$(prepare_grub_to_access_device ${GRUB_DEVICE} | sed -e "s/^/        /")"
     fi
     printf '%s\n' "${prepare_root_cache}"
   else
     if [ -z "${prepare_boot_cache}" ]; then
-      prepare_boot_cache="$(prepare_grub_to_access_device ${GRUB_DEVICE_BOOT} | sed -e "s/^/\t/")"
+      prepare_boot_cache="$(prepare_grub_to_access_device ${GRUB_DEVICE_BOOT} | sed -e "s/^/        /")"
     fi
     printf '%s\n' "${prepare_boot_cache}"
   fi
@@ -132,11 +139,11 @@ EOF
 
 case x`uname -m` in
     xi?86 | xx86_64)
-	list=`for i in /boot/vmlinuz-* /vmlinuz-* /boot/kernel-* ; do
+	list=`for i in /boot/vmlinuz-*${KERNEL}* /vmlinuz-*${KERNEL}* /boot/kernel-*${KERNEL}* ; do
                   if grub_file_is_not_garbage "$i" ; then echo -n "$i " ; fi
               done` ;;
     *) 
-	list=`for i in /boot/vmlinuz-* /boot/vmlinux-* /vmlinuz-* /vmlinux-* /boot/kernel-* ; do
+	list=`for i in /boot/vmlinuz-*${KERNEL}* /boot/vmlinux-*${KERNEL}* /vmlinuz-*${KERNEL}* /vmlinux-*${KERNEL}* /boot/kernel-*${KERNEL}* ; do
                   if grub_file_is_not_garbage "$i" ; then echo -n "$i " ; fi
 	     done` ;;
 esac
@@ -189,10 +196,10 @@ while [ "x$list" != "x" ] ; do
   fi
 
   linux_entry "${OS}" "${version}" false \
-      "${GRUB_CMDLINE_LINUX} ${GRUB_CMDLINE_LINUX_DEFAULT}"
+      "quiet ${GRUB_CMDLINE_LINUX} ${GRUB_CMDLINE_LINUX_DEFAULT}"
   if [ "x${GRUB_DISABLE_RECOVERY}" != "xtrue" ]; then
     linux_entry "${OS}" "${version}" true \
-	"single ${GRUB_CMDLINE_LINUX}"
+	"quiet single ${GRUB_CMDLINE_LINUX}"
   fi
 
   list=`echo $list | tr ' ' '\n' | grep -vx $linux | tr '\n' ' '`
