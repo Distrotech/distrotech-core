@@ -339,9 +339,9 @@ if ($authtype > 0) {
   $voip[_("Extension Template")]="/cdr/extenimport.zip";
   $voip[_("Group Access Control")]=openpage("voip","cdr/gauth.php");
   $voip[_("Callshop Setup")]="include:callshop";
-  $callshop[_("VOIP Providers")]=openpage("callshop","/cdr/csprovider.php");
-  $callshop[_("VOIP Gateways")]=openpage("callshop","/cdr/h323peer.php");
-  $callshop[_("VOIP Neighbours")]=openpage("callshop","/cdr/h323neigh.php");
+  $callshop[_("VOIP Providers")]=openpage("callshop","cdr/csprovider.php");
+  $callshop[_("VOIP Gateways")]=openpage("callshop","cdr/h323peer.php");
+  $callshop[_("VOIP Neighbours")]=openpage("callshop","cdr/h323neigh.php");
 };
 
 

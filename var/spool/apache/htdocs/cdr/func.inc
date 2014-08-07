@@ -114,7 +114,7 @@ SELECT starttime,uniqueid,sessiontime,case when (substr(calledstation,1,2)='27')
 */
     $callquery="INSERT INTO trunkcost SELECT DISTINCT ON (call.uniqueid) call.uniqueid,
       fn_calldist('0'||substr(calledstation,3),'" . $expos[0] . "'),
-      CASE WHEN(to_char(starttime, 'HH24:MI:SS') >= peakstart AND to_char(starttime, 'HH24:MI:SS') <= peakend AND extract('dow' FROM starttime) ~ peakdays ) THEN
+      CASE WHEN(CAST(to_char(starttime, 'HH24:MI:SS') AS time) >= peakstart AND CAST(to_char(starttime, 'HH24:MI:SS') AS time) <= peakend AND CAST(extract('dow' FROM starttime) AS varchar) ~ peakdays ) THEN
              fn_natcallcost(peakmin,peaksec,peakperiod,sessiontime)
            ELSE
              fn_natcallcost(offpeakmin,offpeaksec,offpeakperiod,sessiontime)
@@ -135,8 +135,8 @@ SELECT starttime,uniqueid,sessiontime,case when (substr(calledstation,1,2)='27')
 //    print $callquery . "\n";
 
     $callquery2="INSERT INTO trunkcost SELECT DISTINCT ON (call.uniqueid) call.uniqueid,-1,
-           CASE WHEN(to_char(starttime, 'HH24:MI:SS') >= peakstart AND to_char(starttime, 'HH24:MI:SS') <= peakend AND
-                     extract('dow' FROM starttime) ~ peakdays ) THEN
+           CASE WHEN(CAST(to_char(starttime, 'HH24:MI:SS') AS time) >= peakstart AND CAST(to_char(starttime, 'HH24:MI:SS') AS time) <= peakend AND
+                     CAST(extract('dow' FROM starttime) AS varchar) ~ peakdays ) THEN
              fn_natcallcost(peakmin,peaksec,peakperiod,sessiontime)
            ELSE
              fn_natcallcost(offpeakmin,offpeaksec,offpeakperiod,sessiontime)
@@ -156,8 +156,8 @@ SELECT starttime,uniqueid,sessiontime,case when (substr(calledstation,1,2)='27')
 
     $upquery="INSERT INTO trunkcost SELECT DISTINCT ON (cdr.uniqueid) cdr.uniqueid,fn_calldist(userfield,'" . $expos[0] . "'),
          CASE WHEN (cdr.dstchannel ~ '" . $trunkchan . "|(^Local/)') AND dst != 's' THEN
-           CASE WHEN(to_char(calldate, 'HH24:MI:SS') >= peakstart AND to_char(calldate, 'HH24:MI:SS') <= peakend AND
-                     extract('dow' FROM calldate) ~ peakdays ) THEN
+           CASE WHEN(CAST(to_char(calldate, 'HH24:MI:SS') AS time) >= peakstart AND CAST(to_char(calldate, 'HH24:MI:SS') AS time) <= peakend AND
+                     CAST(extract('dow' FROM calldate) AS varchar) ~ peakdays ) THEN
              fn_natcallcost(peakmin,peaksec,peakperiod,billsec)
            ELSE
              fn_natcallcost(offpeakmin,offpeaksec,offpeakperiod,billsec)
@@ -182,8 +182,8 @@ SELECT starttime,uniqueid,sessiontime,case when (substr(calledstation,1,2)='27')
 
     $upquery2="INSERT INTO trunkcost SELECT DISTINCT ON (cdr.uniqueid) cdr.uniqueid,-1,
          CASE WHEN (cdr.dstchannel ~ '" . $trunkchan . "|(^Local/)') AND dst != 's' THEN
-           CASE WHEN(to_char(calldate, 'HH24:MI:SS') >= peakstart AND to_char(calldate, 'HH24:MI:SS') <= peakend AND
-                     extract('dow' FROM calldate) ~ peakdays ) THEN
+           CASE WHEN(CAST(to_char(calldate, 'HH24:MI:SS') AS time) >= peakstart AND CAST(to_char(calldate, 'HH24:MI:SS') AS time) <= peakend AND
+                     CAST(extract('dow' FROM calldate) AS varchar) ~ peakdays ) THEN
              fn_natcallcost(peakmin,peaksec,peakperiod,billsec)
            ELSE
              fn_natcallcost(offpeakmin,offpeaksec,offpeakperiod,billsec)

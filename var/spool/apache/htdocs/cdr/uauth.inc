@@ -10,13 +10,15 @@
   }
 
   $clogacl="(bgrp.value != '' AND bgrp.value IS NOT NULL AND (";
-  $grpsq=pg_query($db,"SELECT astdb.family FROM astdb  WHERE astdb.value='GAUTH' AND key='" . $ldn . "'");
-  $numrow=pg_num_rows($grpsq);
-  for($i=0;$i < $numrow;$i++){
-    list($grpacc)=pg_fetch_array($grpsq,$i);
-    $clogacl.=" bgrp.value = '" . $grpacc . "'";
-    if ($i < ($numrow-1)) {
-     $clogacl.= " OR";
+  if ($PHP_AUTH_USER != "admin") {
+    $grpsq=pg_query($db,"SELECT astdb.family FROM astdb  WHERE astdb.value='GAUTH' AND key='" . $ldn . "'");
+    $numrow=pg_num_rows($grpsq);
+    for($i=0;$i < $numrow;$i++){
+      list($grpacc)=pg_fetch_array($grpsq,$i);
+      $clogacl.=" bgrp.value = '" . $grpacc . "'";
+      if ($i < ($numrow-1)) {
+       $clogacl.= " OR";
+      }
     }
   }
   $clogacl.="))";
@@ -42,6 +44,9 @@
   $allowgrp['cdr/logged.php']="(cn=Call Logging)(cn=Voip Admin)";
   $allowgrp['cdr/calllist.php']="(cn=Call Logging)(cn=Voip Admin)";
   $allowgrp['cdr/gauth.php']="(cn=Voip Admin)";
+  $allowgrp['cdr/csprovider.php']="(cn=Voip Admin)";
+  $allowgrp['cdr/h323peer.php']="(cn=Voip Admin)";
+  $allowgrp['cdr/h323neigh.php']="(cn=Voip Admin)";
   $allowgrp['cdr/snomload.php']="(cn=Admin Access)(cn=Voip Admin)";
 
   //must check both ...
