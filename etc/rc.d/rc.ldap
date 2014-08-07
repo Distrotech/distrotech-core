@@ -12,6 +12,7 @@ fi;
 
 if [ ! -d /var/spool/ldap ];then
   /bin/mkdir /var/spool/ldap;
+  /bin/touch /var/spool/ldap/usemdb
 fi;
 
 HN=`hostname -f`
@@ -25,7 +26,7 @@ if [ -s /var/spool/apache/htdocs/ns/config/ldap.replica ];then
   fi
 fi;
 
-if [ ! -e /var/spool/ldap/DB_CONFIG ];then
+if [ ! -e /var/spool/ldap/DB_CONFIG ] && [ ! -e /var/spool/ldap/data.mdb ] && [ ! -e /var/spool/ldap/usemdb ];then
 (cat <<__EOF__
 set_cachesize           0 20971520 0
 set_lg_regionmax        5242880
@@ -60,7 +61,7 @@ if [ ! -d /var/log/ldap/logs ];then
   /bin/mkdir -p /var/log/ldap/logs
 fi;
 
-if [ ! -e /var/log/ldap/DB_CONFIG ];then
+if [ ! -e /var/spool/ldap/DB_CONFIG ] && [ ! -e /var/spool/ldap/data.mdb ] && [ ! -e /var/spool/ldap/usemdb ];then
 (cat <<__EOF__
 set_cachesize           0 20971520 0
 set_lg_regionmax        5242880
@@ -82,9 +83,9 @@ EOF
 ) |/usr/sbin/slapadd -b "ou=log" > /dev/null 2>&1
 fi;
 
-if [ ! -e /var/spool/ldap/id2entry.bdb ] && [ ! -e /var/spool/ldap/id2entry.dbb ] && [ ! -e /etc/.install ];then
-  /bin/touch /var/spool/ldap/usehdb
-  if [ ! -s /var/spool/apache/htdocs/ns/config/ldap.replica ];then 
+if [ ! -e /var/spool/ldap/id2entry.bdb ] && [ ! -e /var/spool/ldap/data.mdb ] && [ ! -e /var/spool/ldap/id2entry.dbb ] && [ ! -e /etc/.install ];then
+  /bin/touch /var/spool/ldap/usemdb
+  if [ ! -s /var/spool/apache/htdocs/ns/config/ldap.replica ];then
     /usr/sbin/slapadd -b "" -l /etc/openldap/startup.ldif >/dev/null 2>&1
     chmod 400 /etc/ldap.secret
     chown root.root /etc/ldap.secret
@@ -92,15 +93,16 @@ if [ ! -e /var/spool/ldap/id2entry.bdb ] && [ ! -e /var/spool/ldap/id2entry.dbb 
   fi;
 fi;
 
-if [ -e /var/spool/ldap/id2entry.bdb ] && [ -e /var/spool/ldap/dn2id.bdb ];then
+if [ -e /var/spool/ldap/id2entry.bdb ] || [ -e /var/spool/ldap/data.mdb ] || [ -e /var/spool/ldap/dn2id.bdb ];then
   /usr/bin/db_recover -h /var/spool/ldap > /dev/null 2>&1
   if [ "$?" == "0" ];then
     /usr/libexec/safe_slapd &
   fi;
  else
-  /bin/touch /var/spool/ldap/usehdb
+  /bin/touch /var/spool/ldap/usemdb
   /bin/rm /var/spool/ldap/*.bdb > /dev/null 2>&1
-  if [ ! -s /var/spool/apache/htdocs/ns/config/ldap.replica ];then 
+  /bin/rm /var/spool/ldap/*.dbb > /dev/null 2>&1
+  if [ ! -s /var/spool/apache/htdocs/ns/config/ldap.replica ];then
     /usr/sbin/slapadd -b "" -l /etc/openldap/startup.ldif >/dev/null 2>&1
     chmod 400 /etc/ldap.secret
     chown root.root /etc/ldap.secret
@@ -161,6 +163,5 @@ if [ ${STRET} != 0 ];then
   /usr/sbin/nscd
 fi
 
-(/usr/bin/db_checkpoint -1 -h /var/spool/ldap 
+(/usr/bin/db_checkpoint -1 -h /var/spool/ldap
 /usr/bin/db_checkpoint -1 -h /var/log/ldap ) >/dev/null 2>&1
-
