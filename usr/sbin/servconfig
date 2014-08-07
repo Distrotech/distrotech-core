@@ -501,45 +501,6 @@ if [ -e /var/run/netsentry-update ];then
   exit
 fi;
 
-
-#Check For Capped ADSL Accounts
-
-#if [ ! -d /var/lock/adsl/ ];then
-#  mkdir /var/lock/adsl/
-#fi;
-
-#CAPLOCK=`date +"%B-%Y"`
-#CAPPED="";
-
-#if [ -e /var/lock/adsl/$CAPLOCK ];then
-#  for link in 0 1;do
-#    ip link show ppp${link} > /dev/null 2>&1
-#    if [ $? == 0 ];then
-#      IP3=`ip -o addr show ppp${link} |tail -1 |awk '{print $4}' |cut -d. -f 3`
-#      CLASSB=`ip -o addr show ppp${link} |tail -1 |awk '{print $4}' |awk -F. '{print $1$2}'`
-#      if [ $IP3 -lt 96 ] && [ "$CLASSB" == "165165" ];then
-#        CAPPED="$CAPPED ppp${link}";
-#      fi
-#    fi;
-#  done;
-# else
-#  /usr/sbin/adslreset
-#  touch /var/lock/adsl/$CAPLOCK
-#fi;
-
-#if [ "$CAPPED" ];then
-# /usr/sbin/adsluncap $CAPPED
-# /usr/sbin/genconf
-# PPPDIFF=`diff /var/spool/apache/htdocs/ns/config/rc.ppp /etc/rc.d/rc.ppp`
-# if [ "$PPPDIFF" ];then
-#   cp /var/spool/apache/htdocs/ns/config/rc.ppp /etc/rc.d/rc.ppp
-#   killall pppd
-#   flock -u 10
-#   sleep 30
-#   exit
-# fi;
-#fi;
-
 chown www.www /var/run/netsentry-config
 
 if [ -e clamav.conf ] && [ -e /etc/clamav.conf ];then 
@@ -693,7 +654,7 @@ if [ ! -e networksentry-lite ];then
     fi;
     if [ "$CADIFF" ];then
       cp -p  ca.conf /etc/openssl/
-      chmod 640 /etc/openssl/ca.conf
+      chmod 644 /etc/openssl/ca.conf
       rm /etc/openssl/openssl.conf
       ln -s /etc/openssl/ca.conf /etc/openssl/openssl.conf
       chown root.www /etc/openssl/ca.conf 
