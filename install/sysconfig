@@ -144,8 +144,9 @@ EOF
   tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/games.tbz > /dev/null 2>&1
 
   /usr/bin/dialog --backtitle "$BT" --title "PostGRE SQL Server" --infobox "Installing PostGRE SQL Server" 7 35
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/postgre.tar.bz2 > /dev/null 2>&1
+  tar -C ${INST_BASE} --use-compress-program=unxz -xf /install/pkgs/postgre.txz > /dev/null 2>&1
   tar -C ${INST_BASE}/var/spool/apache/htdocs/postgresql -xzf  /install/pkgs/postgres.tar.gz > /dev/null 2>&1
+  tar -C ${INST_BASE} --use-compress-program=unxz -xf /install/pkgs/pgpool.txz > /dev/null 2>&1
 
   /usr/bin/dialog --backtitle "$BT" --title "ODBC And TDS Driver" --infobox "Installing ODBC Driver" 7 35
   tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/odbc.tar.bz2 > /dev/null 2>&1
@@ -579,19 +580,17 @@ Main_Menu() {
 }
 
 Network_Address()  {
-  if [ -x /usr/sbin/sysreconf ];then
-    /usr/sbin/sysreconf
-    if [ ! -d /var/spool/apache/htdocs/ns/config ];then
-      mkdir -p /var/spool/apache/htdocs/ns/config
-    fi;
-    cp /tmp/netsentry.conf /var/spool/apache/htdocs/ns/config
-    if [ -d /sys/class/net/br0 ];then
-       dhclient -nw br0
-       dhclient -6 -nw br0
-     elif [ -d /sys/class/net/ethA ];then
-       dhclient -nw ethA
-       dhclient -6 -nw ethA
-    fi;
+  /usr/sbin/sysreconf
+  if [ ! -d /var/spool/apache/htdocs/ns/config ];then
+    mkdir -p /var/spool/apache/htdocs/ns/config
+  fi;
+  cp /tmp/netsentry.conf /var/spool/apache/htdocs/ns/config
+  if [ -d /sys/class/net/br0 ];then
+    dhclient -nw br0
+    dhclient -6 -nw br0
+   elif [ -d /sys/class/net/ethA ];then
+    dhclient -nw ethA
+    dhclient -6 -nw ethA
   fi;
 }
 
