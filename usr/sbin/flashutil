@@ -10,10 +10,11 @@ CWD=`pwd`
 KSUF="dts"
 
 OFFSET=511705088
-LIMIT=3167748096
+LIMIT=3514826752
 
 UOFFSET=1048576
 ULIMIT=510656512
+USIZE=3942645759B
 
 ROPT_LOC="-avHKOP"
 ROPT="${ROPT_LOC} -z --inplace --timeout=120"
@@ -25,11 +26,11 @@ Make_GPT() {
   parted -s ${1} mklabel msdos
   parted -s ${1} mkpart primary fat32 1 512
   if [ "${2}" == "loop" ];then
-    parted -s ${1} "mkpart primary ext2 512 3679453183B"
-   elif [ "${2}" == "tiny" ];then
     parted -s ${1} "mkpart primary ext2 512 -1"
+   elif [ "${2}" == "tiny" ];then
+    parted -s ${1} "mkpart primary ext2 512 ${USIZE}"
    else
-    parted -s ${1} mkpart primary ext2 512 3679453183B
+    parted -s ${1} mkpart primary ext2 512 ${USIZE}
     parted -s ${1} "mkpart primary fat32 3680 -1"
     parted -s ${1} set 3 boot on
   fi;
@@ -595,7 +596,7 @@ Load_Flash() {
         fi;
       done
 
-      dd if=/dev/zero of=${FLASH} bs=16M count=230 > /dev/null 2>&1
+      dd if=/dev/zero of=${FLASH} bs=16M count=240 > /dev/null 2>&1
       Make_GPT ${FLASH} loop
       MKFS=1;
      else
@@ -1916,50 +1917,50 @@ if test -e (flash-install)/boot/initrd.img ;then
   if test -e (cd)/flash.hdd ;then
     menuentry "Install" {
   	set root=(flash-install)
-        linux /boot/vmlinuz root=/dev/flash/install ro quiet ${KSUF}_opt=dvd
+        linux /boot/vmlinuz root=/dev/flash/install ro quiet nomodeset ${KSUF}_opt=dvd
         initrd /boot/initrd.img
     }
     menuentry "Install (Rescue)" {
 	set root=(flash-install)
-        linux /boot/vmlinuz root=/dev/flash/install ro single ${KSUF}_opt=dvd
+        linux /boot/vmlinuz root=/dev/flash/install ro single nomodeset ${KSUF}_opt=dvd
         initrd /boot/initrd.img
     }
     menuentry "Install (DHCP/NFS)" {
   	set root=(flash-install)
-        linux /boot/vmlinuz root=/dev/flash/install ro quiet ${KSUF}_opt=nfs
+        linux /boot/vmlinuz root=/dev/flash/install ro quiet nomodeset ${KSUF}_opt=nfs
         initrd /boot/initrd.img
     }
    else
     if test -d (install,msdos1)/putty ;then
       menuentry "Install" {
 	set root=(flash-install)
-        linux /boot/vmlinuz root=/dev/flash/install ro quiet ${KSUF}_opt=loop
+        linux /boot/vmlinuz root=/dev/flash/install ro quiet nomodeset ${KSUF}_opt=loop
         initrd /boot/initrd.img
       }
       menuentry "Install (Rescue)" {
 	set root=(flash-install)
-        linux /boot/vmlinuz root=/dev/flash/install ro single ${KSUF}_opt=loop
+        linux /boot/vmlinuz root=/dev/flash/install ro single nomodeset ${KSUF}_opt=loop
         initrd /boot/initrd.img
       }
       menuentry "Install (DHCP/NFS)" {
 	set root=(flash-install)
-	linux /boot/vmlinuz root=/dev/flash/install ro quiet ${KSUF}_opt=nfs
+	linux /boot/vmlinuz root=/dev/flash/install ro quiet nomodeset ${KSUF}_opt=nfs
 	initrd /boot/initrd.img
       }
      else
       menuentry "Install" {
 	set root=(flash-install)
-        linux /boot/vmlinuz root=/dev/flash/install ro quiet ${KSUF}_opt=install
+        linux /boot/vmlinuz root=/dev/flash/install ro quiet nomodeset ${KSUF}_opt=install
         initrd /boot/initrd.img
       }
       menuentry "Install (Rescue)" {
 	set root=(flash-install)
-        linux /boot/vmlinuz root=/dev/flash/install ro single ${KSUF}_opt=install
+        linux /boot/vmlinuz root=/dev/flash/install ro single nomodeset ${KSUF}_opt=install
         initrd /boot/initrd.img
       }
       menuentry "Install (DHCP/NFS)" {
 	set root=(flash-install)
-	linux /boot/vmlinuz root=/dev/flash/install ro quiet ${KSUF}_opt=nfs
+	linux /boot/vmlinuz root=/dev/flash/install ro quiet nomodeset ${KSUF}_opt=nfs
 	initrd /boot/initrd.img
       }
     fi;
