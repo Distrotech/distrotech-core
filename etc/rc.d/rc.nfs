@@ -13,7 +13,7 @@ if [ ! -d /var/lib/nfs/rpc_pipefs ];then
 fi;
 if [ ! -d /var/lib/nfs/rpc_pipefs/nfs ];then
   mount -t rpc_pipefs none /var/lib/nfs/rpc_pipefs > /dev/null 2>&1
-fi;  
+fi;
 if [ ! -e /proc/fs/nfsd/exports ];then
   mount -t nfsd none /proc/fs/nfsd > /dev/null 2>&1
 fi;
@@ -42,10 +42,10 @@ chown -R 99 /var/lib/nfs/sm.bak
 /usr/sbin/rpc.nfsd -p 2049 8
 
 #Mount Remote File Blocks
-if [ -x /etc/rc.d/rc.mount ];then 
+if [ -x /etc/rc.d/rc.mount ];then
   /etc/rc.d/rc.mount
 fi;
-if [ -e /etc/exports ];then
+if [ -s /etc/exports ];then
   /usr/sbin/exportfs -a
 fi;
 mount -t nfs -a
