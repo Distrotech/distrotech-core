@@ -81,14 +81,18 @@ Welcome To $BRAND V$VERSION Linux V${LKERNEL}
 _EOF_
 )>/etc/issue
 
-if [ -e /etc/HOSTNAME ];then
-  /usr/bin/hostname -F /etc/HOSTNAME
+if [ -x /usr/bin/hostname ];then
+  HOSTNAME=/usr/bin/hostname
  else
-  if [ -e /etc/.networksentry-lite ];then
-    /usr/bin/hostname $HN_ADDR-lite
-   else
-    /usr/bin/hostname $HN_ADDR
-  fi
+  HOSTNAME=hostname
+fi;
+
+if [ -e /etc/HOSTNAME ];then
+  ${HOSTNAME} -F /etc/HOSTNAME
+ elif [ -e /etc/.networksentry-lite ];then
+  ${HOSTNAME} $HN_ADDR-lite
+ else
+  ${HOSTNAME} $HN_ADDR
 fi;
 
 if [ ! -e /etc/resolv.conf ];then
