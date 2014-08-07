@@ -61,12 +61,16 @@ if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstco
     /usr/sbin/dhcpd > /dev/null 2>&1
    elif [ -s /etc/dhcpd6.conf ];then
     for dhcp in dhcpd dhcpd6;do
-      dhpid=`cat /var/run/${dhcp}.pid`
-      if [ ! -d  /proc/${dhpid} ] || [ "`readlink /proc/${dhpid}/exe`" != "/usr/sbin/dhcpd" ];then 
+      if [ -e /var/run/${dhcp}.pid ];then
+        dhpid=`cat /var/run/${dhcp}.pid`
+       else
+        dhpid="";
+      fi;
+      if [ ! "${dhpid}" ] || [ ! -d  /proc/${dhpid} ] || [ "`readlink /proc/${dhpid}/exe`" != "/usr/sbin/dhcpd" ];then
         if [ "${dhcp}" == "dhcpd6" ] && [ -s /etc/dhcpd6.conf ];then
-          /usr/sbin/dhcpd -6 -cf /etc/dhcpd6.conf
-        else
-          /usr/sbin/dhcpd
+          /usr/sbin/dhcpd -6 -cf /etc/dhcpd6.conf > /dev/null 2>&1
+         else
+          /usr/sbin/dhcpd > /dev/null 2>&1
         fi;
       fi;
     done
@@ -119,7 +123,7 @@ if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstco
     /usr/libexec/t38modem_start > /dev/null 2>&1 &
   fi;
 
-  if [ -x /usr/sbin/clamd.start ];then
+  if [ -x /usr/sbin/clamd.start ] && [ ! -e /etc/.lowmem ];then
     /usr/sbin/clamd.start
     MSPID=`cat /var/run/mailscanner.pid 2> /dev/null`
     MSPIDS=`ls -d /proc/$MSPID 2> /dev/null`
@@ -250,7 +254,9 @@ if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstco
       /usr/sbin/gnugk -c /etc/h323.conf > /dev/null 2>&1 &
     fi;
     sleep 2
-    kill -1 `cat /var/run/gnugk.pid`
+    if [ -e /var/run/gnugk.pid ];then
+      kill -1 `cat /var/run/gnugk.pid`
+    fi;
 #    /usr/sbin/asterisk -rx "restart gracefully" > /dev/null 2>&1
   fi;
 
@@ -263,10 +269,12 @@ if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstco
       kill -9 $ASTFOPPID
     fi;
     sleep 2
-    nohup /etc/asterisk/pannel/op_server.pl > /dev/null 2>&1 &
+    if [ ! -e /etc/.lowmem ];then
+      nohup /etc/asterisk/pannel/op_server.pl > /dev/null 2>&1 &
+    fi;
   fi;
 
-  if [ ! "$ASTFOPPID" ];then
+  if [ ! "$ASTFOPPID" ] && [ ! -e /etc/.lowmem ];then
     nohup /etc/asterisk/pannel/op_server.pl > /dev/null 2>&1 &
   fi;
 
@@ -376,7 +384,7 @@ if [ "$ASTOPBUT" ] || [ "$ASTOPSTY" ];then
   ASTFOPPID=`ps ax |grep op_server.pl |grep -v grep |head -1 |awk '{print $1}'`
   if [ "$ASTFOPPID" ];then
     kill -1 $ASTFOPPID
-   else
+   elif [ ! -e /etc/.lowmem ];then
     nohup /etc/asterisk/pannel/op_server.pl > /dev/null 2>&1 &
   fi;
 fi;
@@ -865,7 +873,9 @@ if [ "$MSCF" ] || [ "$MSAF"] ;then
     if [ "x$1" != "x-q" ]; then
       kill -9 $pid > /dev/null 2>&1
     fi
-    /opt/MailScanner/bin/MailScanner /opt/MailScanner/etc/MailScanner.conf
+    if [ ! -e /etc/.lowmem ];then
+      /opt/MailScanner/bin/MailScanner /opt/MailScanner/etc/MailScanner.conf
+    fi;
   fi;
 fi;
 
@@ -2045,7 +2055,9 @@ fi;
 
 if [ "$SGWDIFF" ] || [ ! -h /var/home/sogo/GNUstep/Defaults/.GNUstepDefaults ];then
   if [ ! -h /var/home/sogo/GNUstep/Defaults/.GNUstepDefaults ];then
-    rm /var/home/sogo/GNUstep/Defaults/.GNUstepDefaults
+    if [ -e /var/home/sogo/GNUstep/Defaults/.GNUstepDefaults ];then
+      rm /var/home/sogo/GNUstep/Defaults/.GNUstepDefaults
+    fi;
     ln -s /etc/sogo.conf /var/home/sogo/GNUstep/Defaults/.GNUstepDefaults
   fi;
 
@@ -2205,7 +2217,9 @@ if [ "$DHFDIFF" ] || [ "$DHFDIFF6" ];then
   kill -9 `cat /var/run/dhcpd.pid` > /dev/null 2>&1
   /usr/sbin/dhcpd > /dev/null 2>&1
   if [ -s /etc/dhcpd6.conf ];then
-    kill -9 `cat /var/run/dhcpd6.pid` > /dev/null 2>&1
+    if [ -e /var/run/dhcpd6.pid ];then
+      kill -9 `cat /var/run/dhcpd6.pid` > /dev/null 2>&1
+    fi;
     /usr/sbin/dhcpd -6 -cf /etc/dhcpd6.conf > /dev/null 2>&1
   fi;
  else
