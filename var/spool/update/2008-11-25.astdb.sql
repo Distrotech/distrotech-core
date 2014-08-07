@@ -1,3 +1,0 @@
-DROP view voicemail;
-ALTER TABLE astdb ALTER value type varchar(80);
-CREATE VIEW voicemail AS SELECT users.id AS uniqueid, users.username AS customer_id, users.context, users.mailbox, users."password", users.fullname, users.email, users.pager, users.created FROM ((users LEFT JOIN astdb ON ((((substr((users.name)::text, 0, 3) = (astdb."key")::text) AND ((astdb.family)::text = 'LocalPrefix'::text)) AND ((astdb.value)::text = (1)::text)))) LEFT JOIN astdb vmail ON ((((vmail.family)::text = (users.name)::text) AND ((vmail."key")::text = 'NOVMAIL'::text)))) WHERE (((astdb.value)::text = (1)::text) AND ((vmail.value)::text = (0)::text));
