@@ -1,7 +1,12 @@
 #!/bin/sh
 
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
-export PATH
+if [ -d /opt/mysql ];then
+  MYSQL_PREFIX=/opt/mysql
+ else
+  MYSQL_PREFIX=/usr
+fi;
+export PATH MYSQL_PREFIX
 
 pid_file=/var/spool/mysql/mysqld.pid
 
@@ -36,15 +41,28 @@ install_mysqld() {
   chown mysql.mysql /var/spool/mysql
   if [ -x /usr/scripts/mysql_install_db ];then
     /usr/scripts/mysql_install_db $mysql_args
+   elif [ -x /opt/mysql/scripts/mysql_install_db ];then
+    /opt/mysql/scripts/mysql_install_db $mysql_args
    else
     /usr/bin/mysql_install_db $mysql_args
   fi;
-  /usr/bin/mysqld_safe $mysql_args --pid-file=$pid_file >/dev/null 2>&1 &
-  sleep 5
+  ${MYSQL_PREFIX}/bin/mysqld_safe $mysql_args --pid-file=$pid_file &
 
-  cat ~www/htdocs/phpBB2/schema/phpBB2_struct.sql  |mysql
-  cat ~www/htdocs/phpBB2/schema/phpBB2_data.sql  |mysql
-  cat /usr/bin/mysql_netsentry.sql |mysql
+  MTEST="";
+  while [ "${MTEST}" != "XXXXXXX" ] && [ ! -e /tmp/mysql.sock ];do
+    sleep 2
+    MTEST="${MTEST}X";
+  done;
+
+  if [ -e ~www/htdocs/phpBB2/schema/phpBB2_struct.sql ];then
+    cat ~www/htdocs/phpBB2/schema/phpBB2_struct.sql |${MYSQL_PREFIX}/bin/mysql
+  fi;
+  if [ -e ~www/htdocs/phpBB2/schema/phpBB2_data.sql ];then
+    cat ~www/htdocs/phpBB2/schema/phpBB2_data.sql |${MYSQL_PREFIX}/bin/mysql
+  fi;
+  if [ -e /usr/bin/mysql_netsentry.sql ];then
+    cat /usr/bin/mysql_netsentry.sql |${MYSQL_PREFIX}/bin/mysql
+  fi;
 
   (cat <<_EOF_
 GRANT ALL ON *.* TO 'admin'@'localhost' IDENTIFIED BY 'admin' WITH GRANT OPTION;
@@ -61,7 +79,7 @@ DELETE FROM user WHERE user='root';
 DROP DATABASE test;
 FLUSH PRIVILEGES;
 _EOF_
-) |/usr/bin/mysql mysql
+) |${MYSQL_PREFIX}/bin/mysql mysql
 }
 
 stop_mysqld() {
@@ -87,18 +105,21 @@ stop_mysqld() {
   fi;
 }
 
+start_mysqld() {
+  if [ ! -e /etc/.lowmem ] && [ ! -e /var/spool/apache/htdocs/ns/config/networksentry-lite ];then
+    if [ ! -d /var/spool/mysql/mysql ];then
+      (install_mysqld)
+     else
+      rm /var/spool/mysql/*.err
+      echo ${MYSQL_PREFIX}/bin/mysqld_safe --pid-file=$pid_file $mysql_args
+      (${MYSQL_PREFIX}/bin/mysqld_safe --pid-file=$pid_file $mysql_args >/dev/null 2>&1)&
+    fi;
+  fi;
+}
+
 # See how we were called.
 case "$1" in
   start)
-#        echo -n "Executing start script (asp-admin-5100): "
-#	/usr/local/apache/casp/admtool -s > /dev/null 2>&1 && success || failed $1
-#        echo
-#        touch /var/lock/subsys/asp-admin-5100 > /dev/null 2>&1
-#        echo -n "Executing start script (asp-apache-3000): "
-#	/usr/local/apache/casp/asp-apache-3000/startcaspd > /dev/null 2>&1 && success || failed $1
-#        echo
-#        touch /var/lock/subsys/asp-apache-3000 > /dev/null 2>&1
-
         if [ ! -e /var/spool/apache/htdocs/ns/config/networksentry-lite ];then
           /usr/sbin/genwebmap
           if [ ! -d /var/spool/mysql/mysql ];then
@@ -119,15 +140,6 @@ case "$1" in
 
         sed -e "s/\(^\|^#\)ServerName.*/ServerName $DOMAIN/" /etc/fp/httpd.conf.fp.orig > /etc/fp/httpd.conf.fp
 
-#        if [ ! -d /var/spool/apache/htdocs/_vti_pvt ] || [ ! -e /usr/local/frontpage/we80.cnf ];then
-#          /usr/local/frontpage/version5.0/bin/owsadm.exe -o install -u admin -p 80 -servconf /etc/fp/httpd.conf.fp -xuser www -pw admin > /dev/null 2>&1
-#          chown -R www.www /var/spool/apache/htdocs/*
-#        fi;
-#        if [ ! -e /usr/local/frontpage/we666.cnf ];then
-#          /usr/local/frontpage/version5.0/bin/owsadm.exe -o install -u admin -p 666 -servconf /etc/fp/httpd.conf.fp -xuser www -pw admin > /dev/null 2>&1
-#          chown -R www.www /var/spool/apache/htdocs/*
-#        fi;
-
         ps -ea |tail -10 |sed -e 's/ //g' |cut -c10-137 > /usr/local/frontpage/version5.0/apache-fp/suidkey
         chmod 600 /usr/local/frontpage/version5.0/apache-fp/suidkey
 
@@ -140,16 +152,8 @@ case "$1" in
             /usr/sbin/apachectl start  > /dev/null 2>&1
           fi
         fi;
-        ;;
+        start_mysqld;;
   stop)
-#        echo -n "Executing stop script (asp-admin-5100): "
-#	/usr/local/apache/casp/admtool -e > /dev/null 2>&1 && success || failed $1
-#        echo
-#        rm -f /var/lock/subsys/asp-admin-5100 > /dev/null 2>&1
-#        echo -n "Executing stop script (asp-apache-3000): "
-#	/usr/local/apache/casp/asp-apache-3000/stopcaspd > /dev/null 2>&1 && success || failed $1
-#        echo
-#        rm -f /var/lock/subsys/asp-apache-3000 > /dev/null 2>&1
 	stop_mysqld;
         if [ -d /opt/apache2 ];then
           /opt/apache2/bin/apachectl stop > /dev/null 2>&1
@@ -170,21 +174,8 @@ case "$1" in
           rm /var/run/httpd.pid
         fi;
         ;;
-#  status)
-#        echo "Executing status script(asp-admin-5100): "
-#	/usr/local/apache/casp/admtool -q
-#        ;;
  stopsql)stop_mysqld;;
- startsql)
-        if [ ! -e /var/spool/apache/htdocs/ns/config/networksentry-lite ];then
-          if [ ! -d /var/spool/mysql/mysql ];then
-             install_mysqld;
-           else
-            rm /var/spool/mysql/*.err
-            (mysqld_safe --pid-file=$pid_file $mysql_args >/dev/null 2>&1)&
-          fi;
-        fi;
-        ;;
+ startsql)start_mysqld;;
   restart)
         $0 stop
         $0 start
