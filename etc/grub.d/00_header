@@ -36,8 +36,7 @@ done
 if [ "x${GRUB_DEFAULT}" = "x" ] ; then GRUB_DEFAULT=0 ; fi
 if [ "x${GRUB_DEFAULT}" = "xsaved" ] ; then GRUB_DEFAULT='${saved_entry}' ; fi
 if [ "x${GRUB_TIMEOUT}" = "x" ] ; then GRUB_TIMEOUT=5 ; fi
-if [ "x${GRUB_GFXMODE}" = "x" ] ; then GRUB_GFXMODE=800x600 ; fi
-if [ "x${GRUB_TERMINAL_OUTPUT}" = "x" ] ; then GRUB_TERMINAL_OUTPUT=gfxterm ; fi
+if [ "x${GRUB_GFXMODE}" = "x" ] ; then GRUB_GFXMODE=640x480 ; fi
 
 if [ "x${GRUB_DEFAULT_BUTTON}" = "x" ] ; then GRUB_DEFAULT_BUTTON="$GRUB_DEFAULT" ; fi
 if [ "x${GRUB_DEFAULT_BUTTON}" = "xsaved" ] ; then GRUB_DEFAULT_BUTTON='${saved_entry}' ; fi
@@ -126,13 +125,26 @@ fi
 
 if [ "x$gfxterm" = x1 ]; then
     # Make the font accessible
-    prepare_grub_to_access_device `${grub_probe} --target=device "${1}${GRUB_FONT_PATH}"`
+    prepare_grub_to_access_device `${grub_probe} --target=device "${GRUB_FONT_PATH}"`
 
     cat << EOF
 if loadfont `make_system_path_relative_to_its_root "${GRUB_FONT_PATH}"` ; then
   set gfxmode=${GRUB_GFXMODE}
   load_video
   insmod gfxterm
+EOF
+
+# Gettext variables and module
+if [ "x${LANG}" != "xC" ] && [ -d "${locale_dir}" ] ; then
+    prepare_grub_to_access_device $(${grub_probe} --target=device ${locale_dir}) | sed -e "s/^/  /"
+  cat << EOF
+  set locale_dir=(\$root)$(make_system_path_relative_to_its_root ${locale_dir})
+  set lang=${grub_lang}
+  insmod gettext
+EOF
+fi
+
+cat <<EOF
 fi
 EOF
 fi
@@ -163,7 +175,7 @@ if [ "x$gfxterm" = x1 ]; then
     if [ "x$GRUB_THEME" != x ] && [ -f "$GRUB_THEME" ] \
 	&& is_path_readable_by_grub "$GRUB_THEME"; then
 	echo "Found theme: $GRUB_THEME" >&2
-	prepare_grub_to_access_device `${grub_probe} --target=device "${1}$GRUB_THEME"`
+	prepare_grub_to_access_device `${grub_probe} --target=device "$GRUB_THEME"`
 	cat << EOF
 insmod gfxmenu
 EOF
@@ -203,22 +215,12 @@ EOF
 	    *.jpg|*.jpeg)  reader=jpeg ;;
 	    *)             echo "Unsupported image format" >&2; exit 1 ;;
 	esac
-	prepare_grub_to_access_device `${grub_probe} --target=device "${1}$GRUB_BACKGROUND"`
+	prepare_grub_to_access_device `${grub_probe} --target=device "$GRUB_BACKGROUND"`
 	cat << EOF
 insmod $reader
 background_image -m stretch `make_system_path_relative_to_its_root "$GRUB_BACKGROUND"`
 EOF
     fi
-fi
-
-# Gettext variables and module
-if [ "x${LANG}" != "xC" ] && [ -d "${locale_dir}" ] ; then
-    prepare_grub_to_access_device $(${grub_probe} --target=device ${1}${locale_dir})
-  cat << EOF
-set locale_dir=(\$root)$(make_system_path_relative_to_its_root ${locale_dir})
-set lang=${grub_lang}
-insmod gettext
-EOF
 fi
 
 make_timeout ()
