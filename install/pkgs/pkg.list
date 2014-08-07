@@ -19,7 +19,7 @@ odbc.tar.bz2:var/spool/rsync/programs:bunzip2
 php_manual_en.tar.bz2:var/spool/rsync/webman/phpmanual:bunzip2
 polyfirm.txz:var/spool/apache/htdocs/polycom:unxz
 postgres.tar.gz:var/spool/rsync/webman/postgresql:gunzip
-postgre.tar.bz2:var/spool/rsync/postgre:bunzip2
+postgre.txz:var/spool/rsync/postgre:unxz
 proftp.tbz:var/spool/rsync/programs:bunzip2
 python.txz:var/spool/rsync/programs:unxz
 quagga.tgz:var/spool/rsync/programs:gunzip
@@ -33,3 +33,4 @@ windomadmin.tgz:var/spool/rsync/programs/var/spool/samba/dadmin:gunzip
 extrafw.txz:var/spool/rsync/programs/lib/firmware:unxz
 ecrypt.txz:var/spool/rsync/programs:unxz
 pxelinux.txz:var/spool/rsync/programs:unxz
+pgpool.txz:var/spool/rsync/programs:unxz
