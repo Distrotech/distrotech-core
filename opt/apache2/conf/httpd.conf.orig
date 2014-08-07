@@ -267,6 +267,10 @@ User www
       RubyHandler Apache::ERbRun.instance
     </Files>
   </IfModule>
+</Directory>
+
+<DirectoryMatch "^/var/spool/apache/htdocs/(cdr|ldap|snom|linksys|polycom|yealink)">
+  Options -Indexes
 </DirectoryMatch>
 
 <DirectoryMatch "^/var/spool/apache/htdocs/(cshop|ccadmin|ticket)">
@@ -298,11 +302,11 @@ User www
 #  require ldap-group cn=Call Centre Admin,ou=Admin
 #</DirectoryMatch>
 
-<DirectoryMatch "^/var/spool/apache/htdocs/(auth|rrdgraph|mrtg|cgi-bin/auth)">
+<DirectoryMatch "^/var/spool/apache/htdocs/(auth|rrdgraph|mrtg|cdr|ldap|cgi-bin/auth)">
   require valid-user
 </DirectoryMatch>
 
-<DirectoryMatch "(^/var/spool/samba/share)|(^/usr/share/nagios)|(^/var/spool/apache/htdocs/(polycom/logs|ticket/setup|areski|soap|ssl|logs|auth|rrdgraph|mrtg|cgi-bin/admin|ns))">
+<DirectoryMatch "(^/var/spool/samba/share)|(^/usr/share/nagios)|(^/var/spool/apache/htdocs/(polycom/logs|ticket/setup|areski|soap|ssl|logs|auth|cdr|ldap|rrdgraph|mrtg|cgi-bin/admin|ns))">
   AllowOverride none
   AuthType Basic
   AuthBasicProvider ldap
@@ -357,6 +361,16 @@ User www
   SetHandler cgi-script
 </DirectoryMatch>
 
+<Directory "/usr/share/gitweb">
+  Options +ExecCGI -Indexes -MultiViews
+  AddHandler cgi-script .cgi
+</Directory>
+
+<Directory "/usr/share/gitweb/static">
+  Options -ExecCGI +Indexes +MultiViews
+  RemoveHandler .cgi
+</Directory>
+
 <DirectoryMatch "^(/var/home/././[^\/]+/_vti_bin)|(/var/web/././[^\/]+/_vti_bin)">
   ForceType text/html
 </DirectoryMatch>
@@ -383,7 +397,7 @@ User www
   Allow from all
 </Directory>
 
-<LocationMatch "^/(server-status|server-info|perl-status|cgi-perl|server-balance|svn)">
+<LocationMatch "^/(server-status|server-info|perl-status|cgi-perl|server-balance|svn|svnsrc)">
   AuthType Basic
   AuthBasicProvider ldap
   AuthLDAPUrl ldaps://127.0.0.1
@@ -419,6 +433,27 @@ User www
   SVNPath /var/spool/svn
   SVNIndexXSLT "/xslt/svnindex.xsl"
   AuthzSVNAccessFile /var/spool/svn/access
+  <Limit GET OPTIONS PROPFIND REPORT>
+    Require valid-user
+    Satisfy Any
+    order deny,allow
+    deny from all
+    allow from env=HTTPS_OFF
+  </Limit>
+  <LimitExcept GET OPTIONS PROPFIND REPORT>
+    Require valid-user
+    Satisfy All
+    order deny,allow
+    deny from all
+    allow from env=HTTPS_ON
+  </LimitExcept>
+</Location>
+
+<Location /svnsrc>
+  DAV svn
+  SVNPath /var/spool/svnsync
+  SVNIndexXSLT "/xslt/svnindex.xsl"
+  AuthzSVNAccessFile /var/spool/svnsync/access
   <Limit GET OPTIONS PROPFIND REPORT>
     Require valid-user
     Satisfy Any
@@ -568,9 +603,11 @@ RewriteRule ^/SoundPointIPWelcome.wav /polycom/SoundPointIPWelcome.wav [R,L]
 RewriteRule ^/polycom/([0-9A-Fa-f]{12})-phone.cfg /polycom/config.php?mac=$1 [L,T=application/x-httpd-php]
 RewriteRule ^/polycom/([0-9A-Fa-f]{12})-directory.xml /polycom/directory.php?mac=$1 [L,T=application/x-httpd-php]
 RewriteRule ^/SoundPointIPLocalization(.*) /polycom/SoundPointIPLocalization$1 [R,L]
-RewriteCond %{HTTP_USER_AGENT}  ^yealink
+RewriteCond %{HTTP_USER_AGENT}  ^yealink [OR]
+RewriteCond %{HTTP_USER_AGENT}  ^Yealink
 RewriteRule ^/([0-9A-Fa-f]{12}).cfg /yealink/macconf.php?mac=$1 [L,T=application/x-httpd-php]
-RewriteCond %{HTTP_USER_AGENT}  ^yealink
+RewriteCond %{HTTP_USER_AGENT}  ^yealink [OR]
+RewriteCond %{HTTP_USER_AGENT}  ^Yealink
 RewriteRule ^/y00000000000([0-9]).cfg /yealink/generic.php?version=$1 [L,T=application/x-httpd-php]
 
 RewriteRule ^/([0-9A-Fa-f]{12}).cfg /polycom/masterconf.php?mac=$1 [L,T=application/x-httpd-php]
@@ -646,7 +683,7 @@ RewriteRule ^/[^\/]+(.*) /var/home/%1/%2/%1%2%3/public_html$1 [L]
 
 #Myself
 RewriteCond ${lowercase:%{HTTP_HOST}} ^LOCAL_SERVER_NAME
-RewriteCond %{REQUEST_URI} !^/(cgi-bin)|(cgi-perl)|(perl)|(share)|(SOGo)|(\*docroot\*)|(viewsvn)|(svn)|(~)
+RewriteCond %{REQUEST_URI} !^/(cgi-bin)|(cgi-perl)|(perl)|(share)|(SOGo)|(\*docroot\*)|(viewsrc)|(viewsvn)|(svn)|(git)|(svnsrc)|(~)
 RewriteRule ^/(.*)$ /var/spool/apache/htdocs/$1 [L]
 
 #Myself CGI
@@ -756,17 +793,42 @@ RewriteRule ^/([^\/]*)/(.*) /var/spool/apache/cgi-bin/$2 [L,T=application/x-http
 RewriteCond %{REQUEST_URI} ^/viewsvn$
 RewriteRule ^/([^\/]*) /$1/ [R]
 
+RewriteCond %{REQUEST_URI} ^/viewsrc$
+RewriteRule ^/([^\/]*) /$1/ [R]
+
 RewriteCond %{REQUEST_URI} ^/viewsvn/$
 RewriteRule ^/([^\/]*) /var/spool/apache/htdocs/viewsvn/viewvc.py/viewsvn/ [L]
 
+RewriteCond %{REQUEST_URI} ^/viewsrc/$
+RewriteRule ^/([^\/]*) /var/spool/apache/htdocs/viewsvn/viewvc.py/viewsrc/ [L]
+
 RewriteCond %{REQUEST_URI} ^/viewsvn\/viewsvn/
+RewriteCond %{REQUEST_URI} ^/viewsvn\/viewsrc/
 RewriteRule ^/([^\/]*)/([^\/]*)/(.*) /viewsvn/$3 [R]
 
 RewriteCond %{REQUEST_URI} ^/viewsvn/
 RewriteRule ^/([^\/]*)/(.*) /var/spool/apache/htdocs/viewsvn/viewvc.py/viewsvn/$2 [L]
 
+RewriteCond %{REQUEST_URI} ^/viewsrc/
+RewriteRule ^/([^\/]*)/(.*) /var/spool/apache/htdocs/viewsvn/viewvc.py/viewsrc/$2 [L]
+
 RewriteCond %{REQUEST_URI} ^/\*docroot\*/
 RewriteRule ^/([^\/]*)/(.*) /var/spool/apache/viewvc/templates/docroot/$2 [L]
+
+RewriteCond %{REQUEST_URI} ^/git$
+RewriteRule ^/([^\/]*) /$1/ [R]
+
+RewriteCond %{REQUEST_URI} ^/git/$
+RewriteRule ^/git/$ /usr/share/gitweb/gitweb.cgi [L,T=application/x-httpd-cgi]
+
+RewriteCond %{REQUEST_URI} ^/git/favicon.ico$
+RewriteRule ^/git/favicon.ico /usr/share/gitweb/static/git-favicon.png [L]
+
+RewriteCond %{REQUEST_URI} ^/git/static/
+RewriteRule ^/git/static/(.*) /usr/share/gitweb/static/$1 [L]
+
+RewriteCond %{REQUEST_URI} ^/git/
+RewriteRule ^/git/(.*) /usr/share/gitweb/gitweb.cgi/$1 [L,T=application/x-httpd-cgi]
 
 #Im Not A User Or CGI
 RewriteCond %{REQUEST_URI} !^/~
