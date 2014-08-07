@@ -18,5 +18,7 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #Checkout Printcap / start lpd
-/usr/bin/checkpc -f > /dev/null 2>&1
-/usr/sbin/lpd > /dev/null 2>&1
+if [ -s /etc/lpd/lpd.conf ];then
+  /usr/bin/checkpc -f > /dev/null 2>&1
+  /usr/sbin/lpd > /dev/null 2>&1
+fi;
