@@ -18,7 +18,12 @@ set -e
 # along with GRUB.  If not, see <http://www.gnu.org/licenses/>.
 
 # Include the GRUB helper library for grub-mkconfig.
-. /usr/lib/grub/grub-mkconfig_lib
+
+prefix="/usr"
+exec_prefix="${prefix}"
+datarootdir="${prefix}/share"
+
+. "${datarootdir}/grub/grub-mkconfig_lib"
 
 set_default_theme(){
 	# Set a monochromatic theme for Ubuntu.
@@ -62,7 +67,7 @@ set_background_image(){
 }
 
 # Next search for pictures the user put into /boot/grub/ and use the first one.
-background=${1}/boot/grub/background.jpg
+background=/boot/grub/background.jpg
 if test -e "${background}" ;then
 	set_background_image "${background}" "white/black" "black/white"
 	exit 0
