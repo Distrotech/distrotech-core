@@ -48,6 +48,9 @@ install_mysqld() {
     mkdir /var/spool/mysql
   fi;
   chown mysql.mysql /var/spool/mysql
+  if [ -d /opt/mysql ];then
+    cd /opt/mysql
+  fi;
   if [ -x /usr/scripts/mysql_install_db ];then
     /usr/scripts/mysql_install_db $mysql_args
    elif [ -x /opt/mysql/scripts/mysql_install_db ];then
