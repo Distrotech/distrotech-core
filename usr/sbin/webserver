@@ -35,6 +35,15 @@ fi;
 
 
 install_mysqld() {
+  if [ -d /usr/share/mysql ];then
+    cp /usr/share/mysql/my-huge.cnf /etc/my.cnf
+   elif [ -d /opt/mysql ];then
+    if [ -e /etc/.lowmem ];then
+      cp /opt/mysql/support-files/my-small.cnf /etc/my.cnf
+     else
+      cp /opt/mysql/support-files/my-huge.cnf /etc/my.cnf
+    fi
+  fi
   if [ ! -d /var/spool/mysql ];then
     mkdir /var/spool/mysql
   fi;
