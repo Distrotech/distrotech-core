@@ -249,9 +249,9 @@ if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstco
   if [ ! "`pidof gnugk`" ];then
     rm /tmp/gnugk.ini-* > /dev/null 2>&1
     if [ -e /etc/h323-custom.conf ];then
-      /usr/sbin/gnugk -c /etc/h323-custom.conf > /dev/null 2>&1 &
+      gnugk -c /etc/h323-custom.conf > /dev/null 2>&1 &
      else
-      /usr/sbin/gnugk -c /etc/h323.conf > /dev/null 2>&1 &
+      gnugk -c /etc/h323.conf > /dev/null 2>&1 &
     fi;
     sleep 2
     if [ -e /var/run/gnugk.pid ];then
