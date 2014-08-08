@@ -13304,7 +13304,11 @@ sub printmscanconf() {
   } else {
     $msgsign="no";
   }
-
+  if ( -e "/etc/.lowmem") {
+    $avtype="none";
+  } else {
+    $avtype="clamd";
+  }
 print MSCF<<__EOF__;
 %etc-dir% = /opt/MailScanner/etc
 %mcp-dir% = /opt/MailScanner/etc/mcp
@@ -13609,7 +13613,7 @@ Use Watermarking = yes
 Virus Modify Subject = start
 Virus Scanner Definitions = %etc-dir%/virus.scanners.conf
 Virus Scanner Timeout = 300
-Virus Scanners = clamd
+Virus Scanners = $avtype
 Virus Scanning = yes
 Virus Subject Text = {VIRUS}
 Wait During Bayes Rebuild = no
@@ -16979,12 +16983,17 @@ sub printiftab(){
 }
 
 sub printodbcdsn() {
+  if ( -e "/usr/lib64/psqlodbc/psqlodbcw.so") {
+    $driver="/usr/lib64/psqlodbc/psqlodbcw.so";
+  } else {
+    $driver="/usr/lib/psqlodbc/psqlodbcw.so";
+  }
   open(DSN,">odbc.ini");
   chmod(0600,"odbc.ini");
 print DSN<<__EOB__;
 [Asterisk]
 Description             = Asterisk Database DSN
-Driver                  = /usr/lib/psqlodbc/psqlodbcw.so
+Driver                  = $driver
 Trace                   = Yes
 TraceFile               = /var/log/asterisksql.log
 Database                = asterisk
@@ -17003,7 +17012,7 @@ SSLMode			= require
 
 [Master]
 Description             = Asterisk Master Database DSN
-Driver                  = /usr/lib/psqlodbc/psqlodbcw.so
+Driver                  = $driver
 Trace                   = Yes
 TraceFile               = /var/log/mastersql.log
 Database                = asterisk
