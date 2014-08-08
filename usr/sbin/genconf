@@ -10462,6 +10462,7 @@ foreach $redirsite (@rewww) {
   $rdircnt++;
 }
 
+$hassquidnoparent = "";
 foreach $pacc (@plocal) {
   ($accessnet,$accesssn)=split(/\//,$pacc);
   if ($accesssn =~ m/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/) {
@@ -10469,7 +10470,8 @@ foreach $pacc (@plocal) {
   } else {
     $cidr=$accesssn;
   }
- print SC "acl squidnoparent dst $accessnet/$cidr\n";
+  $hassquidnoparent = "\nalways_direct allow squidnoparent\n";
+  print SC "acl squidnoparent dst $accessnet/$cidr\n";
 }
 
 foreach $netip (@pbypass) {
@@ -10543,8 +10545,7 @@ visible_hostname $hname
 logfile_rotate 10
 forwarded_for off
 log_icp_queries on
-icp_hit_stale off
-always_direct allow squidnoparent
+icp_hit_stale off$hassquidnoparent
 always_direct allow local_sites
 __EOB__
   if ($proxyconf{'Parent'}) {
