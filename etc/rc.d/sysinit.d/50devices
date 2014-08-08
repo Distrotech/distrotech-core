@@ -25,12 +25,12 @@
 
 #Load modules explicitly
 for loadmod in ppp_generic 8021q ipcomp ip_gre esp4 ah4 tun l2tp_ppp pppoe capability \
-               sr_mod autofs4 psmouse dazuko imq lp fuse;do
+               sr_mod autofs4 psmouse imq lp fuse;do
   /sbin/modprobe ${loadmod} >/dev/null 2>&1
 done;
 
 #load the vesa fb if no other fb is loaded
-if [ ! -e /dev/fb1 ];then
+if [ ! -e /dev/fb1 ] && [ -e /dev/fb0 ];then
   modprobe uvesafb >/dev/null 2>&1
 fi;
 
