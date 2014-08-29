@@ -39,7 +39,7 @@ Set_Serial() {
 
 Install_System() {
   setterm -cursor off
-  INST_BASE=/mnt/install
+  INST_BASE=/media/install
   /usr/bin/dialog --backtitle "$BT" --title "Perl Scripting"  --infobox "Installing Perl Scripting" 7 35
   tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/perl.tbz > /dev/null 2>&1
 
@@ -512,12 +512,12 @@ $FSTAB"\
 
 Mount_All() {
   if [ -e "/tmp/fstab.new" ];then
-    cat /tmp/fstab.new |awk '$1 == "/" {print "mount -t ext4 "$2" /mnt/install -o acl,user_xattr >/dev/tty4 2>/dev/tty4"}'|sh
-    MNTRT=`grep "/mnt/install " /proc/mounts`;
+    cat /tmp/fstab.new |awk '$1 == "/" {print "mount -t ext4 "$2" /media/install -o acl,user_xattr >/dev/tty4 2>/dev/tty4"}'|sh
+    MNTRT=`grep "/media/install " /proc/mounts`;
     if [ "$MNTRT" == "" ];then
       /usr/bin/dialog --backtitle "$BT" --title "Mount Failure" --msgbox "No Root Partition Defined" 5 35
      else
-      cat /tmp/fstab.new |/bin/sort |awk '$1 != "/" {print "mkdir -p /mnt/install/"$1";mount "$2" /mnt/install/"$1" >/dev/tty4 2> /dev/tty4"}'|sh
+      cat /tmp/fstab.new |/bin/sort |awk '$1 != "/" {print "mkdir -p /media/install/"$1";mount "$2" /media/install/"$1" >/dev/tty4 2> /dev/tty4"}'|sh
     fi
    else
     /usr/bin/dialog --backtitle "$BT" --title "Mount Failure" --msgbox "No Mount Points Are Defined" 5 35
@@ -556,7 +556,7 @@ Date_Time() {
 }
 
 Local_Install(){
-  MNTRT=`grep "/mnt/install " /proc/mounts`;
+  MNTRT=`grep "/media/install " /proc/mounts`;
   if [ "$MNTRT" == "" ];then
     /usr/bin/dialog --backtitle "$BT" --title "Cannot Install" --msgbox "No Root Partition Mounted" 5 35
     return 1;
@@ -612,8 +612,8 @@ if [ "${1}" == "install" ];then
   exit
 fi;
 
-if [ -e /mnt/install/etc/.install ];then
-  cat /proc/mounts |grep "/mnt/install" |awk '{print $2" "$1}' |sort -r |awk '{print "umount "$1}' |sh
+if [ -e /media/install/etc/.install ];then
+  cat /proc/mounts |grep "/media/install" |awk '{print $2" "$1}' |sort -r |awk '{print "umount "$1}' |sh
   awk '$2 == "partition" {print "swapoff "$1}' /proc/swaps |sh
 fi;
 
