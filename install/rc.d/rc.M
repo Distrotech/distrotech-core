@@ -24,4 +24,3 @@
 /install/sysconfig
 clear
 init 6
-
