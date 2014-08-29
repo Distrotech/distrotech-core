@@ -79,9 +79,15 @@ if [ ! -e /etc/fstab ];then
 fi;
 
 #Startup udev
-(/libexec/udev/udevd --daemon
-/bin/udevadm trigger
-/bin/udevadm settle) >/dev/null 2>&1
+(if [ -x /libexec/udev/udevd ];then
+  /libexec/udev/udevd --daemon
+ elif [ -x /usr/lib/systemd/systemd-udevd ];then
+  /usr/lib/systemd/systemd-udevd --daemon
+fi;
+
+#Trigger events
+udevadm trigger && udevadm settle
+) >/dev/null 2>&1
 
 #ACPI Deamon
 /usr/sbin/acpid > /dev/null 2>&1
