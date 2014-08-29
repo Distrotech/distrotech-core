@@ -51,7 +51,6 @@ fi;
 chmod 750 /var/spool/apache/htdocs/ns/config
 chmod 750 /var/spool/apache/htdocs/ns/config/zones
 chmod 1777 /var/run
-chmod 1777 /tmp
 chmod -R 755 /var/log
 
 chown www.www /var/spool/apache/htdocs/ns/config
@@ -61,26 +60,8 @@ echo "clear" > /root/.bash_logout
 
 mount -a
 
-#Mount utilities partition
-(DTSU=`findfs LABEL=DISTROTECH`
-if [ ! "${DTSU}" ];then
-  DTSU=`findfs LABEL=DTSUTIL`
-fi;
-if [ "${DTSU}" ];then
-  mount ${DTSU} /install/tools -o ro
-fi;) >/dev/null 2>&1
-
-if [ -d /media ];then
-  if [ -d /initrd/isofs/boot ] || [ -d /initrd/isofs/SYSLINUX ] || [ -d /initrd/isofs/syslinux ];then
-    mount --move /initrd/isofs /media > /dev/null 2>&1
-  fi;
-fi;
-
 #Unmount And Cleanup Initial Ram Disk
-(umount /initrd/dev
-umount /initrd/sys 
-umount /initrd/proc
-umount /initrd) > /dev/null 2>&1
+(umount /initrd) > /dev/null 2>&1
 
 if [ ! -e /initrd/linuxrc ];then
   blockdev --flushbufs /dev/ram0
@@ -97,6 +78,7 @@ if [ ! -e /etc/fstab ];then
   touch /etc/fstab
 fi;
 
+#Startup udev
 (/libexec/udev/udevd --daemon
 /bin/udevadm trigger
 /bin/udevadm settle) >/dev/null 2>&1
