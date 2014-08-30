@@ -19,7 +19,7 @@
 
 #Enable Advanced Routing
 if [ ! -e /etc/quagga/Quagga.conf ];then
-  cp /etc/quagga/Qebra.conf.orig /etc/quagga/Quagga.conf
+  cp /etc/quagga/Quagga.conf.orig /etc/quagga/Quagga.conf
 fi;
 (for prog in zebra ripd ripngd ospfd ospf6d babeld bgpd isisd;do
   rm /var/run/$prog.*

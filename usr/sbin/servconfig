@@ -308,7 +308,7 @@ if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstco
 
   if [ ! "$ZPID" ];then
     if [ ! -e /etc/quagga/Quagga.conf ];then
-      cp /etc/quagga/Qebra.conf.orig /etc/quagga/Quagga.conf
+      cp /etc/quagga/Quagga.conf.orig /etc/quagga/Quagga.conf
     fi;
     zebra -d
     REROUTE=1
