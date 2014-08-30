@@ -1,0 +1,70 @@
+#!/bin/bash
+
+
+NARCH=${NARCH:=$(uname -m)}
+
+if [ ! "${3}" ] || [ ! -d "${2}" ];then
+  echo "$0 <ARCH> <INSTDIR> <GROUP TO INSTALL....>";
+  exit
+fi;
+
+ARCH=${1}
+shift
+
+INSTDIR=${1}
+shift;
+
+case ${ARCH} in
+  x86_64|x86_32|i686)ARCHKERN="linux-intel-dts";;
+  *)ARCHKERNEL="";
+esac;
+
+do_yuminstall() {
+  YINSTROOT=${1}
+  shift
+  case ${NARCH} in
+    x86_32|x86_64|i[3-6]86)
+      case ${ARCH} in
+        x86_64)yum -y --installroot=${YINSTROOT} --exclude="*.x86_32" --exclude="*.i686" install $@;;
+        x86_32)yum -y --installroot=${YINSTROOT} --exclude="*.x86_64" --exclude="*.i686" install $@;;
+        i[3-6]86)yum -y --installroot=${YINSTROOT} --exclude="*.x86_64" --exclude="*.x86_32" install $@;;
+        *)yum --installroot=${YINSTROOT} --exclude="*.x86_64" --exclude="*.x86_32" --exclude="*.i686" install $@;;
+      esac;;
+    *)if [ "${NARCH}" == "${ARCH}" ];then
+        yum -y --installroot=${YINSTROOT} install $@;
+       else
+        yum -y --installroot=${YINSTROOT} --exclude="*.${NARCH}" install $@;
+      fi;;
+  esac;
+}
+
+install_to_dir() {
+  INSTDIR=${1}
+  shift;
+
+  for dir in root proc sys dev tmp initrd media media/isofs media/install run run/udev;do
+    if [ ! -d ${INSTDIR}}/${dir} ];then
+      mkdir ${INSTDIR}/${dir}
+    fi;
+  done
+  chmod 1777 ${INSTDIR}/tmp
+  RPM_PKG_LIST="";
+  for pkggrp in $@;do
+    RPM_PKG_LIST+="@${pkggrp} "
+    for spkg in libs conf locale;do
+      RPM_PKG_LIST+="@${pkggrp}-${spkg} "
+    done;
+    if [ "${pkggrp}" == "buildroot" ];then
+      RPM_PKG_LIST+="@${pkggrp}-dev Xorg-dev.${ARCH} --exclude=gcc-libs --exclude=gcc --exclude=gcc-locale --exclude=gcc-dev systemd-dev"
+     elif [ "${pkggrp}" == "root" ] && [ "${ARCHKERN}" ];then
+      for kernpkg in dahdi firmware modules;do
+        RPM_PKG_LIST+=" ${ARCHKERN}-${kernpkg}";
+      done;
+     elif [ "${pkggrp}" == "core" ] && [ "${ARCHKERN}" ];then
+      RPM_PKG_LIST+=" ${ARCHKERN}";
+    fi;
+  done
+  do_yuminstall ${INSTDIR} ${RPM_PKG_LIST}
+}
+
+install_to_dir ${INSTDIR} $@
