@@ -1,8 +1,13 @@
-auth       [success=3 default=ignore] pam_unix.so
-auth       [success=2 default=ignore] pam_winbind.so cached_login
-auth       [success=1 default=ignore] pam_ldap.so
-auth       requisite  pam_deny.so
-auth       required   pam_ecryptfs.so unwrap
-account    required   pam_permit.so
-session    required   pam_mkhomedir.so skel=/etc/skel umask=0022
-session    optional   pam_ecryptfs.so unwrap
+#%PAM-1.0
+auth		sufficient	pam_rootok.so
+# Uncomment the following line to implicitly trust users in the "wheel" group.
+#auth		sufficient	pam_wheel.so trust use_uid
+# Uncomment the following line to require a user to be in the "wheel" group.
+auth		required	pam_wheel.so use_uid
+auth		include		system-auth
+account		include		system-auth
+password	include		system-auth
+session		required	pam_selinux.so close
+session		include		system-auth
+session		required	pam_selinux.so open multiple
+session		optional	pam_xauth.so
