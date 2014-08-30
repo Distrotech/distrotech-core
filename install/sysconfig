@@ -40,143 +40,46 @@ Set_Serial() {
 Install_System() {
   setterm -cursor off
   INST_BASE=/media/install
-  /usr/bin/dialog --backtitle "$BT" --title "Perl Scripting"  --infobox "Installing Perl Scripting" 7 35
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/perl.tbz > /dev/null 2>&1
 
-  (cat << EOF
-#!${INST_BASE}/usr/bin/perl -I ${INST_BASE}/usr/lib/perl5
-
-open(FL,"-");
-\$cnt=0;
-\$percl=0;
-while(<FL>)
-  {
-    \$cnt++;
-    (\$perc)=split(/\./,((\$cnt/\$ARGV[0])*100));
-    if (\$perc > \$percl)
-      {
-        printf(<STDOUT>,"\$perc\n");
-      }
-    \$percl=\$perc;
-  }
-close(FL);
+  if [ ! -d /etc/yum/repos.d ];then
+    mkdir -p /etc/yum/repos.d;
+  fi;
+  (cat <<EOF
+[installer]
+name = Flash Installer
+baseurl = file:///media/isofs/repo
 EOF
-) > /root/instguage
-  chmod 750 /root/instguage
+) > /etc/yum/repos.d/installer.repo
 
-  setterm -cursor on
-  rsync -avHKO --out-format="%n" --filter=". /install/core/core.filter" / ${INST_BASE}/ |\
-    awk '/(^[a-z]+\/)|(^home$)/ {print $0}' |/root/instguage `grep -c "" /install/core/filelist` 2>/dev/null|\
-    dialog --backtitle "$BT" --title "Installing" --guage "Percentage Files Transfered" 6 35 0
-  rm /root/instguage
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/core/install.tbz
+  /root/instpkg x86_64 ${INST_BASE} root core
 
-  for newdir in autofs cdrom floppy initrd proc update;do
+  for newdir in autofs cdrom floppy initrd;do
     mkdir -p ${INST_BASE}/mnt/${newdir}
   done
 
-  setterm -cursor off
-  /usr/bin/dialog --backtitle "$BT" --title "Installing Kernel" --infobox "Installing Linux Kernel" 7 35
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/core/kernel.tar.bz2 > /dev/null 2>&1
-  tar -C ${INST_BASE}/lib/firmware -xJf /install/pkgs/extrafw.txz > /dev/null 2>&1
-  tar -C ${INST_BASE} -xJf /install/pkgs/ecrypt.txz > /dev/null 2>&1
-  tar -C ${INST_BASE} -xJf /install/pkgs/pxelinux.txz > /dev/null 2>&1
-  rsync -a /lib/modules/* ${INST_BASE}/lib/modules/ > /dev/null 2>&1
-  rsync -a /boot/vmlinuz ${INST_BASE}/boot/vmlinuz-${KERNEL}-dts
-  rsync -a /boot/System.map ${INST_BASE}/boot/System.map-${KERNEL}-dts
-  rsync -a /boot/memtest.bin /boot/ > /dev/null 2>&1
+  for newdir in usr/share/clamav var/spool/clientmqueue var/spool/MailScanner/incoming etc/MailScanner \
+                var/empty var/spool/apache/htdocs/ssl/sign var/spool/apache/htdocs/ssl/casign var/state/dhcp \
+                etc/quagga etc/ipsec.d/crls etc/ipsec.d/certs etc/ipsec.d/clients etc/ipsec.d/cacerts \
+                etc/opensssl/certs etc/squid etc/samba etc/openssl/private etc/openssl/newcerts var/named \
+                var/spool/apache/htdocs/ns/config/zones var/spool/apache/htdocs/ns/config/tftptmpl var/db/nscd \
+                var/spool/apache/htdocs/ns/config/sslconf etc/radiusclient etc/samba/private var/run/nscd \
+                var/spool/mailscanner/incoming var/spool/mqueue var/spool/mailscanner/quarantine \
+                var/home/sogo/GNUstep/Defaults var/spool/avirus var/spool/update var/spool/mail \
+                var/spool/samba/share var/spool/samba/dadmin;do
+    mkdir -p ${INST_BASE}/${newdir}
+  done
+
   rsync -a /install/update ${INST_BASE}/var/spool/ > /dev/null 2>&1
-  rsync -a /install/avirus ${INST_BASE}/var/spool/ > /dev/null 2>&1
-
   cp /install/netsentry-version ${INST_BASE}/etc
-  chown -R clamav.clamav ${INST_BASE}/var/spool/avirus > /dev/null 2>&1
 
-  for webdir in postgresql mysqlmanual phpmanual polycom snom;do
+  for webdir in postgresql mysqlmanual phpmanual polycom snom ns/config;do
     if [ ! -d ${INST_BASE}/var/spool/apache/htdocs/${webdir} ];then
       mkdir ${INST_BASE}/var/spool/apache/htdocs/${webdir}
       chown www.www ${INST_BASE}/var/spool/apache/htdocs/${webdir}
     fi;
   done;
 
-  /usr/bin/dialog --backtitle "$BT" --title "Locale Info" --infobox "Multilingual Support" 7 35
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/locale.tbz > /dev/null 2>&1
-
-  /usr/bin/dialog --backtitle "$BT" --title "DNS Server's" --infobox "Installing ISC Bind DNS Server" 7 35
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/bind.tbz > /dev/null 2>&1
-
-  /usr/bin/dialog --backtitle "$BT" --title "LDAP/Mail Server's" --infobox "Installing Open LDAP ,Mail And SSL Server" 7 35
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/ldapmail.tbz > /dev/null 2>&1
-
-  /usr/bin/dialog --backtitle "$BT" --title "Radius Server's" --infobox "Installing Free Radius Server" 7 35
-  tar -C ${INST_BASE} -xJf /install/pkgs/freeradius.txz > /dev/null 2>&1
-
-  /usr/bin/dialog --backtitle "$BT" --title "Samba / KRB" --infobox "Installing KRB And Samba V3 File Server" 7 35
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/samba-krb.tbz > /dev/null 2>&1
-
-  /usr/bin/dialog --backtitle "$BT" --title "Asterisk" --infobox "Installing Asterisk PBX Software" 7 35
-  tar -C ${INST_BASE} -xJf /install/pkgs/asterisk.txz > /dev/null 2>&1
-
-  /usr/bin/dialog --backtitle "$BT" --title "Frontpage" --infobox "Installing Frotpage Extentions" 7 35
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/fp-v5.0.tbz > /dev/null 2>&1
-
-  /usr/bin/dialog --backtitle "$BT" --title "Python Scripting" --infobox "Installing Python Scripting" 7 35
-  tar -C ${INST_BASE} -xJf /install/pkgs/python.txz > /dev/null 2>&1
-
-  /usr/bin/dialog --backtitle "$BT" --title "GNU TLS" --infobox "Installing GNU Transport Layer Security" 7 35
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/gnutls.tar.bz2 > /dev/null 2>&1
-
-#  /usr/bin/dialog --backtitle "$BT" --title "Open VPN" --infobox "Installing Open VPN Server" 7 35
-#  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/openvpn.tbz > /dev/null 2>&1
-
-  /usr/bin/dialog --backtitle "$BT" --title "FTP Server" --infobox "Installing Proftp" 7 35
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/proftp.tbz > /dev/null 2>&1
-
-  /usr/bin/dialog --backtitle "$BT" --title "Ghostscript" --infobox "Installing Ghostscript" 7 35
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/ghostscript-8.54.tar.bz2 > /dev/null 2>&1
-
-  /usr/bin/dialog --backtitle "$BT" --title "Hylafax" --infobox "Installing Hylafax Fax Server" 7 35
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/hylafax.tar.bz2 > /dev/null 2>&1
-
-  /usr/bin/dialog --backtitle "$BT" --title "Routing Protocols" --infobox "Installing Routing Protocols" 7 35
-  tar -C ${INST_BASE} -xzf /install/pkgs/quagga.tgz
-
-  /usr/bin/dialog --backtitle "$BT" --title "Doom Version 1" --infobox "3D Graphic Game Doom" 7 35
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/games.tbz > /dev/null 2>&1
-
-  /usr/bin/dialog --backtitle "$BT" --title "PostGRE SQL Server" --infobox "Installing PostGRE SQL Server" 7 35
-  tar -C ${INST_BASE} --use-compress-program=unxz -xf /install/pkgs/postgre.txz > /dev/null 2>&1
-  tar -C ${INST_BASE}/var/spool/apache/htdocs/postgresql -xzf  /install/pkgs/postgres.tar.gz > /dev/null 2>&1
-  tar -C ${INST_BASE} --use-compress-program=unxz -xf /install/pkgs/pgpool.txz > /dev/null 2>&1
-
-  /usr/bin/dialog --backtitle "$BT" --title "ODBC And TDS Driver" --infobox "Installing ODBC Driver" 7 35
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/odbc.tar.bz2 > /dev/null 2>&1
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/freetds.tar.bz2 > /dev/null 2>&1
-
-  /usr/bin/dialog --backtitle "$BT" --title "Web/Proxy Server" --infobox "Installing Web Server,Pages,MySQL,Proxy Server And Manuals" 7 35
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/apache2.tbz > /dev/null 2>&1
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/svn.tbz > /dev/null 2>&1
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/squid.tbz > /dev/null 2>&1
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/sogo.tbz > /dev/null 2>&1
-  tar -C ${INST_BASE} --use-compress-program=bunzip2 -xf /install/pkgs/dbadmin.tbz > /dev/null 2>&1
-  tar -C ${INST_BASE} -xJf /install/pkgs/mysql.txz > /dev/null 2>&1
-//  tar -C ${INST_BASE} -xzf /install/pkgs/horde.tgz > /dev/null 2>&1
-  tar -C ${INST_BASE}/var/spool/apache/htdocs/phpmanual --use-compress-program=bunzip2 -xf /install/pkgs/php_manual_en.tar.bz2 > /dev/null 2>&1
-  tar -C ${INST_BASE}/var/spool/apache/htdocs/mysqlmanual -xzf /install/pkgs/mysql-manual.tgz > /dev/null 2>&1
-  tar -C ${INST_BASE} -xJf /install/pkgs/snmp-util.txz > /dev/null 2>&1
-  chmod 750 ${INST_BASE}/var/spool/apache/htdocs/userguides/script/genimg.sh
-#      chroot ${INST_BASE} /var/spool/apache/htdocs/userguides/script/genimg.sh
-
-  /usr/bin/dialog --backtitle "$BT" --title "Polycom Phone Firmware" --infobox "Installing Polycom Phone Firmware" 7 35
-  tar -C ${INST_BASE}/var/spool/apache/htdocs/polycom -xJf /install/pkgs/polyfirm.txz > /dev/null 2>&1
-  chmod 770 ${INST_BASE}/var/spool/apache/htdocs/polycom/logs
-
-  /usr/bin/dialog --backtitle "$BT" --title "Snom Phone Firmware" --infobox "Installing Snom Phone Firmware" 7 35
-  tar -C ${INST_BASE}/var/spool/apache/htdocs/snom --use-compress-program=bunzip2 -xf /install/pkgs/snomfirm.tbz > /dev/null 2>&1
-
-  /usr/bin/dialog --backtitle "$BT" --title "Sugar CRM" --infobox "Installing Sugar CRM" 7 35
-  tar -C ${INST_BASE}/var/spool/apache/htdocs --use-compress-program=bunzip2 -xf /install/pkgs/sugarcrm.tar.bz2
-
-  /usr/bin/dialog --backtitle "$BT" --title "Creating Mail/User Hash Directories" --infobox "Creating Mail/User Hash Directories" 5 45
+#  /usr/bin/dialog --backtitle "$BT" --title "Creating Mail/User Hash Directories" --infobox "Creating Mail/User Hash Directories" 5 45
   setfacl -m u::rwX -m g::rwX -m o::0 -m g:12:rwX -m g:100:rX -m m::rwX \
           -m d:u::rwX -m d:g::rwX -m d:o::0 -m d:g:12:rwX -m d:m::rwX ${INST_BASE}/var/spool/mail;
   for root1 in a b c d e f g h i j k l m n o p q r s t u v w x y z 1 2 3 4 5 6 7 8 9 0;do
@@ -196,21 +99,15 @@ EOF
     mkdir /var/spool/apache/htdocs/ns/config/zones
   fi;
 
-  /usr/bin/dialog --backtitle "$BT" --title "Client Software" --infobox "Installing Client Software" 7 35
-  mkdir -p ${INST_BASE}/var/spool/samba/share/
   chmod 2777 ${INST_BASE}/var/spool/samba/share/
-  cp -r /install/tools/* ${INST_BASE}/var/spool/samba/share/
   chmod -R -o=rwX,g=rwX,o=rX ${INST_BASE}/var/spool/samba/share/*
   chown -R root.139 ${INST_BASE}/var/spool/samba/share
 
-  if [ ! -d ${INST_BASE}/var/spool/samba/dadmin ];then
-    mkdir ${INST_BASE}/var/spool/samba/dadmin
-  fi;
-  tar -C ${INST_BASE}/var/spool/samba/dadmin -xzf /install/pkgs/windomadmin.tgz
+#  cp -r /install/tools/* ${INST_BASE}/var/spool/samba/share/
 
-  /usr/bin/dialog --backtitle "$BT" --title "Initial Config" --infobox "Creating Initial Config" 7 35
-  cp /install/.profile ${INST_BASE}/root/.profile
-  chmod 750 ${INST_BASE}/root/.profile
+#  /usr/bin/dialog --backtitle "$BT" --title "Initial Config" --infobox "Creating Initial Config" 7 35
+#  cp /install/.profile ${INST_BASE}/root/.profile
+#  chmod 750 ${INST_BASE}/root/.profile
   echo "clear" > ${INST_BASE}/root/.bash_logout
 
   for sysdir in dev proc sys;do
@@ -241,18 +138,18 @@ EOF
   chmod 1777 ${INST_BASE}/tmp ${INST_BASE}/var/run
   chown -R www.www ${INST_BASE}/var/spool/apache/htdocs
   chmod 770 ${INST_BASE}/var/spool/clientmqueue
-  mkdir -p ${INST_BASE}/var/run/nscd ${INST_BASE}/var/db/nscd > /dev/null 2>&1
+  chown 51.51 ${INST_BASE}/usr/share/clamav ${INST_BASE}/var/spool/avirus > /dev/null 2>&1
+  chown smmsp.smmsp ${INST_BASE}/var/spool/clientmqueue/
 
   chroot ${INST_BASE} /sbin/ldconfig
   chroot ${INST_BASE} /sbin/hwclock --systohc --utc >/dev/tty4 2>&1
   chroot ${INST_BASE} /usr/sbin/rndc-confgen -a -r /dev/urandom > /dev/null 2> /dev/null
   chroot ${INST_BASE} /usr/bin/rebuild-info
 
-#  /usr/bin/dialog --backtitle "$BT" --title "Locate Database" --infobox "Updating File Locate Database" 7 35
-#  chroot ${INST_BASE} /usr/bin/updatedb --output=/var/db/locate --prunepaths='/proc /dev /sys /tmp /var/tmp' >/dev/null 2>&1
-
-  /usr/bin/dialog --backtitle "$BT" --title "Init RD" --infobox "Creating Initial RAM Disks" 7 35
-  rm ${INST_BASE}/etc/mtab
+#  /usr/bin/dialog --backtitle "$BT" --title "Init RD" --infobox "Creating Initial RAM Disks" 7 35
+  if [ -e ${INST_BASE}/etc/mtab ];then
+    rm ${INST_BASE}/etc/mtab
+  fi;
   ln -s /proc/mounts ${INST_BASE}/etc/mtab
   chroot ${INST_BASE} /usr/sbin/mkfstab > ${INST_BASE}/etc/fstab 2> /dev/null
   rm ${INST_BASE}/etc/mtab
@@ -260,7 +157,7 @@ EOF
   chroot ${INST_BASE} /usr/sbin/mkgrub > /dev/null 2>&1
   chroot ${INST_BASE} /usr/sbin/mkfstab > ${INST_BASE}/etc/fstab 2> /dev/null
 
-  /usr/bin/dialog --backtitle "$BT" --title "Post Install" --infobox "Running genconf/servconfig This Takes Several Minutes" 7 35
+#  /usr/bin/dialog --backtitle "$BT" --title "Post Install" --infobox "Running genconf/servconfig This Takes Several Minutes" 7 35
   touch ${INST_BASE}/tmp/.firstconfig ${INST_BASE}/etc/.needsreconf
   rsync -aR /var/lib/avahi-autoipd /etc/dhclient.conf ${INST_BASE} > /dev/null 2>&1
   chroot ${INST_BASE} /usr/sbin/genconf > /dev/null 2>&1
@@ -269,7 +166,8 @@ EOF
   rm ${INST_BASE}/etc/.install ${INST_BASE}/etc/.cdrom > /dev/null 2>&1
 
   setterm -cursor on
-  clear
+
+#  clear
   return 0
 }
 
