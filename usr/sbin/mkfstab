@@ -23,12 +23,12 @@ if ($myid ne "") {
 #read mtab adding other file systems by UUID exclude flash and ram devices
 open(MNT,"/etc/mtab");
 while(<MNT>) {
-  if ((/^\/dev\/mapper\/flash/) && (/^\/dev\/(flash|ram)/)) {
+  if ((/^\/dev\/mapper\/flash/) || (/^\/dev\/(flash|ram)/)) {
     next;
   }
 
   if (/^(\/[\w\/-]+)\s(\/[\w\/-]+|\/)\s([\w]+)/) {
-    if (($2 eq "/install/tools") || (! -e $1) || (! -d $2)) {
+    if (($2 eq "/install/tools") || ($2 eq "/media/isofs") || (! -e $1) || (! -d $2)) {
       next;
     }
 
