@@ -141,6 +141,13 @@ EOF
   chown 51.51 ${INST_BASE}/usr/share/clamav ${INST_BASE}/var/spool/avirus > /dev/null 2>&1
   chown smmsp.smmsp ${INST_BASE}/var/spool/clientmqueue/
 
+  if [ ! -e ${INST_BASE}/etc/firewall.conf ];then
+    ln -s -r ${INST_BASE}/var/spool/apache/htdocs/ns/config/netsentry.conf ${INST_BASE}/etc/firewall.conf
+  fi;
+  if [ ! -e ${INST_BASE}/etc/localtime ];then
+    ln -s -r ${INST_BASE}/usr/share/zoneinfo/Africa/Johannesburg ${INST_BASE}/etc/localtime
+  fi;
+
   chroot ${INST_BASE} /sbin/ldconfig
   chroot ${INST_BASE} /sbin/hwclock --systohc --utc >/dev/tty4 2>&1
   chroot ${INST_BASE} /usr/sbin/rndc-confgen -a -r /dev/urandom > /dev/null 2> /dev/null
