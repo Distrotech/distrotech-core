@@ -167,7 +167,7 @@ LogFormat "%V %h %l %u %t \"%r\" %>s %b" common
 LogFormat "%{Referer}i -> %U" referer
 LogFormat "%{User-agent}i" agent
 LogLevel notice
-MIMEMagicFile /opt/apache2/conf/magic
+MIMEMagicFile /etc/httpd/magic
 <IfModule prefork.c>
   ServerLimit          1024
   StartServers           10
@@ -217,7 +217,7 @@ SSLSessionCache         dbm:/var/run/ssl_scache
 StartServers 5
 #SuexecUserGroup nobody nogroup
 Timeout 300
-TypesConfig /opt/apache2/conf/mime.types
+TypesConfig /etc/httpd/mime.types
 UseCanonicalName Off
 UserDir public_html
 User www
@@ -267,7 +267,7 @@ User www
       RubyHandler Apache::ERbRun.instance
     </Files>
   </IfModule>
-</Directory>
+</DirectoryMatch>
 
 <DirectoryMatch "^/var/spool/apache/htdocs/(cdr|ldap|snom|linksys|polycom|yealink)">
   Options -Indexes
