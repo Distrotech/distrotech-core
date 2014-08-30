@@ -2348,7 +2348,7 @@ if [ ! -e /etc/.cdrom ];then
     cp sendmail.mc /etc/mail/sendmail.mc
     chown root.root /etc/mail/sendmail.mc
     chmod 640 /etc/mail/sendmail.mc
-    (m4  -I /usr/mailconf /usr/mailconf/m4/cf.m4 /etc/mail/sendmail.mc |grep -vE "(^#)|(^$)" > /etc/mail/sendmail.cf.orig) > /dev/null 2>&1
+    (m4  -I /usr/share/mailconf /usr/share/mailconf/m4/cf.m4 /etc/mail/sendmail.mc |grep -vE "(^#)|(^$)" > /etc/mail/sendmail.cf.orig) > /dev/null 2>&1
     cp /etc/mail/sendmail.cf.orig /etc/mail/sendmail.cf
     chmod 644 /etc/mail/sendmail.cf
   fi;
@@ -2378,7 +2378,7 @@ if [ ! -e /etc/.cdrom ];then
     cp submit.mc /etc/mail/submit.mc
     chown root.root /etc/mail/submit.mc
     chmod 640 /etc/mail/sendmail.mc
-    (m4  -I /usr/mailconf /usr/mailconf/m4/cf.m4 /etc/mail/submit.mc |grep -vE "(^#)|(^$)" > /etc/mail/submit.cf) > /dev/null 2>&1
+    (m4  -I /usr/share/mailconf /usr/share/mailconf/m4/cf.m4 /etc/mail/submit.mc |grep -vE "(^#)|(^$)" > /etc/mail/submit.cf) > /dev/null 2>&1
     chmod 644 /etc/mail/submit.cf
   fi;
 
