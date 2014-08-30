@@ -1,0 +1,19 @@
+!
+log syslog
+table 75
+bgp multiple-instance
+!
+router rip
+ default-information originate
+ redistribute kernel
+ redistribute connected
+ redistribute static
+ redistribute ospf
+!
+router ospf
+ redistribute kernel
+ redistribute connected
+ redistribute static
+ redistribute rip
+ default-information originate
+!
