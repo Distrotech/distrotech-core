@@ -54,6 +54,9 @@ fi
 
 if [ -e /etc/.install ];then
   (/usr/sbin/sysreconf /install/default.conf.sysvars
+  if [ ! -d /var/spool/apache/htdocs/ns/config ];then
+    mkdir -p /var/spool/apache/htdocs/ns/config
+  fi;
   cp /tmp/netsentry.conf /var/spool/apache/htdocs/ns/config) > /dev/null 2>&1
 fi;
 
