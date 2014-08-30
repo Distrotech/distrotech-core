@@ -51,7 +51,18 @@ baseurl = file:///media/isofs/repo
 EOF
 ) > /etc/yum/repos.d/installer.repo
 
-  /root/instpkg x86_64 ${INST_BASE} root core
+
+  ARCH=x86_64
+  case ${ARCH} in
+    *64)LIBDIR="lib64";;
+    x86_32)LIBDIR="libx32";;
+    *)LIBDIR="lib";;
+  esac;
+
+  /install/instpkg x86_64 ${INST_BASE} root
+  /install/instpkg x86_64 ${INST_BASE} core
+
+  ls -d ${INST_BASE}/opt/*/${LIBDIR} |awk -v MNT=${INST_BASE} '{printf "%s\n",substr($1,length(MNT)+1)}' > ${INST_BASE}/etc/ld.so.conf.d/opt.conf
 
   for newdir in autofs cdrom floppy initrd;do
     mkdir -p ${INST_BASE}/mnt/${newdir}
@@ -153,24 +164,22 @@ EOF
   chroot ${INST_BASE} /usr/sbin/rndc-confgen -a -r /dev/urandom > /dev/null 2> /dev/null
   chroot ${INST_BASE} /usr/bin/rebuild-info
 
-#  /usr/bin/dialog --backtitle "$BT" --title "Init RD" --infobox "Creating Initial RAM Disks" 7 35
-  if [ -e ${INST_BASE}/etc/mtab ];then
-    rm ${INST_BASE}/etc/mtab
-  fi;
-  ln -s /proc/mounts ${INST_BASE}/etc/mtab
-  chroot ${INST_BASE} /usr/sbin/mkfstab > ${INST_BASE}/etc/fstab 2> /dev/null
-  rm ${INST_BASE}/etc/mtab
-  chroot ${INST_BASE} mount -fa
-  chroot ${INST_BASE} /usr/sbin/mkgrub > /dev/null 2>&1
-  chroot ${INST_BASE} /usr/sbin/mkfstab > ${INST_BASE}/etc/fstab 2> /dev/null
-
 #  /usr/bin/dialog --backtitle "$BT" --title "Post Install" --infobox "Running genconf/servconfig This Takes Several Minutes" 7 35
+  rm ${INST_BASE}/etc/.install ${INST_BASE}/etc/.cdrom > /dev/null 2>&1
   touch ${INST_BASE}/tmp/.firstconfig ${INST_BASE}/etc/.needsreconf
   rsync -aR /var/lib/avahi-autoipd /etc/dhclient.conf ${INST_BASE} > /dev/null 2>&1
   chroot ${INST_BASE} /usr/sbin/genconf > /dev/null 2>&1
   chroot ${INST_BASE} /usr/sbin/servconfig > /dev/tty4 2> /dev/tty4
   rm -rf ${INST_BASE}/var/spool/mail/shared
-  rm ${INST_BASE}/etc/.install ${INST_BASE}/etc/.cdrom > /dev/null 2>&1
+
+#  /usr/bin/dialog --backtitle "$BT" --title "Init RD" --infobox "Creating Initial RAM Disks" 7 35
+  if [ -e ${INST_BASE}/etc/mtab ];then
+    rm ${INST_BASE}/etc/mtab
+  fi;
+  ln -s -r ${INST_BASE}/proc/mounts ${INST_BASE}/etc/mtab
+  chroot ${INST_BASE} /usr/sbin/mkfstab > ${INST_BASE}/etc/fstab 2> /dev/null
+  chroot ${INST_BASE} /usr/sbin/mkgrub > /dev/null 2>&1
+  chroot ${INST_BASE} /usr/sbin/mkfstab > ${INST_BASE}/etc/fstab 2> /dev/null
 
   setterm -cursor on
 
