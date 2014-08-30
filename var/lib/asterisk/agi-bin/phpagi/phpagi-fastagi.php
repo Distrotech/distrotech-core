@@ -1,4 +1,4 @@
-#!/usr/local/bin/php -q
+#!/usr/bin/php -q
 <?php
   require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'phpagi.php');
 

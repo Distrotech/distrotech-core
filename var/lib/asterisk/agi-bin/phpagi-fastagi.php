@@ -1,4 +1,4 @@
-#!/usr/local/bin/php -q
+#!/usr/bin/php -q
 <?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
