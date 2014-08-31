@@ -30,10 +30,15 @@ for cservice in ipv6 ldap nfs interface;do
   fi;
 done
 
+if [ ! -d /var/run/dbus ];then
+  mkdir -p /var/run/dbus
+fi;
 dbus-daemon --system
 
 for mservice in /etc/rc.d/M.d/*;do
-  ${mservice}
+  if [ -x ${mservice} ];then
+    ${mservice}
+  fi;
 done
 
 (/etc/rc.d/rc.hfax;/usr/libexec/t38modem_start) > /dev/null 2>&1 &
