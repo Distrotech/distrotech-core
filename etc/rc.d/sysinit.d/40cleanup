@@ -45,7 +45,7 @@ fi;
 
 #VPN
 if [ ! -d /usr/var/racoon/ ];then
-  mkdir /usr/var/racoon
+  mkdir -p /usr/var/racoon
 fi;
 
 #NSCD
