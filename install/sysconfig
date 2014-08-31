@@ -546,6 +546,7 @@ DISK="";
 DCNT=1;
 
 Date_Time;
+Network_Address;
 Fdisk;
 
 RESULT="0";
