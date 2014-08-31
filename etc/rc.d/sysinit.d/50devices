@@ -30,9 +30,9 @@ for loadmod in ppp_generic 8021q ipcomp ip_gre esp4 ah4 tun l2tp_ppp pppoe capab
 done;
 
 #load the vesa fb if no other fb is loaded
-if [ ! -e /dev/fb1 ] && [ -e /dev/fb0 ];then
-  modprobe uvesafb >/dev/null 2>&1
-fi;
+#if [ ! -e /dev/fb1 ] && [ -e /dev/fb0 ];then
+#  modprobe uvesafb >/dev/null 2>&1
+#fi;
 
 #Load old mouse driver if there is a FB
 if [ -e /dev/fb0 ];then
