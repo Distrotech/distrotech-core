@@ -59,8 +59,10 @@ EOF
     *)LIBDIR="lib";;
   esac;
 
-  /install/instpkg x86_64 ${INST_BASE} root
-  /install/instpkg x86_64 ${INST_BASE} core
+  /install/instpkg x86_64 ${INST_BASE} root |/root/instguage.pl |\
+    dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install System Base Packages" 8 35
+  /install/instpkg x86_64 ${INST_BASE} core |/root/instguage.pl |\
+    dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install System Core Packages" 8 35
 
   ls -d ${INST_BASE}/opt/*/${LIBDIR} |awk -v MNT=${INST_BASE} '{printf "%s\n",substr($1,length(MNT)+1)}' > ${INST_BASE}/etc/ld.so.conf.d/opt.conf
 
