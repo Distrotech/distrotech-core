@@ -100,17 +100,32 @@ ssh-keygen -t ecdsa -f /etc/ssh_host_ecdsa_key -N "" > /dev/null 2>&1
 /usr/sbin/sshd > /dev/null 2>&1
 
 #Rename any stray network cards
-for etype in eth wlan;do
-  cifname=0;
-  for nifname in A B C D;do
-    /sbin/ip link set dev ${etype}${cifname} down > /dev/null 2>&1
-    if [ $? == 0 ];then
-      (ifrename -i ${etype}${cifname} -n ${etype}${nifname}
-      /sbin/ip link set dev ${etype}${nifname} up) > /dev/null 2>&1
-    fi;
-    let cifname++;
-  done;
-done;
+(NCLASSDIR=/sys/class/net/;
+
+ECNT="0";
+WCNT="0"
+
+for net in `ls ${NCLASSDIR}/`;do
+  TYPE=$(cat ${NCLASSDIR}/${net}/type)
+  if [ "${TYPE}" != "1" ] || [ ! -d ${NCLASSDIR}/${net}/device/ ] || [ -e /tmp/ifnrename-${net} ];then
+    continue;
+  fi;
+
+  if [ -d ${NCLASSDIR}/${net}/wireless ];then
+    ADDR=$(echo ${WCNT} |tr [0-9] [A-J])
+    let WCNT++;
+    DEV="wlan${ADDR}";
+   else
+    ADDR=$(echo ${ECNT} |tr [0-9] [A-J])
+    let ECNT++;
+    DEV="eth${ADDR}";
+  fi;
+  ip link set down dev ${net}
+  ifrename -i ${net} -n ${DEV}
+  ip link set up dev ${DEV}
+  touch /tmp/ifrename-${DEV}
+done
+rm /tmp/ifrename-*) > /dev/null 2>&1
 
 #Set up Bridge add ethA to it this will be the internal interface
 if [ -d /sys/class/net/ethA ];then
