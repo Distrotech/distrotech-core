@@ -48,13 +48,13 @@ if [ -x /usr/sbin/asterisk ];then
    /var/lib/asterisk/agi-bin/phpagi-fast.php > /dev/null 2>&1
 fi;
 if [ ! -e /tmp/op_buttons.cfg.new ] || [ ! -e /tmp/op_style.cfg.new ];then
-  /etc/asterisk/pannel/genbut.pl > /dev/null 2>&1 
+  /etc/asterisk/pannel/genbut.pl > /dev/null 2>&1
 fi
 
 (/usr/sbin/cfrestore;
 /usr/sbin/genconf;
 if [ -x /etc/rc.d/rc.ppp ];then
-  /etc/rc.d/rc.ppp &
+  (/etc/rc.d/rc.ppp;/usr/sbin/servconfig) &
  else
   /usr/sbin/servconfig
 fi

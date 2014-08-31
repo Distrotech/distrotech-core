@@ -177,7 +177,7 @@ EOF
   chroot ${INST_BASE} /usr/sbin/genconf > /dev/null 2>&1
   chroot ${INST_BASE} /usr/sbin/servconfig > /dev/tty4 2> /dev/tty4
   touch ${INST_BASE}/tmp/.firstconfig
-  rm -rf ${INST_BASE}/var/spool/mail/shared
+  rm -rf ${INST_BASE}/var/spool/mail/shared ${INST_BASE}/root/crontab
 
   /usr/bin/dialog --backtitle "$BT" --title "Init RD" --infobox "Creating Initial RAM Disks" 7 35
   if [ -e ${INST_BASE}/etc/mtab ];then
