@@ -166,26 +166,29 @@ EOF
   chroot ${INST_BASE} /usr/sbin/rndc-confgen -a -r /dev/urandom > /dev/null 2> /dev/null
   chroot ${INST_BASE} /usr/bin/rebuild-info
 
-  /usr/bin/dialog --backtitle "$BT" --title "Post Install" --infobox "Running genconf/servconfig This Takes Several Minutes" 7 35
+  /usr/bin/dialog --backtitle "$BT" --title "Post Install" --infobox "Running genconf/servconfig. This Takes Several Minutes" 7 35
   rm ${INST_BASE}/etc/.install ${INST_BASE}/etc/.cdrom > /dev/null 2>&1
   touch ${INST_BASE}/tmp/.firstconfig ${INST_BASE}/etc/.needsreconf
   rsync -aR /var/lib/avahi-autoipd /etc/dhclient.conf ${INST_BASE} > /dev/null 2>&1
   chroot ${INST_BASE} /usr/sbin/genconf > /dev/null 2>&1
   chroot ${INST_BASE} /usr/sbin/servconfig > /dev/tty4 2> /dev/tty4
+  /usr/bin/dialog --backtitle "$BT" --title "PostGRE Setup" --infobox "Applying PostGRE Schema. This Takes Several Minutes" 7 35
+  chroot ${INST_BASE} /usr/sbin/genconf > /dev/null 2>&1
+  chroot ${INST_BASE} /usr/sbin/servconfig > /dev/tty4 2> /dev/tty4
+  touch ${INST_BASE}/tmp/.firstconfig
   rm -rf ${INST_BASE}/var/spool/mail/shared
 
-#  /usr/bin/dialog --backtitle "$BT" --title "Init RD" --infobox "Creating Initial RAM Disks" 7 35
+  /usr/bin/dialog --backtitle "$BT" --title "Init RD" --infobox "Creating Initial RAM Disks" 7 35
   if [ -e ${INST_BASE}/etc/mtab ];then
     rm ${INST_BASE}/etc/mtab
   fi;
   ln -s -r ${INST_BASE}/proc/mounts ${INST_BASE}/etc/mtab
   chroot ${INST_BASE} /usr/sbin/mkfstab > ${INST_BASE}/etc/fstab 2> /dev/null
   chroot ${INST_BASE} /usr/sbin/mkgrub > /dev/null 2>&1
-  chroot ${INST_BASE} /usr/sbin/mkfstab > ${INST_BASE}/etc/fstab 2> /dev/null
 
   setterm -cursor on
 
-#  clear
+  clear
   return 0
 }
 
@@ -496,7 +499,8 @@ Main_Menu() {
 }
 
 Network_Address()  {
-  /usr/sbin/sysreconf /install/default.conf.sysvars
+  /usr/bin/dialog --backtitle "$BT" --title "Network Setup" --infobox "Configuring network addresses" 4 35
+  (/usr/sbin/sysreconf /install/default.conf.sysvars
   if [ ! -d /var/spool/apache/htdocs/ns/config ];then
     mkdir -p /var/spool/apache/htdocs/ns/config
   fi;
@@ -507,7 +511,7 @@ Network_Address()  {
    elif [ -d /sys/class/net/ethA ];then
     dhclient -nw ethA
     dhclient -6 -nw ethA
-  fi;
+  fi;) >/dev/null 2>&1
 }
 
 if [ "${1}" == "install" ];then
@@ -548,7 +552,7 @@ DISK="";
 DCNT=1;
 
 Date_Time;
-Network_Address >/dev/null 2>&1
+Network_Address
 Fdisk;
 
 RESULT="0";
