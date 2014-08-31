@@ -1,10 +1,5 @@
 #!/bin/bash
 
-/usr/sbin/grub-mkdevicemap --no-floppy
-if [ -e /boot/grub/devicemap.local ];then
-  cat /boot/grub/devicemap.local >> /boot/grub/device.map
-fi;
-
 DCNT=0
 
 #Ensure swap space has a UUID
@@ -17,7 +12,7 @@ blkid -t TYPE=swap -o device |awk '{printf "\
 
 #Install grub on all lvm VG PV's
 for hdisk in `pvdisplay -c 2>/dev/null |awk -F: '$2 == "lvm" {printf "%s\n",$1}'`;do
-  DEV=`grub-probe --target=drive -d ${hdisk} |sed -e "s/\(.*\),.*/\1)/"`
+  DEV=`grub-probe --target=drive -d ${hdisk} |sed -e "s/.*\(\/dev\/.*\),.*/\1/"`
   echo "Installing GRUB on ${DEV}"
   /usr/sbin/grub-install --force ${DEV}
   if [ $? == 0 ];then
@@ -27,8 +22,8 @@ done
 
 #If there is no LVM install on the drive with /boot
 if [ ${DCNT} == 0 ];then
-  DEV=`grub-probe --target=drive /boot |sed -e "s/\(.*\),.*/\1)/"`
-  if [ $? == 0 ] && [ "${DEV}" != "(lvm-root)" ];then
+  DEV=`grub-probe --target=drive /boot |sed -e "s/.*\(\/dev\/.*\),.*/\1/"`
+  if [ $? == 0 ] && [ "${DEV}" != "(lvm/lvm-root)" ];then
     echo "Installing GRUB on ${DEV}"
     /usr/sbin/grub-install --force ${DEV}
     if [ $? == 0 ];then
