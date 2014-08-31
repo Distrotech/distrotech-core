@@ -92,7 +92,7 @@ EOF
     fi;
   done;
 
-#  /usr/bin/dialog --backtitle "$BT" --title "Creating Mail/User Hash Directories" --infobox "Creating Mail/User Hash Directories" 5 45
+  /usr/bin/dialog --backtitle "$BT" --title "Creating Mail/User Hash Directories" --infobox "Creating Mail/User Hash Directories" 5 45
   setfacl -m u::rwX -m g::rwX -m o::0 -m g:12:rwX -m g:100:rX -m m::rwX \
           -m d:u::rwX -m d:g::rwX -m d:o::0 -m d:g:12:rwX -m d:m::rwX ${INST_BASE}/var/spool/mail;
   for root1 in a b c d e f g h i j k l m n o p q r s t u v w x y z 1 2 3 4 5 6 7 8 9 0;do
@@ -112,13 +112,13 @@ EOF
     mkdir /var/spool/apache/htdocs/ns/config/zones
   fi;
 
-  chmod 2777 ${INST_BASE}/var/spool/samba/share/
+  (chmod 2777 ${INST_BASE}/var/spool/samba/share/
   chmod -R -o=rwX,g=rwX,o=rX ${INST_BASE}/var/spool/samba/share/*
-  chown -R root.139 ${INST_BASE}/var/spool/samba/share
+  chown -R root.139 ${INST_BASE}/var/spool/samba/share) >/dev/null 2>&1
 
 #  cp -r /install/tools/* ${INST_BASE}/var/spool/samba/share/
 
-#  /usr/bin/dialog --backtitle "$BT" --title "Initial Config" --infobox "Creating Initial Config" 7 35
+  /usr/bin/dialog --backtitle "$BT" --title "Initial Config" --infobox "Creating Initial Config" 7 35
 #  cp /install/.profile ${INST_BASE}/root/.profile
 #  chmod 750 ${INST_BASE}/root/.profile
   echo "clear" > ${INST_BASE}/root/.bash_logout
@@ -161,12 +161,12 @@ EOF
     ln -s -r ${INST_BASE}/usr/share/zoneinfo/Africa/Johannesburg ${INST_BASE}/etc/localtime
   fi;
 
-  chroot ${INST_BASE} /sbin/ldconfig
+  chroot ${INST_BASE} /sbin/ldconfig > /dev/null 2>&1
   chroot ${INST_BASE} /sbin/hwclock --systohc --utc >/dev/tty4 2>&1
   chroot ${INST_BASE} /usr/sbin/rndc-confgen -a -r /dev/urandom > /dev/null 2> /dev/null
   chroot ${INST_BASE} /usr/bin/rebuild-info
 
-#  /usr/bin/dialog --backtitle "$BT" --title "Post Install" --infobox "Running genconf/servconfig This Takes Several Minutes" 7 35
+  /usr/bin/dialog --backtitle "$BT" --title "Post Install" --infobox "Running genconf/servconfig This Takes Several Minutes" 7 35
   rm ${INST_BASE}/etc/.install ${INST_BASE}/etc/.cdrom > /dev/null 2>&1
   touch ${INST_BASE}/tmp/.firstconfig ${INST_BASE}/etc/.needsreconf
   rsync -aR /var/lib/avahi-autoipd /etc/dhclient.conf ${INST_BASE} > /dev/null 2>&1
