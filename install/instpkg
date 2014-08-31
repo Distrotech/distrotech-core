@@ -44,7 +44,7 @@ install_to_dir() {
 
   for dir in root proc sys dev tmp initrd media media/isofs media/install run run/udev;do
     if [ ! -d ${INSTDIR}}/${dir} ];then
-      mkdir ${INSTDIR}/${dir}
+      mkdir -p ${INSTDIR}/${dir}
     fi;
   done
   chmod 1777 ${INSTDIR}/tmp
