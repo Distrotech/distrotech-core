@@ -25,8 +25,4 @@ fi;
 if [ ! "`pidof crond`" ];then
   echo $$ > /var/run/crond.pid
   exec /usr/sbin/crond -f >> /var/log/cron 2>&1
-
-  if [ -e /root/crontab ];then
-    crontab /root/crontab -u root
-  fi;
 fi
