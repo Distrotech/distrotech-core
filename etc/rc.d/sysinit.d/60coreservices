@@ -22,19 +22,16 @@ if [ -x /etc/rc.d/rc.firewall ];then
   /etc/rc.d/rc.firewall startup > /dev/null 2>&1
 fi;
 
+
 #Start SSHD
 if [ ! -e /etc/ssh_host_key ];then
   ssh-keygen -t rsa1 -f /etc/ssh_host_key -N "" > /dev/null 2>&1
 fi;
-if [ ! -e /etc/ssh_host_dsa_key ];then
-  ssh-keygen -t dsa -f /etc/ssh_host_dsa_key -N "" > /dev/null 2>&1
-fi;
-if [ ! -e /etc/ssh_host_rsa_key ];then
-  ssh-keygen -t rsa -f /etc/ssh_host_rsa_key -N "" > /dev/null 2>&1
-fi;
-if [ ! -e /etc/ssh_host_ecdsa_key ];then
-  ssh-keygen -t ecdsa -f /etc/ssh_host_ecdsa_key -N "" > /dev/null 2>&1
-fi;
+for sshkey in dsa rsa ecdsa ed25519;do
+  if [ ! -e /etc/ssh_host_${sshkey}_key ];then
+    ssh-keygen -t ${sshkey} -f /etc/ssh_host_${sshkey}_key -N "" > /dev/null 2>&1
+  fi;
+done;
 (ulimit -n 65535;/usr/sbin/sshd > /dev/null 2>&1) &
 
 #Startup DNS Server
