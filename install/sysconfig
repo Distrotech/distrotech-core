@@ -59,9 +59,9 @@ EOF
     *)LIBDIR="lib";;
   esac;
 
-  /install/instpkg x86_64 ${INST_BASE} root |/root/instguage.pl |\
+  /install/instpkg x86_64 ${INST_BASE} root 2>/dev/null |/install/instguage.pl |\
     dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install System Base Packages" 8 35
-  /install/instpkg x86_64 ${INST_BASE} core |/root/instguage.pl |\
+  /install/instpkg x86_64 ${INST_BASE} core 2>/dev/null |/install/instguage.pl |\
     dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install System Core Packages" 8 35
 
   ls -d ${INST_BASE}/opt/*/${LIBDIR} |awk -v MNT=${INST_BASE} '{printf "%s\n",substr($1,length(MNT)+1)}' > ${INST_BASE}/etc/ld.so.conf.d/opt.conf
@@ -496,7 +496,7 @@ Main_Menu() {
 }
 
 Network_Address()  {
-  /usr/sbin/sysreconf
+  /usr/sbin/sysreconf /install/default.conf.sysvars
   if [ ! -d /var/spool/apache/htdocs/ns/config ];then
     mkdir -p /var/spool/apache/htdocs/ns/config
   fi;
@@ -548,7 +548,7 @@ DISK="";
 DCNT=1;
 
 Date_Time;
-Network_Address;
+Network_Address >/dev/null 2>&1
 Fdisk;
 
 RESULT="0";
