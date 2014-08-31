@@ -2475,9 +2475,9 @@ modulepath /usr/libexec/openldap
 __EOB__
 
   if ($repurl eq "" ){
-    if ((-e "/var/spool/ldap/usemdb" ) || (-e "/var/spool/ldap/data.mdb")) {
+    if ((-e "/var/spool/ldap/usemdb" ) || (-e "/var/spool/ldap/data.mdb") || (! -d "/var/spool/ldap")) {
       $dbtype="mdb";
-    } elsif (( ! -e "/var/spool/ldap/usehdb" ) && (-e "/var/spool/ldap/id2entry.bdb") && ( -d "/var/spool/ldap" )) {
+    } elsif (( ! -e "/var/spool/ldap/usehdb" ) && (-e "/var/spool/ldap/id2entry.bdb")) {
       $dbtype="bdb";
     } else {
       $dbtype="hdb";
