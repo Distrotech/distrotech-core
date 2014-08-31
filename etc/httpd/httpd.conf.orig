@@ -863,5 +863,5 @@ RewriteRule ^/(.*)$ /var/spool/apache/htdocs/$1 [L]
   SetEnvIf User-Agent ".*" HTTPS_ON
 </VirtualHost>
 
-Include conf/httpd.conf.sogo
+Include /etc/httpd/sogo.conf
 

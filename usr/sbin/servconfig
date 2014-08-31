@@ -1836,11 +1836,7 @@ if [ -e sqlpasswd ] && [ -e /usr/sbin/sqlpasswd ];then
 fi;
 
 if [ -e networksentry-full ] && [ ! -e /tmp/.firstconfig ];then
-  if [ "$SPDIFF" ] || [ /opt/apache2/conf/httpd.conf.orig -nt /opt/apache2/conf/httpd.conf ];then
-    if [ -e /etc/apache/php.ini ] && [ ! -e /opt/apache2/conf/php.ini ];then
-      cp /etc/apache/php.ini /opt/apache2/conf/php.ini
-      /opt/apache2/bin/apachectl restart
-    fi;
+  if [ "$SPDIFF" ] || [ /etc/httpd/httpd.conf.orig -nt /etc/httpd/httpd.conf ];then
     if [ ! -d /var/spool/mysql/mysql ];then
       webserver startsql
     fi;
@@ -1853,7 +1849,7 @@ if [ -e networksentry-full ] && [ ! -e /tmp/.firstconfig ];then
       /usr/sbin/winbindd > /dev/null 2>&1 &
       /usr/sbin/smbd -D > /dev/null 2>&1 &
       /etc/rc.d/rc.mail
-      touch /opt/apache2/conf/httpd.conf
+      touch /etc/httpd/httpd.conf
       AST_RESTART=1
     else
       /bin/sh sqlpasswd > /dev/null 2>&1

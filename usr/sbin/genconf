@@ -2368,8 +2368,8 @@ if ($sysconfig{'Type'} eq "full") {
 
 
 print SP<<__EOF__;
-if [ ! -e /etc/apache/sogo.conf ];then
-  touch /etc/apache/sogo.conf
+if [ ! -e /etc/httpd/sogo.conf ];then
+  touch /etc/httpd/sogo.conf
 fi;
 
 touch /tmp/httpd.conf.1 /tmp/httpd.conf
@@ -2425,11 +2425,7 @@ if [ "\$HCDIFF" ] && [ ! -e /etc/.install ] && [ ! -e /etc/.cdrom ];then
     rm /var/run/httpd.pid
   fi;
 
-  if [ ! -d /opt/apache2 ];then
-    mv /tmp/httpd.conf /etc/apache
-   else
-    mv /tmp/httpd.conf /etc/httpd/httpd.conf
-  fi;
+  mv /tmp/httpd.conf /etc/httpd/httpd.conf
 
   if [ ! -e /etc/apache/vhosts2 ];then
     /usr/sbin/genwebmap
