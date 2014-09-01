@@ -16962,6 +16962,10 @@ sub printodbcdsn() {
     $driver="/usr/lib64/x86_64/psqlodbc/psqlodbcw.so";
   } elsif ( -e "/usr/lib64/psqlodbc/psqlodbcw.so") {
     $driver="/usr/lib64/psqlodbc/psqlodbcw.so";
+  } elsif ( -e "/usr/libx32/i686/psqlodbc/psqlodbcw.so") {
+    $driver="/usr/libx32/i686/psqlodbc/psqlodbcw.so";
+  } elsif ( -e "/usr/lib/i686/psqlodbc/psqlodbcw.so") {
+    $driver="/usr/lib/i686/psqlodbc/psqlodbcw.so";
   } else {
     $driver="/usr/lib/psqlodbc/psqlodbcw.so";
   }
