@@ -167,7 +167,6 @@ EOF
   chroot ${INST_BASE} /usr/bin/rebuild-info
 
   /usr/bin/dialog --backtitle "$BT" --title "Post Install" --infobox "Running genconf/servconfig. This Takes Several Minutes" 7 35
-  chroot ${INST_BASE} rsync -a /lib64/x86_64/security/*.so /usr/lib64/security/*.so /usr/lib64/x86_64/security/ > /dev/null 2>&1
   rm ${INST_BASE}/etc/.install ${INST_BASE}/etc/.cdrom > /dev/null 2>&1
   touch ${INST_BASE}/tmp/.firstconfig ${INST_BASE}/etc/.needsreconf
   rsync -aR /var/lib/avahi-autoipd /etc/dhclient.conf ${INST_BASE} > /dev/null 2>&1
