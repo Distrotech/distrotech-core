@@ -87,6 +87,7 @@ if [ ! -e /var/spool/ldap/id2entry.bdb ] && [ ! -e /var/spool/ldap/data.mdb ] &&
   /bin/touch /var/spool/ldap/usemdb
   if [ ! -s /var/spool/apache/htdocs/ns/config/ldap.replica ];then
     /usr/sbin/slapadd -b "" -l /etc/openldap/startup.ldif >/dev/null 2>&1
+    touch /etc/ldap.secret
     chmod 400 /etc/ldap.secret
     chown root.root /etc/ldap.secret
     echo -n "admin" > /etc/ldap.secret
@@ -104,6 +105,7 @@ if [ -e /var/spool/ldap/id2entry.bdb ] || [ -e /var/spool/ldap/data.mdb ] || [ -
   /bin/rm /var/spool/ldap/*.dbb > /dev/null 2>&1
   if [ ! -s /var/spool/apache/htdocs/ns/config/ldap.replica ];then
     /usr/sbin/slapadd -b "" -l /etc/openldap/startup.ldif >/dev/null 2>&1
+    touch /etc/ldap.secret
     chmod 400 /etc/ldap.secret
     chown root.root /etc/ldap.secret
     echo -n "admin" > /etc/ldap.secret

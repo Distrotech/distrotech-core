@@ -54,9 +54,9 @@ fi
 (/usr/sbin/cfrestore;
 /usr/sbin/genconf;
 if [ -x /etc/rc.d/rc.ppp ];then
-  (/etc/rc.d/rc.ppp;/usr/sbin/servconfig) &
+  (/etc/rc.d/rc.ppp;/usr/sbin/servconfig;/usr/sbin/genconf) &
  else
-  /usr/sbin/servconfig
+  (/usr/sbin/servconfig;/usr/sbin/genconf) &
 fi
 
 while [ "`pidof racoon`" ] && [ "${RKCNT}" != "XXXXXX" ];do
