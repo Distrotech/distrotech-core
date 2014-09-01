@@ -53,10 +53,12 @@ EOF
 
 
   ARCH=$(uname -m)
+  KARCH="x86_64";
   case ${ARCH} in
-    *64)LIBDIR="lib64";;
+    x86_64)LIBDIR="lib64";;
     x86_32)LIBDIR="libx32";;
-    *)LIBDIR="lib";;
+    i686)KARCH="x86";
+         LIBDIR="lib";;
   esac;
 
   /install/instpkg ${ARCH} ${INST_BASE} root 2>/dev/null |/install/instguage.pl |\
@@ -69,6 +71,10 @@ EOF
   for newdir in autofs cdrom floppy initrd;do
     mkdir -p ${INST_BASE}/mnt/${newdir}
   done
+
+  #Setup the kernel version in the config file used by mkinitd
+  LINKERNEL=$(yum --installroot=${INSTBASE} info linux-intel-dts.${ARCH} |grep Version |sed -e "s/.*\s\(.*\)/\1/")
+  sed -e "s/\(KERNEL=\"\).*\"/\1${LINKERNEL}-${KARCH}\"/" /install/netsentry-version > ${INST_BASE}/etc/netsentry-version
 
   for newdir in usr/share/clamav var/spool/clientmqueue var/spool/MailScanner/incoming etc/MailScanner \
                 var/empty var/spool/apache/htdocs/ssl/sign var/spool/apache/htdocs/ssl/casign var/state/dhcp \
@@ -83,7 +89,6 @@ EOF
   done
 
   rsync -a /install/update ${INST_BASE}/var/spool/ > /dev/null 2>&1
-  cp /install/netsentry-version ${INST_BASE}/etc
 
   for webdir in postgresql mysqlmanual phpmanual polycom snom ns/config;do
     if [ ! -d ${INST_BASE}/var/spool/apache/htdocs/${webdir} ];then
