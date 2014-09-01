@@ -44,7 +44,7 @@ install_to_dir() {
 
   for dir in root proc sys dev tmp initrd media media/isofs media/install run run/udev;do
     if [ ! -d ${INSTDIR}}/${dir} ];then
-      mkdir -p ${INSTDIR}/${dir}
+      mkdir ${INSTDIR}/${dir}
     fi;
   done
   chmod 1777 ${INSTDIR}/tmp
@@ -58,10 +58,10 @@ install_to_dir() {
       RPM_PKG_LIST+="@${pkggrp}-dev Xorg-dev.${ARCH} --exclude=gcc-libs --exclude=gcc --exclude=gcc-locale --exclude=gcc-dev systemd-dev"
      elif [ "${pkggrp}" == "root" ] && [ "${ARCHKERN}" ];then
       for kernpkg in dahdi firmware modules;do
-        RPM_PKG_LIST+=" ${ARCHKERN}-${kernpkg}";
+        RPM_PKG_LIST+=" ${ARCHKERN}-${kernpkg}.${ARCH}";
       done;
      elif [ "${pkggrp}" == "core" ] && [ "${ARCHKERN}" ];then
-      RPM_PKG_LIST+=" ${ARCHKERN}";
+      RPM_PKG_LIST+=" ${ARCHKERN}.${ARCH}";
     fi;
   done
   do_yuminstall ${INSTDIR} ${RPM_PKG_LIST}
