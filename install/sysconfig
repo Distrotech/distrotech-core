@@ -52,16 +52,16 @@ EOF
 ) > /etc/yum/repos.d/installer.repo
 
 
-  ARCH=x86_64
+  ARCH=$(uname -m)
   case ${ARCH} in
     *64)LIBDIR="lib64";;
     x86_32)LIBDIR="libx32";;
     *)LIBDIR="lib";;
   esac;
 
-  /install/instpkg x86_64 ${INST_BASE} root 2>/dev/null |/install/instguage.pl |\
+  /install/instpkg ${ARCH} ${INST_BASE} root 2>/dev/null |/install/instguage.pl |\
     dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install System Base Packages" 8 35
-  /install/instpkg x86_64 ${INST_BASE} core 2>/dev/null |/install/instguage.pl |\
+  /install/instpkg ${ARCH} ${INST_BASE} core 2>/dev/null |/install/instguage.pl |\
     dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install System Core Packages" 8 35
 
   ls -d ${INST_BASE}/opt/*/${LIBDIR} |awk -v MNT=${INST_BASE} '{printf "%s\n",substr($1,length(MNT)+1)}' > ${INST_BASE}/etc/ld.so.conf.d/opt.conf
