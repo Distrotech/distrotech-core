@@ -193,7 +193,7 @@ EOF
   if [ -e ${INST_BASE}/etc/mtab ];then
     rm ${INST_BASE}/etc/mtab
   fi;
-  ln -s -r ${INST_BASE}/proc/mounts ${INST_BASE}/etc/mtab
+  ln -s ../proc/self/mounts ${INST_BASE}/etc/mtab
   chroot ${INST_BASE} /usr/sbin/mkfstab > ${INST_BASE}/etc/fstab 2> /dev/null
   chroot ${INST_BASE} /usr/sbin/mkgrub > /dev/null 2>&1
 
