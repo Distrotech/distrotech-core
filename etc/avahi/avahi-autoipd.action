@@ -37,12 +37,11 @@ METRIC=$((1000 + `cat "/sys/class/net/$2/ifindex" 2>/dev/null || echo 0`))
 
 case "$1" in
     BIND)
+        ip addr add ${3}/16 brd 169.254.255.255 label ${2}:avahi scope link dev ${2}
         if [ -e /etc/.install ];then
-          ip addr add ${3}/16 brd 169.254.255.255 scope link dev ${2}
           ip route add 169.254/16 src ${3} dev ${2}
           ip route add default dev ${2} metric ${METRIC} scope link
          else
-          ip addr add ${3}/16 brd 169.254.255.255 label ${2}:avahi scope link dev ${2}
           ip route add 169.254/16 src ${3} dev ${2} table Link
           ip route add default dev ${2} metric ${METRIC} scope link table 90
         fi;
@@ -51,11 +50,10 @@ case "$1" in
     CONFLICT|UNBIND|STOP)
         if [ -e /etc/.install ];then
           ip route del default dev ${2} metric ${METRIC} scope link
-          ip addr del ${3}/16 brd 169.254.255.255 label ${2}:avahi scope link dev ${2}
        else
           ip route del default dev ${2} metric ${METRIC} scope link table 90
-          ip addr del ${3}/16 brd 169.254.255.255 label ${2}:avahi scope link dev ${2}
         fi;
+        ip addr del ${3}/16 brd 169.254.255.255 label ${2}:avahi scope link dev ${2}
         ;;
 
     *)
