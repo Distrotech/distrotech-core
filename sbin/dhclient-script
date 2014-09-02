@@ -25,6 +25,10 @@
 # 'ip' just looks too weird.  /sbin/ip looks less weird.
 ip=/sbin/ip
 
+if [ ! -d /etc/bind ];then
+  mkdir /etc/bind
+fi;
+
 activate_dnsfwd() {
   if [ ! -e /etc/bind/forwarders.conf ];then
     touch /etc/bind/forwarders.conf
@@ -96,7 +100,6 @@ fi;
 ### DHCPv4 Handlers
 ###
 
-
 if [ x$IF_METRIC != x ]; then
   metric_arg="metric $IF_METRIC"
  else
@@ -125,7 +128,7 @@ fi
 if [ x$reason = xARPCHECK ] || [ x$reason = xARPSEND ]; then
   exit 0
 fi
-  
+
 if [ x$reason = xBOUND ] || [ x$reason = xRENEW ] || \
    [ x$reason = xREBIND ] || [ x$reason = xREBOOT ]; then
   current_hostname=`hostname`
@@ -137,12 +140,13 @@ if [ x$reason = xBOUND ] || [ x$reason = xRENEW ] || \
       hostname "$new_host_name"
     fi
   fi
-    
+
   if [ x$old_ip_address != x ] && [ x$alias_ip_address != x ] && \
 		[ x$alias_ip_address != x$old_ip_address ]; then
     # Possible new alias. Remove old alias.
     ip -4 addr flush dev $interface label ${interface}:fixed
   fi
+
   if [ x$old_ip_address != x ] && [ x$old_ip_address != x$new_ip_address ]; then
     # IP address changed. Bringing down the interface will delete all routes,
     # and clear the ARP cache.
@@ -165,7 +169,7 @@ if [ x$reason = xBOUND ] || [ x$reason = xRENEW ] || \
       done
     fi
   else
-    # we haven't changed the address, have we changed other options           
+    # we haven't changed the address, have we changed other options
     # that we wish to update?
     if [ "${FIREWALL}" != "OTHER" ];then
       if [ x$new_routers != x ] && [ x$new_routers != x$old_routers ] ; then
@@ -182,10 +186,12 @@ if [ x$reason = xBOUND ] || [ x$reason = xRENEW ] || \
       fi;
     fi
   fi
+
   if [ x$new_ip_address != x$alias_ip_address ] && [ x$alias_ip_address != x ];then
     ip addr add $alias_ip_address/$alias_subnet_mask broadcast $alias_broadcast_address dev $interface label ${interface}:fixed
     ip route add $alias_network_number/$alias_subnet_mask src $alias_ip_address dev ${interface} table Link
   fi
+
   if [ "${FIREWALL}" != "OTHER" ];then
     add_dnsfwd
     if [ "${FIREWALL}" == "INTERNAL" ];then
@@ -194,6 +200,17 @@ if [ x$reason = xBOUND ] || [ x$reason = xRENEW ] || \
       fi;
     fi;
   fi;
+
+  #SET Date/Time
+  if [ x$new_ntp_servers ] && [ -x /usr/bin/ntpdate ];then
+    for ntpsrv in $new_ntp_servers;do
+      if /usr/bin/ntpdate $ntpsrv >/dev/null 2>&1;then
+        touch /tmp/ntptime
+        break
+      fi;
+    done
+  fi;
+
   exit 0
 fi
 
