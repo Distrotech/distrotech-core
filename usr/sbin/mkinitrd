@@ -570,7 +570,7 @@ if [ "${1}" == "" ];then
   mkfs.ext2 -F -L initrd -i 1024 ${INITRD}
   mount ${ILOOP} ${TMPDIR}/) > /dev/null 2>&1
 
-  mkbootimg ${TMPDIR} / ${2}
+  mkbootimg ${TMPDIR} ${2} ${3}
 
   sleep 2
   umount ${TMPDIR}
