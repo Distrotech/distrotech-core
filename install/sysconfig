@@ -62,6 +62,11 @@ EOF
       LIBDIR="lib";;
   esac;
 
+  if [ ! -d /etc/rpm ];then
+    mkdir /etc/rpm
+  fi;
+  echo "${ARCH}-gnu-linux" > /etc/rpm/platform
+
   /install/instpkg ${ARCH} ${INST_BASE} root 2>/dev/null |/install/instguage.pl |\
     dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install System Base Packages" 8 35
   /install/instpkg ${ARCH} ${INST_BASE} core 2>/dev/null |/install/instguage.pl |\
@@ -74,7 +79,7 @@ EOF
   done
 
   #Setup the kernel version in the config file used by mkinitd
-  LINKERNEL=$(yum --installroot=${INSTBASE} info linux-intel-dts.${ARCH} |grep Version |sed -e "s/.*\s\(.*\)/\1/")
+  LINKERNEL=$(yum info linux-intel-dts.${ARCH} |grep Version |sed -e "s/.*\s\(.*\)/\1/")
   sed -e "s/\(KERNEL=\"\).*\"/\1${LINKERNEL}-${KARCH}\"/" /install/netsentry-version > ${INST_BASE}/etc/netsentry-version
 
   for newdir in usr/share/clamav var/spool/clientmqueue var/spool/MailScanner/incoming etc/MailScanner \
