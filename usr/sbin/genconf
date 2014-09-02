@@ -17909,7 +17909,7 @@ interface "$iface" {
   send fqdn.fqdn "$dnsconf{'Hostname'}";
   send fqdn.encoded on;
   send fqdn.server-update on;
-  also request fqdn, dhcp6.fqdn;
+  also request fqdn, dhcp6.fqdn, ntp-servers;
   script "/usr/bin/dhclient-script";
 }
 
