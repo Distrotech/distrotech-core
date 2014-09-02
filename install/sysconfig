@@ -51,14 +51,15 @@ baseurl = file:///media/isofs/repo
 EOF
 ) > /etc/yum/repos.d/installer.repo
 
-
-  ARCH=$(uname -m)
-  KARCH="x86_64";
-  case ${ARCH} in
-    x86_64)LIBDIR="lib64";;
-    x86_32)LIBDIR="libx32";;
-    i686)KARCH="x86";
-         LIBDIR="lib";;
+  IFS=- read -a KREL <<< $(uname -r)
+  KARCH=${KREL[1]}
+  case ${KARCH} in
+    x86_64)ARCH="x86_64";
+      LIBDIR="lib64";;
+    x86_x32)ARCH="x86_32";
+      LIBDIR="libx32";;
+    x86)ARCH="i686";
+      LIBDIR="lib";;
   esac;
 
   /install/instpkg ${ARCH} ${INST_BASE} root 2>/dev/null |/install/instguage.pl |\
