@@ -1,6 +1,5 @@
 ACLOCAL_AMFLAGS = -I m4
-#SUBDIRS = src
-EXTRA_DIST = LICENSE
+EXTRA_DIST = sysroot m4
 DIST_TARGETS = dist-gzip dist-bzip2 dist-xz dist-zip
 
 install-data-local:
