@@ -17,16 +17,13 @@
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-mount -f -t ext4 /dev/flash/install / > /dev/null 2>&1
-mount -f -t ext3 /dev/ram5 /etc > /dev/null 2>&1
-mount -t ramfs none /var > /dev/null 2>&1
-mount -t ramfs none /root > /dev/null 2>&1
 mount -t tmpfs none /tmp > /dev/null 2>&1
-mount -t ramfs none /run/udev
 
 for vardir in log run lock tmp lib spool home state empty logs db \
               named db/nscd run/nscd run/dbus state/dhcp;do
-  mkdir /var/$vardir
+  if [ ! -d /var/${vardir} ];then
+    mkdir /var/${vardir}
+  fi;
 done;
 
 #init utmp/wtmp/lastlog/ppplog
@@ -146,3 +143,11 @@ if [ -d /sys/class/net/ethA ];then
   echo 1 > /proc/sys/net/ipv6/conf/br0/use_tempaddr
   echo 1 > /sys/class/net/br0/bridge/stp_state
 fi;
+
+(if [ -d /sys/class/net/br0 ];then
+  dhclient -nw br0
+  dhclient -6 -nw br0
+ elif [ -d /sys/class/net/ethA ];then
+  dhclient -nw ethA
+  dhclient -6 -nw ethA
+fi;) >/dev/null 2>&1 &
