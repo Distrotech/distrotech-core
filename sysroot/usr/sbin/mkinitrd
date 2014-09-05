@@ -130,6 +130,9 @@ initrd_init() {
    else
     cp ${2}/sbin/mount.static ${1}/bin/mount
   fi;
+  if [ -x ${2}/sbin/mount.aufs ];then
+    cp ${2}/sbin/mount.aufs ${1}/sbin/
+  fi;
   cp ${2}/sbin/mount.nfs.static ${1}/sbin/mount.nfs
   mkdir -p ${1}/usr/share/udhcpc/
   cp ${2}/usr/share/udhcpc/distrotech-nfs.script ${1}/usr/share/udhcpc/default.script
@@ -342,13 +345,13 @@ sleep 5
 /bin/ip link set dev eth0 name ethA
 /sbin/udhcpc -i ethA -q
 echo 0x0100 > /proc/sys/kernel/real-root-dev
+
 /sbin/pivot_root /sysroot /sysroot/initrd
 
 mount -M /initrd/proc /proc
 mount -M /initrd/sys /sys
 mount -M /initrd/dev /dev
 
-/initrd/sbin/mntetc
 EOF
    elif [ "${3}" == "rootfs" ];then
     cat << EOF
@@ -366,7 +369,6 @@ mount -M /initrd/proc /proc
 mount -M /initrd/sys /sys
 mount -M /initrd/dev /dev
 
-/initrd/sbin/mntetc
 EOF
    elif [ "${3}" == "squashfs" ];then
     cat << EOF
@@ -375,20 +377,27 @@ modprobe nls-cp437
 modprobe nls-iso8859-1
 modprobe squashfs
 
-/bin/mount -n -o ro -L DTS_INSTALL /isofs
-/sbin/losetup /dev/loop0 /isofs\${squashimg}
-/bin/mount -n -o ro /dev/loop0 /sysroot
+mke2fs /dev/ram1
+mount -n /dev/ram1 /isofs
+mkdir /isofs/flash
+mkdir /isofs/install
+mkdir /isofs/user
+
+mount -n -o ro -L DTS_INSTALL /isofs/flash
+losetup /dev/loop0 /isofs/flash/\${squashimg}
+
+mount -n -o ro /dev/loop0 /isofs/install
+mount -n -t aufs -o br:/isofs/user=rw:/isofs/install=ro none /sysroot
 
 mount -M /isofs /sysroot/media/isofs
 
 echo 0x0100 > /proc/sys/kernel/real-root-dev
-/sbin/pivot_root /sysroot /sysroot/initrd
+
+pivot_root /sysroot /sysroot/initrd
 
 mount -M /initrd/proc /proc
 mount -M /initrd/sys /sys
 mount -M /initrd/dev /dev
-
-/initrd/sbin/mntetc
 
 EOF
    else
@@ -407,7 +416,6 @@ mount -M /initrd/proc /proc
 mount -M /initrd/sys /sys
 mount -M /initrd/dev /dev
 
-/initrd/sbin/mntetc
 EOF
   fi;
 }
@@ -423,15 +431,6 @@ options loop meax_part=63
 options sg allow_dio=1
 EOF
 ) > ${1}/etc/modprobe.d/modprobe.conf
-
-  (cat << EOF
-#!/bin/bash
-
-gunzip -c /install/etc.gz |dd of=/dev/ram5 > /dev/null 2>&1
-mount -n -t ext4 /dev/ram5 /etc
-EOF
-) > ${1}/sbin/mntetc
-  chmod 750 ${1}/sbin/mntetc
 
   (cat << EOF
 #!/bin/ash
@@ -476,7 +475,7 @@ EOF
   mkbootimg_cfg ${1} ${3}-${KSUF} squashfs > ${1}/sbin/linuxrc.squashfs
 
   chmod 750 ${1}/sbin/linuxrc*
-  ${2}/sbin/depmod -b ${1} -aeF ${2}/boot/System.map ${3}-${KSUF}
+  ${2}/sbin/depmod -b ${1} -aeF ${2}/boot/System.map-${3}-${KSUF} ${3}-${KSUF}
 }
 
 mk_initrd() {
