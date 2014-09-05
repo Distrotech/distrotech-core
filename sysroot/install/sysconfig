@@ -500,8 +500,7 @@ Main_Menu() {
   /usr/bin/dialog --backtitle "$BT" --clear --title "Main Menu" --menu "Read Documentation For More Information." 13 70 7\
            "1" "Fdisk/Format Drive(s)"\
            "2" "Configure Mounts"\
-           "3" "Configure Server Name And Address"\
-           "4" "Configure Server Date And Time"\
+           "3" "Configure Server Date And Time"\
            "I" "Install Software"\
            "V" "View Config Files/Active System" 2> /tmp/menu.tmp.$$
   RESULT=$?;
@@ -510,19 +509,16 @@ Main_Menu() {
 }
 
 Network_Address()  {
-  /usr/bin/dialog --backtitle "$BT" --title "Network Setup" --infobox "Configuring network addresses" 4 35
   (/usr/sbin/sysreconf /install/default.conf.sysvars
   if [ ! -d /var/spool/apache/htdocs/ns/config ];then
     mkdir -p /var/spool/apache/htdocs/ns/config
   fi;
-  cp /tmp/netsentry.conf /var/spool/apache/htdocs/ns/config
-  if [ -d /sys/class/net/br0 ];then
-    dhclient -nw br0
-    dhclient -6 -nw br0
-   elif [ -d /sys/class/net/ethA ];then
-    dhclient -nw ethA
-    dhclient -6 -nw ethA
-  fi;) >/dev/null 2>&1
+  cp /tmp/netsentry.conf /var/spool/apache/htdocs/ns/config) >/dev/null 2>&1 &
+  (cnt=0;while [ "${cnt}" != "100" ] && [ ! -e /tmp/ntptime ];do let cnt+=10;sleep 2;echo ${cnt};done) |\
+     dialog --backtitle "$BT" --title "NTP"  --gauge "Wait for NTP config via DHCP" 8 35
+  if [ ! -e /tmp/ntptime ];then
+    Date_Time;
+  fi;
 }
 
 if [ "${1}" == "install" ];then
@@ -562,7 +558,6 @@ done
 DISK="";
 DCNT=1;
 
-Date_Time;
 Network_Address
 Fdisk;
 
@@ -574,8 +569,7 @@ while [ $RESULT == 0 ];do
     1)Fdisk;;
     2){Mounts;
        Mount_All};;
-    3)Network_Address;;
-    4)Date_Time;;
+    3)Date_Time;;
     I)Local_Install;;
     V)(RET=0;
        while [ ${RET} == 0 ];do
