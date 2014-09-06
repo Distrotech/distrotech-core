@@ -539,8 +539,6 @@ mk_initrd() {
 if [ "${1}" == "" ];then
   if [ -e /etc/netsentry-version ];then
     eval `cat /etc/netsentry-version`
-   elif [ -e /install/netsentry-version ];then
-    eval `cat /install/netsentry-version`
    else
     echo "No Config File"
     exit -1

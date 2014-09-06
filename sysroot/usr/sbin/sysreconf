@@ -2,11 +2,7 @@
 
 RELOAD=1;
 
-if [ -e /install/netsentry-version ];then
-  eval `cat /install/netsentry-version`
-  IP_ADDR[1]="0.0.0.0";
-  SN_ADDR[1]="32";
- else
+if [ -e /etc/netsentry-version ];then
   eval `cat /etc/netsentry-version`
   if [ "$IP_ADDR" ];then
     IP_ADDR[1]=$IP_ADDR;
@@ -544,10 +540,6 @@ sed -e "s/IP SysConf External .*/IP SysConf External $FWALL_EXT/" \
     -e "s/X509 Config Locked .*/X509 Config Locked true/" \
     -e "s/^Serial .*/Serial $SERIAL/" \
     $config_file |grep -vEf /etc/reconf >> /tmp/netsentry.conf
-
-if [ ! -e /etc/netsentry-version ] && [ -e /etc/.install ];then
-  cp /install/netsentry-version /etc/netsentry-version
-fi;
 
 sed -e "s/IP_ADDR=.*/IP_ADDR=\"${IP_ADDR[1]}\";/" -e "s/SN_ADDR=.*/SN_ADDR=\"${SN_ADDR[1]}\";/" \
     -e "s/HN_ADDR=.*/HN_ADDR=\"$HN_ADDR\";/" -e "s/DOM_ADDR=.*/DOM_ADDR=\"$DOM_ADDR\";/" \
