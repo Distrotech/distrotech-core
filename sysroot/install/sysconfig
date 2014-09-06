@@ -466,6 +466,13 @@ New_Serial() {
 }
 
 Date_Time() {
+  (cnt=0;while [ "${cnt}" != "100" ] && [ ! -e /tmp/ntptime ];do let cnt+=10;sleep 2;echo ${cnt};done) |\
+     dialog --backtitle "$BT" --title "NTP"  --gauge "Wait for NTP config via DHCP" 8 35
+
+  if [ -e /tmp/ntptime ];then
+    return 0
+  fi;
+
   dialog --backtitle "$BT" --clear --title "Configure Date And Time" \
          --inputbox "Set The Date And Time In The Following Format MMDDhhmmCCYY.ss" \
          9 40 "`date +%m%d%H%M%Y.%S`" 2> /tmp/datetime
@@ -508,19 +515,6 @@ Main_Menu() {
   rm /tmp/menu.tmp.$$;
 }
 
-Network_Address()  {
-  (/usr/sbin/sysreconf /install/default.conf.sysvars
-  if [ ! -d /var/spool/apache/htdocs/ns/config ];then
-    mkdir -p /var/spool/apache/htdocs/ns/config
-  fi;
-  cp /tmp/netsentry.conf /var/spool/apache/htdocs/ns/config) >/dev/null 2>&1 &
-  (cnt=0;while [ "${cnt}" != "100" ] && [ ! -e /tmp/ntptime ];do let cnt+=10;sleep 2;echo ${cnt};done) |\
-     dialog --backtitle "$BT" --title "NTP"  --gauge "Wait for NTP config via DHCP" 8 35
-  if [ ! -e /tmp/ntptime ];then
-    Date_Time;
-  fi;
-}
-
 if [ "${1}" == "install" ];then
   Install_System
   exit
@@ -558,7 +552,7 @@ done
 DISK="";
 DCNT=1;
 
-Network_Address
+Date_Time
 Fdisk;
 
 RESULT="0";

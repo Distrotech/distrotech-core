@@ -17,6 +17,21 @@
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+#Null Config / DHCP
+(/usr/sbin/sysreconf /install/default.conf.sysvars
+if [ ! -d /var/spool/apache/htdocs/ns/config ];then
+  mkdir -p /var/spool/apache/htdocs/ns/config
+fi;
+cp /tmp/netsentry.conf /var/spool/apache/htdocs/ns/config
+
+if [ -d /sys/class/net/br0 ];then
+  dhclient -nw br0
+  dhclient -6 -nw br0
+ elif [ -d /sys/class/net/ethA ];then
+  dhclient -nw ethA
+  dhclient -6 -nw ethA
+fi;) >/dev/null 2>&1 &
+
 (while [ 1 ];do /usr/bin/setsid /sbin/agetty 38400 tty8 linux;done) &
 (while [ 1 ];do /usr/bin/setsid /sbin/agetty 38400 tty9 linux;done) &
 (while [ 1 ];do /usr/bin/setsid /sbin/agetty -nl /usr/libexec/shell 38400 tty2 linux;done) &

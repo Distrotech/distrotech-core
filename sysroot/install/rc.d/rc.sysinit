@@ -143,11 +143,3 @@ if [ -d /sys/class/net/ethA ];then
   echo 1 > /proc/sys/net/ipv6/conf/br0/use_tempaddr
   echo 1 > /sys/class/net/br0/bridge/stp_state
 fi;
-
-(if [ -d /sys/class/net/br0 ];then
-  dhclient -nw br0
-  dhclient -6 -nw br0
- elif [ -d /sys/class/net/ethA ];then
-  dhclient -nw ethA
-  dhclient -6 -nw ethA
-fi;) >/dev/null 2>&1 &
