@@ -20,7 +20,7 @@
 export PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
 if [ -e /etc/.install ];then
-  exec /install/rc.d/rc.M
+  exec /etc/rc.d/install/rc.M
 fi;
 
 #Core services

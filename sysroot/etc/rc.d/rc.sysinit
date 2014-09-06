@@ -49,7 +49,7 @@ fi;
 /sbin/ip route add 127.255.255.252/30 src 127.255.255.253 dev dummy0 scope link table 80) > /dev/null 2>&1
 
 if [ -e /etc/.install ];then
-  /install/rc.d/rc.sysinit
+  /etc/rc.d/install/rc.sysinit
  else
   for startfile in /etc/rc.d/sysinit.d/*;do
     ${startfile}
