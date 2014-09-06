@@ -100,7 +100,7 @@ init_rd_drivers() {
 }
 
 initrd_init() {
-  for tld in bin dev etc isofs lib proc sbin sys sysroot var;do
+  for tld in bin dev etc isofs media lib proc sbin sys sysroot var;do
     if [ ! -d ${1}/${tld} ];then
       mkdir ${1}/${tld}
     fi;
@@ -378,18 +378,19 @@ modprobe nls-iso8859-1
 modprobe squashfs
 
 mke2fs /dev/ram1
-mount -n /dev/ram1 /isofs
-mkdir /isofs/flash
-mkdir /isofs/install
-mkdir /isofs/user
+mount -n /dev/ram1 /media
+mkdir /media/isofs
+mkdir /media/install
+mkdir /media/installer
+mkdir /media/user
 
-mount -n -o ro -L DTS_INSTALL /isofs/flash
-losetup /dev/loop0 /isofs/flash/\${squashimg}
+mount -n -o ro -L DTS_INSTALL /media/isofs
+losetup /dev/loop0 /media/isofs/\${squashimg}
 
-mount -n -o ro /dev/loop0 /isofs/install
-mount -n -t aufs -o br:/isofs/user=rw:/isofs/install=ro none /sysroot
+mount -n -o ro /dev/loop0 /media/installer
+mount -n -t aufs -o br:/media/user=rw:/media/installer=rr none /sysroot
 
-mount -M /isofs /sysroot/media/isofs
+mount -M /media /sysroot/media
 
 echo 0x0100 > /proc/sys/kernel/real-root-dev
 
