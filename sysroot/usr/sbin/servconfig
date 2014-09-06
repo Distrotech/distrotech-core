@@ -392,13 +392,13 @@ if [ "$ASTOPBUT" ] || [ "$ASTOPSTY" ];then
   fi;
 fi;
 
-if [ -e netsentry-sysvars ] && [ -e sysvars ] && [ ! -e /install/default.conf.full ] && [ "`diff sysvars netsentry-sysvars`" ];then
+if [ -e netsentry-sysvars ] && [ -e sysvars ] && [ "`diff sysvars netsentry-sysvars`" ];then
   /usr/sbin/sysreconf netsentry-sysvars;
   if [ -d /var/log/ldap ];then
     rm -rf /var/log/ldap
   fi;
   /sbin/reboot
- elif [ -e netsentry-sysvars ] && [ -e sysvars ] && [ ! -e /install/default.conf.full ];then
+ elif [ -e netsentry-sysvars ] && [ -e sysvars ];then
   /usr/sbin/genconf
 fi;
 
