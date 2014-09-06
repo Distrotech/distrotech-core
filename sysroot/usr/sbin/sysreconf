@@ -130,10 +130,10 @@ if [ -e /etc/.install ];then
   FWALL_EXT="${INT_IFACE[1]}";
 
   HN_ADDR=${HN_ADDR}-`cat /sys/class/net/ethA/address  |tr 'a-f:' 'A-F\-'`
-  /usr/sbin/avahi-autoipd -c ${INT_IFACE[1]}
+  (/usr/sbin/avahi-autoipd -c ${INT_IFACE[1]}
   if [ $? != 0 ];then
     /usr/sbin/avahi-autoipd --force-bind -D -w ${INT_IFACE[1]}
-  fi;
+  fi;)&
 fi;
 
 MAX_IF=${#INT_IFACE[@]};
