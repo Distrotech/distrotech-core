@@ -23,12 +23,12 @@ if [ ! -e /var/spool/apache/htdocs/ns/config ];then
   if [ ! -d /var/spool/apache/htdocs/ns/config ];then
     mkdir -p /var/spool/apache/htdocs/ns/config
   fi;
-  cp /tmp/netsentry.conf /var/spool/apache/htdocs/ns/config)
+  cp /tmp/netsentry.conf /var/spool/apache/htdocs/ns/config) >/dev/null 2>&1
 fi;
 
 #Run DHCP
 if [ ! -e /var/run/dhclient.pid ];then
-  if [ -d /sys/class/net/br0 ];then
+  (if [ -d /sys/class/net/br0 ];then
     dhclient -nw br0
     dhclient -6 -nw br0 -pf dhclient6.pid
    elif [ -d /sys/class/net/ethA ];then
