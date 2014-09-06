@@ -56,8 +56,8 @@ if [ -e /etc/.install ];then
   done
 fi;
 
-if [ ! -e /etc/netsentry-version ] && [ -e /etc/netsentry-version.dist ];then
-  cp /etc/netsentry-version.dist /etc/netsentry-version
+if [ ! -e /etc/netsentry-version ] && [ -e /etc/distrotech/netsentry-version.dist ];then
+  cp /etc/distrotech/netsentry-version.dist /etc/netsentry-version
 fi;
 
 if [ -e /etc/netsentry-version ];then

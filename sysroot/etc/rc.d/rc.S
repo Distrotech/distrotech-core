@@ -53,7 +53,7 @@ if [ $? != 0 ];then
 fi
 
 if [ -e /etc/.install ];then
-  (/usr/sbin/sysreconf /install/default.conf.sysvars
+  (/usr/sbin/sysreconf /etc/distrotech/default.conf.sysvars
   if [ ! -d /var/spool/apache/htdocs/ns/config ];then
     mkdir -p /var/spool/apache/htdocs/ns/config
   fi;

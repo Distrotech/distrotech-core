@@ -19,7 +19,7 @@
 
 #Null Config
 if [ ! -e /var/spool/apache/htdocs/ns/config/netsentry.conf ];then
-  (/usr/sbin/sysreconf /install/default.conf.sysvars
+  (/usr/sbin/sysreconf /etc/distrotech/default.conf.sysvars
   if [ ! -d /var/spool/apache/htdocs/ns/config ];then
     mkdir -p /var/spool/apache/htdocs/ns/config
   fi;

@@ -27,8 +27,8 @@ if [ -d /sys/class/net/ethA ] && [ -d /sys/class/net/wlanA ] && [ -e /etc/.insta
   INT_IFACE[1]="ethA";
 fi;
 
-if [ -e /install/default.conf ];then
-  config_file=/install/default.conf
+if [ -e /etc/distrotech/default.conf ];then
+  config_file=/etc/distrotech/default.conf
  else
   config_file=/etc/firewall.conf
 fi;
