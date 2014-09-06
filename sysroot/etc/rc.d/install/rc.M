@@ -18,7 +18,7 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #Null Config
-if [ ! -e /var/spool/apache/htdocs/ns/config ];then
+if [ ! -e /var/spool/apache/htdocs/ns/config/netsentry.conf ];then
   (/usr/sbin/sysreconf /install/default.conf.sysvars
   if [ ! -d /var/spool/apache/htdocs/ns/config ];then
     mkdir -p /var/spool/apache/htdocs/ns/config
@@ -30,10 +30,10 @@ fi;
 if [ ! -e /var/run/dhclient.pid ];then
   (if [ -d /sys/class/net/br0 ];then
     dhclient -nw br0
-    dhclient -6 -nw br0 -pf dhclient6.pid
+    dhclient -6 -nw -pf /var/run/dhclient6.pid br0
    elif [ -d /sys/class/net/ethA ];then
     dhclient -nw ethA
-    dhclient -6 -nw ethA -pf dhclient6.pid
+    dhclient -6 -nw -pf /var/run/dhclient6.pid ethA
   fi;) >/dev/null 2>&1 &
 fi;
 
