@@ -123,7 +123,7 @@ __EOF__
   #Reinstall Grub/Update initrd if needed
   if [ ! -e /boot/grub/core.img ] || [ /usr/lib/grub/i386-pc/ -nt /boot/grub/core.img ];then
     /usr/sbin/mkgrub
-   elif [ ! -e /boot/initrd-${KERNEL}-${KSUF} ] || [ /boot/vmlinuz-${KERNEL}-${KSUF} -nt /boot/initrd-${KERNEL}-${KSUF} ];then
+   elif [ ! -e /boot/initrd-${KERNEL} ] || [ /boot/vmlinuz-${KERNEL} -nt /boot/initrd-${KERNEL} ];then
     mkinitrd
   fi
 
@@ -379,9 +379,9 @@ if [ "${1}" == "iso" ];then
 
   Post_Update ${UPKERN}
 
-  if [ -d ${CORE}/install/core ];then
-    pxeboot_config
-  fi;
+#  if [ -d ${CORE}/install/core ];then
+#    pxeboot_config
+#  fi;
  elif [ "${1}" == "grub2" ];then
   Grub_Local ${2}
 fi;

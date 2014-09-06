@@ -422,7 +422,7 @@ EOF
 }
 
 mkbootimg() {
-  initrd_init ${1} ${2} ${3}-${KSUF}
+  initrd_init ${1} ${2} ${3}
 
   if [ ! -d ${1}/etc/modprobe.d ];then
     mkdir ${1}/etc/modprobe.d
@@ -469,14 +469,14 @@ EOF
 ) > ${1}/linuxrc
   chmod 750 ${1}/linuxrc
 
-  mkbootimg_cfg ${1} ${3}-${KSUF} > ${1}/sbin/linuxrc.install
-  mkbootimg_cfg ${1} ${3}-${KSUF} dvd > ${1}/sbin/linuxrc.dvd
-  mkbootimg_cfg ${1} ${3}-${KSUF} nfs > ${1}/sbin/linuxrc.nfs
-  mkbootimg_cfg ${1} ${3}-${KSUF} rootfs > ${1}/sbin/linuxrc.rootfs
-  mkbootimg_cfg ${1} ${3}-${KSUF} squashfs > ${1}/sbin/linuxrc.squashfs
+  mkbootimg_cfg ${1} ${3} > ${1}/sbin/linuxrc.install
+  mkbootimg_cfg ${1} ${3} dvd > ${1}/sbin/linuxrc.dvd
+  mkbootimg_cfg ${1} ${3} nfs > ${1}/sbin/linuxrc.nfs
+  mkbootimg_cfg ${1} ${3} rootfs > ${1}/sbin/linuxrc.rootfs
+  mkbootimg_cfg ${1} ${3} squashfs > ${1}/sbin/linuxrc.squashfs
 
   chmod 750 ${1}/sbin/linuxrc*
-  ${2}/sbin/depmod -b ${1} -aeF ${2}/boot/System.map-${3}-${KSUF} ${3}-${KSUF}
+  ${2}/sbin/depmod -b ${1} -aeF ${2}/boot/System.map-${3} ${3}
 }
 
 mk_initrd() {
@@ -488,8 +488,8 @@ mk_initrd() {
     rm /boot/boot
   fi;
 
-  if [ ! -d ${2}/lib/modules/${KERNEL}-${KSUF} ];then
-    echo "No Kernel Directory ${2}/lib/modules/${KERNEL}-${KSUF}"
+  if [ ! -d ${2}/lib/modules/${3} ];then
+    echo "No Kernel Directory ${2}/lib/modules/${3}"
     return 255
   fi;
 
@@ -512,26 +512,26 @@ mk_initrd() {
   losetup ${LOOP} ${TINIT}
   mount ${LOOP} ${1}) >/dev/null 2>&1
 
-  initrd_init ${1} ${2} ${KERNEL}-${KSUF}
+  initrd_init ${1} ${2} ${3}
   cp -r ${2}/etc/modprobe.d ${1}/etc/
 
-  ${2}/sbin/depmod -a -F ${2}/boot/System.map-${KERNEL}-${KSUF} -b ${2} ${KERNEL}-${KSUF}
-  (init_rd_drivers_scsi ${1} ${2} ${KERNEL}-${KSUF})
-  ${2}/sbin/depmod -a -e -F ${2}/boot/System.map-${KERNEL}-${KSUF} -b ${1} ${KERNEL}-${KSUF}
+  ${2}/sbin/depmod -a -F ${2}/boot/System.map-${3} -b ${2} ${3}
+  (init_rd_drivers_scsi ${1} ${2} ${3})
+  ${2}/sbin/depmod -a -e -F ${2}/boot/System.map-${3} -b ${1} ${3}
 
-  initrd_config ${1} ${2} ${KERNEL}-${KSUF} > ${1}/linuxrc
+  initrd_config ${1} ${2} ${3} > ${1}/linuxrc
   chmod 750 ${1}/linuxrc
 
   umount ${1}
   losetup -d ${LOOP}
 
   (e2fsck -Dfy ${TINIT}
-  dd if=${TINIT} bs=1k |gzip -c9 > ${2}/boot/initrd-${KERNEL}-${KSUF}
+  dd if=${TINIT} bs=1k |gzip -c9 > ${2}/boot/initrd-${3}
   rm ${TINIT} ${2}/boot/initrd.img ${2}/boot/vmlinuz ${2}/boot/System.map > /dev/null 2>&1
 
-  ln -s vmlinuz-${KERNEL}-${KSUF} ${2}/boot/vmlinuz
-  ln -s System.map-${KERNEL}-${KSUF} ${2}/boot/System.map
-  ln -s initrd-${KERNEL}-${KSUF} ${2}/boot/initrd.img) > /dev/null 2>&1
+  ln -s vmlinuz-${3} ${2}/boot/vmlinuz
+  ln -s System.map-${3} ${2}/boot/System.map
+  ln -s initrd-${3} ${2}/boot/initrd.img) > /dev/null 2>&1
 
   return 0
 }
@@ -544,7 +544,7 @@ if [ "${1}" == "" ];then
     exit -1
   fi;
 
-  mk_initrd /mnt/initrd /
+  mk_initrd /mnt/initrd / ${KERNEL}
   grub-mkconfig  > /boot/grub/grub.cfg
  elif [ "${1}" == "bootimg" ];then
   shift

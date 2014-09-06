@@ -78,7 +78,7 @@ EOF
 
   #Setup the kernel version in the config file used by mkinitd
   LINKERNEL=$(rpm --root ${INST_BASE} -q -i linux-intel-dts |grep Version |sed -e "s/.*\s\(.*\)/\1/")
-  sed -e "s/\(KERNEL=\"\).*\"/\1${LINKERNEL}-${KARCH}\"/" /etc/netsentry-version > ${INST_BASE}/etc/netsentry-version
+  sed -e "s/\(KERNEL=\"\).*\"/\1${LINKERNEL}-${KARCH}-dts\"/" /etc/netsentry-version > ${INST_BASE}/etc/netsentry-version
 
   for newdir in usr/share/clamav var/spool/clientmqueue var/spool/MailScanner/incoming etc/MailScanner \
                 var/empty var/spool/apache/htdocs/ssl/sign var/spool/apache/htdocs/ssl/casign var/state/dhcp \

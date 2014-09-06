@@ -1,6 +1,6 @@
 BRAND="Distrotech";
 VERSION="12.01.04";
-KERNEL="3.14.4-x86_64";
+KERNEL="3.14.17-x86_64-dts";
 HN_ADDR="dts";
 DOM_ADDR="company.co.za";
 BT="${BRAND} V${VERSION} Linux V${KERNEL} Install";
