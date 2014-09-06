@@ -57,7 +57,15 @@ if [ -e /etc/.install ];then
   if [ ! -d /var/spool/apache/htdocs/ns/config ];then
     mkdir -p /var/spool/apache/htdocs/ns/config
   fi;
-  cp /tmp/netsentry.conf /var/spool/apache/htdocs/ns/config) > /dev/null 2>&1
+  cp /tmp/netsentry.conf /var/spool/apache/htdocs/ns/config
+
+  if [ -d /sys/class/net/br0 ];then
+    dhclient -nw br0
+    dhclient -6 -nw -pf dhclient6.pid br0
+   elif [ -d /sys/class/net/ethA ];then
+    dhclient -nw ethA
+    dhclient -6 -nw -pf dhclient6.pid ethA
+  fi;) >/dev/null 2>&1 &
 fi;
 
 reset -Q
