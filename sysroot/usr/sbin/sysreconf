@@ -674,7 +674,7 @@ if [ ! -e /etc/.install ] && [ ! "$1" ];then
     RELOAD=$?
 fi;
 
-if [ $RELOAD == "0" ] && [ ! -d /install ];then
+if [ $RELOAD == "0" ] && [ ! -e /etc/.install ];then
   if [ -e /var/run/safe_slapd.pid ] && [ ! -s /var/run/safe_slapd.pid ];then
     MAXT=""
     while [ -d /proc/`cat /var/run/safe_slapd.pid` ] && [ "${MAXT}" != "XXXXX" ];do
