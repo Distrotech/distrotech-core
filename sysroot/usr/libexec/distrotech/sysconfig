@@ -28,7 +28,7 @@ Set_Serial() {
   MAC=`cat /sys/class/net/${IFACE}/address`
   ZCIP=`cat "/var/lib/avahi-autoipd/${MAC}"`
   if [ "${ZCIP}" ];then
-    cp /install/serial.pl ${INST_BASE}/root
+    cp /usr/libexec/distrotech/serial.pl ${INST_BASE}/root
     chmod 750 ${INST_BASE}/root/serial.pl
     chroot ${INST_BASE} /root/serial.pl ${1} ${ZCIP}+16 >> ${INST_BASE}/var/spool/apache/htdocs/ns/config/netsentry.conf
     rm ${INST_BASE}/root/serial.pl
@@ -67,9 +67,9 @@ EOF
   fi;
   echo "${ARCH}-gnu-linux" > /etc/rpm/platform
 
-  /install/instpkg ${ARCH} ${INST_BASE} root 2>/dev/null |/install/instguage.pl |\
+  /usr/libexec/distrotech/instpkg ${ARCH} ${INST_BASE} root 2>/dev/null |/usr/libexec/distrotech/instguage.pl |\
     dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install System Base Packages" 8 35
-  /install/instpkg ${ARCH} ${INST_BASE} core 2>/dev/null |/install/instguage.pl |\
+  /usr/libexec/distrotech/instpkg ${ARCH} ${INST_BASE} core 2>/dev/null |/usr/libexec/distrotech/instguage.pl |\
     dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install System Core Packages" 8 35
 
   ls -d ${INST_BASE}/opt/*/${LIBDIR} |awk -v MNT=${INST_BASE} '{printf "%s\n",substr($1,length(MNT)+1)}' > ${INST_BASE}/etc/ld.so.conf.d/opt.conf
@@ -94,7 +94,7 @@ EOF
     mkdir -p ${INST_BASE}/${newdir}
   done
 
-  rsync -a /install/update ${INST_BASE}/var/spool/ > /dev/null 2>&1
+#  rsync -a /install/update ${INST_BASE}/var/spool/ > /dev/null 2>&1
 
   for webdir in postgresql mysqlmanual phpmanual polycom snom ns/config;do
     if [ ! -d ${INST_BASE}/var/spool/apache/htdocs/${webdir} ];then

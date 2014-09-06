@@ -42,6 +42,6 @@ fi;
 (while [ 1 ];do /usr/bin/setsid /sbin/agetty -nl /usr/libexec/shell 38400 tty2 linux;done) &
 (while [ 1 ];do /usr/bin/setsid /sbin/agetty -nl /usr/libexec/shell 38400 tty3 linux;done) &
 
-/install/sysconfig
+/usr/libexec/distrotech/sysconfig
 clear
 init 6
