@@ -1,7 +1,0 @@
-#!/bin/bash
-
-if [ "$1" ];then
-  cp /boot/System.map-$1 /boot/System.map
-  /sbin/depmod -ae -F /boot/System.map  2.4.18-$1
-  tar -czf /install/kernel-$1.tgz /boot/System.map /boot/vmlinuz-2.4.18-$1 /lib/modules/2.4.18-$1
-fi;
