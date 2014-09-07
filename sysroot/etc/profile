@@ -1,35 +1,91 @@
 # /etc/profile: This file contains system-wide defaults used by
 # all Bourne (and related) shells.
 
+IFS=- read -a KVER <<< $(uname -r)
+case ${KVER[1]} in
+  x86_x32)HOST_LIBDIR="libx32";;
+  *64)HOST_LIBDIR="lib64";;
+  *)HOST_LIBDIR="lib";;
+esac;
+
 # Set the values for some environment variables:
 export TERMINFO=/usr/share/terminfo
 export MINICOM="-c on"
 export MANPATH=/share/man:/man:/usr/share/man:/usr/man/preformat:/usr/man:/usr/X11R7/share/man
 export LESSOPEN="|lesspipe.sh %s"
-export LESS="-M"
+export LESSQUIET=1
+export LESS="-MR"
 export MOZILLA_HOME=/usr/lib/netscape
 export TAPE=/dev/tapes/tape0/mtn
-export EDITOR=pico
+export EDITOR=nano
 export LOCATE_PATH=/var/db/locate
 export PGDATA=/var/spool/pgsql
 export SDL_FBDEV=/dev/fb1
-export LANG=en_ZA.UTF-8
 
-# Set the default system $PATH:
-export PATH="/usr/bin:/bin:/usr/X11R7/bin:/opt/xfce/bin:/opt/qt-4/bin"
+export LANG=${LANG:=en_ZA.UTF8}
+if [ ! -e /etc/localtime ];then
+  export TZ=${TZ:=Africa/Johannesburg}
+fi;
+
+unset JAVA_HOME ANT_HOME M2_HOME QTDIR FOP_HOME FORREST_HOME LESSCLOSE
+
+MANPATH=/share/man:usr/share/man
+PATH=/usr/local/bin:/usr/bin:/bin:/opt/apache2/bin:/opt/Xorg/bin:/opt/xfce/bin
 
 if [ "`id -u`" = "0" ]; then
-  PATH=/usr/sbin:/sbin:$PATH
+  PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
  else
   PATH="$PATH:."
 fi
 
-# I had problems using 'eval tset' instead of 'TERM=', but you might want to 
-# try it anyway. I think with the right /etc/termcap it would work great.
-# eval `tset -sQ "$TERM"`
-if [ "$TERM" = "" -o "$TERM" = "unknown" ]; then
- TERM=linux
-fi
+if [ "${JAVA_VER}" ] && [ -d /usr/${HOST_LIBDIR}/jvm/jdk-${JAVA_VER} ];then
+  export JAVA_HOME=/usr/${HOST_LIBDIR}/jvm/jdk-${JAVA_VER}
+  PATH=${PATH}:${JAVA_HOME}/bin
+fi;
+
+if [ ! "${JAVA_HOME}" ] && [ -d /usr/${HOST_LIBDIR}/jvm/gcj-jdk/bin ];then
+  export JAVA_HOME=/usr/${HOST_LIBDIR}/jvm/gcj-jdk
+  PATH=${PATH}:${JAVA_HOME}/bin
+fi;
+
+if [ "${ANT_VER}" ] && [ -d /usr/${HOST_LIBDIR}/jvm/apache-ant-${ANT_VER} ];then
+  export ANT_HOME=/usr/${HOST_LIBDIR}/jvm/apache-ant-${ANT_VER}
+  PATH=${PATH}:${ANT_HOME}/bin
+fi;
+
+if [ "${M2_VER}" ] && [ -d /usr/${HOST_LIBDIR}/jvm/apache-maven-${M2_VER} ];then
+  export M2_HOME=/usr/${HOST_LIBDIR}/jvm/apache-maven-${M2_VER}
+  PATH=${PATH}:${M2_HOME}/bin
+fi;
+
+if [ -d /opt/texlive ];then
+  export TEX=tex
+  PATH=${PATH}:/opt/texlive/bin/custom
+  if [ -d /opt/texlive/bin/${HOST}-linux ];then
+    PATH=${PATH}:/opt/texlive/bin/x86_64-linux
+  fi;
+  MANPATH=${MANPATH}:/opt/texlive/texmf-dist/doc/man
+fi;
+
+for pkg in /opt/*;do
+  if [ "${pkg:0:3}" != "qt-" ] && [ -d ${pkg}/bin ];then
+    PATH=${PATH}:${pkg}/bin
+  fi;
+done
+
+if [ "${QT_VER}" ] && [ -d /opt/qt-${QT_VER} ];then
+  export QTDIR=/opt/qt-${QT_VER}
+  PATH=${PATH}:${QTDIR}/bin
+fi;
+
+if [ -d /opt/fop ];then
+  export FOP_HOME=/opt/fop
+  PATH=${PATH}:${FOP_HOME}
+fi;
+
+export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+
+eval `tset -sQ "$TERM"`
 
 # Set a default shell prompt:
 #PS1='`hostname`:`pwd`# '
@@ -73,3 +129,5 @@ alias ldapadd='ldapadd -U admin -Y PLAIN -y /etc/ldap.secret'
 alias ldappasswd='ldappasswd -U admin -Y PLAIN -y /etc/ldap.secret'
 alias ldapdelete='ldapdelete -U admin -Y PLAIN -y /etc/ldap.secret'
 alias pstree='pstree -U'
+alias pico='nano'
+alias vi='vim'
