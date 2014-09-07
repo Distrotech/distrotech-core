@@ -7,7 +7,7 @@ SN_ADDR[1]="32";
 export VERSION=$(lsb_release -r -s)
 export KVER=$(uname -r)
 eval export BRAND=$(lsb_release -d -s)
-export BT="${BRAND} ${VERSION} Kernel ${KVER} Install";
+export BT="${BRAND} ${VERSION} Kernel ${KVER} Configure";
 
 INT_NAME[1]="Internal";
 if [ -d /sys/class/net/ethA ] && [ -d /sys/class/net/wlanA ] && [ -e /etc/.install ];then
@@ -622,7 +622,7 @@ EOF
 ) > /tmp/netsentry-sysvars
 
 if [ -e /etc/.install ];then
-  /usr/bin/hostname $HN_ADDR >/dev/null 2>&1
+  /bin/hostname $HN_ADDR >/dev/null 2>&1
   /bin/domainname $DOM_ADDR >/dev/null 2>&1
   /usr/sbin/avahi-daemon -D
 
@@ -638,20 +638,13 @@ interface "${INT_IFACE[1]}" {
 EOF
 ) > /etc/dhclient.conf
 
-  if [ ! -e /etc/.install ];then
-    (cat <<EOF
+  (cat <<EOF
 domain $DOM_ADDR
 search $DOM_ADDR
-nameserver 127.0.0.1
+nameserver ::1
 EOF
 ) > /etc/resolv.conf
-  fi;
 
-  (cat <<EOF
-$IP_ADDR            $HN_ADDR.$DOM_ADDR $HN_ADDR
-127.0.0.1           localhost
-EOF
-) > /etc/hosts
   mv /tmp/netsentry-sysvars /etc/
 fi;
 
