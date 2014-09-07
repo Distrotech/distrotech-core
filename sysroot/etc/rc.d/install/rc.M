@@ -26,6 +26,9 @@ if [ ! -e /var/spool/apache/htdocs/ns/config/netsentry.conf ];then
   cp /tmp/netsentry.conf /var/spool/apache/htdocs/ns/config) >/dev/null 2>&1
 fi;
 
+#Start DNS server
+/etc/rc.d/install/rc.named
+
 #Run DHCP
 if [ ! -e /var/run/dhclient.pid ];then
   (if [ -d /sys/class/net/br0 ];then

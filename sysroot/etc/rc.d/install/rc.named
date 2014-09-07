@@ -1,0 +1,15 @@
+#!/bin/bash
+
+if [ ! -d /etc/bind ];then
+  mkdir /etc/bind
+fi;
+
+if [ ! -e /etc/bind/forwarders.conf ];then
+  touch /etc/bind/forwarders.conf
+fi;
+
+if [ ! -e /etc/rndc.key ];then
+  rndc-confgen -a -r /dev/urandom
+fi;
+
+named -c /etc/distrotech/named.conf
