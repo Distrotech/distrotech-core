@@ -2,6 +2,8 @@ ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = sysroot m4
 DIST_TARGETS = dist-gzip dist-bzip2 dist-xz dist-zip
 
+SUBDIRS = lsb
+
 install-data-local:
 	install -d $(DESTDIR)/
 	rsync -a --exclude=.git sysroot/* $(DESTDIR)/
