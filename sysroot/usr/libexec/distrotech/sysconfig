@@ -468,31 +468,43 @@ New_Serial() {
   fi;
 }
 
+Dialog_Time() {
+  /usr/bin/dialog --backtitle "$BT" --clear --title "Date" --calendar "Select current date" 3 40 $(date +"%d %m %Y") 2> /tmp/date
+  IFS=/ read -a DATE < /tmp/date
+  if [ "$?" == "0" ];then
+    /usr/bin/dialog --backtitle "$BT" --clear --title "Time" --timebox "Set current time" 3 40 $(date +"%H %M %S") 2>/tmp/time
+    IFS=: read -a TIME < /tmp/time
+   else
+    return 1
+  fi;
+
+  if [ "$?" == "0" ];then
+    /usr/bin/date ${DATE[1]}${DATE[0]}${TIME[0]}${TIME[1]}${DATE[2]}.${TIME[2]} > /dev/tty4 2>&1
+    if [ "$?" == "0" ];then
+      /sbin/hwclock --systohc --utc >/dev/tty4 2>&1
+      /usr/bin/dialog --backtitle "$BT" --clear --title "Date/Time Ok"\
+        --msgbox "`date`"  9 40
+     else
+      return 1
+    fi;
+   else
+    return 1
+  fi;
+}
+
 Date_Time() {
   (cnt=0;while [ "${cnt}" != "100" ] && [ ! -e /tmp/ntptime ];do let cnt+=2;sleep 1;echo ${cnt};done) |\
      dialog --backtitle "$BT" --title "NTP"  --gauge "Wait for NTP config via DHCP" 8 35
 
   if [ -e /tmp/ntptime ];then
+    /sbin/hwclock --systohc --utc >/dev/tty4 2>&1
     return 0
   fi;
 
-  dialog --backtitle "$BT" --clear --title "Configure Date And Time" \
-         --inputbox "Set The Date And Time In The Following Format MMDDhhmmCCYY.ss" \
-         9 40 "`date +%m%d%H%M%Y.%S`" 2> /tmp/datetime
-
-  RETVAL=$?;
-  if [ $RETVAL == "0" ];then
-    /usr/bin/date `cat /tmp/datetime` > /dev/tty4 2>&1
-    DATEOK=$?
-    if [ $DATEOK != "0" ];then
-      /usr/bin/dialog --backtitle "$BT" --clear --title "Date/Time Error"\
-        --msgbox "Invalid Date Format"  9 40
-     else
-      /sbin/hwclock --systohc --utc >/dev/tty4 2>&1
-      /usr/bin/dialog --backtitle "$BT" --clear --title "Date/Time Ok"\
-        --msgbox "`date`"  9 40
-    fi;
-  fi;
+  while ! Dialog_Time;do
+    /usr/bin/dialog --backtitle "$BT" --clear --title "Date/Time Error"\
+     --msgbox "Invalid Date Format"  9 40
+  done
 }
 
 Local_Install(){
