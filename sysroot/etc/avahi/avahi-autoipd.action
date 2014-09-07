@@ -41,6 +41,8 @@ case "$1" in
         if [ -e /etc/.install ];then
           ip route add 169.254/16 src ${3} dev ${2}
           ip route add default dev ${2} metric ${METRIC} scope link
+          (echo "$IP_ADDR            $HN_ADDR.$DOM_ADDR $HN_ADDR"
+           echo "127.0.0.1           localhost") > /etc/hosts
          else
           ip route add 169.254/16 src ${3} dev ${2} table Link
           ip route add default dev ${2} metric ${METRIC} scope link table 90
