@@ -411,7 +411,43 @@ mount -n -o ro -L DTS_INSTALL /media/isofs
 losetup /dev/loop0 /media/isofs/\${squashimg}
 
 mount -n -o ro /dev/loop0 /media/installer
-mount -n -t aufs -o br:/media/user=rw:/media/installer=rr none /sysroot >/dev/null 2>&1
+mount -n -t aufs -o br:/media/user=rw+moo:/media/installer=rr none /sysroot >/dev/null 2>&1
+
+mount -M /media /sysroot/media
+
+echo 0x0100 > /proc/sys/kernel/real-root-dev
+
+pivot_root /sysroot /sysroot/initrd
+
+mount -M /initrd/proc /proc
+mount -M /initrd/sys /sys
+mount -M /initrd/dev /dev
+
+EOF
+   elif [ "${3}" == "buildroot" ];then
+    cat << EOF
+modprobe vfat
+modprobe nls-cp437
+modprobe nls-iso8859-1
+modprobe squashfs
+
+sleep 4
+
+mke2fs -q /dev/ram1 >/dev/null 2>&1
+mount -n /dev/ram1 /media
+mkdir /media/isofs
+mkdir /media/install
+mkdir /media/installer
+mkdir /media/buildroot
+mkdir /media/user
+
+mount -o ro -L DTS_INSTALL /media/isofs
+losetup /dev/loop0 /media/isofs/\${squashimg}
+losetup /dev/loop1 /media/isofs/\${buildimg}
+
+mount -o ro /dev/loop0 /media/installer
+mount -o ro /dev/loop1 /media/buildroot
+mount -t aufs -o br:/media/user=rw+moo:/media/buildroot=rr:/media/installer=rr build /sysroot > /dev/null 2>&1
 
 mount -M /media /sysroot/media
 
@@ -477,6 +513,10 @@ for copt in \`cat /proc/cmdline\`;do
     squashimg=\${copt#squashimg=}
     export squashimg
   fi;
+  if [ "\${copt#buildimg=}" != "\${copt}" ];then
+    buildimg=\${copt#buildimg=}
+    export buildimg
+  fi;
 done
 
 case \$${KSUF}_opt in
@@ -484,6 +524,7 @@ case \$${KSUF}_opt in
   nfs)exec /sbin/linuxrc.nfs;;
   install)exec /sbin/linuxrc.install;;
   squashfs)exec /sbin/linuxrc.squashfs;;
+  buildroot)exec /sbin/linuxrc.buildroot;;
 esac
 
 exec /sbin/linuxrc.rootfs
@@ -497,6 +538,7 @@ EOF
   mkbootimg_cfg ${1} ${3} nfs > ${1}/sbin/linuxrc.nfs
   mkbootimg_cfg ${1} ${3} rootfs > ${1}/sbin/linuxrc.rootfs
   mkbootimg_cfg ${1} ${3} squashfs > ${1}/sbin/linuxrc.squashfs
+  mkbootimg_cfg ${1} ${3} buildroot > ${1}/sbin/linuxrc.buildroot
 
   chmod 750 ${1}/sbin/linuxrc*
   ${2}/sbin/depmod -b ${1} -aeF ${2}/boot/System.map-${3} ${3}
