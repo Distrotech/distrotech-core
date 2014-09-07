@@ -60,7 +60,7 @@ init_rd_drivers() {
   for kmod in block/loop.ko.gz base/firmware_class.ko.gz pcmcia mmc/core \
            mmc/card misc/cb710 misc/tifm_core.ko.gz cdrom/cdrom.ko.gz ssb \
            usb/host md/ usb/wusbcore uwb usb/misc/ftdi-elan.ko.gz connector/cn.ko.gz \
-           hid/hid.ko.gz hid/usbhid bcma/bcma.ko.gz;do
+           hid/hid.ko.gz hid/usbhid hid/hid-generic.ko.gz bcma/bcma.ko.gz;do
    if [ -f ${2}lib/modules/${kernel}/kernel/drivers/${kmod} ];then
      cp ${2}lib/modules/${kernel}/kernel/drivers/${kmod} ${1}/lib/modules/${kernel}/drivers
     elif [ -d ${2}lib/modules/${kernel}/kernel/drivers/${kmod} ];then
@@ -217,6 +217,15 @@ modprobe ata_generic
 modprobe uhci_hcd
 modprobe ohci_hcd
 modprobe ehci_hcd
+modprobe bcma-hcd
+modprobe isp116x-hcd
+modprobe isp1362-hcd
+modprobe oxu210hp-hcd
+modprobe r8a66597-hcd
+modprobe sl811-hcd
+modprobe ssb-hcd
+modprobe u132-hcd
+modprobe xhci-hcd
 _EOF_
 
   for driver in `ls ${1}/lib/modules/${3}/drivers-usb |cut -d. -f1`;do
@@ -230,6 +239,7 @@ modprobe scsi_wait_scan
 modprobe loop
 modprobe dm-mod
 modprobe usbhid
+modprobe hid-generic
 
 _EOF_
 
@@ -308,6 +318,15 @@ modprobe ata_generic
 modprobe uhci_hcd
 modprobe ohci_hcd
 modprobe ehci_hcd
+modprobe bcma-hcd
+modprobe isp116x-hcd
+modprobe isp1362-hcd
+modprobe oxu210hp-hcd
+modprobe r8a66597-hcd
+modprobe sl811-hcd
+modprobe ssb-hcd
+modprobe u132-hcd
+modprobe xhci-hcd
 EOF
 
 for driver in `ls ${1}/lib/modules/${2}/drivers-usb |cut -d. -f1`;do
@@ -321,6 +340,7 @@ modprobe cdrom
 modprobe loop
 modprobe dm-mod
 modprobe usbhid
+modprobe hid-generic
 modprobe ext4
 EOF
 
@@ -378,7 +398,9 @@ modprobe nls-cp437
 modprobe nls-iso8859-1
 modprobe squashfs
 
-mke2fs /dev/ram1
+sleep 4
+
+mke2fs -q /dev/ram1 >/dev/null 2>&1
 mount -n /dev/ram1 /media
 mkdir /media/isofs
 mkdir /media/install
@@ -389,7 +411,7 @@ mount -n -o ro -L DTS_INSTALL /media/isofs
 losetup /dev/loop0 /media/isofs/\${squashimg}
 
 mount -n -o ro /dev/loop0 /media/installer
-mount -n -t aufs -o br:/media/user=rw:/media/installer=rr none /sysroot
+mount -n -t aufs -o br:/media/user=rw:/media/installer=rr none /sysroot >/dev/null 2>&1
 
 mount -M /media /sysroot/media
 
