@@ -1,8 +1,8 @@
 #!/bin/bash
 
-if [ ! -e /etc/netsentry-version ] && [ -e /etc/distrotech/netsentry-version.dis ];then
+if [ ! -e /etc/netsentry-version ] && [ -e /etc/distrotech/netsentry-version.dist ];then
   cp /etc/distrotech/netsentry-version.dist /etc/netsentry-version
- else
+ elif [ ! -e /etc/netsentry-version ];then
   echo "Config not found"
   exit 255
 fi
@@ -10,7 +10,7 @@ fi
 export KVER=$(uname -r)
 export VERSION=$(lsb_release -r -s)
 eval export BRAND=$(lsb_release -d -s)
-export BT="$BRAND V$VERSION Linux v${KVER} Install";
+export BT="${BRAND} ${VERSION} Kernel ${KVER} Install";
 
 setterm -blank 20
 

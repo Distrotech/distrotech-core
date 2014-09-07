@@ -7,7 +7,7 @@ SN_ADDR[1]="32";
 export VERSION=$(lsb_release -r -s)
 export KVER=$(uname -r)
 eval export BRAND=$(lsb_release -d -s)
-export BT="$BRAND ${VERSION} Linux v${KVER} Install";
+export BT="${BRAND} ${VERSION} Kernel ${KVER} Install";
 
 INT_NAME[1]="Internal";
 if [ -d /sys/class/net/ethA ] && [ -d /sys/class/net/wlanA ] && [ -e /etc/.install ];then

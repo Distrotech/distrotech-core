@@ -62,7 +62,7 @@ eval export BRAND=$(lsb_release -d -s)
 (cat <<_EOF_
 
 Welcome To ${BRAND} ${VERSION}
-Powered By Linux v${LKERNEL}
+Powered By Linux Kernel ${LKERNEL}
 
 Where Do You Want To Go Tommorow ?
 
@@ -73,7 +73,7 @@ _EOF_
 
 (cat <<_EOF_
 
-Welcome To ${BRAND} ${VERSION} Linux v${LKERNEL}
+Welcome To ${BRAND} ${VERSION} Kernel ${LKERNEL}
 
 _EOF_
 )>/etc/issue
