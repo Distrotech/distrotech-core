@@ -586,6 +586,10 @@ PACKAGE_URL=''
 
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
+DIST_DI
+DIST_CN
+DIST_RE
+DIST_ID
 AM_BACKSLASH
 AM_DEFAULT_VERBOSITY
 AM_DEFAULT_V
@@ -656,6 +660,10 @@ ac_subst_files=''
 ac_user_opts='
 enable_option_checking
 enable_silent_rules
+with_dist_id
+with_dist_release
+with_dist_codename
+with_dist_description
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1276,6 +1284,15 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-silent-rules   less verbose build output (undo: "make V=1")
   --disable-silent-rules  verbose build output (undo: "make V=0")
+
+Optional Packages:
+  --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
+  --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-dist-id          Distribution id stored in lsb-release (Distrotech)
+  --with-dist-release     Distribution release stored in lsb-release
+  --with-dist-codename    Distribution codename stored in lsb-release
+  --with-dist-description Distribution codename stored in lsb-release
+                          (Distrotech Solutions)
 
 Report bugs to <gregnietsky@gmail.com>.
 _ACEOF
@@ -2328,13 +2345,65 @@ END
   fi
 fi
 
+
+# Check whether --with-dist-id was given.
+if test "${with_dist_id+set}" = set; then :
+  withval=$with_dist_id;
+fi
+
+if test "x$with_dist_id" = "x" ; then :
+  DIST_ID=Distrotech
+else
+  DIST_ID=$with_dist_id
+fi
+
+
+
+# Check whether --with-dist-release was given.
+if test "${with_dist_release+set}" = set; then :
+  withval=$with_dist_release;
+fi
+
+if test "x$with_dist_release" = "x" ; then :
+  DIST_RE=""
+else
+  DIST_RE=$with_dist_release
+fi
+
+
+
+# Check whether --with-dist-codename was given.
+if test "${with_dist_codename+set}" = set; then :
+  withval=$with_dist_codename;
+fi
+
+if test "x$with_dist_codename" = "x" ; then :
+  DIST_CN=""
+else
+  DIST_CN=$with_dist_codename
+fi
+
+
+
+# Check whether --with-dist-description was given.
+if test "${with_dist_description+set}" = set; then :
+  withval=$with_dist_description;
+fi
+
+if test "x$with_dist_description" = "x" ; then :
+  DIST_DI="Distrotech Solutions Linux"
+else
+  DIST_DI=$with_dist_description
+fi
+
+
 # Checks for header files.
 
 # Checks for typedefs, structures, and compiler characteristics.
 
 # Checks for library functions.
 
-ac_config_files="$ac_config_files Makefile"
+ac_config_files="$ac_config_files Makefile lsb/lsb-release"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -3054,6 +3123,7 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
+    "lsb/lsb-release") CONFIG_FILES="$CONFIG_FILES lsb/lsb-release" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
