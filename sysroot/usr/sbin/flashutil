@@ -7,7 +7,8 @@ CORE=/mnt/dev
 AMNT=/media
 CWD=`pwd`
 
-KSUF="dts"
+IFS=- read -a KREL <<< $(uname -r)
+KSUF=${KREL[2]}
 
 Grub_Local() {
   GPARTI=`grub-probe -t partmap ${BASE}`
@@ -65,12 +66,7 @@ Post_Update() {
   if [ "${1}" ] && [ ${KERNEL} != ${1} ];then
     KERNEL=$1
     (cat <<__EOF__
-BRAND="$BRAND";
-VERSION="$VERSION";
 KERNEL="$KERNEL";
-HN_ADDR="$HN_ADDR";
-DOM_ADDR="$DOM_ADDR";
-BT="\$BRAND V\$VERSION Linux V\$KERNEL Install";
 KERNOPTS="$KERNOPTS";
 EXTRA_DEV="$EXTRA_DEV";
 USBSLEEP="$USBSLEEP";

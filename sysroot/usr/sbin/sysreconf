@@ -2,20 +2,12 @@
 
 RELOAD=1;
 
-if [ -e /etc/netsentry-version ];then
-  eval `cat /etc/netsentry-version`
-  if [ "$IP_ADDR" ];then
-    IP_ADDR[1]=$IP_ADDR;
-    if [ "$SN_ADDR" ];then
-      SN_ADDR[1]=$SN_ADDR;
-     else
-      SN_ADDR[1]=24;
-    fi;
-   else
-    IP_ADDR[1]="0.0.0.0";
-    SN_ADDR[1]="32";
-  fi;
-fi;
+IP_ADDR[1]="0.0.0.0";
+SN_ADDR[1]="32";
+export VERSION=$(lsb_release -r -s)
+export KVER=$(uname -r)
+eval export BRAND=$(lsb_release -d -s)
+export BT="$BRAND ${VERSION} Linux v${KVER} Install";
 
 INT_NAME[1]="Internal";
 if [ -d /sys/class/net/ethA ] && [ -d /sys/class/net/wlanA ] && [ -e /etc/.install ];then
@@ -541,10 +533,6 @@ sed -e "s/IP SysConf External .*/IP SysConf External $FWALL_EXT/" \
     -e "s/^Serial .*/Serial $SERIAL/" \
     $config_file |grep -vEf /etc/reconf >> /tmp/netsentry.conf
 
-sed -e "s/IP_ADDR=.*/IP_ADDR=\"${IP_ADDR[1]}\";/" -e "s/SN_ADDR=.*/SN_ADDR=\"${SN_ADDR[1]}\";/" \
-    -e "s/HN_ADDR=.*/HN_ADDR=\"$HN_ADDR\";/" -e "s/DOM_ADDR=.*/DOM_ADDR=\"$DOM_ADDR\";/" \
-    /etc/netsentry-version > /tmp/netsentry-version
-
 (cat <<EOF
 IP_ADDR[1]="${IP_ADDR[1]}";
 SN_ADDR[1]="${SN_ADDR[1]}";
@@ -664,7 +652,6 @@ $IP_ADDR            $HN_ADDR.$DOM_ADDR $HN_ADDR
 127.0.0.1           localhost
 EOF
 ) > /etc/hosts
-  mv /tmp/netsentry-version /etc/
   mv /tmp/netsentry-sysvars /etc/
 fi;
 
@@ -710,7 +697,6 @@ if [ $RELOAD == "0" ] && [ ! -e /etc/.install ];then
     fi;
   fi
 
-  mv /tmp/netsentry-version /etc/
   cp /tmp/netsentry.conf /var/spool/apache/htdocs/ns/config/netsentry.conf
   chown www.www /var/spool/apache/htdocs/ns/config/netsentry.conf
   chmod 600 /var/spool/apache/htdocs/ns/config/netsentry.conf

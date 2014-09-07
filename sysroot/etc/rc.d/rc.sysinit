@@ -56,18 +56,13 @@ if [ -e /etc/.install ];then
   done
 fi;
 
-if [ ! -e /etc/netsentry-version ] && [ -e /etc/distrotech/netsentry-version.dist ];then
-  cp /etc/distrotech/netsentry-version.dist /etc/netsentry-version
-fi;
-
-if [ -e /etc/netsentry-version ];then
-  eval `cat /etc/netsentry-version`
-fi;
+export VERSION=$(lsb_release -r -s)
+eval export BRAND=$(lsb_release -d -s)
 
 (cat <<_EOF_
 
-Welcome To $BRAND V$VERSION
-Powered By Linux V${LKERNEL}
+Welcome To ${BRAND} ${VERSION}
+Powered By Linux v${LKERNEL}
 
 Where Do You Want To Go Tommorow ?
 
@@ -78,7 +73,7 @@ _EOF_
 
 (cat <<_EOF_
 
-Welcome To $BRAND V$VERSION Linux V${LKERNEL}
+Welcome To ${BRAND} ${VERSION} Linux v${LKERNEL}
 
 _EOF_
 )>/etc/issue
@@ -91,10 +86,8 @@ fi;
 
 if [ -e /etc/HOSTNAME ];then
   ${HOSTNAME} -F /etc/HOSTNAME
- elif [ -e /etc/.networksentry-lite ];then
-  ${HOSTNAME} $HN_ADDR-lite
  else
-  ${HOSTNAME} $HN_ADDR
+  ${HOSTNAME} $(lsb_release -s -i |tr [A-Z] [a-z])
 fi;
 
 if [ ! -e /etc/resolv.conf ];then

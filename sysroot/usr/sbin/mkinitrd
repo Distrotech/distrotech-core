@@ -1,6 +1,7 @@
 #!/bin/bash
 
-KSUF="dts"
+IFS=- read -a KREL <<< $(uname -r)
+KSUF=${KREL[2]}
 
 init_rd_drivers() {
   kernel=${3}

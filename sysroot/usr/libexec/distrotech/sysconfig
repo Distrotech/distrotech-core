@@ -1,11 +1,16 @@
 #!/bin/bash
 
-if [ -e /etc/netsentry-version ];then
-  eval `cat /etc/netsentry-version`
+if [ ! -e /etc/netsentry-version ] && [ -e /etc/distrotech/netsentry-version.dis ];then
+  cp /etc/distrotech/netsentry-version.dist /etc/netsentry-version
  else
   echo "Config not found"
   exit 255
 fi
+
+export KVER=$(uname -r)
+export VERSION=$(lsb_release -r -s)
+eval export BRAND=$(lsb_release -d -s)
+export BT="$BRAND V$VERSION Linux v${KVER} Install";
 
 setterm -blank 20
 
@@ -49,7 +54,7 @@ baseurl = file:///media/isofs/repo
 EOF
 ) > /etc/yum/repos.d/installer.repo
 
-  IFS=- read -a KREL <<< $(uname -r)
+  IFS=- read -a KREL <<< ${KVER}
   KARCH=${KREL[1]}
   case ${KARCH} in
     x86_64)ARCH="x86_64";
@@ -77,8 +82,8 @@ EOF
   done
 
   #Setup the kernel version in the config file used by mkinitd
-  LINKERNEL=$(rpm --root ${INST_BASE} -q -i linux-intel-dts |grep Version |sed -e "s/.*\s\(.*\)/\1/")
-  sed -e "s/\(KERNEL=\"\).*\"/\1${LINKERNEL}-${KARCH}-dts\"/" /etc/netsentry-version > ${INST_BASE}/etc/netsentry-version
+  LINKERNEL=$(rpm --root ${INST_BASE} -q -i linux-intel-${KREL[2]} |grep Version |sed -e "s/.*\s\(.*\)/\1/")
+  sed -e "s/\(KERNEL=\"\).*\"/\1${LINKERNEL}-${KARCH}-${KREL[2]}\"/" /etc/netsentry-version > ${INST_BASE}/etc/netsentry-version
 
   for newdir in usr/share/clamav var/spool/clientmqueue var/spool/MailScanner/incoming etc/MailScanner \
                 var/empty var/spool/apache/htdocs/ssl/sign var/spool/apache/htdocs/ssl/casign var/state/dhcp \
@@ -151,11 +156,11 @@ EOF
   fi;
 
   #Create Serial On Install
-  if [ "$SERIAL" ];then
-    echo "Serial $SERIAL" >> ${INST_BASE}/var/spool/apache/htdocs/ns/config/netsentry.conf
-   else
-    Set_Serial ${HN_ADDR}.${DOM_ADDR}
-  fi
+#  if [ "$SERIAL" ];then
+#    echo "Serial $SERIAL" >> ${INST_BASE}/var/spool/apache/htdocs/ns/config/netsentry.conf
+#   else
+#    Set_Serial ${HN_ADDR}.${DOM_ADDR}
+#  fi
 
   chmod 1777 ${INST_BASE}/tmp ${INST_BASE}/var/run
   chown -R www.www ${INST_BASE}/var/spool/apache/htdocs
