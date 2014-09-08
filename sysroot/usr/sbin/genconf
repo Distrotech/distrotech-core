@@ -10335,19 +10335,19 @@ cache_log /var/log/squid/cache.log
 cache_dir ufs /var/spool/squid $proxyconf{'CacheSize'} 16 $squidsld
 cache_access_log /var/log/squid/access.log
 cache_store_log none
-emulate_httpd_log off
+#emulate_httpd_log off
 mime_table /etc/squid/mime.conf
 log_mime_hdrs off
 pid_filename /var/run/squid.pid
 error_directory $squiderrdir
 debug_options ALL,1
-log_fqdn $squidfqdnlog
+#log_fqdn $squidfqdnlog
 client_netmask 255.255.255.255
 ftp_user root\@$dnsconf{'Domain'}
-ftp_list_width 32
+#ftp_list_width 32
 ftp_passive on
 append_domain .$dnsconf{'Domain'}
-unlinkd_program /usr/libexec/squid/unlinkd
+unlinkd_program /usr/libexec/unlinkd
 request_header_max_size 10 KB
 refresh_pattern         ^ftp:           1440    20%     10080
 refresh_pattern         ^gopher:        1440    0%      1440
@@ -10365,11 +10365,11 @@ half_closed_clients on
 pconn_timeout 120 seconds
 shutdown_lifetime 30 seconds
 auth_param basic realm Access To Internet
-auth_param basic program /usr/libexec/pam_auth
+auth_param basic program /usr/libexec/basic_pam_auth
 authenticate_ip_ttl 300 second
 auth_param basic children 10
-external_acl_type unix_group %LOGIN /usr/libexec/squid_unix_group -p
-acl duplicate max_user_ip -s 1
+external_acl_type unix_group %LOGIN /usr/libexec/ext_unix_group_acl -p
+acl duplicate max_user_ip 1
 __EOB__
 foreach $pden (@pdeny) {
   print SC "acl squiddeny src $pden\n";
@@ -10455,7 +10455,7 @@ foreach $netip (@pbypass) {
 print SC<<__EOB__;
 acl authenticate proxy_auth REQUIRED
 acl all src all
-acl manager proto cache_object
+#acl manager proto cache_object
 acl localhost src 127.0.0.1/32
 acl SSL_ports port 443 563 666 990 5222 1863
 acl Safe_ports port 80 21 990 443 563 70 210 3128 3129 8080 5222 1863
