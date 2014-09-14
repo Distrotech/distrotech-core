@@ -65,7 +65,8 @@ if [ -e /etc/.install ];then
    elif [ -d /sys/class/net/ethA ];then
     dhclient -nw ethA
     dhclient -6 -nw -pf /var/run/dhclient6.pid ethA
-  fi;) >/dev/null 2>&1 &
+  fi;
+  /etc/rc.d/install/rc.named) >/dev/null 2>&1 &
 fi;
 
 reset -Q

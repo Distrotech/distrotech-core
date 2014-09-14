@@ -9,7 +9,11 @@ if [ ! -e /etc/bind/forwarders.conf ];then
 fi;
 
 if [ ! -e /etc/rndc.key ];then
-  rndc-confgen -a -r /dev/urandom
+  rndc-confgen -a -r /dev/urandom > /dev/null 2>&1
 fi;
 
-named -c /etc/distrotech/named.conf
+rndc status > /dev/null 2>&1
+
+if [ $? != 0 ];then
+  named -c /etc/distrotech/named.conf
+fi;
