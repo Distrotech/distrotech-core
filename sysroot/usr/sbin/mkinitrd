@@ -411,6 +411,8 @@ mount -n -o ro -L DTS_INSTALL /media/isofs
 losetup /dev/loop0 /media/isofs/\${squashimg}
 
 mount -n -o ro /dev/loop0 /media/installer
+mount -t tmpfs tmprw /media/user
+
 mount -n -t aufs -o br:/media/user=rw+moo:/media/installer=rr none /sysroot >/dev/null 2>&1
 
 mount -M /media /sysroot/media
@@ -422,6 +424,7 @@ pivot_root /sysroot /sysroot/initrd
 mount -M /initrd/proc /proc
 mount -M /initrd/sys /sys
 mount -M /initrd/dev /dev
+mount -t tmpfs rundir /run
 
 EOF
    elif [ "${3}" == "buildroot" ];then
@@ -447,6 +450,8 @@ losetup /dev/loop1 /media/isofs/\${buildimg}
 
 mount -o ro /dev/loop0 /media/installer
 mount -o ro /dev/loop1 /media/buildroot
+mount -t tmpfs tmprw /media/user
+
 mount -t aufs -o br:/media/user=rw+moo:/media/buildroot=rr:/media/installer=rr build /sysroot > /dev/null 2>&1
 
 mount -M /media /sysroot/media
@@ -458,6 +463,7 @@ pivot_root /sysroot /sysroot/initrd
 mount -M /initrd/proc /proc
 mount -M /initrd/sys /sys
 mount -M /initrd/dev /dev
+mount -t tmpfs rundir /run
 
 EOF
    else
