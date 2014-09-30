@@ -13,6 +13,9 @@ blkid -t TYPE=swap -o device |awk '{printf "\
 #Install grub on all lvm VG PV's
 for hdisk in `pvdisplay -c 2>/dev/null |awk -F: '$2 == "lvm" {printf "%s\n",$1}'`;do
   DEV=`grub-probe --target=drive -d ${hdisk} |sed -e "s/.*\(\/dev\/.*\),.*/\1/"`
+  if [ ! -e /dev/${DEV} ];then
+     DEV=`echo ${hdisk} |sed -e "s/\(\/dev\/sd[a-z]\).*/\1/"`
+  fi;
   echo "Installing GRUB on ${DEV}"
   /usr/sbin/grub-install --force ${DEV}
   if [ $? == 0 ];then

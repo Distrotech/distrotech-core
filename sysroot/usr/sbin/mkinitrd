@@ -615,7 +615,11 @@ if [ "${1}" == "" ];then
     exit -1
   fi;
 
-  mk_initrd /mnt/initrd / ${KERNEL}
+  if [ -d /lib/modules/${KERNEL}-${KSUF} ];then
+    mk_initrd /mnt/initrd / ${KERNEL}-${KSUF}
+   else
+    mk_initrd /mnt/initrd / ${KERNEL}
+  fi;
   grub-mkconfig  > /boot/grub/grub.cfg
  elif [ "${1}" == "bootimg" ];then
   shift
