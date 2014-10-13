@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:variable name='nl'><xsl:text>&#xa;</xsl:text></xsl:variable>
+<xsl:output method="text" omit-xml-declaration="yes" indent="no" />
+<xsl:variable name="extcon" select="/config/IP/Dialup/Option[@option = 'Connection']"/>
+<xsl:variable name="mtu" select="/config/IP/Dialup/Option[@option = 'MTU']"/>
+<xsl:variable name="pppint" select="/config/Radius/Config/Option[@option = 'PPPoEIF']"/>
+<xsl:variable name="extint" select="/config/IP/SysConf/Option[@option = 'External']"/>
+<xsl:variable name="intint" select="/config/IP/SysConf/Option[@option = 'Internal']"/>
+
+<xsl:template match="/config">
+  <xsl:text>multilink&#xa;</xsl:text>
+
+  <xsl:choose>
+    <xsl:when test="$extcon = 'ADSL'">
+      <xsl:value-of select="concat('endpoint MAC:',$extint,$nl)"/>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:choose>
+        <xsl:when test="$pppint != ''">
+          <xsl:value-of select="concat('endpoint MAC:',$pppint,$nl)"/>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:value-of select="concat('endpoint MAC:',$intint,$nl)"/>
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:otherwise>
+  </xsl:choose>  
+
+  <xsl:value-of select="concat('mrru ',$mtu,$nl)"/>
+  <xsl:value-of select="concat('mru ',$mtu,$nl)"/>
+  <xsl:value-of select="concat('mtu ',$mtu,$nl)"/>
+
+  <xsl:if test="(/config/IP/Dialup/Option[@option = 'BSD'] = '') or (count(/config/IP/Dialup/Option[@option = 'BSD']) = 0)">
+    <xsl:text>nobsdcomp&#xa;</xsl:text>
+  </xsl:if>
+
+  <xsl:if test="(/config/IP/Dialup/Option[@option = 'Deflate'] = '') or (count(/config/IP/Dialup/Option[@option = 'Deflate']) = 0)">
+    <xsl:text>nodeflate&#xa;</xsl:text>
+  </xsl:if>
+
+  <xsl:choose>
+    <xsl:when test="/config/IP/Dialup/Option[@option = 'Maxfail'] != ''">
+      <xsl:value-of select="concat('maxfail ',/config/IP/Dialup/Option[@option = 'Maxfail'],$nl)"/>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:value-of select="concat('maxfail 0',$nl)"/>
+    </xsl:otherwise>
+  </xsl:choose>
+
+  <xsl:text>noipdefault&#xa;</xsl:text>
+
+  <xsl:choose>
+    <xsl:when test="/config/IP/Dialup/Option[@option = 'Holdoff'] != ''">
+      <xsl:value-of select="concat('holdoff ',/config/IP/Dialup/Option[@option = 'Holdoff'],$nl)"/>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:value-of select="concat('holdoff 5',$nl)"/>
+    </xsl:otherwise>
+  </xsl:choose>
+
+  <xsl:text>lcp-echo-interval 20&#xa;</xsl:text>
+  <xsl:text>lcp-echo-failure 2&#xa;</xsl:text>
+  <xsl:text>lcp-max-configure 3&#xa;</xsl:text>
+  <xsl:text>lcp-max-failure 3&#xa;</xsl:text>
+
+  <xsl:value-of select="concat('ms-dns ',/config/IP/Interfaces/Interface[text() = $intint]/@ipaddr,$nl)"/>
+
+  <xsl:if test="/config/IP/SysConf/Option[@option = 'PrimaryDns'] != ''">
+    <xsl:value-of select="concat('ms-dns ',/config/IP/SysConf/Option[@option = 'PrimaryDns'],$nl)"/>
+  </xsl:if>
+
+  <xsl:if test="/config/IP/SysConf/Option[@option = 'SecondaryDns'] != ''">
+    <xsl:value-of select="concat('ms-dns ',/config/IP/SysConf/Option[@option = 'SecondaryDns'],$nl)"/>
+  </xsl:if>
+
+  <xsl:choose>
+    <xsl:when test="(/config/IP/SysConf/Option[@option = 'PrimaryWins'] != '')">
+      <xsl:value-of select="concat('ms-wins ',/config/IP/SysConf/Option[@option = 'PrimaryWins'],$nl)"/>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:value-of select="concat('ms-wins ',/config/IP/Interfaces/Interface[text() = $intint]/@ipaddr,$nl)"/>
+    </xsl:otherwise>
+  </xsl:choose>
+
+  <xsl:if test="/config/IP/SysConf/Option[@option = 'SecondaryWins'] != ''">
+    <xsl:value-of select="concat('ms-wins ',/config/IP/SysConf/Option[@option = 'SecondaryWins'],$nl)"/>
+  </xsl:if>
+
+  <xsl:if test="($extint = 'Dialup') and ($extcon = 'Dialup')">
+    <xsl:text>active-filter "tcp port 22 or tcp port 995 or tcp port 993 or tcp port 143  or tcp port 443 or tcp port 666 or tcp port 110 or tcp port25 or tcp port 80 or udp port 53"&#xa;</xsl:text>
+    <xsl:text>connect "/usr/sbin/chat -v -f /etc/ppp/diald.scr"&#xa;</xsl:text>
+    <xsl:if test="/config/IP/Dialup/Option[@option = 'ConnectDelay'] != ''">
+      <xsl:value-of select="concat('connect-delay ',/config/IP/Dialup/Option[@option = 'ConnectDelay'],$nl)"/>
+    </xsl:if>
+  </xsl:if>
+
+  <xsl:if test="($extint = 'Dialup') and ($extcon = 'Leased')">
+    <xsl:value-of select="concat(/config/IP/Dialup/Option[@option = 'FlowControl'],$nl)"/>
+    <xsl:text>persist&#xa;</xsl:text>
+  </xsl:if>
+</xsl:template>
+</xsl:stylesheet>
