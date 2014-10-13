@@ -234,7 +234,6 @@ _EOF_
 
   cat <<_EOF_
 modprobe sd_mod
-modprobe scsi_wait_scan
 
 modprobe loop
 modprobe dm-mod
@@ -620,7 +619,7 @@ if [ "${1}" == "" ];then
    else
     mk_initrd /mnt/initrd / ${KERNEL}
   fi;
-  grub-mkconfig  > /boot/grub/grub.cfg
+  grub-mkconfig -o /boot/grub/grub.cfg
  elif [ "${1}" == "bootimg" ];then
   shift
   TMPDIR=$(mktemp -d /tmp/bootinitrd-XXXXXXXX)
