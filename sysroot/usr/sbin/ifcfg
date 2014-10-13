@@ -26,12 +26,13 @@ if [ ! -e /etc/ifconf/ifup.${INT} ];then
   exit
 fi
 
-eval `cat /etc/ifconf/ifup.${INT}`
+. /etc/ifconf/ifup.${INT}
 
 #Set Address On Interface
 if [ ! -e /etc/.install ] && [ ! -e /etc/.needsreconf ];then
  /sbin/ip -4 addr flush dev ${IFNAME}
 fi;
+
 if [ "${CHILLI}" == "0" ] && [ "${NETWORK}" != "169.254.0.0" ];then
   /sbin/ip addr add ${ADDRESS}/${NETMASK} dev ${IFNAME} broadcast ${BROADCAST} > /dev/null 2>&1
   /sbin/ip addr add ::${ADDRESS}/96 dev sit0 > /dev/null 2>&1
@@ -68,7 +69,7 @@ if [ -d /sys/class/net/${IFNAME}/wireless ];then
     /sbin/ip link set ${IFNAME} up
   fi;
  else
-  /sbin/ip link set ${IFNAME} up
+  /sbin/ip link set ${IFNAME} up &
 fi;
 
 if [ -s /etc/chilli/${IFNAME}.conf ] && [ "${CHILLI}" == "1" ];then
@@ -196,12 +197,13 @@ if [ "$FIREWALL" == "EXTERNAL" ] && [ "$DEFAULT" ];then
 fi;
 
 #Bridge control
-if [ "${BRIDGE}" ];then
+(if [ "${BRIDGE}" ];then
+  sleep 10
   if [ ! -d /proc/sys/net/ipv4/neigh/${BRIDGE} ];then
-   (ip link add dev ${BRIDGE} type bridge
+    ip link add dev ${BRIDGE} type bridge
     ip link set dev ${BRIDGE} up
-    echo 1 > /sys/class/net/br0/bridge/stp_state) > /dev/null 2>&1
+    echo 1 > /sys/class/net/${BRIDGE}/bridge/stp_state
+    sleep 5
   fi;
-  sleep 5
-  ip link set dev ${IFNAME} master ${BRIDGE} > /dev/null 2>&1
-fi;
+  ip link set dev ${IFNAME} master ${BRIDGE}
+fi) > /dev/null 2>&1 &
