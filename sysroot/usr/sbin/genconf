@@ -2035,7 +2035,7 @@ function FindProxyForURL(url, host) {
 EOF
 )>/var/spool/apache/htdocs/proxy.pac
 
-sed -e "s/^\\\$whereami.*/\\\$whereami = \\\"$dnsconf{'Domain'}\\\";/" /var/spool/majordomo/majordomo.cf.orig  > /var/spool/majordomo/majordomo.cf
+sed -i -e "s/^\\\$whereami.*/\\\$whereami = \\\"$dnsconf{'Domain'}\\\";/" /opt/majordomo/majordomo.cf
 
 sed -e "s/^binddn.*\$/binddn $ldapserv{'limited'}/" \\
     -e "s/^rootbinddn.*\$/rootbinddn $ldapserv{'Login'}/" \\
@@ -2046,7 +2046,7 @@ sed -e "s/^binddn.*\$/binddn $ldapserv{'limited'}/" \\
     -e "s/^uri.*\$/uri ldaps:\\/\\/$ldapserv{'Server'} ldaps:\\/\\/$repmaster/" /etc/ldap.conf.orig >  /etc/ldap.conf
 
 chmod 644 /etc/ldap.conf
-chown root.smbadm /etc/ldap.conf
+chown 0.139 /etc/ldap.conf
 
 (cat <<EOF
 <%
@@ -2271,9 +2271,11 @@ sed -e "s/^\\\$password=.*;/\\\$password=\\\"$sqlradiuspass\\\";/" \\
 chmod 750 /usr/sbin/radcheck
 chown root.root /usr/sbin/radcheck
 
-sed -e "s/ETHER_LOCAL_DEV=.*/ETHER_LOCAL_DEV=$sysconf{'Internal'}/" /usr/lib/ipsec/_updown.orig > /usr/lib/ipsec/_updown
-chown root.root /usr/lib/ipsec/_updown
-chmod 755 /usr/lib/ipsec/_updown
+if [ -e /usr/lib/ipsec/_updown.orig ];then
+  sed -e "s/ETHER_LOCAL_DEV=.*/ETHER_LOCAL_DEV=$sysconf{'Internal'}/" /usr/lib/ipsec/_updown.orig > /usr/lib/ipsec/_updown
+  chown root.root /usr/lib/ipsec/_updown
+  chmod 755 /usr/lib/ipsec/_updown
+fi;
 
 sed -e "s/^\\\$password=.*;/\\\$password=\\\"$sqlvoippass\\\";/" /etc/asterisk/pannel/genbut.pl.orig > /etc/asterisk/pannel/genbut.pl
 chmod 750 /etc/asterisk/pannel/genbut.pl
@@ -11027,7 +11029,7 @@ __EOB__
 
 [MAILLISTS]
 	comment = Majordomo Mailing Lists
-	path = /var/spool/majordomo/lists
+	path = /opt/majordomo/lists
         read only = No
         create mask = 0644
         directory mask = 0755

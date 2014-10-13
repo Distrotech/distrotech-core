@@ -66,7 +66,7 @@ if (($aliasedit == _("Delete")) && ($alias != "")){
     $addent["sendmailmtaaliasgrouping"][0]="aliases";
     $addent["sendmailmtacluster"][0]="AllServers";  
     $addent["sendmailmtakey"][0]="$newalias-list";
-    $addent["sendmailmtaaliasvalue"][0]="\"|/var/spool/majordomo/wrapper resend -h $LOCAL_DOMAIN -l $newalias-list $newalias-members\"";
+    $addent["sendmailmtaaliasvalue"][0]="\"|/opt/majordomo/wrapper resend -h $LOCAL_DOMAIN -l $newalias-list $newalias-members\"";
     ldap_add($ds,"sendmailMTAKey=$newalias-list,ou=Email",$addent);
 
     $addent=array();
@@ -76,7 +76,7 @@ if (($aliasedit == _("Delete")) && ($alias != "")){
     $addent["sendmailmtaaliasgrouping"][0]="aliases";
     $addent["sendmailmtacluster"][0]="AllServers";  
     $addent["sendmailmtakey"][0]="$newalias-members";
-    $addent["sendmailmtaaliasvalue"][0]=":include:/var/spool/majordomo/lists/$newalias-list";
+    $addent["sendmailmtaaliasvalue"][0]=":include:/opt/majordomo/lists/$newalias-list";
     ldap_add($ds,"sendmailMTAKey=$newalias-members,ou=Email",$addent);
 
     $addent=array();
@@ -106,7 +106,7 @@ if (($aliasedit == _("Delete")) && ($alias != "")){
     $addent["sendmailmtaaliasgrouping"][0]="aliases";
     $addent["sendmailmtacluster"][0]="AllServers";  
     $addent["sendmailmtakey"][0]="$newalias-list-request";
-    $addent["sendmailmtaaliasvalue"][0]="\"|/var/spool/majordomo/wrapper majordomo -l $newalias-list\"";
+    $addent["sendmailmtaaliasvalue"][0]="\"|/opt/majordomo/wrapper majordomo -l $newalias-list\"";
     ldap_add($ds,"sendmailMTAKey=$newalias-list-request,ou=Email",$addent);
 
     $addent=array();
