@@ -70,13 +70,13 @@ if [ -x /etc/rc.d/rc.wanpipe ];then
 fi;
 
 if [ -e /lib/modules/${LKERNEL}/dahdi ];then
-  /sbin/modprobe wctdm > /dev/null 2>&1
+  /sbin/modprobe wctdm > /dev/null 2>&1 &
 fi;
 
 #Setup mIDN DSP
 if [ -e /dev/mISDNtimer ] && [ -x /usr/sbin/lcr ];then
   (/sbin/modprobe mISDN_dsp
-  /sbin/modprobe mISDN_dsp_oslec ) >/dev/null 2>&1
+  /sbin/modprobe mISDN_dsp_oslec ) >/dev/null 2>&1 &
 fi;
 
 #Remove Unused SATA/PATA Drivers
@@ -97,5 +97,3 @@ if [ -d /lib/modules/${LKERNEL}/kernel/sound/ ];then
   /sbin/modprobe snd_seq_midi
   /usr/sbin/alsactl restore)> /dev/null 2>&1
 fi;
-
-
