@@ -37,6 +37,9 @@ if [ ! -e /dev/fd ];then
   ln -s /proc/self/fd /dev
 fi;
 
+#Disable screen blanking till later
+/usr/bin/setterm -blank 0
+
 #Bring Up Loopback Device
 /sbin/ip addr add 127.0.0.1/8 dev lo
 /sbin/ip addr add 127.0.0.2/32 dev lo
