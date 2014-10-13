@@ -196,6 +196,12 @@ initrd_config() {
 
 echo "Distrotech Linux Starting"
 
+for copt in \`cat /proc/cmdline\`;do
+  if [ "\${copt#${KSUF}_bash=}" == "\${copt}" ];then
+    ${KSUF}_bash="1";
+  fi;
+done
+
 /bin/mount -t proc none /proc
 /bin/mount -t sysfs none /sys
 /bin/mount -t devtmpfs none /dev
