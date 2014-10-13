@@ -22,7 +22,6 @@ if [ -x /etc/rc.d/rc.firewall ];then
   /etc/rc.d/rc.firewall startup > /dev/null 2>&1
 fi;
 
-
 #Start SSHD
 if [ ! -e /etc/ssh_host_key ];then
   ssh-keygen -t rsa1 -f /etc/ssh_host_key -N "" > /dev/null 2>&1
@@ -56,4 +55,3 @@ fi;
 
 #ACPI Deamon
 /usr/sbin/acpid > /dev/null 2>&1
-
