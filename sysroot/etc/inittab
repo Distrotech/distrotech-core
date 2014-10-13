@@ -1,12 +1,16 @@
 id:3:initdefault:
 
 si:S:sysinit:/etc/rc.d/rc.sysinit
+
 su1:1S:wait:/etc/rc.d/rc.config
 su2:1S:wait:/etc/rc.d/rc.S
 su3:1S:wait:/sbin/sulogin -p
 
 rc1:3:wait:/etc/rc.d/rc.config
 rc2:3:wait:/etc/rc.d/rc.M
+
+rd1:4:wait:/etc/rc.d/rc.config
+rd2:4:wait:/etc/rc.d/rc.D
 
 ca::ctrlaltdel:/sbin/init 2
 
