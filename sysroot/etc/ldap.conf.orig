@@ -30,5 +30,5 @@ nss_connect_policy persist
 
 pam_filter objectclass=posixAccount
 pam_login_attribute uid
-pam_password crypt
+pam_password exop
 pam_member_attribute gidNumber
