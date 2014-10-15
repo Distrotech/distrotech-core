@@ -1,8 +1,14 @@
-auth       [success=3 default=ignore] pam_unix.so
-auth       [success=2 default=ignore] pam_winbind.so cached_login
-auth       [success=1 default=ignore] pam_ldap.so
-auth       requisite  pam_deny.so
-auth       required   pam_ecryptfs.so unwrap
-account    required   pam_permit.so
-session    required   pam_mkhomedir.so skel=/etc/skel umask=0022
-session    optional   pam_ecryptfs.so unwrap
+auth		[success=3 default=done]	pam_unix.so
+auth		[success=2 default=done]	pam_ldap.so use_first_pass
+auth		[success=1 default=done]	pam_winbind.so cached_login
+auth		required			pam_deny.so
+auth		required			pam_ecryptfs.so unwrap
+
+password	optional			pam_unix.so sha512
+password	optional			pam_ldap.so use_authtok
+password	optional			pam_smbpass.so use_authtok
+
+account		required			pam_permit.so
+
+session		required			pam_mkhomedir.so skel=/etc/skel umask=0022
+session		optional			pam_ecryptfs.so unwrap
