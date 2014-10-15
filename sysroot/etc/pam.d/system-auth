@@ -4,12 +4,11 @@ auth		[success=1 default=done]	pam_winbind.so cached_login
 auth		required			pam_deny.so
 auth		required			pam_ecryptfs.so unwrap
 
-password	[success=2 default=ignore]	pam_unix.so sha512
-password	optional			pam_ldap.so
+password	[success=ok default=2]		pam_ldap.so
 password	optional			pam_smbpass.so use_authtok
+password	[success=done default=ignore]	pam_unix.so sha512 use_authtok
 
-password	optional			pam_ldap.so use_authtok
-password	optional			pam_smbpass.so use_authtok
+password	optional			pam_unix.so sha512
 
 account		required			pam_permit.so
 
