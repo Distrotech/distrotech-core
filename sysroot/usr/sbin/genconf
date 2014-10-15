@@ -2287,7 +2287,11 @@ if [ -e /tmp/mysql.sock ];then
   rm /tmp/mysql.sock
 fi;
 
-(/usr/libexec/mysqld --basedir=/usr --datadir=/var/spool/mysql --user=mysql --pid-file=/var/spool/mysql/mysqld.pid --skip-external-locking --port=3306 --socket=/tmp/mysql.sock --skip-grant-tables > /dev/null 2>&1) &
+if [ -x /opt/mysql/bin/mysqld ];then
+  (/opt/mysql/bin/mysqld --basedir=/opt/mysql --datadir=/var/spool/mysql --user=mysql --pid-file=/var/spool/mysql/mysqld.pid --skip-external-locking --port=3306 --socket=/tmp/mysql.sock --skip-grant-tables > /dev/null 2>&1) &
+ else
+  (/usr/libexec/mysqld --basedir=/usr --datadir=/var/spool/mysql --user=mysql --pid-file=/var/spool/mysql/mysqld.pid --skip-external-locking --port=3306 --socket=/tmp/mysql.sock --skip-grant-tables > /dev/null 2>&1) &
+fi;
 sleep 4
 (cat <<_EOF_
 USE mysql;
