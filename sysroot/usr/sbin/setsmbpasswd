@@ -1,15 +1,6 @@
 #!/bin/bash
 
-if [ -e /var/spool/apache/htdocs/ns/config/ldap.newsecret ];then
-  ROOTPW=`cat /var/spool/apache/htdocs/ns/config/ldap.newsecret`
-  rm /var/spool/apache/htdocs/ns/config/ldap.newsecret
-  touch /etc/ldap.secret
-  chmod 400 /etc/ldap.secret
-  chown root.root /etc/ldap.secret
-  echo "${ROOTPW}" > /etc/ldap.secret
- else
-  ROOTPW=`cat /etc/ldap.secret`
-fi;
+ROOTPW=`cat /etc/ldap.secret`
 
 if [ -e "/etc/samba/smb.conf" ];then
   /usr/bin/smbpasswd -w ${ROOTPW} > /dev/null 2>&1
