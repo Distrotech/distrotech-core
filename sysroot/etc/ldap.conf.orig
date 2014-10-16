@@ -17,7 +17,7 @@ tls_checkpeer no
 tls_ciphers HIGH
 tls_cacertdir /etc/ipsec.d/certs/
 #tls_cacertfile /etc/ipsec.d/cacerts/cacert.pem
-tls_key /etc/openssl/serverkey.pem
+#tls_key /etc/openssl/serverkey.pem
 tls_cert /etc/openssl/server.signed.pem
 
 binddn ****
