@@ -232,7 +232,7 @@ sed -e "s/^binddn.*$/binddn ${LDAPLIMLOGIN}/" \
     -e "s/^base.*$/base ${VSUF:1}/" \
     -e "s/^port.*/port 636/" \
     -e "s/^master_host.*$/master_host ${REPMASTER}/" \
-    -e "s/^uri.*$/uri ldaps:\/\/${LDAPSERVER} ldaps:\/\/${REPMASTER}/" /etc/ldap.conf.orig >  /etc/ldap.conf
+    -e "s/^uri.*$/uri ldaps:\/\/${LDAPSERVER} ldaps:\/\/${REPMASTER}/" /etc/distrotech/ldap.conf.orig >  /etc/ldap.conf
 
 chmod 644 /etc/ldap.conf
 chown root.smbadm /etc/ldap.conf

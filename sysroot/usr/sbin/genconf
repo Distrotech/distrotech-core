@@ -1905,7 +1905,7 @@ sed -e "s/^binddn.*\$/binddn $ldapserv{'limited'}/" \\
     -e "s/^base.*\$/base $vsuf/" \\
     -e "s/^port.*/port 389/" \\
     -e "s/^uri.*\$/uri ldap\\:\\/\\/$ldapserv{'Server'}/" \\
-    -e "s/^master_host.*\$/master_host $repmaster/" /etc/ldap.conf.orig >  /etc/ldap.conf
+    -e "s/^master_host.*\$/master_host $repmaster/" /etc/distrotech/ldap.conf.orig >  /etc/ldap.conf
 
 chmod 644 /etc/ldap.conf
 chown 0.139 /etc/ldap.conf
@@ -2043,7 +2043,7 @@ sed -e "s/^binddn.*\$/binddn $ldapserv{'limited'}/" \\
     -e "s/^base.*\$/base $vsuf/" \\
     -e "s/^port.*/port 636/" \\
     -e "s/^master_host.*\$/master_host $repmaster/" \\
-    -e "s/^uri.*\$/uri ldaps:\\/\\/$ldapserv{'Server'} ldaps:\\/\\/$repmaster/" /etc/ldap.conf.orig >  /etc/ldap.conf
+    -e "s/^uri.*\$/uri ldaps:\\/\\/$ldapserv{'Server'} ldaps:\\/\\/$repmaster/" /etc/distrotech/ldap.conf.orig >  /etc/ldap.conf
 
 chmod 644 /etc/ldap.conf
 chown 0.139 /etc/ldap.conf
@@ -2222,7 +2222,7 @@ if [ -e /var/lib/asterisk/agi-bin/db_php_lib/defines.php.orig ];then
   sed -e "s/SQLPASS/$sqlvoippass/" /var/lib/asterisk/agi-bin/db_php_lib/defines.php.orig > /var/lib/asterisk/agi-bin/db_php_lib/defines.php
 fi;
 
-sed -e "s/pass=\\"\\*\\*\\*\\*\\"/pass=\\"admin\\"/" /etc/ulogd.conf.orig > /etc/ulogd.conf
+sed -e "s/pass=\\"\\*\\*\\*\\*\\"/pass=\\"admin\\"/" /etc/distrotech/ulogd.conf.orig > /etc/ulogd.conf
 
 if [ -e /var/spool/apache/htdocs/dbadmin/config.inc.php.orig ];then
   sed -e "s/\\*\\*\\*\\*\\*/$sqlctrlpass/" /var/spool/apache/htdocs/dbadmin/config.inc.php.orig > /var/spool/apache/htdocs/dbadmin/config.inc.php
@@ -2248,21 +2248,21 @@ EOF
 chown www.www /var/spool/apache/htdocs/radius/opendb.inc
 chmod 640 /var/spool/apache/htdocs/radius/opendb.inc
 
-sed -e "s/\\\$password=.*;/\\\$password=\\\"$sqlulogdpass\\\";/" /etc/procmlog.orig > /usr/sbin/procmlog
+sed -e "s/\\\$password=.*;/\\\$password=\\\"$sqlulogdpass\\\";/" /etc/distrotech/procmlog.orig > /usr/sbin/procmlog
 chmod 750 /usr/sbin/procmlog
 chown root.root /usr/sbin/procmlog
 
-sed -e "s/\\\$password=.*;/\\\$password=\\\"$sqlulogdpass\\\";/" /etc/rrdlog.orig > /usr/bin/rrdlog
+sed -e "s/\\\$password=.*;/\\\$password=\\\"$sqlulogdpass\\\";/" /etc/distrotech/rrdlog.orig > /usr/bin/rrdlog
 chmod 750 /usr/bin/rrdlog
 chown root.root /usr/bin/rrdlog
 
 sed -e "s/^\\\$password=.*;/\\\$password=\\\"$hordepass\\\";/" \\
-    -e "s/^\\\$hostname=.*;/\\\$hostname=\\\"$sqlserver\\\";/" /etc/procmfilter.orig > /usr/sbin/procmfilter
+    -e "s/^\\\$hostname=.*;/\\\$hostname=\\\"$sqlserver\\\";/" /etc/distrotech/procmfilter.orig > /usr/sbin/procmfilter
 chmod 750 /usr/sbin/procmfilter
 chown root.root /usr/sbin/procmfilter
 
 sed -e "s/DOMAIN/$dnsconf{'Domain'}/" -e "s/TSIGKEY/$domtsigkey/" \\
-    -e "s/SERVER/$dnsserv/" /etc/wins_hook.orig > /usr/sbin/wins_hook
+    -e "s/SERVER/$dnsserv/" /etc/distrotech/wins_hook.orig > /usr/sbin/wins_hook
 chmod 700 /usr/sbin/wins_hook
 chown root.root /usr/sbin/wins_hook
 
