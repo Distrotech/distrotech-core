@@ -29,7 +29,6 @@ fi;
 
 unset JAVA_HOME ANT_HOME M2_HOME QTDIR FOP_HOME FORREST_HOME LESSCLOSE
 
-MANPATH=/share/man:usr/share/man
 PATH=/usr/local/bin:/usr/bin:/bin:/opt/apache2/bin:/opt/Xorg/bin:/opt/xfce/bin
 
 if [ "`id -u`" = "0" ]; then
