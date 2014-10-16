@@ -11420,7 +11420,7 @@ sub printcrontab() {
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","(/usr/sbin/rndc flush;/usr/sbin/rndc stop;rm /var/named/*.jnl;killall -9 named;/usr/sbin/named)");
 #    printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","(/usr/sbin/faxcron |mail -s \"FAX Statistics\" root)");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","*/1","*","/usr/sbin/genwebmap");
-    printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","*/10","*","*","(killall -9 cshopfix;/usr/sbin/cshopfix)");
+    printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","*/10","*","*","/usr/sbin/cshopfix");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","*/1","*","/usr/bin/db_checkpoint -1 -h /var/spool/ldap");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","/usr/bin/db_archive -d -h /var/spool/ldap");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","*/1","*","/usr/bin/db_checkpoint -1 -h /var/log/ldap");
@@ -11438,12 +11438,7 @@ sub printcrontab() {
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","*/15","*","*","/usr/sbin/radcheck");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","*/15","*","*","/etc/asterisk/pannel/genbut.pl");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","2,4,6","*","(if [ \"`asterisk -rx \"module show like chan_sip.so\" |awk '\$1 == \"chan_sip.so\" {print \$1}'`\" != \"chan_sip.so\" ];then kill -9 `cat /var/run/asterisk.pid`; fi;)");
-    if (-e "/usr/sbin/rebootphone") {
-      printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","4","*","/usr/sbin/rebootphone");
-      printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","15","4","*","killall -9 rebootphone");
-    } else {
-      printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","4","*","/usr/sbin/rebootsnom");
-    }
+    printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","4","*","/usr/sbin/rebootphone");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","2-23","*","(rm /var/spool/apache/htdocs/ns/config/ifup.*;/var/spool/apache/htdocs/ns/config/bwup.*;/usr/sbin/genconf)");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","*/4","*","/usr/sbin/quotasetup");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","(openssl ca -gencrl -out /etc/ipsec.d/crls/crl.pem -config /etc/openssl/ca.conf;cp /etc/ipsec.d/crls/crl.pem /etc/ipsec.d/certs/`openssl crl -noout -hash -in /etc/ipsec.d/crls/crl.pem`.r0;openssl crl -in /etc/ipsec.d/crls/crl.pem -text  > /var/spool/apache/htdocs/ns/config/crl.txt;/usr/sbin/pkistore)");
