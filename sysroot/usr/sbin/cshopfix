@@ -3,6 +3,10 @@
 include "/var/lib/asterisk/agi-bin/functions.inc";
 include "/var/spool/apache/htdocs/cdr/apifunc.inc";
 
+if (! $db) {
+  exit;
+}
+
 $fixup=pg_query("SELECT inuse.uniqueid from inuse left outer join cdr using (uniqueid) left outer join call using (uniqueid) where not cleared and cdr.uniqueid is not null and call.uniqueid is null AND disposition='ANSWERED' AND channel ~ '^SIP/[0-9]{8}-'");
 for($i=0;$i < pg_num_rows($fixup);$i++) {
   $row=pg_fetch_array($fixup,$i,PGSQL_NUM);

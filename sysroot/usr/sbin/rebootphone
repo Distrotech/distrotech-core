@@ -32,6 +32,10 @@ $boot['trunk']=FALSE;
 include "/var/spool/apache/htdocs/cdr/auth.inc";
 include "/var/spool/apache/htdocs/cdr/autoadd.inc";
 
+if (! $db) {
+  exit;
+}
+
 if (! isset($agi)) {
   require_once("/var/lib/asterisk/agi-bin/phpagi/phpagi-asmanager.php");
   $agi=new AGI_AsteriskManager();
