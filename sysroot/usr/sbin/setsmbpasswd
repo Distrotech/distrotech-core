@@ -25,6 +25,11 @@ fi;
 touch /etc/shadow.new
 chmod 400 /etc/shadow.new
 
-(getent shadow |grep -E "^admin:"  |tail -1 |sed -e "s/admin\(:.*\)/root\1/"
-grep -vE "^root:" /etc/shadow) > /etc/shadow.new
+CRYPT=$(slappasswd -c '$6$%.12s' -T /etc/ldap.secret |cut -c8-)
+SECS=$(date +%s)
+DAYS=$(echo "${SECS} / 86400" |bc)
+
+(echo "root:${CRYPT}:${DAYS}::99999:0:0:65535:"
+echo "admin:${CRYPT}:${DAYS}::99999:0:0:65535:"
+grep -vE "^(root|admin):" /etc/shadow) > /etc/shadow.new
 mv /etc/shadow.new /etc/shadow
