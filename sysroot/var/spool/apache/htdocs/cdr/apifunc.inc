@@ -20,7 +20,11 @@
 
 function apiopen() {
   $timeout=120;
-  $socket = fsockopen("127.0.0.1","5038", $errno, $errstr, $timeout); 
+  $socket = @fsockopen("127.0.0.1","5038", $errno, $errstr, $timeout); 
+
+  if (! $socket) {
+    return $socket;
+  }
 
   fputs($socket,"Action: Login\r\n"); 
   fputs($socket,"UserName: admin\r\n"); 
@@ -49,6 +53,9 @@ function apiquery($command) {
   }
 
   $socket=apiopen();
+  if (! $socket) {
+    return $socket;
+  }
 
   fputs($socket,"Action: ". $command . "\r\n");
   fputs($socket,"\r\n");
@@ -84,6 +91,10 @@ function apiquery($command) {
 
 function agentquery($agent) {
   $socket=apiopen();
+  if (! $socket) {
+    return $socket;
+  }
+
   $agentdat=getagentstatus($agent,$socket);
   apiclose($socket); 
   return $agentdat;
@@ -139,6 +150,9 @@ function chanstatus($channel) {
     $isokkey[$okkeys[$okc]]=true;
   }
   $socket=apiopen();
+  if (! $socket) {
+    return $soocket;
+  }
   $chaninf=getchanstatus($channel,$socket);
   apiclose($socket);
   return $chaninf;

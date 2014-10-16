@@ -37,7 +37,9 @@ if (! isset($agi)) {
   $agi=new AGI_AsteriskManager();
 }
 
-$agi->connect("127.0.0.1","admin","admin");
+if (!$agi->connect("127.0.0.1","admin","admin")) {
+  exit;
+}
 
 while(list($phone,$query) = each($ptype)) {
   $curext=pg_query($db,$ptype[$phone]);

@@ -19,6 +19,9 @@ for($i=0;$i < pg_num_rows($delnocdr);$i++) {
 //pg_query($db,"UPDATE inuse set cleared = 't' where setup < now() - interval '30 minutes' and not cleared");
 
 $chanlist=chanstatus("");
+if (! $chanlist) {
+  exit;
+}
 if (count($chanlist) > 0) {
   $delnocdr=pg_query($db,"SELECT inuse.uniqueid,inuse.* FROM inuse LEFT OUTER JOIN cdr USING (uniqueid) WHERE NOT cleared AND cdr.uniqueid IS NULL");
   for($i=0;$i < pg_num_rows($delnocdr);$i++) {
