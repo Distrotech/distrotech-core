@@ -210,9 +210,9 @@ if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstco
   fi;
 
   #Reconfig Watchdog
-  if [ -e /etc/watchdog.conf.orig ];then
-    if [ /etc/watchdog.conf.orig -nt /etc/watchdog.conf ];then
-     (grep -E "^max-load-[15]+" /etc/watchdog.conf;grep -vE "^max-load-[15]" /etc/watchdog.conf.orig) > /etc/watchdog.local
+  if [ -e /etc/distrotech/watchdog.conf.orig ];then
+    if [ /etc/distrotech/watchdog.conf.orig -nt /etc/watchdog.conf ];then
+     (grep -E "^max-load-[15]+" /etc/watchdog.conf;grep -vE "^max-load-[15]" /etc/distrotech/watchdog.conf.orig) > /etc/watchdog.local
       if [ "`diff /etc/watchdog.local /etc/watchdog.conf`" ];then
         mv /etc/watchdog.local /etc/watchdog.conf
         while [ "`pidof watchdog`" ];do

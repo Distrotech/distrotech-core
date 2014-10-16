@@ -2267,7 +2267,7 @@ chmod 700 /usr/sbin/wins_hook
 chown root.root /usr/sbin/wins_hook
 
 sed -e "s/^\\\$password=.*;/\\\$password=\\\"$sqlradiuspass\\\";/" \\
-    -e "s/^\\\$hostname=.*;/\\\$hostname=\\\"$sqlradiusserv\\\";/" /etc/radcheck.orig > /usr/sbin/radcheck
+    -e "s/^\\\$hostname=.*;/\\\$hostname=\\\"$sqlradiusserv\\\";/" /etc/distrotech/radcheck.orig > /usr/sbin/radcheck
 chmod 750 /usr/sbin/radcheck
 chown root.root /usr/sbin/radcheck
 
