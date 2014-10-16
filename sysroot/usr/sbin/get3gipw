@@ -1,4 +1,0 @@
-#!/bin/bash
-
-grep -E "(\+CGATT:)|(\+CGMM:)|(\+CGMR:)|(\+CGSN:)|(\+COPS:)" /var/log/messages |cut -d\^ -f1 |cut -d\+ -f2 |sort |uniq |sed -e "s/CGATT/Freq. Speed <Unknown> Tower/" -e "s/CGMR/Firmware Version/" -e "s/CGMM/Model ID/" -e "s/CGSN/IMEI Number/" -e "s/COPS/SP Status Code Name/"
-grep -E "(\+CSQ:)" /var/log/messages |cut -d\^ -f1 |cut -d\+ -f2 |tail -1 |sed -e "s/CSQ/Signal Strength % RSCP ISCP/"
