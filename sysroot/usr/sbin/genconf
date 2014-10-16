@@ -1713,7 +1713,7 @@ fi;
 #Change the password if need be
 if [ -e /var/spool/apache/htdocs/ns/config/ldap.newsecret ];then
   NEWROOTPW="`cat /var/spool/apache/htdocs/ns/config/ldap.newsecret`";
-  CRYPT=`slappasswd -c '\$1\$%.8s' -s \${NEWROOTPW}`
+  CRYPT=`slappasswd -c '\$6\$%.12s' -s \${NEWROOTPW}`
 
   (cat <<EOF
 dn: $ldapserv{'Login'},$vsuf
@@ -1756,7 +1756,7 @@ fi;
 if [ ! -e /var/spool/apache/htdocs/ns/config/$limfile ];then
   ldapdelete -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z $ldapserv{'limited'},$vsuf
   LDAPLIMPW=`apg -M NCL -n 1 -m 12`
-  CRYPT=`slappasswd -c '\$1\$%.8s' -s \${LDAPLIMPW}`
+  CRYPT=`slappasswd -c '\$6\$%.12s' -s \${LDAPLIMPW}`
 
   (cat <<EOF
 dn: $ldapserv{'limited'},$vsuf
@@ -1786,7 +1786,7 @@ fi;
 if [ ! -e /var/spool/apache/htdocs/ns/config/$conffile ];then
   ldapdelete -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z $ldapserv{'config'},$vsuf
   LDAPCONFPW=`apg -M NCL -n 1 -m 12`
-  CRYPT=`slappasswd -c '\$1\$%.8s' -s \${LDAPCONFPW}`
+  CRYPT=`slappasswd -c '\$6\$%.12s' -s \${LDAPCONFPW}`
 
   (cat <<EOF
 dn: $ldapserv{'config'},$vsuf
@@ -1812,7 +1812,7 @@ fi;
 if [ -s /var/spool/apache/htdocs/ns/config/ldap.replica ] && [ ! -e /etc/ldap-$fqdn ];then
   ldapdelete -xD $ldapserv{'Login'} -y /etc/ldap.secret -h $repmaster -Z uid=$fqdn,ou=servers,$vsuf
   LDAPREPPW=`apg -M NCL -n 1 -m 12`
-  CRYPT=`slappasswd -c '\$1\$%.8s' -s \${LDAPREPPW}`
+  CRYPT=`slappasswd -c '\$6\$%.12s' -s \${LDAPREPPW}`
 
   (cat <<EOF
 dn: uid=$fqdn,ou=servers,$vsuf
@@ -3625,7 +3625,7 @@ pidfile		/var/run/slapd.pid
 argsfile	/var/run/slapd.args
 
 password-hash {CRYPT}
-password-crypt-salt-format \$1\$\%.8s
+password-crypt-salt-format \$6\$\%.12s
 
 __EOB__
 
