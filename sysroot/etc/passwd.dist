@@ -1,24 +1,24 @@
 root:x:0:0:root:/root:/bin/bash
+admin:x:0:139:admin:/root:/bin/bash
 bin:*:1:1:bin:/dev/null:/usr/bin/true
 daemon:*:2:2:daemon:/opt/apache2:/bin/bash
 fax:*:3:3:fax:/var/spool/hylafax:/usr/bin/true
 uucp:*:3:3:fax:/var/spool/hylafax:/usr/bin/true
 mysql:*:10:10:MySQL Server:/dev/null:/usr/bin/true
 pgsql:*:11:11:pgSQL Server:/var/spool/pgsql:/bin/bash
+svn:*:13:13:SVN User:/dev/null:/usr/bin/true
 asterisk:*:20:20:Asterisk Voip Server:/dev/null:/usr/bin/true
 sshd:*:22:22:SSH Seperation User:/dev/null:/usr/bin/true
-www:*:80:10:Web Server:/var/spool/apache:/usr/bin/true
+smmsp:*:25:25:Mail Role Account:/dev/null:/usr/bin/true
 sweep:*:50:50:Sophos Anti Virus User:/dev/null:/usr/bin/true
 clamav:*:51:51:Clam Anti Virus User:/dev/null:/usr/bin/true
-smmsp:*:25:25:Mail Role Account:/dev/null:/usr/bin/true
-majordomo:*:123:45:Mailing List Manager:/var/spool/majordomo:/usr/sbin/smrsh
-sogo:*:143:100:SOGo Role Account:/var/home/sogo:/bin/bash
-mail:*:110:12:Email Shared Access:/dev/null:/usr/bin/true
-svn:*:13:13:SVN User:/dev/null:/usr/bin/true
 avahi:*:59:59:Avahi User:/dev/null:/usr/bin/true
 messagebus:*:60:60:D-Bus:/var/run/dbus:/usr/bin/true
 pulse:*:61:61:Pulse:/var/run/dbus:/usr/bin/true
-nobody:*:65535:65535:Unprivliged User:/tmp:/usr/bin/true
+www:*:80:10:Web Server:/var/spool/apache:/usr/bin/true
+mail:*:110:12:Email Shared Access:/dev/null:/usr/bin/true
+majordomo:*:123:45:Mailing List Manager:/opt/majordomo:/usr/sbin/smrsh
+sogo:*:143:100:SOGo Role Account:/var/home/sogo:/bin/bash
 git:*:418:418:Git:/var/spool/git:/bin/bash
-admin:x:0:139:admin:/root:/bin/bash
 squid:*:428:428::/var/spool/squid:/bin/bash
+nobody:*:65535:65535:Unprivliged User:/tmp:/usr/bin/true
