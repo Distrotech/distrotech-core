@@ -1184,7 +1184,7 @@ if ($ddnslocal eq "0") {
                                            $dnsconf{'Retry'}
                                            $dnsconf{'Expire'}
                                            $dnsconf{'DefaultTTL'})
-                                                                $dnsconf{'DefaultTTL'}       IN     NS      $fqdn.
+                                                                $dnsconf{'DefaultTTL'}     IN     NS       $fqdn.
 __EOB__
 #  printf ZONE ("%-25s%s IN     %-5s %s\n","",$dnsconf{'DefaultTTL'},"A",$localip);
 #  foreach $linknme (@vadsllink) {
@@ -10296,11 +10296,15 @@ if ($proxyconf{'CacheSize'} < 8) {
   if ($proxyconf{'CacheSize'} eq "") {
     $proxyconf{'CacheSize'}=8;
   }
-  $cmem="$proxyconf{'CacheSize'} MB";
   $squidsld=16;
 } else {
   $squidsld=256;
+}
+
+if ( -e "/etc/.lowmem") {
   $cmem="8 MB";
+} else {
+  $cmem="256 MB";
 }
 
 if ($proxyconf{'LogFQDN'} eq "true") {
