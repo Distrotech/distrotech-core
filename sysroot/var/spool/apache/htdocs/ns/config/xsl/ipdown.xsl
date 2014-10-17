@@ -28,9 +28,9 @@
   fi;
 
   #Flush Applicable Chains
-  /sbin/iptables -t mangle -F MANGLEP${FILID}
-  /sbin/iptables -t mangle -F MANGLEO${FILID}
-  /sbin/iptables -t mangle -F MANGLEF${FILID}
+  /usr/sbin/iptables -t mangle -F MANGLEP${FILID}
+  /usr/sbin/iptables -t mangle -F MANGLEO${FILID}
+  /usr/sbin/iptables -t mangle -F MANGLEF${FILID}
 
   #Delete Existing Classes
   /sbin/tc qdisc del dev $1 root > /dev/null 2>&amp;1
@@ -43,17 +43,17 @@
 
   /sbin/ip tunnel del sit1.${FILID}
 
-  /sbin/iptables -D IP6RDDSL -j ACCEPT -i $INT_NAME -d ${4}
-  /sbin/iptables -D MANGLEIN -j DEFIN -i $INT_NAME -d ${4}
-  /sbin/iptables -D MANGLEIN -j VOIPIN -i $INT_NAME -d ${LOCALIP} -p udp --sport 1024:65535
-  /sbin/iptables -D MANGLEOUT -j DEFOUT -o $INT_NAME -s ${4}
-  /sbin/iptables -D IP6RDDSL -j ACCEPT -o $INT_NAME -s ${4}
-  /sbin/iptables -D MANGLEOUT -j ACCEPT -o $INT_NAME -m mark --mark ${MARK}
-  /sbin/iptables -D MANGLEOUT -j ACCEPT -m mark --mark ${MARK}
-  /sbin/iptables -D MANGLEOUT -j VOIPOUT -o $INT_NAME -s ${LOCALIP} -p udp --dport 1024:65535
-  /sbin/iptables -D MANGLEFWD -j ACCEPT -o $INT_NAME
-  /sbin/iptables -t nat -D MANGLEPROXY -j DEFPROXY -t nat -i $INT_NAME -d ${4}
-  /sbin/iptables -t nat -D MANGLE -j SNAT -o $INT_NAME --to-source $4
+  /usr/sbin/iptables -D IP6RDDSL -j ACCEPT -i $INT_NAME -d ${4}
+  /usr/sbin/iptables -D MANGLEIN -j DEFIN -i $INT_NAME -d ${4}
+  /usr/sbin/iptables -D MANGLEIN -j VOIPIN -i $INT_NAME -d ${LOCALIP} -p udp --sport 1024:65535
+  /usr/sbin/iptables -D MANGLEOUT -j DEFOUT -o $INT_NAME -s ${4}
+  /usr/sbin/iptables -D IP6RDDSL -j ACCEPT -o $INT_NAME -s ${4}
+  /usr/sbin/iptables -D MANGLEOUT -j ACCEPT -o $INT_NAME -m mark --mark ${MARK}
+  /usr/sbin/iptables -D MANGLEOUT -j ACCEPT -m mark --mark ${MARK}
+  /usr/sbin/iptables -D MANGLEOUT -j VOIPOUT -o $INT_NAME -s ${LOCALIP} -p udp --dport 1024:65535
+  /usr/sbin/iptables -D MANGLEFWD -j ACCEPT -o $INT_NAME
+  /usr/sbin/iptables -t nat -D MANGLEPROXY -j DEFPROXY -t nat -i $INT_NAME -d ${4}
+  /usr/sbin/iptables -t nat -D MANGLE -j SNAT -o $INT_NAME --to-source $4
 
   (cat &lt;&lt;EOF
 server </xsl:text><xsl:value-of select="/config/DNS/Config/Option[@option = 'DynServ']"/><xsl:text>
@@ -87,15 +87,15 @@ EOF
   <xsl:variable name="pppsn" select="/config/IP/Interfaces/Interface[. = $pint]/@subnet"/>
 
   <xsl:text> elif [ "$6"  == "pppoe" ];then
-  /sbin/iptables -t nat -D NOPPPNAT -j ACCEPT -o ${1}
-  /sbin/iptables -D PPPFWD -j ACCEPT -i $INT_NAME -o </xsl:text>
+  /usr/sbin/iptables -t nat -D NOPPPNAT -j ACCEPT -o ${1}
+  /usr/sbin/iptables -D PPPFWD -j ACCEPT -i $INT_NAME -o </xsl:text>
     <xsl:value-of select="concat($pint,' -d ',$pppnw,'/',$pppsn,' -s $5/32')"/><xsl:text>
-  /sbin/iptables -D PPPFWD -j ACCEPT -o $INT_NAME -i </xsl:text>
+  /usr/sbin/iptables -D PPPFWD -j ACCEPT -o $INT_NAME -i </xsl:text>
     <xsl:value-of select="concat($pint,' -s ',$pppnw,'/',$pppsn,' -d $5/32')"/><xsl:text>
-  /sbin/iptables -D PPPIN -j SYSIN -i $INT_NAME -d </xsl:text><xsl:value-of select="$pppip"/><xsl:text>/32 -s $5/32
-  /sbin/iptables -D PPPIN -j MCASTIN -i $INT_NAME -d 224.0.0.0/3 -s $5/32
-  /sbin/iptables -D PPPOUT -j SYSOUT -o $INT_NAME -s </xsl:text><xsl:value-of select="$pppip"/><xsl:text>/32 -d $5/32
-  /sbin/iptables -D PPPOUT -j MCASTOUT -o $INT_NAME -s 224.0.0.0/3 -d $5/32
+  /usr/sbin/iptables -D PPPIN -j SYSIN -i $INT_NAME -d </xsl:text><xsl:value-of select="$pppip"/><xsl:text>/32 -s $5/32
+  /usr/sbin/iptables -D PPPIN -j MCASTIN -i $INT_NAME -d 224.0.0.0/3 -s $5/32
+  /usr/sbin/iptables -D PPPOUT -j SYSOUT -o $INT_NAME -s </xsl:text><xsl:value-of select="$pppip"/><xsl:text>/32 -d $5/32
+  /usr/sbin/iptables -D PPPOUT -j MCASTOUT -o $INT_NAME -s 224.0.0.0/3 -d $5/32
 </xsl:text>
 </xsl:template>
 
@@ -167,18 +167,18 @@ if [ ! "${6}" ];then
     fi;
     rm /etc/bind/forwarders.ppp.3g
   fi;
-  /sbin/iptables -F 3GIN
-  /sbin/iptables -F 3GOUT
-  /sbin/iptables -t nat -F 3GNAT
+  /usr/sbin/iptables -F 3GIN
+  /usr/sbin/iptables -F 3GOUT
+  /usr/sbin/iptables -t nat -F 3GNAT
  elif [ "${6:0:4}"  == "l2tp" ];then
-  /sbin/iptables -t nat -D NOPPPNAT -j ACCEPT -o ${1}
-  /sbin/iptables -D PPPIN -j SYSIN -i ${1} -d </xsl:text><xsl:value-of select="$intip"/><xsl:text> -s ${5}/32
-  /sbin/iptables -D PPPOUT -j SYSOUT -o ${1} -s </xsl:text><xsl:value-of select="$intip"/><xsl:text> -d ${5}/32
-  /sbin/iptables -D PPPFWD -j ACCEPT -i ${1} -o </xsl:text><xsl:value-of select="$intiface"/><xsl:text>
-  /sbin/iptables -D PPPFWD -j ACCEPT -o ${1} -i </xsl:text><xsl:value-of select="$intiface"/><xsl:text>
-  /sbin/iptables -D PPPIN -j MCASTIN -i ${1} -d 224.0.0.0/3 -s $5/32
-  /sbin/iptables -D PPPOUT -j MCASTOUT -o ${1} -s 224.0.0.0/3 -d $5/32
-  /sbin/iptables -D PPPOUT -j MCASTOUT -o ${1} -s ${4} -d 224.0.0.0/3
+  /usr/sbin/iptables -t nat -D NOPPPNAT -j ACCEPT -o ${1}
+  /usr/sbin/iptables -D PPPIN -j SYSIN -i ${1} -d </xsl:text><xsl:value-of select="$intip"/><xsl:text> -s ${5}/32
+  /usr/sbin/iptables -D PPPOUT -j SYSOUT -o ${1} -s </xsl:text><xsl:value-of select="$intip"/><xsl:text> -d ${5}/32
+  /usr/sbin/iptables -D PPPFWD -j ACCEPT -i ${1} -o </xsl:text><xsl:value-of select="$intiface"/><xsl:text>
+  /usr/sbin/iptables -D PPPFWD -j ACCEPT -o ${1} -i </xsl:text><xsl:value-of select="$intiface"/><xsl:text>
+  /usr/sbin/iptables -D PPPIN -j MCASTIN -i ${1} -d 224.0.0.0/3 -s $5/32
+  /usr/sbin/iptables -D PPPOUT -j MCASTOUT -o ${1} -s 224.0.0.0/3 -d $5/32
+  /usr/sbin/iptables -D PPPOUT -j MCASTOUT -o ${1} -s ${4} -d 224.0.0.0/3
  elif [ "$6"  != "other" ] &amp;&amp; [ "$6" ];then
   /usr/sbin/radipdown $6 $5
  elif [ "$6" ];then

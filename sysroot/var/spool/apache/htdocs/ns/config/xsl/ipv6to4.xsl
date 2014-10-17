@@ -71,9 +71,9 @@ if [ "`pidof hostapd`" ];then
   killall -HUP hostapd
 fi;
 
-/sbin/iptables -F IP6RD
-/sbin/iptables -I IP6RD -j ACCEPT -i </xsl:text><xsl:call-template name="getext"/><xsl:text> -d </xsl:text><xsl:value-of select="$sitip"/><xsl:text>
-/sbin/iptables -I IP6RD -j ACCEPT -o </xsl:text><xsl:call-template name="getext"/><xsl:text> -s </xsl:text><xsl:value-of select="$sitip"/><xsl:text>
+/usr/sbin/iptables -F IP6RD
+/usr/sbin/iptables -I IP6RD -j ACCEPT -i </xsl:text><xsl:call-template name="getext"/><xsl:text> -d </xsl:text><xsl:value-of select="$sitip"/><xsl:text>
+/usr/sbin/iptables -I IP6RD -j ACCEPT -o </xsl:text><xsl:call-template name="getext"/><xsl:text> -s </xsl:text><xsl:value-of select="$sitip"/><xsl:text>
 
 /etc/ifconf/ipv6to4.addr add ${i6prefix}
 </xsl:text>

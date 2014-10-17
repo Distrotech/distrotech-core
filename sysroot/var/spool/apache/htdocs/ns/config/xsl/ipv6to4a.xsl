@@ -54,7 +54,7 @@
 
   <xsl:text>
 if [ -x /etc/firewall6.local ];then
-  /sbin/ip6tables -F LOCALFWD
+  /usr/sbin/ip6tables -F LOCALFWD
   /etc/firewall6.local 2002:${2}
 fi;
 </xsl:text>

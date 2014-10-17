@@ -217,13 +217,13 @@ EOF
   /usr/bin/nsupdate /tmp/dnsup.$6.ppp
   /sbin/ip route add $DEST_IP/32 dev $INT_NAME src $EXT_IP_ADDR table 80;
   /sbin/ip route add 0/0 via $DEST_IP dev $INT_NAME src $EXT_IP_ADDR table 95;
-  /sbin/iptables -F 3GIN
-  /sbin/iptables -F 3GOUT
-  /sbin/iptables -t nat -F 3GNAT
+  /usr/sbin/iptables -F 3GIN
+  /usr/sbin/iptables -F 3GOUT
+  /usr/sbin/iptables -t nat -F 3GNAT
 
-  /sbin/iptables -A 3GIN -j ACCEPT -i $INT_NAME
-  /sbin/iptables -I 3GOUT -j ACCEPT -o $INT_NAME
-  /sbin/iptables -t nat -A 3GNAT -j SNAT -o $INT_NAME --to-source $EXT_IP_ADDR
+  /usr/sbin/iptables -A 3GIN -j ACCEPT -i $INT_NAME
+  /usr/sbin/iptables -I 3GOUT -j ACCEPT -o $INT_NAME
+  /usr/sbin/iptables -t nat -A 3GNAT -j SNAT -o $INT_NAME --to-source $EXT_IP_ADDR
 
   if [ "$USEPEERDNS" == "1" ] &amp;&amp; [ "$DNS1" ];then
     if [ "$DNS2" ];then
@@ -249,11 +249,11 @@ EOF
   <xsl:param name="tosmatch"/>
 
   <xsl:if test="$tosmatch != 0">
-    <xsl:text>  /sbin/iptables -t mangle -A MANGLEO${FILID} -j MARK -o </xsl:text>
+    <xsl:text>  /usr/sbin/iptables -t mangle -A MANGLEO${FILID} -j MARK -o </xsl:text>
     <xsl:value-of select="concat($extint,' -m tos --tos ',$tosmatch,' --set-mark ${MARK} ! -d $EXT_IP_ADDR')"/><xsl:text>
-  /sbin/iptables -t mangle -A MANGLEF${FILID} -j MARK -o </xsl:text>
+  /usr/sbin/iptables -t mangle -A MANGLEF${FILID} -j MARK -o </xsl:text>
     <xsl:value-of select="concat($extint,' -m tos --tos ',$tosmatch,' --set-mark ${MARK} ! -d $EXT_IP_ADDR')"/><xsl:text>
-  /sbin/iptables -t mangle -A MANGLEP${FILID} ! -i ppp+ -j MARK -m tos --tos </xsl:text>
+  /usr/sbin/iptables -t mangle -A MANGLEP${FILID} ! -i ppp+ -j MARK -m tos --tos </xsl:text>
     <xsl:value-of select="concat($tosmatch,' -m mark --mark 0 --set-mark ${MARK} ! -d $EXT_IP_ADDR',$nl)"/>
   </xsl:if>
 </xsl:template>
@@ -296,18 +296,18 @@ EOF
   </xsl:variable>
 
   <xsl:value-of select="concat('#Allow Mail/DNS To DC ',$adserv,' ',$dcipaddr,$nl)"/>
-  <xsl:value-of select="concat('/sbin/iptables -A SBSRULESI -j ACCEPT -p tcp -m state --state NEW,RELATED -i ',$intiface,' -d ',$intip,'/32 --dport 1024:65535 -s ',$dcipaddr,' --sport 25',$nl)"/>
-  <xsl:value-of select="concat('/sbin/iptables -A SBSRULESI -j ACCEPT -p tcp ! --syn -m state --state ESTABLISHED -i ',$intiface,' -d ',$intip,'/32 --dport 1024:65535 -s ',$dcipaddr,' --sport 25',$nl)"/>
-  <xsl:value-of select="concat('/sbin/iptables -A SBSRULESO -j ACCEPT -p tcp -m state --state NEW,ESTABLISHED -o ',$intiface,' -s ',$intip,'/32 --sport 1024:65535 -d ',$dcipaddr,' --dport 25',$nl)"/>
-  <xsl:value-of select="concat('/sbin/iptables -A SBSRULESI -j ACCEPT -p tcp -m state --state NEW,RELATED -i ',$intiface,' -d ',$intip,'/32 --dport 1024:65535 -s ',$dcipaddr,' --sport 53',$nl)"/>
-  <xsl:value-of select="concat('/sbin/iptables -A SBSRULESI -j ACCEPT -p tcp ! --syn -m state --state ESTABLISHED -i ',$intiface,' -d ',$intip,'/32 --dport 1024:65535 -s ',$dcipaddr,' --sport 53',$nl)"/>
-  <xsl:value-of select="concat('/sbin/iptables -A SBSRULESO -j ACCEPT -p tcp -m state --state NEW,ESTABLISHED -o ',$intiface,' -s ',$intip,'/32 --sport 1024:65535 -d ',$dcipaddr,' --dport 53',$nl)"/>
-  <xsl:value-of select="concat('/sbin/iptables -A SBSRULESI -j ACCEPT -p udp -m state --state NEW,RELATED -i ',$intiface,' -d ',$intip,'/32 --dport 1024:65535 -s ',$dcipaddr,' --sport 53',$nl)"/>
-  <xsl:value-of select="concat('/sbin/iptables -A SBSRULESI -j ACCEPT -p udp -m state --state ESTABLISHED -i ',$intiface,' -d ',$intip,'/32 --dport 1024:65535 -s ',$dcipaddr,' --sport 53',$nl)"/>
-  <xsl:value-of select="concat('/sbin/iptables -A SBSRULESO -j ACCEPT -p udp -m state --state NEW,ESTABLISHED -o ',$intiface,' -s ',$intip,'/32 --sport 1024:65535 -d ',$dcipaddr,' --dport 53',$nl)"/>
-  <xsl:value-of select="concat('/sbin/iptables -A SBSRULESI -j ACCEPT -p udp -m state --state NEW,RELATED -i ',$intiface,' -d ',$intip,'/32 --dport 53 -s ',$dcipaddr,' --sport 53',$nl)"/>
-  <xsl:value-of select="concat('/sbin/iptables -A SBSRULESI -j ACCEPT -p udp -m state --state ESTABLISHED -i ',$intiface,' -d ',$intip,'/32 --dport 53 -s ',$dcipaddr,' --sport 53',$nl)"/>
-  <xsl:value-of select="concat('/sbin/iptables -A SBSRULESO -j ACCEPT -p udp -m state --state NEW,ESTABLISHED -o ',$intiface,' -s ',$intip,'/32 --sport 53 -d ',$dcipaddr,' --dport 53',$nl,$nl)"/>
+  <xsl:value-of select="concat('/usr/sbin/iptables -A SBSRULESI -j ACCEPT -p tcp -m state --state NEW,RELATED -i ',$intiface,' -d ',$intip,'/32 --dport 1024:65535 -s ',$dcipaddr,' --sport 25',$nl)"/>
+  <xsl:value-of select="concat('/usr/sbin/iptables -A SBSRULESI -j ACCEPT -p tcp ! --syn -m state --state ESTABLISHED -i ',$intiface,' -d ',$intip,'/32 --dport 1024:65535 -s ',$dcipaddr,' --sport 25',$nl)"/>
+  <xsl:value-of select="concat('/usr/sbin/iptables -A SBSRULESO -j ACCEPT -p tcp -m state --state NEW,ESTABLISHED -o ',$intiface,' -s ',$intip,'/32 --sport 1024:65535 -d ',$dcipaddr,' --dport 25',$nl)"/>
+  <xsl:value-of select="concat('/usr/sbin/iptables -A SBSRULESI -j ACCEPT -p tcp -m state --state NEW,RELATED -i ',$intiface,' -d ',$intip,'/32 --dport 1024:65535 -s ',$dcipaddr,' --sport 53',$nl)"/>
+  <xsl:value-of select="concat('/usr/sbin/iptables -A SBSRULESI -j ACCEPT -p tcp ! --syn -m state --state ESTABLISHED -i ',$intiface,' -d ',$intip,'/32 --dport 1024:65535 -s ',$dcipaddr,' --sport 53',$nl)"/>
+  <xsl:value-of select="concat('/usr/sbin/iptables -A SBSRULESO -j ACCEPT -p tcp -m state --state NEW,ESTABLISHED -o ',$intiface,' -s ',$intip,'/32 --sport 1024:65535 -d ',$dcipaddr,' --dport 53',$nl)"/>
+  <xsl:value-of select="concat('/usr/sbin/iptables -A SBSRULESI -j ACCEPT -p udp -m state --state NEW,RELATED -i ',$intiface,' -d ',$intip,'/32 --dport 1024:65535 -s ',$dcipaddr,' --sport 53',$nl)"/>
+  <xsl:value-of select="concat('/usr/sbin/iptables -A SBSRULESI -j ACCEPT -p udp -m state --state ESTABLISHED -i ',$intiface,' -d ',$intip,'/32 --dport 1024:65535 -s ',$dcipaddr,' --sport 53',$nl)"/>
+  <xsl:value-of select="concat('/usr/sbin/iptables -A SBSRULESO -j ACCEPT -p udp -m state --state NEW,ESTABLISHED -o ',$intiface,' -s ',$intip,'/32 --sport 1024:65535 -d ',$dcipaddr,' --dport 53',$nl)"/>
+  <xsl:value-of select="concat('/usr/sbin/iptables -A SBSRULESI -j ACCEPT -p udp -m state --state NEW,RELATED -i ',$intiface,' -d ',$intip,'/32 --dport 53 -s ',$dcipaddr,' --sport 53',$nl)"/>
+  <xsl:value-of select="concat('/usr/sbin/iptables -A SBSRULESI -j ACCEPT -p udp -m state --state ESTABLISHED -i ',$intiface,' -d ',$intip,'/32 --dport 53 -s ',$dcipaddr,' --sport 53',$nl)"/>
+  <xsl:value-of select="concat('/usr/sbin/iptables -A SBSRULESO -j ACCEPT -p udp -m state --state NEW,ESTABLISHED -o ',$intiface,' -s ',$intip,'/32 --sport 53 -d ',$dcipaddr,' --dport 53',$nl,$nl)"/>
 </xsl:template>
 
 <xsl:template name="setupad">
@@ -584,21 +584,21 @@ EOF
         <xsl:value-of select="concat('  #Local ',@action,' ',$rname,' ',$fwsource,':',@source,' --> ',$localip,':',@dest,$nl)"/>
         <xsl:choose>
           <xsl:when test="@direction = 'Out'">
-            <xsl:value-of select="concat('  /sbin/iptables -A LOCALIN -j ',$rpolicy,$statein,' -i ',$iface,' -s ',$fwsource,' --sport ',@source,' -d ',$localip,' --dport ',@dest,$nl)"/>
+            <xsl:value-of select="concat('  /usr/sbin/iptables -A LOCALIN -j ',$rpolicy,$statein,' -i ',$iface,' -s ',$fwsource,' --sport ',@source,' -d ',$localip,' --dport ',@dest,$nl)"/>
           </xsl:when>
           <xsl:otherwise>
-            <xsl:value-of select="concat('  /sbin/iptables -A LOCALOUT -j ',$rpolicy,$stateout,' -o ',$iface,' -d ',$fwsource,' --dport ',@source,' -s ',$localip,' --sport ',@dest,$nl)"/>
+            <xsl:value-of select="concat('  /usr/sbin/iptables -A LOCALOUT -j ',$rpolicy,$stateout,' -o ',$iface,' -d ',$fwsource,' --dport ',@source,' -s ',$localip,' --sport ',@dest,$nl)"/>
           </xsl:otherwise>
         </xsl:choose>
         <xsl:if test="@action = 'Accept'">
-          <xsl:value-of select="concat('  /sbin/iptables -t mangle -A LOCALOUT -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -o ',$iface,' -d ',$fwsource,' --dport ',@source,' -s ',$localip,' --sport ',@dest,$nl)"/>
-          <xsl:value-of select="concat('  /sbin/iptables -t mangle -A LOCALIN -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -i ',$iface,' -s ',$fwsource,' --sport ',@source,' -d ',$localip,' --dport ',@dest,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -t mangle -A LOCALOUT -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -o ',$iface,' -d ',$fwsource,' --dport ',@source,' -s ',$localip,' --sport ',@dest,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -t mangle -A LOCALIN -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -i ',$iface,' -s ',$fwsource,' --sport ',@source,' -d ',$localip,' --dport ',@dest,$nl)"/>
           <xsl:choose>
             <xsl:when test="@direction = 'Out'">
-              <xsl:value-of select="concat('  /sbin/iptables -t mangle -A LOCALOUT -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -o ',$iface,' -d ',$fwsource,' --dport ',@source,' -s ',$localip,' --sport ',@dest,$nl)"/>
+              <xsl:value-of select="concat('  /usr/sbin/iptables -t mangle -A LOCALOUT -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -o ',$iface,' -d ',$fwsource,' --dport ',@source,' -s ',$localip,' --sport ',@dest,$nl)"/>
             </xsl:when>
             <xsl:otherwise>
-              <xsl:value-of select="concat('  /sbin/iptables -t mangle -A LOCALIN -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -i ',$iface,' -s ',$fwsource,' --sport ',@source,' -d ',$localip,' --dport ',@dest,$nl)"/>
+              <xsl:value-of select="concat('  /usr/sbin/iptables -t mangle -A LOCALIN -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -i ',$iface,' -s ',$fwsource,' --sport ',@source,' -d ',$localip,' --dport ',@dest,$nl)"/>
             </xsl:otherwise>
           </xsl:choose>
         </xsl:if>
@@ -607,21 +607,21 @@ EOF
         <xsl:value-of select="concat('  #Local ',@action,' ',$rname,' ',$fwsource,' --> ',$localip,$nl)"/>
         <xsl:choose>
           <xsl:when test="@direction = 'Out'">
-            <xsl:value-of select="concat('  /sbin/iptables -A LOCALIN -j ',$rpolicy,$statein,' -i ',$iface,' -s ',$fwsource,' -d ',$localip,$nl)"/>
+            <xsl:value-of select="concat('  /usr/sbin/iptables -A LOCALIN -j ',$rpolicy,$statein,' -i ',$iface,' -s ',$fwsource,' -d ',$localip,$nl)"/>
           </xsl:when>
           <xsl:otherwise>
-            <xsl:value-of select="concat('  /sbin/iptables -A LOCALOUT -j ',$rpolicy,$stateout,' -o ',$iface,' -d ',$fwsource,' -s ',$localip,$nl)"/>
+            <xsl:value-of select="concat('  /usr/sbin/iptables -A LOCALOUT -j ',$rpolicy,$stateout,' -o ',$iface,' -d ',$fwsource,' -s ',$localip,$nl)"/>
           </xsl:otherwise>
         </xsl:choose>
         <xsl:if test="@action = 'Accept'">
-          <xsl:value-of select="concat('  /sbin/iptables -t mangle -A LOCALOUT -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -o ',$iface,' -d ',$fwsource,' -s ',$localip,$nl)"/>
-          <xsl:value-of select="concat('  /sbin/iptables -t mangle -A LOCALIN -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -i ',$iface,' -s ',$fwsource,' -d ',$localip,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -t mangle -A LOCALOUT -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -o ',$iface,' -d ',$fwsource,' -s ',$localip,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -t mangle -A LOCALIN -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -i ',$iface,' -s ',$fwsource,' -d ',$localip,$nl)"/>
           <xsl:choose>
             <xsl:when test="@direction = 'Out'">
-              <xsl:value-of select="concat('  /sbin/iptables -t mangle -A LOCALOUT -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -o ',$iface,' -d ',$fwsource,' -s ',$localip,$nl)"/>
+              <xsl:value-of select="concat('  /usr/sbin/iptables -t mangle -A LOCALOUT -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -o ',$iface,' -d ',$fwsource,' -s ',$localip,$nl)"/>
             </xsl:when>
             <xsl:otherwise>
-              <xsl:value-of select="concat('  /sbin/iptables -t mangle -A LOCALIN -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -i ',$iface,' -s ',$fwsource,' -d ',$localip,$nl)"/>
+              <xsl:value-of select="concat('  /usr/sbin/iptables -t mangle -A LOCALIN -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -i ',$iface,' -s ',$fwsource,' -d ',$localip,$nl)"/>
             </xsl:otherwise>
           </xsl:choose>
         </xsl:if>
@@ -636,38 +636,38 @@ EOF
         <xsl:value-of select="concat('  #NAT ',@action,' ',$rname,' ',$fwsource,':',@source,' --> ',@ip,':',@dest,$nl)"/>
         <xsl:choose>
           <xsl:when test="@direction = 'Out'">
-            <xsl:value-of select="concat('  /sbin/iptables -A LOCALFWD -j ',$rpolicy,$statein,' ',$INT_OUT,' -i ',$iface,' -s ',$fwsource,' --sport ',@source,' -d ',@ip,' --dport ',@dest,$nl)"/>
+            <xsl:value-of select="concat('  /usr/sbin/iptables -A LOCALFWD -j ',$rpolicy,$statein,' ',$INT_OUT,' -i ',$iface,' -s ',$fwsource,' --sport ',@source,' -d ',@ip,' --dport ',@dest,$nl)"/>
           </xsl:when>
           <xsl:otherwise>
-            <xsl:value-of select="concat('  /sbin/iptables -A LOCALFWD -j ',$rpolicy,$stateout,' ',$INT_IN,' -o ',$iface,' -d ',$fwsource,' --dport ',@source,' -s ',@ip,' --sport ',@dest,$nl)"/>
+            <xsl:value-of select="concat('  /usr/sbin/iptables -A LOCALFWD -j ',$rpolicy,$stateout,' ',$INT_IN,' -o ',$iface,' -d ',$fwsource,' --dport ',@source,' -s ',@ip,' --sport ',@dest,$nl)"/>
           </xsl:otherwise>
         </xsl:choose>
         <xsl:if test="@action = 'Accept'">
-          <xsl:value-of select="concat('  /sbin/iptables -t mangle -A LOCALIN -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -i ',$iface,' -s ',$fwsource,' --sport ',@source,' -d ',@ip,' --dport ',@dest,$nl)"/>
-          <xsl:value-of select="concat('  /sbin/iptables -t mangle -A LOCALOUT -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -o ',$iface,' -d ',$fwsource,' --dport ',@source,' -s ',@ip,' --sport ',@dest,$nl)"/>
-          <xsl:value-of select="concat('  /sbin/iptables -t mangle -A LOCALIN -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' ',$INT_IN,' -d ',$dest,' --dport ',@source,' -s ',@ip,' --sport ',@dest,$nl)"/>
-          <xsl:value-of select="concat('  /sbin/iptables -t mangle -A LOCALOUT -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' ',$INT_OUT,' -s ',$dest,' --sport ',@source,' -d ',@ip,' --dport ',@dest,$nl)"/>
-          <xsl:value-of select="concat('  /sbin/iptables -A EXTNAT -j ',$fwnat,' -t nat ',$INT_OUT,' ',$proto,$statein,' -s ',$fwsource,' --sport ',@source,' -d ',@ip,' --dport ',@dest,$nl)"/>
-          <xsl:value-of select="concat('  /sbin/iptables -A LOCALTOS -j TOS -t mangle',$proto,$statein,' -i ',$iface,' -s ',$fwsource,' --sport ',@source,' -d ',@ip,' --dport ',@dest,' --set-tos ',@tos,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -t mangle -A LOCALIN -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -i ',$iface,' -s ',$fwsource,' --sport ',@source,' -d ',@ip,' --dport ',@dest,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -t mangle -A LOCALOUT -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -o ',$iface,' -d ',$fwsource,' --dport ',@source,' -s ',@ip,' --sport ',@dest,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -t mangle -A LOCALIN -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' ',$INT_IN,' -d ',$dest,' --dport ',@source,' -s ',@ip,' --sport ',@dest,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -t mangle -A LOCALOUT -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' ',$INT_OUT,' -s ',$dest,' --sport ',@source,' -d ',@ip,' --dport ',@dest,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -A EXTNAT -j ',$fwnat,' -t nat ',$INT_OUT,' ',$proto,$statein,' -s ',$fwsource,' --sport ',@source,' -d ',@ip,' --dport ',@dest,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -A LOCALTOS -j TOS -t mangle',$proto,$statein,' -i ',$iface,' -s ',$fwsource,' --sport ',@source,' -d ',@ip,' --dport ',@dest,' --set-tos ',@tos,$nl)"/>
         </xsl:if>
       </xsl:when>
       <xsl:otherwise>
         <xsl:value-of select="concat('  #NAT ',@action,' ',$rname,' ',$fwsource,' --> ',@ip,$nl)"/>
         <xsl:choose>
           <xsl:when test="@direction = 'Out'">
-            <xsl:value-of select="concat('  /sbin/iptables -A LOCALFWD -j ',$rpolicy,$statein,' ',$INT_OUT,' -i ',$iface,' -s ',$fwsource,' -d ',@ip,$nl)"/>
+            <xsl:value-of select="concat('  /usr/sbin/iptables -A LOCALFWD -j ',$rpolicy,$statein,' ',$INT_OUT,' -i ',$iface,' -s ',$fwsource,' -d ',@ip,$nl)"/>
           </xsl:when>
           <xsl:otherwise>
-            <xsl:value-of select="concat('  /sbin/iptables -A LOCALFWD -j ',$rpolicy,$stateout,' ',$INT_IN,' -o ',$iface,' -d ',$fwsource,' -s ',@ip,$nl)"/>
+            <xsl:value-of select="concat('  /usr/sbin/iptables -A LOCALFWD -j ',$rpolicy,$stateout,' ',$INT_IN,' -o ',$iface,' -d ',$fwsource,' -s ',@ip,$nl)"/>
           </xsl:otherwise>
         </xsl:choose>
         <xsl:if test="@action = 'Accept'">
-          <xsl:value-of select="concat('  /sbin/iptables -t mangle -A LOCALIN -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -i ',$iface,' -s ',$fwsource,' -d ',@ip,$nl)"/>
-          <xsl:value-of select="concat('  /sbin/iptables -t mangle -A LOCALOUT -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -o ',$iface,' -d ',$fwsource,' -s ',@ip,$nl)"/>
-          <xsl:value-of select="concat('  /sbin/iptables -t mangle -A LOCALIN -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' ',$INT_IN,' -d ',$dest,' -s ',@ip,$nl)"/>
-          <xsl:value-of select="concat('  /sbin/iptables -t mangle -A LOCALOUT -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' ',$INT_OUT,' -s ',$dest,' -d ',@ip,$nl)"/>
-          <xsl:value-of select="concat('  /sbin/iptables -A EXTNAT -j ',$fwnat,' -t nat ',$INT_OUT,' ',$proto,$statein,' -s ',$fwsource,' -d ',@ip,$nl)"/>
-          <xsl:value-of select="concat('  /sbin/iptables -A LOCALTOS -j TOS -t mangle',$proto,$statein,' -i ',$iface,' -s ',$fwsource,' -d ',@ip,' --set-tos ',@tos,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -t mangle -A LOCALIN -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -i ',$iface,' -s ',$fwsource,' -d ',@ip,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -t mangle -A LOCALOUT -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -o ',$iface,' -d ',$fwsource,' -s ',@ip,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -t mangle -A LOCALIN -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' ',$INT_IN,' -d ',$dest,' -s ',@ip,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -t mangle -A LOCALOUT -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' ',$INT_OUT,' -s ',$dest,' -d ',@ip,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -A EXTNAT -j ',$fwnat,' -t nat ',$INT_OUT,' ',$proto,$statein,' -s ',$fwsource,' -d ',@ip,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -A LOCALTOS -j TOS -t mangle',$proto,$statein,' -i ',$iface,' -s ',$fwsource,' -d ',@ip,' --set-tos ',@tos,$nl)"/>
         </xsl:if>
       </xsl:otherwise>
     </xsl:choose>
@@ -702,16 +702,16 @@ EOF
           <xsl:variable name="destip" select="@ip"/>
           <xsl:choose>
             <xsl:when test="@direction = count(/config/IP/Interfaces/Interface[@ipaddr = $destip]) &gt; 0">
-              <xsl:value-of select="concat('  /sbin/iptables -A LOCALIN -j ',$rpolicy,$statein,' -i ',$iface,' -s ',$fwsource,' --sport ',@source,' -d ',@ip,' --dport ',$int_port,$nl)"/>
+              <xsl:value-of select="concat('  /usr/sbin/iptables -A LOCALIN -j ',$rpolicy,$statein,' -i ',$iface,' -s ',$fwsource,' --sport ',@source,' -d ',@ip,' --dport ',$int_port,$nl)"/>
             </xsl:when>
             <xsl:otherwise>
-              <xsl:value-of select="concat('  /sbin/iptables -A LOCALFWD -j ',$rpolicy,$statein,' ',$INT_OUT,' -i ',$iface,' -s ',$fwsource,' --sport ',@source,' -d ',@ip,' --dport ',$int_port,$nl)"/>
-              <xsl:value-of select="concat('  /sbin/iptables -t mangle -A LOCALOUT -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -o ',$iface,' -d ',$fwsource,' --dport ',@source,' -s ',@ip,' --sport ',$int_port,$nl)"/>
-              <xsl:value-of select="concat('  /sbin/iptables -t mangle -A LOCALIN -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -i ',$iface,' -s ',$fwsource,' --sport ',@source,' -d ',@ip,' --dport ',$int_port,$nl)"/>
+              <xsl:value-of select="concat('  /usr/sbin/iptables -A LOCALFWD -j ',$rpolicy,$statein,' ',$INT_OUT,' -i ',$iface,' -s ',$fwsource,' --sport ',@source,' -d ',@ip,' --dport ',$int_port,$nl)"/>
+              <xsl:value-of select="concat('  /usr/sbin/iptables -t mangle -A LOCALOUT -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -o ',$iface,' -d ',$fwsource,' --dport ',@source,' -s ',@ip,' --sport ',$int_port,$nl)"/>
+              <xsl:value-of select="concat('  /usr/sbin/iptables -t mangle -A LOCALIN -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -i ',$iface,' -s ',$fwsource,' --sport ',@source,' -d ',@ip,' --dport ',$int_port,$nl)"/>
             </xsl:otherwise>
           </xsl:choose>
-          <xsl:value-of select="concat('  /sbin/iptables -A EXTPROXY -i ',$iface,' -j DNAT -t nat',$proto,$statein,' --to-destination ',@ip,':',$int_port,' -s ',$fwsource,' -d ',$localip,' --sport ',@source,' --dport ',$ext_port,$nl)"/>
-          <xsl:value-of select="concat('  /sbin/iptables -A LOCALTOS -j TOS -t mangle',$proto,$statein,' -i ',$output,' -d ',$fwsource,' --dport ',@source,' -s ',@ip,'/32 --sport ',$int_port,' --set-tos ',@tos,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -A EXTPROXY -i ',$iface,' -j DNAT -t nat',$proto,$statein,' --to-destination ',@ip,':',$int_port,' -s ',$fwsource,' -d ',$localip,' --sport ',@source,' --dport ',$ext_port,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -A LOCALTOS -j TOS -t mangle',$proto,$statein,' -i ',$output,' -d ',$fwsource,' --dport ',@source,' -s ',@ip,'/32 --sport ',$int_port,' --set-tos ',@tos,$nl)"/>
         </xsl:if>
       </xsl:when>
       <xsl:otherwise>
@@ -720,16 +720,16 @@ EOF
           <xsl:variable name="destip" select="@ip"/>
           <xsl:choose>
             <xsl:when test="@direction = count(/config/IP/Interfaces/Interface[@ipaddr = $destip]) &gt; 0">
-              <xsl:value-of select="concat('  /sbin/iptables -A LOCALIN -j ',$rpolicy,$statein,' -i ',$iface,' -s ',$fwsource,' -d ',@ip,$nl)"/>
+              <xsl:value-of select="concat('  /usr/sbin/iptables -A LOCALIN -j ',$rpolicy,$statein,' -i ',$iface,' -s ',$fwsource,' -d ',@ip,$nl)"/>
             </xsl:when>
             <xsl:otherwise>
-              <xsl:value-of select="concat('  /sbin/iptables -A LOCALFWD -j ',$rpolicy,$statein,' ',$INT_OUT,' -i ',$iface,' -s ',$fwsource,' -d ',@ip,$nl)"/>
-              <xsl:value-of select="concat('  /sbin/iptables -t mangle -A LOCALOUT -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -o ',$iface,' -d ',$fwsource,' -s ',@ip,$nl)"/>
-              <xsl:value-of select="concat('  /sbin/iptables -t mangle -A LOCALIN -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -i ',$iface,' -s ',$fwsource,' -d ',@ip,$nl)"/>
+              <xsl:value-of select="concat('  /usr/sbin/iptables -A LOCALFWD -j ',$rpolicy,$statein,' ',$INT_OUT,' -i ',$iface,' -s ',$fwsource,' -d ',@ip,$nl)"/>
+              <xsl:value-of select="concat('  /usr/sbin/iptables -t mangle -A LOCALOUT -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -o ',$iface,' -d ',$fwsource,' -s ',@ip,$nl)"/>
+              <xsl:value-of select="concat('  /usr/sbin/iptables -t mangle -A LOCALIN -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -i ',$iface,' -s ',$fwsource,' -d ',@ip,$nl)"/>
             </xsl:otherwise>
           </xsl:choose>
-          <xsl:value-of select="concat('  /sbin/iptables -A EXTPROXY -i ',$iface,' -j DNAT -t nat',$proto,$statein,' --to-destination ',@ip,' -s ',$fwsource,' -d ',$localip,$nl)"/>
-          <xsl:value-of select="concat('  /sbin/iptables -A LOCALTOS -j TOS -t mangle',$proto,$statein,' -i ',$output,' -d ',$fwsource,' -s ',@ip,'/32 --set-tos ',@tos,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -A EXTPROXY -i ',$iface,' -j DNAT -t nat',$proto,$statein,' --to-destination ',@ip,' -s ',$fwsource,' -d ',$localip,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -A LOCALTOS -j TOS -t mangle',$proto,$statein,' -i ',$output,' -d ',$fwsource,' -s ',@ip,'/32 --set-tos ',@tos,$nl)"/>
         </xsl:if>
       </xsl:otherwise>
     </xsl:choose>
@@ -742,34 +742,34 @@ EOF
         <xsl:value-of select="concat('  #Forward ',@action,' ',$rname,' ',$fwsource,':',@source,' --> ',@ip,':',@dest,$nl)"/>
         <xsl:choose>
           <xsl:when test="@direction = 'Out'">
-            <xsl:value-of select="concat('  /sbin/iptables -A LOCALFWD -j ',$rpolicy,$statein,' -i ',$iface,' ',$INT_OUT,' -s ',$fwsource,' --sport ',@source,' -d ',@ip,' --dport ',@dest,$nl)"/>
+            <xsl:value-of select="concat('  /usr/sbin/iptables -A LOCALFWD -j ',$rpolicy,$statein,' -i ',$iface,' ',$INT_OUT,' -s ',$fwsource,' --sport ',@source,' -d ',@ip,' --dport ',@dest,$nl)"/>
           </xsl:when>
           <xsl:otherwise>
-            <xsl:value-of select="concat('  /sbin/iptables -A LOCALFWD -j ',$rpolicy,$stateout,' -o ',$iface,' ',$INT_IN,' -d ',$fwsource,' --dport ',@source,' -s ',@ip,' --sport ',@dest,$nl)"/>
+            <xsl:value-of select="concat('  /usr/sbin/iptables -A LOCALFWD -j ',$rpolicy,$stateout,' -o ',$iface,' ',$INT_IN,' -d ',$fwsource,' --dport ',@source,' -s ',@ip,' --sport ',@dest,$nl)"/>
           </xsl:otherwise>
         </xsl:choose>
         <xsl:if test="@action = 'Accept'">
-          <xsl:value-of select="concat('  /sbin/iptables -t nat -A NOFWDNAT -j ACCEPT ',$proto,$statein,' -o ',$iface,' -d ',$fwsource,' --dport ',@source,' -s ',@ip,' --sport ',@dest,$nl)"/>
-          <xsl:value-of select="concat('  /sbin/iptables -A LOCALTOS -j TOS -t mangle',$proto,$statein,' -i ',$iface,' -s ',$fwsource,' --sport ',@source,' -d ',@ip,' --dport ',@dest,' --set-tos ',@tos,$nl)"/>
-          <xsl:value-of select="concat('  /sbin/iptables -t mangle -A LOCALOUT -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -o ',$iface,' -d ',$fwsource,' --dport ',@source,' -s ',@ip,' --sport ',@dest,$nl)"/>
-          <xsl:value-of select="concat('  /sbin/iptables -t mangle -A LOCALIN -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -i ',$iface,' -s ',$fwsource,' --sport ',@source,' -d ',@ip,' --dport ',@dest,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -t nat -A NOFWDNAT -j ACCEPT ',$proto,$statein,' -o ',$iface,' -d ',$fwsource,' --dport ',@source,' -s ',@ip,' --sport ',@dest,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -A LOCALTOS -j TOS -t mangle',$proto,$statein,' -i ',$iface,' -s ',$fwsource,' --sport ',@source,' -d ',@ip,' --dport ',@dest,' --set-tos ',@tos,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -t mangle -A LOCALOUT -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -o ',$iface,' -d ',$fwsource,' --dport ',@source,' -s ',@ip,' --sport ',@dest,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -t mangle -A LOCALIN -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -i ',$iface,' -s ',$fwsource,' --sport ',@source,' -d ',@ip,' --dport ',@dest,$nl)"/>
         </xsl:if>
       </xsl:when>
       <xsl:otherwise>
         <xsl:value-of select="concat('  #Forward ',@action,' ',$rname,' ',$fwsource,' --> ',@ip,$nl)"/>
         <xsl:choose>
           <xsl:when test="@direction = 'Out'">
-            <xsl:value-of select="concat('  /sbin/iptables -A LOCALFWD -j ',$rpolicy,$statein,' -i ',$iface,' ',$INT_OUT,' -s ',$fwsource,' -d ',@ip,$nl)"/>
+            <xsl:value-of select="concat('  /usr/sbin/iptables -A LOCALFWD -j ',$rpolicy,$statein,' -i ',$iface,' ',$INT_OUT,' -s ',$fwsource,' -d ',@ip,$nl)"/>
           </xsl:when>
           <xsl:otherwise>
-            <xsl:value-of select="concat('  /sbin/iptables -A LOCALFWD -j ',$rpolicy,$stateout,' -o ',$iface,' ',$INT_IN,' -d ',$fwsource,' -s ',@ip,$nl)"/>
+            <xsl:value-of select="concat('  /usr/sbin/iptables -A LOCALFWD -j ',$rpolicy,$stateout,' -o ',$iface,' ',$INT_IN,' -d ',$fwsource,' -s ',@ip,$nl)"/>
           </xsl:otherwise>
         </xsl:choose>
         <xsl:if test="@action = 'Accept'">
-          <xsl:value-of select="concat('  /sbin/iptables -t nat -A NOFWDNAT -j ACCEPT ',$proto,$statein,' -o ',$iface,' -d ',$fwsource,' -s ',@ip,$nl)"/>
-          <xsl:value-of select="concat('  /sbin/iptables -A LOCALTOS -j TOS -t mangle',$proto,$statein,' -i ',$iface,' -s ',$fwsource,' -d ',@ip,' --set-tos ',@tos,$nl)"/>
-          <xsl:value-of select="concat('  /sbin/iptables -t mangle -A LOCALOUT -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -o ',$iface,' -d ',$fwsource,' -s ',@ip,$nl)"/>
-          <xsl:value-of select="concat('  /sbin/iptables -t mangle -A LOCALIN -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -i ',$iface,' -s ',$fwsource,' -d ',@ip,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -t nat -A NOFWDNAT -j ACCEPT ',$proto,$statein,' -o ',$iface,' -d ',$fwsource,' -s ',@ip,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -A LOCALTOS -j TOS -t mangle',$proto,$statein,' -i ',$iface,' -s ',$fwsource,' -d ',@ip,' --set-tos ',@tos,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -t mangle -A LOCALOUT -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -o ',$iface,' -d ',$fwsource,' -s ',@ip,$nl)"/>
+          <xsl:value-of select="concat('  /usr/sbin/iptables -t mangle -A LOCALIN -j MARK',$proto,' -m mark --mark 0x102 --set-mark ',$priority,' -i ',$iface,' -s ',$fwsource,' -d ',@ip,$nl)"/>
         </xsl:if>
       </xsl:otherwise>
     </xsl:choose>
@@ -840,41 +840,41 @@ EOF
   fi; 
 
   #Flush Tables
-  /sbin/iptables -F LOCALIN
-  /sbin/iptables -F LOCALOUT
-  /sbin/iptables -F SBSRULESI
-  /sbin/iptables -F SBSRULESO
-  /sbin/iptables -F LOCALFWD
-  /sbin/iptables -F GWOUT
-  /sbin/iptables -A GWOUT -j ACCEPT ${INT_OUT}
-  /sbin/iptables -F GWIN
-  /sbin/iptables -A GWIN -j ACCEPT ${INT_IN}
-  /sbin/iptables -t nat -F EXTNAT
-  /sbin/iptables -t nat -F NATOUT
-  /sbin/iptables -t nat -A NATOUT -j ${NATCMD} ${INT_OUT}
-  /sbin/iptables -t nat -F LOCALPROXY
-  /sbin/iptables -t nat -F NOFWDNAT
-  /sbin/iptables -t nat -F NOPPPNAT
-  /sbin/iptables -t nat -F EXTPROXY
-  /sbin/iptables -t mangle -F SYSTOS
-  /sbin/iptables -t mangle -F NOSYSTOS
-  /sbin/iptables -t mangle -F LOCALTOS
-  /sbin/iptables -t mangle -F LOCALIN
-  /sbin/iptables -t mangle -F LOCALOUT
+  /usr/sbin/iptables -F LOCALIN
+  /usr/sbin/iptables -F LOCALOUT
+  /usr/sbin/iptables -F SBSRULESI
+  /usr/sbin/iptables -F SBSRULESO
+  /usr/sbin/iptables -F LOCALFWD
+  /usr/sbin/iptables -F GWOUT
+  /usr/sbin/iptables -A GWOUT -j ACCEPT ${INT_OUT}
+  /usr/sbin/iptables -F GWIN
+  /usr/sbin/iptables -A GWIN -j ACCEPT ${INT_IN}
+  /usr/sbin/iptables -t nat -F EXTNAT
+  /usr/sbin/iptables -t nat -F NATOUT
+  /usr/sbin/iptables -t nat -A NATOUT -j ${NATCMD} ${INT_OUT}
+  /usr/sbin/iptables -t nat -F LOCALPROXY
+  /usr/sbin/iptables -t nat -F NOFWDNAT
+  /usr/sbin/iptables -t nat -F NOPPPNAT
+  /usr/sbin/iptables -t nat -F EXTPROXY
+  /usr/sbin/iptables -t mangle -F SYSTOS
+  /usr/sbin/iptables -t mangle -F NOSYSTOS
+  /usr/sbin/iptables -t mangle -F LOCALTOS
+  /usr/sbin/iptables -t mangle -F LOCALIN
+  /usr/sbin/iptables -t mangle -F LOCALOUT
 
-  /sbin/iptables -A LOCALIN -j DEFIN $INT_IN -d $EXT_IP
-  /sbin/iptables -A LOCALIN -j VOIPIN $INT_IN -d $EXT_IP
-  /sbin/iptables -A LOCALIN -j VOIPIN $INT_IN -d </xsl:text><xsl:value-of select="$intip"/><xsl:text> -p udp --sport 1024:65535
+  /usr/sbin/iptables -A LOCALIN -j DEFIN $INT_IN -d $EXT_IP
+  /usr/sbin/iptables -A LOCALIN -j VOIPIN $INT_IN -d $EXT_IP
+  /usr/sbin/iptables -A LOCALIN -j VOIPIN $INT_IN -d </xsl:text><xsl:value-of select="$intip"/><xsl:text> -p udp --sport 1024:65535
 
-  /sbin/iptables -A LOCALOUT -j DEFOUT $INT_OUT -s $EXT_IP
-  /sbin/iptables -A LOCALOUT -j VOIPOUT $INT_OUT -s </xsl:text><xsl:value-of select="concat($intip,' -p udp ',$sfnew)"/><xsl:text> --dport 1024:65535
+  /usr/sbin/iptables -A LOCALOUT -j DEFOUT $INT_OUT -s $EXT_IP
+  /usr/sbin/iptables -A LOCALOUT -j VOIPOUT $INT_OUT -s </xsl:text><xsl:value-of select="concat($intip,' -p udp ',$sfnew)"/><xsl:text> --dport 1024:65535
 
   #Allow Access To STUN Remotely
-  /sbin/iptables -A LOCALIN -j ACCEPT $INT_IN-p udp </xsl:text><xsl:value-of select="concat($sfnew,' -s ',$loclan)"/><xsl:text> --sport 1024:65535 -d $EXT_IP --dport 3478:3479
-  /sbin/iptables -A LOCALOUT -j ACCEPT $INT_OUT-p udp </xsl:text><xsl:value-of select="$sfnew"/><xsl:text> -s $EXT_IP --sport 3478:3479 -d $EXT_IP --dport 10000:65535
+  /usr/sbin/iptables -A LOCALIN -j ACCEPT $INT_IN-p udp </xsl:text><xsl:value-of select="concat($sfnew,' -s ',$loclan)"/><xsl:text> --sport 1024:65535 -d $EXT_IP --dport 3478:3479
+  /usr/sbin/iptables -A LOCALOUT -j ACCEPT $INT_OUT-p udp </xsl:text><xsl:value-of select="$sfnew"/><xsl:text> -s $EXT_IP --sport 3478:3479 -d $EXT_IP --dport 10000:65535
   #Allow Transparent Proxy For External Connections
-  /sbin/iptables -t nat -A LOCALPROXY -j REDIRECT $INT_IN -p tcp -s 0.0.0.0/0 -d $EXT_IP --dport 80 --to-port 8080
-  /sbin/iptables -t nat -A LOCALPROXY -j EXTPROXY
+  /usr/sbin/iptables -t nat -A LOCALPROXY -j REDIRECT $INT_IN -p tcp -s 0.0.0.0/0 -d $EXT_IP --dport 80 --to-port 8080
+  /usr/sbin/iptables -t nat -A LOCALPROXY -j EXTPROXY
 
 </xsl:text>
 
@@ -1060,9 +1060,9 @@ EOF
   chmod 700 /tmp/pppup/$1.ip-up
 
   #Flush Applicable Chains
-  /sbin/iptables -t mangle -F MANGLEP${FILID}
-  /sbin/iptables -t mangle -F MANGLEO${FILID}
-  /sbin/iptables -t mangle -F MANGLEF${FILID}
+  /usr/sbin/iptables -t mangle -F MANGLEP${FILID}
+  /usr/sbin/iptables -t mangle -F MANGLEO${FILID}
+  /usr/sbin/iptables -t mangle -F MANGLEF${FILID}
 
   #Set fwmark based on TOS value&#xa;</xsl:text>
     <xsl:call-template name="tosmatch">
@@ -1122,27 +1122,27 @@ EOF
   /sbin/ip route flush cache
 
   #NAT All packets outputing the interface with its ip any state
-  /sbin/iptables -t nat -I MANGLE -j SNAT -o $INT_NAME --to-source $EXT_IP_ADDR
+  /usr/sbin/iptables -t nat -I MANGLE -j SNAT -o $INT_NAME --to-source $EXT_IP_ADDR
 
   #Default Incoming/Outgoing Rules
-  /sbin/iptables -I MANGLEIN -j VOIPIN -i $INT_NAME -d ${LOCALIP} -p udp --sport 1024:65535
-  /sbin/iptables -I MANGLEIN -j DEFIN -i $INT_NAME -d $EXT_IP_ADDR
-  /sbin/iptables -I IP6RDDSL -j ACCEPT -i $INT_NAME -d $EXT_IP_ADDR
+  /usr/sbin/iptables -I MANGLEIN -j VOIPIN -i $INT_NAME -d ${LOCALIP} -p udp --sport 1024:65535
+  /usr/sbin/iptables -I MANGLEIN -j DEFIN -i $INT_NAME -d $EXT_IP_ADDR
+  /usr/sbin/iptables -I IP6RDDSL -j ACCEPT -i $INT_NAME -d $EXT_IP_ADDR
 
-  /sbin/iptables -I MANGLEOUT -j ACCEPT -m mark --mark ${MARK}
-  /sbin/iptables -I MANGLEOUT -j ACCEPT -o $INT_NAME -m mark --mark ${MARK}
-  /sbin/iptables -I MANGLEOUT -j DEFOUT -o $INT_NAME -s $EXT_IP_ADDR
-  /sbin/iptables -I MANGLEOUT -j VOIPOUT -o $INT_NAME -s ${LOCALIP} -p udp --dport 1024:65535
-  /sbin/iptables -I IP6RDDSL -j ACCEPT -o $INT_NAME -s $EXT_IP_ADDR
+  /usr/sbin/iptables -I MANGLEOUT -j ACCEPT -m mark --mark ${MARK}
+  /usr/sbin/iptables -I MANGLEOUT -j ACCEPT -o $INT_NAME -m mark --mark ${MARK}
+  /usr/sbin/iptables -I MANGLEOUT -j DEFOUT -o $INT_NAME -s $EXT_IP_ADDR
+  /usr/sbin/iptables -I MANGLEOUT -j VOIPOUT -o $INT_NAME -s ${LOCALIP} -p udp --dport 1024:65535
+  /usr/sbin/iptables -I IP6RDDSL -j ACCEPT -o $INT_NAME -s $EXT_IP_ADDR
 
-  /sbin/iptables -I MANGLEFWD -j ACCEPT -o $INT_NAME 
+  /usr/sbin/iptables -I MANGLEFWD -j ACCEPT -o $INT_NAME 
 
   #Allow Proxy Requests 
-  /sbin/iptables -I MANGLEPROXY -j DEFPROXY -t nat -i $INT_NAME -d $EXT_IP_ADDR
+  /usr/sbin/iptables -I MANGLEPROXY -j DEFPROXY -t nat -i $INT_NAME -d $EXT_IP_ADDR
 
   #Clear TOS Values on marked packets
-  /sbin/iptables -t mangle -A MANGLEF${FILID} -j TOS -o </xsl:text><xsl:value-of select="$extint"/><xsl:text> -m tos ! --tos 0 --set-tos 0 -m mark ! --mark 0x0 ! -d $EXT_IP_ADDR
-  /sbin/iptables -t mangle -A MANGLEP${FILID} -j TOS ! -i ppp+ -m tos ! --tos 0 --set-tos 0 -m mark ! --mark 0x0 ! -d $EXT_IP_ADDR
+  /usr/sbin/iptables -t mangle -A MANGLEF${FILID} -j TOS -o </xsl:text><xsl:value-of select="$extint"/><xsl:text> -m tos ! --tos 0 --set-tos 0 -m mark ! --mark 0x0 ! -d $EXT_IP_ADDR
+  /usr/sbin/iptables -t mangle -A MANGLEP${FILID} -j TOS ! -i ppp+ -m tos ! --tos 0 --set-tos 0 -m mark ! --mark 0x0 ! -d $EXT_IP_ADDR
 </xsl:text>
     <xsl:if test="@virtip != ''">
       <xsl:value-of select="concat($nl,'  /sbin/ip route add ',@virtip,'/32 via ${DEST_IP} src ${EXT_IP_ADDR} dev ${INT_NAME} table Link')"/>
@@ -1235,19 +1235,19 @@ EOF
   fi;
 
   /sbin/ip route add  ${5}/32 dev ${1} src ${4} table Link
-  /sbin/iptables -t nat -I NOPPPNAT -j ACCEPT -o ${1}
-  /sbin/iptables -I PPPFWD -j ACCEPT -i $INT_NAME -o </xsl:text>
+  /usr/sbin/iptables -t nat -I NOPPPNAT -j ACCEPT -o ${1}
+  /usr/sbin/iptables -I PPPFWD -j ACCEPT -i $INT_NAME -o </xsl:text>
     <xsl:value-of select="concat($pppoeint,' -d ',$pppoelan,' -s $5/32')"/><xsl:text>
-  /sbin/iptables -I PPPFWD -j ACCEPT -o $INT_NAME -i </xsl:text>
+  /usr/sbin/iptables -I PPPFWD -j ACCEPT -o $INT_NAME -i </xsl:text>
     <xsl:value-of select="concat($pppoeint,' -s ',$pppoelan,' -d $5/32')"/><xsl:text>
-  /sbin/iptables -I PPPIN -j SYSIN -i $INT_NAME -d </xsl:text>
+  /usr/sbin/iptables -I PPPIN -j SYSIN -i $INT_NAME -d </xsl:text>
     <xsl:value-of select="concat(/config/IP/Interfaces/Interface[. = $pppoeint]/@ipaddr,'/32 -s $5/32')"/><xsl:text>
-  /sbin/iptables -I PPPOUT -j SYSOUT -o $INT_NAME -s </xsl:text>
+  /usr/sbin/iptables -I PPPOUT -j SYSOUT -o $INT_NAME -s </xsl:text>
     <xsl:value-of select="concat(/config/IP/Interfaces/Interface[. = $pppoeint]/@ipaddr,'/32 -d $5/32')"/><xsl:text>
-  /sbin/iptables -I PPPIN -j MCASTIN -i $INT_NAME -d 224.0.0.0/3 -s $5/32
-  /sbin/iptables -I PPPOUT -j MCASTOUT -o $INT_NAME -s 224.0.0.0/3 -d $5/32
+  /usr/sbin/iptables -I PPPIN -j MCASTIN -i $INT_NAME -d 224.0.0.0/3 -s $5/32
+  /usr/sbin/iptables -I PPPOUT -j MCASTOUT -o $INT_NAME -s 224.0.0.0/3 -d $5/32
 #  if [ "$MAC_ADDR" ];then
-#    /sbin/iptables -I PPPIN -j RETURN -I -s $5 -m mac --mac-source $MAC_ADDR
+#    /usr/sbin/iptables -I PPPIN -j RETURN -I -s $5 -m mac --mac-source $MAC_ADDR
 #  fi;
  elif [ "$6" == "3g" ];then
   (cat &lt;&lt;EOF
@@ -1265,13 +1265,13 @@ EOF
   echo $1 > /tmp/ppp.$6.int
   /usr/bin/nsupdate /tmp/dnsup.$6.ppp
   /sbin/ip route add 0/0 via $DEST_IP dev $INT_NAME table 95;
-  /sbin/iptables -F 3GIN
-  /sbin/iptables -F 3GOUT
-  /sbin/iptables -t nat -F 3GNAT
+  /usr/sbin/iptables -F 3GIN
+  /usr/sbin/iptables -F 3GOUT
+  /usr/sbin/iptables -t nat -F 3GNAT
 
-  /sbin/iptables -A 3GIN -j ACCEPT -i $INT_NAME
-  /sbin/iptables -I 3GOUT -j ACCEPT -o $INT_NAME
-  /sbin/iptables -t nat -A 3GNAT -j SNAT -o $INT_NAME --to-source $EXT_IP_ADDR
+  /usr/sbin/iptables -A 3GIN -j ACCEPT -i $INT_NAME
+  /usr/sbin/iptables -I 3GOUT -j ACCEPT -o $INT_NAME
+  /usr/sbin/iptables -t nat -A 3GNAT -j SNAT -o $INT_NAME --to-source $EXT_IP_ADDR
 
   if [ "$USEPEERDNS" == "1" ] &amp;&amp; [ "$DNS1" ];then
     if [ "$DNS2" ];then
@@ -1292,14 +1292,14 @@ EOF
   fi;
  elif [ "${6:0:4}"  == "l2tp" ];then
   /sbin/ip route add  ${5}/32 dev ${1} src ${4} table Link
-  /sbin/iptables -t nat -I NOPPPNAT -j ACCEPT -o ${1}
-  /sbin/iptables -I PPPIN -j SYSIN -i ${1} -d </xsl:text><xsl:value-of select="$intip"/><xsl:text> -s ${5}/32
-  /sbin/iptables -I PPPOUT -j SYSOUT -o ${1} -s </xsl:text><xsl:value-of select="$intip"/><xsl:text> -d ${5}/32
-  /sbin/iptables -I PPPFWD -j ACCEPT -i ${1} -o </xsl:text><xsl:value-of select="$intiface"/><xsl:text>
-  /sbin/iptables -I PPPFWD -j ACCEPT -o ${1} -i </xsl:text><xsl:value-of select="$intiface"/><xsl:text>
-  /sbin/iptables -I PPPIN -j MCASTIN -i ${1} -d 224.0.0.0/3 -s $5/32
-  /sbin/iptables -I PPPOUT -j MCASTOUT -o ${1} -s 224.0.0.0/3 -d $5/32
-  /sbin/iptables -I PPPOUT -j MCASTOUT -o ${1} -s ${4} -d 224.0.0.0/3
+  /usr/sbin/iptables -t nat -I NOPPPNAT -j ACCEPT -o ${1}
+  /usr/sbin/iptables -I PPPIN -j SYSIN -i ${1} -d </xsl:text><xsl:value-of select="$intip"/><xsl:text> -s ${5}/32
+  /usr/sbin/iptables -I PPPOUT -j SYSOUT -o ${1} -s </xsl:text><xsl:value-of select="$intip"/><xsl:text> -d ${5}/32
+  /usr/sbin/iptables -I PPPFWD -j ACCEPT -i ${1} -o </xsl:text><xsl:value-of select="$intiface"/><xsl:text>
+  /usr/sbin/iptables -I PPPFWD -j ACCEPT -o ${1} -i </xsl:text><xsl:value-of select="$intiface"/><xsl:text>
+  /usr/sbin/iptables -I PPPIN -j MCASTIN -i ${1} -d 224.0.0.0/3 -s $5/32
+  /usr/sbin/iptables -I PPPOUT -j MCASTOUT -o ${1} -s 224.0.0.0/3 -d $5/32
+  /usr/sbin/iptables -I PPPOUT -j MCASTOUT -o ${1} -s ${4} -d 224.0.0.0/3
  elif [ "$6" != "other" ];then
   /usr/sbin/radipup $6 $5
 fi;
