@@ -70,7 +70,9 @@
       <xsl:value-of select="concat('NB_NAME=&quot;',/config/FileServer/Config/Option[@option = 'netbios name'],'&quot;;',$nl)"/>
     </xsl:when>
     <xsl:otherwise>
-      <xsl:value-of select="concat('NB_NAME=&quot;',substring-after(/config/FileServer/Config/Item[starts-with(.,'netbios name = ')],'netbios name = '),'&quot;;',$nl)"/>
+      <xsl:if test="substring-after(/config/FileServer/Config/Item[starts-with(.,'netbios name = ')],'netbios name = ') != ''">
+        <xsl:value-of select="concat('NB_NAME=&quot;',substring-after(/config/FileServer/Config/Item[starts-with(.,'netbios name = ')],'netbios name = '),'&quot;;',$nl)"/>
+      </xsl:if>
     </xsl:otherwise>
   </xsl:choose>
   <xsl:choose>
@@ -78,7 +80,9 @@
       <xsl:value-of select="concat('OSLEVEL=&quot;',/config/FileServer/Config/Option[@option = 'os level'],'&quot;;',$nl)"/>
     </xsl:when>
     <xsl:otherwise>
-      <xsl:value-of select="concat('OSLEVEL=&quot;',substring-after(/config/FileServer/Config/Item[starts-with(.,'os level = ')],'os level = '),'&quot;;',$nl)"/>
+      <xsl:if test="substring-after(/config/FileServer/Config/Item[starts-with(.,'os level = ')],'os level = ') != ''">
+        <xsl:value-of select="concat('OSLEVEL=&quot;',substring-after(/config/FileServer/Config/Item[starts-with(.,'os level = ')],'os level = '),'&quot;;',$nl)"/>
+      </xsl:if>
     </xsl:otherwise>
   </xsl:choose>
   <xsl:value-of select="concat('DOM_WG=&quot;',/config/FileServer/Setup/Option[@option = 'Domain'],'&quot;;',$nl)"/>
