@@ -15,7 +15,7 @@
 <xsl:variable name="domain" select="/config/DNS/Config/Option[@option = 'Domain']"/>
 
 <xsl:template match="Share">
-  <xsl:value-of select="concat($nl,'[',.,']',$nl)"/>
+  <xsl:value-of select="concat('[',.,']',$nl)"/>
   <xsl:if test="@av = 'true'">
     <xsl:text>        vfs objects = clamav&#xa;</xsl:text>
   </xsl:if>
@@ -67,6 +67,7 @@
   </xsl:choose>
   <xsl:value-of select="concat('        force group = +',@group,$nl)"/>
   <xsl:text>        guest ok = No&#xa;</xsl:text>
+  <xsl:text>&#xa;</xsl:text>
 </xsl:template>
 
 <xsl:template name="usergrp">
@@ -179,7 +180,7 @@
       </xsl:call-template>
     </xsl:when>
     <xsl:otherwise>
-      <xsl:value-of select="concat($output,$nl)"/>
+      <xsl:value-of select="concat($output,' ',$nl)"/>
     </xsl:otherwise>
   </xsl:choose>
 </xsl:template>
@@ -298,11 +299,11 @@
       <xsl:text>        wins support = Yes&#xa;</xsl:text>
       <xsl:text>        wins hook = /usr/sbin/wins_hook&#xa;</xsl:text>
       <xsl:if test="/config/FileServer/Setup/Option[@option = 'RemoteSync'] != ''">
-        <xsl:text>        remote announce = </xsl:text>
+        <xsl:text>        remote announce =</xsl:text>
         <xsl:call-template name="browsesrvs">
           <xsl:with-param name="servers" select="/config/FileServer/Setup/Option[@option = 'RemoteSync']"/>
         </xsl:call-template>
-        <xsl:text>        remote browse sync = </xsl:text>
+        <xsl:text>        remote browse sync =</xsl:text>
         <xsl:call-template name="remsync">
           <xsl:with-param name="servers" select="/config/FileServer/Setup/Option[@option = 'RemoteSync']"/>
         </xsl:call-template>
@@ -739,7 +740,7 @@
         hide unreadable = Yes
         force user = admin
         valid users = </xsl:text>
-    <xsl:call-template name="admingrp"/><xsl:text>&#xa;</xsl:text>
+    <xsl:call-template name="admingrp"/><xsl:text>&#xa;&#xa;</xsl:text>
   </xsl:if>
 
   <xsl:apply-templates select="/config/FileServer/Shares/Share"/>

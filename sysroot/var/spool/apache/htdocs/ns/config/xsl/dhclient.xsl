@@ -11,7 +11,7 @@
   send fqdn.fqdn "</xsl:text><xsl:value-of select="/config/DNS/Config/Option[@option = 'Hostname']"/><xsl:text>";
   send fqdn.encoded on;
   send fqdn.server-update on;
-  also request fqdn, dhcp6.fqdn;
+  also request fqdn, dhcp6.fqdn, ntp-servers;
   script "/usr/bin/dhclient-script";
 }</xsl:text>
     </xsl:when>

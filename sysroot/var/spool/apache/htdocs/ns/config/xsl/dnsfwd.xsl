@@ -9,10 +9,10 @@
     <xsl:text>forward first;
 forwarders {&#xa;</xsl:text>
     <xsl:if test="/config/IP/SysConf/Option[@option = 'PrimaryDns'] != ''">
-      <xsl:value-of select="concat('&#9;',/config/IP/SysConf/Option[@option = 'PrimaryDns'],';&#xa;')"/>
+      <xsl:value-of select="concat('       ',/config/IP/SysConf/Option[@option = 'PrimaryDns'],';&#xa;')"/>
     </xsl:if>
     <xsl:if test="/config/IP/SysConf/Option[@option = 'SecondaryDns'] != ''">
-      <xsl:value-of select="concat('&#9;',/config/IP/SysConf/Option[@option = 'SecondaryDns'],';&#xa;')"/>
+      <xsl:value-of select="concat('       ',/config/IP/SysConf/Option[@option = 'SecondaryDns'],';&#xa;')"/>
     </xsl:if>
     <xsl:text>};&#xa;</xsl:text>
   </xsl:if>

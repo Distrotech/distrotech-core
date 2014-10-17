@@ -171,7 +171,7 @@
 </xsl:template>
 
 <xsl:template match="/config">
-  <xsl:text>#!/bin/bash&#xa;&#xa;(flock -w 20 10 || exit&#xa;&#xa;</xsl:text>
+  <xsl:text>#!/bin/bash&#xa;&#xa;(flock -w 20 10 || exit&#xa;</xsl:text>
 
   <xsl:if test="count(/config/IP/GRE/Tunnels/Tunnel[@interface = $link]) &gt; 0">
     <xsl:text>#Disable Tunnels&#xa;</xsl:text>

@@ -131,7 +131,7 @@ http://www.dpawson.co.uk/xsl/sect2/padding.html
 0     0      * * *        /usr/bin/updatedb --output=/var/db/locate --prunepaths='/proc /dev /sys /tmp /var/tmp /mnt/dev /var/spool/mail /var/spool/mail /var/spool/mailscanner /var/web' > /dev/null 2>&amp;1
 0     0      * * *        (/usr/sbin/rndc flush;/usr/sbin/rndc stop;rm /var/named/*.jnl;killall -9 named;/usr/sbin/named) > /dev/null 2>&amp;1
 0     */1    * * *        /usr/sbin/genwebmap > /dev/null 2>&amp;1
-*/10  *      * * *        (killall -9 cshopfix;/usr/sbin/cshopfix) > /dev/null 2>&amp;1
+*/10  *      * * *        /usr/sbin/cshopfix > /dev/null 2>&amp;1
 0     */1    * * *        /usr/bin/db_checkpoint -1 -h /var/spool/ldap > /dev/null 2>&amp;1
 0     0      * * *        /usr/bin/db_archive -d -h /var/spool/ldap > /dev/null 2>&amp;1
 0     */1    * * *        /usr/bin/db_checkpoint -1 -h /var/log/ldap > /dev/null 2>&amp;1
@@ -147,7 +147,6 @@ http://www.dpawson.co.uk/xsl/sect2/padding.html
 */15  *      * * *        /etc/asterisk/pannel/genbut.pl > /dev/null 2>&amp;1
 0     2,4,6  * * *        (if [ "&#96;asterisk -rx "module show like chan_sip.so" |awk '$1 == "chan_sip.so" {print $1}'&#96;" != "chan_sip.so" ];then kill -9 &#96;cat /var/run/asterisk.pid&#96;; fi;) > /dev/null 2>&amp;1
 0     4      * * *        /usr/sbin/rebootphone > /dev/null 2>&amp;1
-15    4      * * *        killall -9 rebootphone > /dev/null 2>&amp;1
 0     2-23   * * *        (rm /var/spool/apache/htdocs/ns/config/ifup.*;/var/spool/apache/htdocs/ns/config/bwup.*;/usr/sbin/genconf) > /dev/null 2>&amp;1
 0     */4    * * *        /usr/sbin/quotasetup > /dev/null 2>&amp;1
 0     0      * * *        (openssl ca -gencrl -out /etc/ipsec.d/crls/crl.pem -config /etc/openssl/ca.conf;cp /etc/ipsec.d/crls/crl.pem /etc/ipsec.d/certs/`openssl crl -noout -hash -in /etc/ipsec.d/crls/crl.pem`.r0;openssl crl -in /etc/ipsec.d/crls/crl.pem -text  > /var/spool/apache/htdocs/ns/config/crl.txt;/usr/sbin/pkistore) > /dev/null 2>&amp;1

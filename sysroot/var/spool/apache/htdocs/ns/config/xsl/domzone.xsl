@@ -44,7 +44,7 @@ http://www.dpawson.co.uk/xsl/sect2/padding.html
   <xsl:call-template name="append-pad">
     <xsl:with-param name="padChar" select="' '"/>
     <xsl:with-param name="padVar" select="$entry"/>
-    <xsl:with-param name="length" select="'25'"/>
+    <xsl:with-param name="length" select="'64'"/>
   </xsl:call-template>
 
   <xsl:call-template name="append-pad">

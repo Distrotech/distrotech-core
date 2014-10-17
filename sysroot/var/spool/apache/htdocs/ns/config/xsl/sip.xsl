@@ -88,10 +88,16 @@ type=peer
   <xsl:value-of select="concat('fromdomain=',@server,$nl)"/>
   <xsl:value-of select="concat('host=',@server,$nl)"/>
 
-  <xsl:text>context=sipddi
-nat=yes
-qualify=yes
-directmedia=no
+  <xsl:text>context=sipddi&#xa;</xsl:text>
+  <xsl:choose>
+    <xsl:when test="$usestun = '1'">
+      <xsl:text>nat=no&#xa;qualify=no&#xa;</xsl:text>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:text>nat=yes&#xa;qualify=yes&#xa;</xsl:text>
+    </xsl:otherwise>
+  </xsl:choose>
+<xsl:text>directmedia=no
 insecure=port,invite
 sendrpid=yes
 trustrpid=yes
@@ -152,6 +158,7 @@ encryption=try
 tcpenable=yes
 transport=udp,tcp,tls
 t38pt_udptl=yes,redundancy
+t38pt_usertpsource=yes
 callcounter=yes
 faxdetect=no
 t38pt_rtp=yes
@@ -162,6 +169,14 @@ alwaysauthreject=yes
 prematuremedia=no
 insecure=no
 </xsl:text>
+  <xsl:choose>
+    <xsl:when test="$usestun = '1'">
+      <xsl:text>subscribe_network_change_event=yes&#xa;</xsl:text>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:text>subscribe_network_change_event=no&#xa;</xsl:text>
+    </xsl:otherwise>
+  </xsl:choose>
 
   <xsl:choose>
     <xsl:when test="$usetls = '1'">

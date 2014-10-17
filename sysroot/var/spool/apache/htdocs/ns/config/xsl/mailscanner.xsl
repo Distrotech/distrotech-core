@@ -241,7 +241,7 @@ Minimum Attachment Size = -1
 Minimum Code Status = supported
 Minimum Stars If On Spam List = 0
 Monitors For Sophos Updates = /usr/local/Sophos/ide/*ides.zip
-Monitors for ClamAV Updates = /var/spool/avirus/*.inc/* /var/spool/avirus/*.cvd
+Monitors for ClamAV Updates = /usr/share/clamav/*.inc/* /usr/share/clamav/*.cvd
 Multiple Headers = replace
 Never Notify Senders Of Precedence = list bulk
 Non MCP Actions = deliver
@@ -402,7 +402,16 @@ Use Watermarking = yes
 Virus Modify Subject = start
 Virus Scanner Definitions = %etc-dir%/virus.scanners.conf
 Virus Scanner Timeout = 300
-Virus Scanners = clamd
+Virus Scanners = </xsl:text>
+  <xsl:choose>
+    <xsl:when test="$useclam = '1'">
+      <xsl:text>clamd</xsl:text>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:text>none</xsl:text>
+    </xsl:otherwise>
+  </xsl:choose>
+  <xsl:text>
 Virus Scanning = yes
 Virus Subject Text = {VIRUS}
 Wait During Bayes Rebuild = no

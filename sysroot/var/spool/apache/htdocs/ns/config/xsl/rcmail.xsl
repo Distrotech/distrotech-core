@@ -85,7 +85,12 @@ fi;
 if [ ! "`/bin/pidof sendmail`" ];then
   #Check Statistics File
   if [ ! -e /var/db/sendmail.statistics ];then
-    mv /etc/mail/statistics /var/db/sendmail.statistics
+    if [ ! -h /etc/mail/statistics ];then
+      mv /etc/mail/statistics /var/db/sendmail.statistics
+     else
+      rm /var/db/sendmail.statistics
+      touch /var/db/sendmail.statistics
+    fi;
     ln -s /var/db/sendmail.statistics /etc/mail/statistics
   fi;
   /usr/sbin/sendmail -bd -ODeliveryMode=</xsl:text>
@@ -134,7 +139,7 @@ if [ ! -e /etc/dovecot/dovecot-sogo.conf ] || [ /etc/dovecot/dovecot.conf -nt /e
   killall -9 dovecot-sogo) > /dev/null 2>&amp;1
 fi
 
-if [ -e /etc/dovecot/dovecot-sogo.conf ] &amp;&amp; [ ! "`/bin/pidof dovecot-sogo`" ] &amp;&amp; [ "$1" != "sendmail" ];then
+if [ ! -e /etc/.lowmem ] &amp;&amp; [ -e /etc/dovecot/dovecot-sogo.conf ] &amp;&amp; [ ! "`/bin/pidof dovecot-sogo`" ] &amp;&amp; [ "$1" != "sendmail" ];then
   if [ -e /var/run/dovecot-sogo/master.pid ];then
     rm /var/run/dovecot-sogo/master.pid
   fi;

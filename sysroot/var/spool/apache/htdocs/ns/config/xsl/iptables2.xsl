@@ -490,7 +490,14 @@ EOF
       <xsl:otherwise>
         <xsl:choose>
           <xsl:when test="(@type = 'Local') or (@type = 'Proxy')">
-            <xsl:value-of select="concat(/config/IP/Interfaces/Interface[. = $srciface]/@ipaddr,'/32')"/>
+            <xsl:choose>
+              <xsl:when test="/config/IP/Interfaces/Interface[. = $srciface]/@ipaddr != ''">
+                <xsl:value-of select="concat(/config/IP/Interfaces/Interface[. = $srciface]/@ipaddr,'/32')"/>
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:text>0/0</xsl:text>
+              </xsl:otherwise>
+            </xsl:choose>
           </xsl:when>
           <xsl:otherwise>
             <xsl:value-of select="/config/IP/Interfaces/Interface[. = $srciface]/@ipaddr"/>
@@ -795,8 +802,7 @@ EOF
 </xsl:template>
 
 <xsl:template name="fwconf">
-  <xsl:text>
- elif [ ! "$6" ];then
+  <xsl:text> elif [ ! "$6" ];then
   #Set Bandwidth Rate
 
   #Delete Existing Classes
@@ -870,11 +876,11 @@ EOF
   /usr/sbin/iptables -A LOCALOUT -j VOIPOUT $INT_OUT -s </xsl:text><xsl:value-of select="concat($intip,' -p udp ',$sfnew)"/><xsl:text> --dport 1024:65535
 
   #Allow Access To STUN Remotely
-  /usr/sbin/iptables -A LOCALIN -j ACCEPT $INT_IN-p udp </xsl:text><xsl:value-of select="concat($sfnew,' -s ',$loclan)"/><xsl:text> --sport 1024:65535 -d $EXT_IP --dport 3478:3479
-  /usr/sbin/iptables -A LOCALOUT -j ACCEPT $INT_OUT-p udp </xsl:text><xsl:value-of select="$sfnew"/><xsl:text> -s $EXT_IP --sport 3478:3479 -d $EXT_IP --dport 10000:65535
+  /usr/sbin/iptables -A LOCALIN -j ACCEPT $INT_IN -p udp </xsl:text><xsl:value-of select="concat($sfnew,' -s ',$loclan)"/><xsl:text> --sport 1024:65535 -d $EXT_IP --dport 3478:3479
+  /usr/sbin/iptables -A LOCALOUT -j ACCEPT $INT_OUT -p udp </xsl:text><xsl:value-of select="$sfnew"/><xsl:text> -s $EXT_IP --sport 3478:3479 -d $EXT_IP --dport 10000:65535
   #Allow Transparent Proxy For External Connections
   /usr/sbin/iptables -t nat -A LOCALPROXY -j REDIRECT $INT_IN -p tcp -s 0.0.0.0/0 -d $EXT_IP --dport 80 --to-port 8080
-  /usr/sbin/iptables -t nat -A LOCALPROXY -j EXTPROXY
+  /usr/sbin/iptables -t nat -A LOCALPROXY -j EXTPROXY $INT_IN -d $EXT_IP
 
 </xsl:text>
 

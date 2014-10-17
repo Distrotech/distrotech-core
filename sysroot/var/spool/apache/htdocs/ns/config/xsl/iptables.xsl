@@ -539,7 +539,7 @@ XXX NEED TESTiNG
 /usr/sbin/iptables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 3306
 
 #PGSQL
-/usr/sbin/iptables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 5432
+/usr/sbin/iptables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 5432:5439
 
 #Orb
 /usr/sbin/iptables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 2809
@@ -685,6 +685,7 @@ XXX NEED TESTiNG
 /usr/sbin/iptables -t nat -N SYSNAT
 
 /usr/sbin/iptables -t nat -A PREROUTING -j DNAT -t nat -p tcp ! -d </xsl:text><xsl:value-of select="concat($intip, ' --to-destination ',$intip)"/><xsl:text> --sport 1024:65535 --dport 80
+/usr/sbin/iptables -t nat -A PREROUTING -j REDIRECT -p tcp --dport 80 --to-port 3129
 /usr/sbin/iptables -t nat -A PREROUTING -j SIPMAP
 /usr/sbin/iptables -t nat -A PREROUTING -j NATMAPI
 /usr/sbin/iptables -t nat -A POSTROUTING -j SIPNAT -p udp -s </xsl:text><xsl:value-of select="$intip"/><xsl:text> --sport 5000 --dport 1024:65535
@@ -1346,7 +1347,7 @@ fi;
   <xsl:if test="/config/IP/SysConf/Option[@option = 'OVPNNet']">
     <xsl:value-of select="concat('/usr/sbin/iptables -I VPNFWD -j OVPNFWD -i vpn0 -s ',/config/IP/SysConf/Option[@option = 'OVPNNet'],$nl)"/>
     <xsl:value-of select="concat('/usr/sbin/iptables -I VPNFWD -j OVPNFWD -o vpn0 -d ',/config/IP/SysConf/Option[@option = 'OVPNNet'],$nl)"/>
-    <xsl:value-of select="concat('/usr/sbin/iptables -t nat -I VPNNAT -j MASQUERADE -i vpn0 -s ',/config/IP/SysConf/Option[@option = 'OVPNNet'],$nl,$nl)"/>
+    <xsl:value-of select="concat('/usr/sbin/iptables -t nat -I VPNNAT -j MASQUERADE -i vpn0 -s ',/config/IP/SysConf/Option[@option = 'OVPNNet'],$nl)"/>
   </xsl:if>
 
   <xsl:if test="/config/IP/SysConf/Option[@option = 'VPNNet']">
@@ -1391,20 +1392,23 @@ fi;
     <xsl:value-of select="concat('#PPP Link ',.,$nl)"/>
     <xsl:value-of select="concat('/usr/sbin/iptables -I VPNCIN -j SYSIN -i ppp+ -s ',@remote,' -d 0/0 -m state --state NEW,ESTABLISHED',$nl)"/>
     <xsl:value-of select="concat('/usr/sbin/iptables -I VPNCOUT -j SYSOUT -o ppp+ -d ',@remote,' -s 0/0 -m state --state ESTABLISHED',$nl)"/>
-    <xsl:value-of select="concat('/usr/sbin/iptables -A TXPROXY -t nat -j REDIRECT -p tcp --to-port 3129 -i ppp+ -s ',@remote,$nl,$nl)"/>
+    <xsl:value-of select="concat('/usr/sbin/iptables -A TXPROXY -t nat -j REDIRECT -p tcp --to-port 3129 -i ppp+ -s ',@remote,$nl)"/>
   </xsl:for-each>
  
   <xsl:if test="/config/Radius/Config/Option[@option = 'PPPoE'] != ''">
-    <xsl:text>#PPPoE Connections&#xa;</xsl:text>
-    <xsl:value-of select="concat('/usr/sbin/iptables -A TXPROXY -p tcp -t nat -j REDIRECT --to-port 3129 -i ppp+ -s ',/config/Radius/Config/Option[@option = 'PPPoE'],$nl,$nl)"/>
+    <xsl:text>
+#PPPoE Connections&#xa;</xsl:text>
+    <xsl:value-of select="concat('/usr/sbin/iptables -A TXPROXY -p tcp -t nat -j REDIRECT --to-port 3129 -i ppp+ -s ',/config/Radius/Config/Option[@option = 'PPPoE'],$nl)"/>
   </xsl:if>
 
   <xsl:if test="/config/IP/SysConf/Option[@option = 'L2TPNet']">
-    <xsl:text>#L2TP Connections&#xa;</xsl:text>
-    <xsl:value-of select="concat('/usr/sbin/iptables -A TXPROXY -p tcp -t nat -j REDIRECT --to-port 3129 -i ppp+ -s ',/config/IP/SysConf/Option[@option = 'L2TPNet'],$nl,$nl)"/>
+    <xsl:text>
+#L2TP Connections&#xa;</xsl:text>
+    <xsl:value-of select="concat('/usr/sbin/iptables -A TXPROXY -p tcp -t nat -j REDIRECT --to-port 3129 -i ppp+ -s ',/config/IP/SysConf/Option[@option = 'L2TPNet'],$nl)"/>
   </xsl:if>
 
-  <xsl:text>#Protect The Loopback Interface
+  <xsl:text>
+#Protect The Loopback Interface
 /usr/sbin/iptables -A INPUT -j DENY -i lo ! -s 127.0.0.0/8
 /usr/sbin/iptables -A INPUT -j DENY ! -i lo -s 127.0.0.0/8
 /usr/sbin/iptables -A OUTPUT -j DENY -o lo ! -d 127.0.0.0/8

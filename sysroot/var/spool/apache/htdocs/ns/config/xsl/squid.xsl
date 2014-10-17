@@ -151,7 +151,14 @@
 </xsl:template>
 
 <xsl:template match="WWW">
-  <xsl:value-of select="concat('acl redirect dst ',@ipaddr,'/32',$nl)"/>
+  <xsl:choose>
+    <xsl:when test="contains(@ipaddr,'/')">
+      <xsl:value-of select="concat('acl redirect dst ',@ipaddr,$nl)"/>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:value-of select="concat('acl redirect dst ',@ipaddr,'/32',$nl)"/>
+    </xsl:otherwise>
+  </xsl:choose>
 </xsl:template>
 
 <xsl:template match="Bypass">
@@ -255,10 +262,10 @@
 </xsl:template>
 
 <xsl:template match="/config">
-  <xsl:variable name="squiderrdir" select="'/usr/share/squid/errors/en'"/>
+  <xsl:variable name="squiderrdir" select="'/usr/share/squid/errors/templates'"/>
 
   <xsl:text>http_port 3128
-http_port 8080 accel
+http_port 8080 vhost
 http_port 3129 transparent
 </xsl:text>
   <xsl:for-each select="/config/IP/Interfaces/Interface[(@ipaddr != '0.0.0.0') and (@subnet != '32') and (. != $intiface)]">
@@ -314,17 +321,17 @@ half_closed_clients on
 pconn_timeout 120 seconds
 shutdown_lifetime 30 seconds
 auth_param basic realm Access To Internet
-auth_param basic program /usr/libexec/pam_auth
+auth_param basic program /usr/libexec/basic_pam_auth
 authenticate_ip_ttl 300 second
 auth_param basic children 10
-external_acl_type unix_group %LOGIN /usr/libexec/squid_unix_group -p
-acl duplicate max_user_ip -s 1
+external_acl_type unix_group %LOGIN /usr/libexec/ext_unix_group_acl -p
+acl duplicate max_user_ip 1
 </xsl:text>
   <xsl:call-template name="getaccess"/>
   <xsl:text>acl authenticate proxy_auth REQUIRED
-#acl all src all
+acl all src all
 #acl manager proto cache_object
-#acl localhost src 127.0.0.1/32
+acl localhost src 127.0.0.1/32
 acl SSL_ports port 443 563 666 990 5222 1863
 acl Safe_ports port 80 21 990 443 563 70 210 3128 3129 8080 5222 1863
 acl Safe_ports port 280         # http-mgmt

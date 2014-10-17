@@ -149,11 +149,10 @@ fi;
   <xsl:for-each select="/config/IPv6/IPv6to4/SIT">
     <xsl:value-of select="concat('/usr/sbin/ip6tables -I EXTERNIN -j DEFIN -i sit',position()+1,' -s 2002:',@ipv6to4pre,'::/',@subnet,$nl)"/>
     <xsl:value-of select="concat('/usr/sbin/ip6tables -I EXTERNOUT -j ACCEPT -o sit',position()+1,' -d 2002:',@ipv6to4pre,'::/',@subnet,$nl)"/>
-    <xsl:value-of select="concat('/usr/sbin/ip6tables -I EXTERNFWD -j ACCEPT -o sit',position()+1,' -d 2002:',@ipv6to4pre,'::/',@subnet,$nl)"/>
+    <xsl:value-of select="concat('/usr/sbin/ip6tables -I EXTERNFWD -j ACCEPT -o sit',position()+1,' -d 2002:',@ipv6to4pre,'::/',@subnet,$nl,$nl)"/>
   </xsl:for-each>
 
-  <xsl:text>
-#Activate Loopback Chain's
+  <xsl:text>#Activate Loopback Chain's
 /usr/sbin/ip6tables -A LOOPIN -j ACCEPT -i lo -s ::1 -d ::1
 /usr/sbin/ip6tables -A LOOPOUT -j ACCEPT -o lo -s ::1 -d ::1
 
@@ -166,8 +165,8 @@ fi;
 /usr/sbin/ip6tables -A LOOPOUT -j ACCEPT -p 34
 
 #STUN Loopback
-/usr/sbin/ip6tables -A LOOPIN -j ACCEPT -p udp -m state --state ESTABLISHED,NEW --sport 3478:3479 --dport 10000:65535
-/usr/sbin/ip6tables -A LOOPOUT -j ACCEPT -p udp -m state --state ESTABLISHED,NEW --sport 3478:3479 --dport 10000:65535
+/usr/sbin/ip6tables -A LOOPIN -j ACCEPT -p udp -m state --state ESTABLISHED,NEW  --sport 3478:3479 --dport 10000:65535
+/usr/sbin/ip6tables -A LOOPOUT -j ACCEPT -p udp -m state --state ESTABLISHED,NEW  --sport 3478:3479 --dport 10000:65535
 
 #Traffic to link local addresses
 /usr/sbin/ip6tables -A LOOPIN -j ACCEPT -d fe80::/64
@@ -215,7 +214,7 @@ fi;
 /usr/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 3306
 
 #PGSQL
-/usr/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 5432
+/usr/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 5432:5439
 
 #Orb
 /usr/sbin/ip6tables -A SYSIN -j ACCEPT -p tcp -m state --state NEW  --sport 1024:65535 --dport 2809
@@ -316,6 +315,7 @@ fi;
   </xsl:if>
 
   <xsl:text>
+
 #SSH/Rsync Access
 /usr/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --dport 22 --sport 1024:65535
 /usr/sbin/ip6tables -A DEFIN -j ACCEPT -p tcp --dport 873 --sport 1024:65535

@@ -6,7 +6,7 @@
 <xsl:template match="/config">
 <xsl:text>[Asterisk]
 Description             = Asterisk Database DSN
-Driver                  = /usr/lib/psqlodbc/psqlodbcw.so
+Driver                  = </xsl:text><xsl:value-of select="$pgsqlodbc"/><xsl:text>
 Trace                   = Yes
 TraceFile               = /var/log/asterisksql.log
 Database                = asterisk
@@ -25,7 +25,7 @@ SSLMode			= require
 
 [Master]
 Description             = Asterisk Master Database DSN
-Driver                  = /usr/lib/psqlodbc/psqlodbcw.so
+Driver                  = </xsl:text><xsl:value-of select="$pgsqlodbc"/><xsl:text>
 Trace                   = Yes
 TraceFile               = /var/log/mastersql.log
 Database                = asterisk

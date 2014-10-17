@@ -77,5 +77,6 @@
   <xsl:value-of select="concat('AGISERVER=',/config/SQL/Option[@option = 'MAsteriskServ'],$nl)"/>
   <xsl:value-of select="concat('DOMAIN=',/config/DNS/Config/Option[@option = 'Domain'],$nl)"/>
   <xsl:value-of select="concat('IPADDR=',$intip,$nl)"/>
+  <xsl:text>FAX_CODEC=alaw&#xa;</xsl:text>
 </xsl:template>
 </xsl:stylesheet>

@@ -67,7 +67,7 @@
       </xsl:if>
     </xsl:when>
     <xsl:otherwise>
-      <xsl:value-of select="$linkip"/>
+      <xsl:value-of select="$intip"/>
     </xsl:otherwise>
   </xsl:choose>
   <xsl:text>;&#xa;</xsl:text>
@@ -226,8 +226,7 @@ option yealink-url code 250 = string;
       <xsl:value-of select="concat('option polycom-vlanid ',substring-after(.,'.'),';',$nl)"/>
     </xsl:if>
   </xsl:for-each>
-<xsl:text>
-ddns-update-style interim;
+<xsl:text>ddns-update-style interim;
 ddns-updates on;
 ddns-domainname "</xsl:text><xsl:value-of select="$domain"/><xsl:text>";
 ddns-rev-domainname "in-addr.arpa";

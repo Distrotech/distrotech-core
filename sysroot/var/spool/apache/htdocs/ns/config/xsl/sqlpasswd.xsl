@@ -33,7 +33,7 @@ fi;
 #Change the password if need be
 if [ -e /var/spool/apache/htdocs/ns/config/ldap.newsecret ];then
   NEWROOTPW="`cat /var/spool/apache/htdocs/ns/config/ldap.newsecret`";
-  CRYPT=`slappasswd -c '$1$%.8s' -s ${NEWROOTPW}`
+  CRYPT=`slappasswd -c '$6$%.12s' -s ${NEWROOTPW}`
 
   (cat &lt;&lt;EOF
 dn: ${LDAPLOGIN}${VSUF}
@@ -59,7 +59,7 @@ fi;
 
 /usr/sbin/setsmbpasswd
 
-SNOMPW=`apg -M SNCL -n 1 -m 10 -E '!$%^~|\`\",'\'`
+SNOMPW=`apg -M NCL -n 1 -m 12`
 
 (cat &lt;&lt;EOF
 dn: cn=Snom,ou=snom${VSUF}
@@ -75,8 +75,8 @@ fi;
 
 if [ ! -e /var/spool/apache/htdocs/ns/config/${LIMFILE} ];then
   ldapdelete -xD ${LDAPLOGIN} -y /etc/ldap.secret -h ${REPMASTER} -Z ${LDAPLIMLOGIN}${VSUF}
-  LDAPLIMPW=`apg -M SNCL -n 1 -m 10 -E '!$%^~|\`\",'\'`
-  CRYPT=`slappasswd -c '$1$%.8s' -s ${LDAPLIMPW}`
+  LDAPLIMPW=`apg -M NCL -n 1 -m 12`
+  CRYPT=`slappasswd -c '$6$%.12s' -s ${LDAPLIMPW}`
 
   (cat &lt;&lt;EOF
 dn: ${LDAPLIMLOGIN}${VSUF}
@@ -105,8 +105,8 @@ fi;
 
 if [ ! -e /var/spool/apache/htdocs/ns/config/${CONFFILE} ];then
   ldapdelete -xD ${LDAPLOGIN} -y /etc/ldap.secret -h ${REPMASTER} -Z ${LDAPCONFLOGIN}${VSUF}
-  LDAPCONFPW=`apg -M SNCL -n 1 -m 10 -E '!$%^~|\`\",/'\'`
-  CRYPT=`slappasswd -c '$1$%.8s' -s ${LDAPCONFPW}`
+  LDAPCONFPW=`apg -M NCL -n 1 -m 12`
+  CRYPT=`slappasswd -c '$6$%.12s' -s ${LDAPCONFPW}`
 
   (cat &lt;&lt;EOF
 dn: ${LDAPCONFLOGIN}${VSUF}
@@ -131,8 +131,8 @@ fi;
 
 if [ -s /var/spool/apache/htdocs/ns/config/ldap.replica ] &amp;&amp; [ ! -e /etc/ldap-${FQDN} ];then
   ldapdelete -xD ${LDAPLOGIN} -y /etc/ldap.secret -h ${REPMASTER} -Z uid=${FQDN},ou=servers${VSUF}
-  LDAPREPPW=`apg -M SNCL -n 1 -m 10 -E '!$%^~|\`\",'\'`
-  CRYPT=`slappasswd -c '$1$%.8s' -s ${LDAPREPPW}`
+  LDAPREPPW=`apg -M NCL -n 1 -m 12`
+  CRYPT=`slappasswd -c '$6$%.12s' -s ${LDAPREPPW}`
 
   (cat &lt;&lt;EOF
 dn: uid=${FQDN},ou=servers${VSUF}
@@ -224,7 +224,7 @@ function FindProxyForURL(url, host) {
 EOF
 )>/var/spool/apache/htdocs/proxy.pac
 
-sed -i -e "s/^\$whereami.*/\$whereami = \"${DOMAIN}\";/" /opt/majordomo/majordomo.cf.orig
+sed -i -e "s/^\$whereami.*/\$whereami = \"${DOMAIN}\";/" /opt/majordomo/majordomo.cf
 
 sed -e "s/^binddn.*$/binddn ${LDAPLIMLOGIN}/" \
     -e "s/^rootbinddn.*$/rootbinddn ${LDAPLOGIN}/" \
@@ -235,7 +235,7 @@ sed -e "s/^binddn.*$/binddn ${LDAPLIMLOGIN}/" \
     -e "s/^uri.*$/uri ldaps:\/\/${LDAPSERVER} ldaps:\/\/${REPMASTER}/" /etc/distrotech/ldap.conf.orig >  /etc/ldap.conf
 
 chmod 644 /etc/ldap.conf
-chown root.smbadm /etc/ldap.conf
+chown 0.139 /etc/ldap.conf
 
 (cat &lt;&lt;EOF
 &lt;%
@@ -358,6 +358,14 @@ echo "UPDATE realm SET domain='${DOMAIN}' WHERE id=0;" |/usr/bin/psql -h 127.0.0
 127.0.0.1:5432:*:exchange:${EXCHANGEPASS}
 127.0.0.1:5432:*:asterisk:${SQLVOIPPASS}
 127.0.0.1:5432:*:phpgw:phpgw
+local:5432:*:pgsql:${PGADMINPASS}
+local:5432:*:exchange:${EXCHANGEPASS}
+local:5432:*:asterisk:${SQLVOIPPASS}
+local:5432:*:phpgw:phpgw
+localhost:5432:*:pgsql:${PGADMINPASS}
+localhost:5432:*:exchange:${EXCHANGEPASS}
+localhost:5432:*:asterisk:${SQLVOIPPASS}
+localhost:5432:*:phpgw:phpgw
 EOF
 )> /root/.pgpass
 chmod 600 /root/.pgpass
@@ -403,7 +411,7 @@ if [ -e /var/lib/asterisk/agi-bin/db_php_lib/defines.php.orig ];then
   sed -e "s/SQLPASS/${SQLVOIPPASS}/" /var/lib/asterisk/agi-bin/db_php_lib/defines.php.orig > /var/lib/asterisk/agi-bin/db_php_lib/defines.php
 fi;
 
-sed -e "s/pass=\"\*\*\*\*\"/pass=\"admin\"/" /etc/ulogd.conf.orig > /etc/ulogd.conf
+sed -e "s/pass=\"\*\*\*\*\"/pass=\"admin\"/" /etc/distrotech/ulogd.conf.orig > /etc/ulogd.conf
 
 if [ -e /var/spool/apache/htdocs/dbadmin/config.inc.php.orig ];then
   sed -e "s/\*\*\*\*\*/${SQLCTRLPASS}/" /var/spool/apache/htdocs/dbadmin/config.inc.php.orig > /var/spool/apache/htdocs/dbadmin/config.inc.php
@@ -429,26 +437,26 @@ EOF
 chown www.www /var/spool/apache/htdocs/radius/opendb.inc
 chmod 640 /var/spool/apache/htdocs/radius/opendb.inc
 
-sed -e "s/\$password=.*;/\$password=\"${SQLULOGDPASS}\";/" /etc/procmlog.orig > /usr/sbin/procmlog
+sed -e "s/\$password=.*;/\$password=\"${SQLULOGDPASS}\";/" /etc/distrotech/procmlog.orig > /usr/sbin/procmlog
 chmod 750 /usr/sbin/procmlog
 chown root.root /usr/sbin/procmlog
 
-sed -e "s/\$password=.*;/\$password=\"${SQLULOGDPASS}\";/" /etc/rrdlog.orig > /usr/bin/rrdlog
+sed -e "s/\$password=.*;/\$password=\"${SQLULOGDPASS}\";/" /etc/distrotech/rrdlog.orig > /usr/bin/rrdlog
 chmod 750 /usr/bin/rrdlog
 chown root.root /usr/bin/rrdlog
 
 sed -e "s/^\$password=.*;/\$password=\"${HORDEPASS}\";/" \
-    -e "s/^\$hostname=.*;/\$hostname=\"${SQLSERVER}\";/" /etc/procmfilter.orig > /usr/sbin/procmfilter
+    -e "s/^\$hostname=.*;/\$hostname=\"${SQLSERVER}\";/" /etc/distrotech/procmfilter.orig > /usr/sbin/procmfilter
 chmod 750 /usr/sbin/procmfilter
 chown root.root /usr/sbin/procmfilter
 
 sed -e "s/DOMAIN/${DOMAIN}/" -e "s/TSIGKEY/${DOMTSIGKEY}/" \
-    -e "s/SERVER/${DNSSERV}/" /etc/wins_hook.orig > /usr/sbin/wins_hook
+    -e "s/SERVER/${DNSSERV}/" /etc/distrotech/wins_hook.orig > /usr/sbin/wins_hook
 chmod 700 /usr/sbin/wins_hook
 chown root.root /usr/sbin/wins_hook
 
 sed -e "s/^\$password=.*;/\$password=\"${SQLRADIUSPASS}\";/" \
-    -e "s/^\$hostname=.*;/\$hostname=\"${SQLRADIUSSERV}\";/" /etc/radcheck.orig > /usr/sbin/radcheck
+    -e "s/^\$hostname=.*;/\$hostname=\"${SQLRADIUSSERV}\";/" /etc/distrotech/radcheck.orig > /usr/sbin/radcheck
 chmod 750 /usr/sbin/radcheck
 chown root.root /usr/sbin/radcheck
 
@@ -462,7 +470,11 @@ if [ -e /tmp/mysql.sock ];then
   rm /tmp/mysql.sock
 fi;
 
-(/usr/libexec/mysqld --basedir=/usr --datadir=/var/spool/mysql --user=mysql --pid-file=/var/spool/mysql/mysqld.pid --skip-external-locking --port=3306 --socket=/tmp/mysql.sock --skip-grant-tables > /dev/null 2>&amp;1) &amp;
+if [ -x /opt/mysql/bin/mysqld ];then
+  (/opt/mysql/bin/mysqld --basedir=/opt/mysql --datadir=/var/spool/mysql --user=mysql --pid-file=/var/spool/mysql/mysqld.pid --skip-external-locking --port=3306 --socket=/tmp/mysql.sock --skip-grant-tables > /dev/null 2>&amp;1) &amp;
+ else
+  (/usr/libexec/mysqld --basedir=/usr --datadir=/var/spool/mysql --user=mysql --pid-file=/var/spool/mysql/mysqld.pid --skip-external-locking --port=3306 --socket=/tmp/mysql.sock --skip-grant-tables > /dev/null 2>&amp;1) &amp;
+fi;
 sleep 4
 (cat &lt;&lt;_EOF_
 USE mysql;
@@ -534,46 +546,34 @@ if [ -e /var/log/radutmp ];then
 fi
 /usr/sbin/radiusd > /dev/null 2>&amp;1
 
-if [ ! -e /etc/apache/sogo.conf ];then
-  touch /etc/apache/sogo.conf
+if [ ! -e /etc/httpd/sogo.conf ];then
+  touch /etc/httpd/sogo.conf
 fi;
 
-if [ ! -d /opt/apache2 ];then
-  touch /tmp/httpd.conf
-  chmod 600 /tmp/httpd.conf
-  chown root.root /tmp/httpd.conf
-  sed -e "s/^Listen 0.0.0.0:80.*/Listen ${INTIP}:80/"  \
-      -e "s/^Listen 80.*/Listen ${INTIP}:80/" \
-      -e "s/AuthLDAPUrl ldap:\/\/127.0.0.1/AuthLDAPUrl ldap:\/\/${LDAPSERVER}/" \
-      -e "s/AuthLDAPBindDN.*/AuthLDAPBindDN ${LDAPLIMLOGIN}/" \
-      -e "s/AuthLDAPBindPassword admin/AuthLDAPBindPassword ${LDAPLIMPW}/" \
-      -e "s/AuthLDAPStartTLS on/AuthLDAPStartTLS ${ISLDAPTLS}/" \
-      -e "s/(^|^#)ServerName.*/ServerName ${FQDN}/" \
-      -e "s/LOCAL_SERVER_NAME/${FQDN}/" /etc/apache/httpd.conf.orig | grep -vE "(^#)" >  /tmp/httpd.conf
-  HCDIFF=`diff /tmp/httpd.conf /etc/apache/httpd.conf`
+touch /tmp/httpd.conf.1 /tmp/httpd.conf
+chmod 600 /tmp/httpd.conf.1 /tmp/httpd.conf
+chown root.root /tmp/httpd.conf.1 /tmp/httpd.conf
+sed -e "s/^Listen 0.0.0.0:80.*/Listen ${INTIP}:80/"  \
+    -e "s/^Listen 80.*/Listen ${INTIP}:80/" \
+    -e "s/AuthLDAPUrl ldap:\/\/127.0.0.1/AuthLDAPUrl ldap:\/\/${LDAPSERVER}/" \
+    -e "s/AuthLDAPBindDN.*/AuthLDAPBindDN ${LDAPLIMLOGIN}/" \
+    -e "s/AuthLDAPBindPassword admin/AuthLDAPBindPassword ${LDAPLIMPW}/" \
+    -e "s/AuthLDAPStartTLS on/AuthLDAPStartTLS ${ISLDAPTLS}/" \
+    -e "s/(^|^#)ServerName.*/ServerName ${FQDN}/" \
+    -e "s/LOCAL_SERVER_NAME/${FQDN}/" /etc/httpd/httpd.conf.orig | grep -vE "(^#)" >  /tmp/httpd.conf.1
+
+if [ ! -e /etc/httpd/httpd.conf ];then
+  cp /etc/httpd/httpd.conf.orig /etc/httpd/httpd.conf
+fi;
+
+if [ -e /etc/httpd/httpd.conf.local ];then
+  cat /tmp/httpd.conf.1 /etc/httpd/httpd.conf.local > /tmp/httpd.conf
+  rm /tmp/httpd.conf.1
  else
-  touch /tmp/httpd.conf.1 /tmp/httpd.conf
-  chmod 600 /tmp/httpd.conf.1 /tmp/httpd.conf
-  chown root.root /tmp/httpd.conf.1 /tmp/httpd.conf
-  sed -e "s/^Listen 0.0.0.0:80.*/Listen ${INTIP}:80/"  \
-      -e "s/^Listen 80.*/Listen ${INTIP}:80/" \
-      -e "s/AuthLDAPUrl ldap:\/\/127.0.0.1/AuthLDAPUrl ldap:\/\/${LDAPSERVER}/" \
-      -e "s/AuthLDAPBindDN.*/AuthLDAPBindDN ${LDAPLIMLOGIN}/" \
-      -e "s/AuthLDAPBindPassword admin/AuthLDAPBindPassword ${LDAPLIMPW}/" \
-      -e "s/AuthLDAPStartTLS on/AuthLDAPStartTLS ${ISLDAPTLS}/" \
-      -e "s/LOCAL_SERVER_NAME/${FQDN}/" /opt/apache2/conf/httpd.conf.orig >  /tmp/httpd.conf.1
-  if [ ! -e /opt/apache2/conf/httpd.conf ];then
-    cp /opt/apache2/conf/httpd.conf.orig /opt/apache2/conf/httpd.conf
-  fi;
-  if [ -e /etc/httpd.conf.local ];then
-     cat /tmp/httpd.conf.1 /etc/httpd.conf.local > /tmp/httpd.conf
-     rm /tmp/httpd.conf.1
-    else
-     mv /tmp/httpd.conf.1 /tmp/httpd.conf
-  fi;
-  HCDIFF=`diff /tmp/httpd.conf /opt/apache2/conf/httpd.conf`
+  mv /tmp/httpd.conf.1 /tmp/httpd.conf
 fi;
 
+HCDIFF=`diff /tmp/httpd.conf /etc/httpd/httpd.conf`
 if [ "$HCDIFF" ] &amp;&amp; [ ! -e /etc/.install ] &amp;&amp; [ ! -e /etc/.cdrom ];then
   if [ ! -d /opt/apache2 ];then
     apachectl stop > /dev/null 2>&amp;1
@@ -604,25 +604,12 @@ if [ "$HCDIFF" ] &amp;&amp; [ ! -e /etc/.install ] &amp;&amp; [ ! -e /etc/.cdrom
     rm /var/run/httpd.pid
   fi;
 
-  if [ ! -d /opt/apache2 ];then
-    mv /tmp/httpd.conf /etc/apache
-   else
-    mv /tmp/httpd.conf /opt/apache2/conf/httpd.conf
+  mv /tmp/httpd.conf /etc/httpd/httpd.conf
+
+  if [ ! -e /etc/apache/vhosts2 ];then
+    /usr/sbin/genwebmap
   fi;
-
-  if [ -e /etc/ipsec.d/cacerts/cacert.pem ] &amp;&amp; [ -e /etc/openssl/server.signed.pem ] &amp;&amp; [ ! -e /etc/.networksentry-lite ];then
-    if [ ! -d /opt/apache2 ];then
-      /usr/sbin/apachectl startssl  > /dev/null 2>&amp;1
-     else
-      if [ ! -e /etc/apache/vhosts2 ];then
-        /usr/sbin/genwebmap
-      fi;
-      /opt/apache2/bin/apachectl start  > /dev/null 2>&amp;1
-    fi;
-   else
-    /usr/sbin/apachectl stop > /dev/null 2>&amp;1
-  fi
-
+  /opt/apache2/bin/apachectl start  > /dev/null 2>&amp;1
 fi;
 </xsl:text>
 </xsl:template>

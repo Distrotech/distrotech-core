@@ -64,7 +64,7 @@ noload => codec_zap.so
 
 ;Load g723
 <xsl:choose>
-  <xsl:when test="$g723">
+  <xsl:when test="$useg723">
     <xsl:text>load => codec_g723.so</xsl:text>
   </xsl:when>
   <xsl:otherwise>
@@ -74,7 +74,7 @@ noload => codec_zap.so
 
 ;Load g729
 <xsl:choose>
-  <xsl:when test="$g729">
+  <xsl:when test="$useg729">
     <xsl:text>load => codec_g729.so</xsl:text>
   </xsl:when>
   <xsl:otherwise>

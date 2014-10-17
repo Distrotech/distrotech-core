@@ -12,7 +12,7 @@
     <xsl:value-of select="concat('IP_EDHCPV[',position(),']=&quot;',@dhcpend,'&quot;;',$nl)"/>
     <xsl:value-of select="concat('INT_BWINV[',position(),']=&quot;',@bwin,'&quot;;',$nl)"/>
     <xsl:value-of select="concat('INT_BWOUTV[',position(),']=&quot;',@bwout,'&quot;;',$nl)"/>
-    <xsl:value-of select="concat('INT_GWV[',position(),']=&quot;',@gatewway,'&quot;;',$nl)"/>
+    <xsl:value-of select="concat('INT_GWV[',position(),']=&quot;',@gateway,'&quot;;',$nl)"/>
     <xsl:value-of select="concat('INT_NAMEV[',position(),']=&quot;',@name,'&quot;;',$nl)"/>
     <xsl:value-of select="concat('INT_PARV[',position(),']=&quot;',substring-before(.,'.'),'&quot;;',$nl)"/>
   </xsl:for-each>

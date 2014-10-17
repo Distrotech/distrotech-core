@@ -8,7 +8,7 @@ LogFileMaxSize 0
 LogVerbose yes
 LogTime yes
 PidFile /var/run/clamd.pid
-DatabaseDirectory /var/spool/avirus
+DatabaseDirectory /usr/share/clamav
 LocalSocket /tmp/clamd
 FixStaleSocket yes
 #TCPSocket 3310

@@ -10,9 +10,8 @@
   <xsl:param name="proto"/>
   <xsl:choose>
     <xsl:when test="(@protocol = 'TCP') or (@protocol = 'UDP')">
-      <xsl:text>/usr/sbin/iptables -t mangle -A SYSINGRESS -j MARK --set-mark </xsl:text>
-      <xsl:value-of select="$mark"/> -m mark --mark 0x102 -p <xsl:value-of select="$proto"/> -s <xsl:value-of select="@ipaddr"/> --sport <xsl:value-of select="@dport"/> --dport <xsl:value-of select="@sport"/>
-/usr/sbin/iptables -t mangle -A SYSEGRESS -j MARK --set-mark <xsl:value-of select="$mark"/> -m mark --mark 0x102 -p <xsl:value-of select="$proto"/> -d <xsl:value-of select="@ipaddr"/> --dport <xsl:value-of select="@dport"/> --sport <xsl:value-of select="concat(@sport,$nl)"/>
+       <xsl:value-of select="concat('/usr/sbin/iptables -t mangle -A SYSINGRESS -j MARK --set-mark ',$mark,' -m mark --mark 0x102 -p ',$proto,' -s ',@ipaddr,' --sport ',@dport,' --dport ',@sport,$nl)"/>
+       <xsl:value-of select="concat('/usr/sbin/iptables -t mangle -A SYSEGRESS -j MARK --set-mark ',$mark,' -m mark --mark 0x102 -p ',$proto,' -d ',@ipaddr,' --dport ',@dport,' --sport ',@sport,$nl)"/>
       <xsl:if test="@sport = '80'">
         <xsl:text>/usr/sbin/iptables -t mangle -A SYSINGRESS -j MARK --set-mark </xsl:text>
         <xsl:value-of select="$mark"/> -m mark --mark 0x102 -p <xsl:value-of select="$proto"/> -s <xsl:value-of select="@ipaddr"/> --dport <xsl:value-of select="@dport"/> --sport <xsl:value-of select="'3128'"/>
@@ -25,37 +24,33 @@
       </xsl:if>
     </xsl:when>
     <xsl:otherwise>
-      <xsl:text>/usr/sbin/iptables -t mangle -A SYSINGRESS -j MARK --set-mark </xsl:text>
-      <xsl:value-of select="$mark"/> -m mark --mark 0x102 -p <xsl:value-of select="$proto"/> -s <xsl:value-of select="@ipaddr"/>
-/usr/sbin/iptables -t mangle -A SYSEGRESS -j MARK --set-mark <xsl:value-of select="$mark"/> -m mark --mark 0x102 -p <xsl:value-of select="$proto"/> -d <xsl:value-of select="concat(@ipaddr,$nl)"/>
-      <xsl:text>&#xa;</xsl:text>
+       <xsl:value-of select="conctat('/usr/sbin/iptables -t mangle -A SYSINGRESS -j MARK --set-mark ',$mark,' -m mark --mark 0x102 -p ',$proto,' -s ',@ipaddr,$nl)"/>
+       <xsl:value-of select="conctat('/usr/sbin/iptables -t mangle -A SYSEGRESS -j MARK --set-mark ',$mark,' -m mark --mark 0x102 -p ',$proto,' -d ',@ipaddr,$nl)"/>
     </xsl:otherwise>
   </xsl:choose>
-  <xsl:text>&#xa;</xsl:text>
 </xsl:template>
 
 <xsl:template match="TOS">
   <xsl:variable name="proto" select="translate(@protocol, $uppercase, $smallcase)"/>
-
-  <xsl:value-of select="concat('#Set Tos For ',@name)"/>
+  <xsl:value-of select="concat('#Set Tos For ',@name,$nl)"/>
   <xsl:choose>
     <xsl:when test=". != 'Normal-Service'">
       <xsl:choose>
         <xsl:when test="(@protocol = 'TCP') or (@protocol = 'UDP')">
-/usr/sbin/iptables -t mangle -A SYSTOS -j TOS -p <xsl:value-of select="$proto"/> -d <xsl:value-of select="@ipaddr"/> --dport <xsl:value-of select="@dport"/> --sport <xsl:value-of select="@sport"/> --set-tos <xsl:value-of select="concat(.,$nl)"/>
+          <xsl:value-of select="concat('/usr/sbin/iptables -t mangle -A SYSTOS -j TOS -p ',$proto,' -d ',@ipaddr,' --dport ',@dport,' --sport ',@sport,' --set-tos ',.,$nl)"/>
         </xsl:when>
         <xsl:otherwise>
-/usr/sbin/iptables -t mangle -A SYSTOS -j TOS -p <xsl:value-of select="$proto"/> -d <xsl:value-of select="@ipaddr"/> --set-tos <xsl:value-of select="concat(.,$nl)"/>
+          <xsl:value-of select="concat('/usr/sbin/iptables -t mangle -A SYSTOS -j TOS -p ',$proto,' -d ',@ipaddr,' --set-tos ',.,$nl)"/>
         </xsl:otherwise>
       </xsl:choose>
     </xsl:when>
     <xsl:otherwise>
       <xsl:choose>
         <xsl:when test="(@protocol = 'TCP') or (@protocol = 'UDP')">
-/usr/sbin/iptables -t mangle -A NOSYSTOS -j ACCEPT -p <xsl:value-of select="$proto"/> -d <xsl:value-of select="@ipaddr"/> --dport <xsl:value-of select="@dport"/> --sport <xsl:value-of select="concat(@sport,$nl)"/> 
+          <xsl:value-of select="concat('/usr/sbin/iptables -t mangle -A NOSYSTOS -j ACCEPT -p ',$proto,' -d ',@ipaddr,' --dport ',@dport,' --sport ',@sport,$nl)"/>
         </xsl:when>
         <xsl:otherwise>
-/usr/sbin/iptables -t mangle -A NOSYSTOS -j ACCEPT -p <xsl:value-of select="$proto"/> -d <xsl:value-of select="concat(@ipaddr,$nl)"/>
+          <xsl:value-of select="concat('/usr/sbin/iptables -t mangle -A NOSYSTOS -j ACCEPT -p ',$proto,' -d ',@ipaddr,$nl)"/>
         </xsl:otherwise>
       </xsl:choose>
     </xsl:otherwise>
@@ -79,10 +74,13 @@
       <xsl:with-param name="proto" select="$proto"/>
     </xsl:call-template>
   </xsl:if>
+  <xsl:text>&#xa;</xsl:text>
 </xsl:template>
 
-<xsl:template match="/config">#!/bin/bash
-<xsl:if test="/config/IP/SysConf/Option[@option='Internal'] != /config/IP/SysConf/Option[@option='External']">
+<xsl:template match="/config">
+  <xsl:text>#!/bin/bash&#xa;</xsl:text>
+  <xsl:if test="/config/IP/SysConf/Option[@option='Internal'] != /config/IP/SysConf/Option[@option='External']">
+    <xsl:text>
 #Flushing Rules
 /usr/sbin/iptables -t mangle -F SYSTOS
 /usr/sbin/iptables -t mangle -F NOSYSTOS
@@ -120,17 +118,19 @@
 /usr/sbin/iptables -t mangle -A SYSINGRESS -j MARK --set-mark 0x101 -m mark --mark 0x102 -p tcp -s 0/0 --sport 5060:5061 --dport 1024:65535
 /usr/sbin/iptables -t mangle -A SYSEGRESS -j MARK --set-mark 0x101 -m mark --mark 0x102 -p tcp -d 0/0 --dport 5060:5061 --sport 1024:65535
 
-<xsl:apply-templates select="/config/IP/QOS/TOS"/>
-  <xsl:choose>
-    <xsl:when test="(/config/IP/Dialup/Option[@option='Connection'] = 'ADSL') or 
-                    (/config/IP/SysConf/Option[@option='External'] = 'Dialup')">
-      <xsl:text>/usr/sbin/iptables -t mangle -A NOSYSTOS -j ACCEPT -i ppp0&#xa;</xsl:text>
-    </xsl:when>
-    <xsl:otherwise>
-      <xsl:text>/usr/sbin/iptables -t mangle -A NOSYSTOS -j ACCEPT -i </xsl:text>
-      <xsl:value-of select="/config/IP/SysConf/Option[@option='External']"/>
-      <xsl:text>&#xa;</xsl:text>
-    </xsl:otherwise>
+</xsl:text>
+
+  <xsl:apply-templates select="/config/IP/QOS/TOS"/>
+    <xsl:choose>
+      <xsl:when test="(/config/IP/Dialup/Option[@option='Connection'] = 'ADSL') or 
+                      (/config/IP/SysConf/Option[@option='External'] = 'Dialup')">
+        <xsl:text>/usr/sbin/iptables -t mangle -A NOSYSTOS -j ACCEPT -i ppp0&#xa;</xsl:text>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:text>/usr/sbin/iptables -t mangle -A NOSYSTOS -j ACCEPT -i </xsl:text>
+        <xsl:value-of select="/config/IP/SysConf/Option[@option='External']"/>
+        <xsl:text>&#xa;</xsl:text>
+      </xsl:otherwise>
   </xsl:choose>
 </xsl:if>
 </xsl:template>

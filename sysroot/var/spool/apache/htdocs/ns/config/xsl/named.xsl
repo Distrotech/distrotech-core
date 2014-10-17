@@ -328,8 +328,8 @@ XXXX
 
 <xsl:template name="printkeys">
   <xsl:for-each select="/config/DNS/Hosted/Domain[@b64key != '']">
-    <xsl:value-of select="concat($nl,'key ',@domain,' {',$nl,'        algorithm hmac-md5;',$nl)"/>
-    <xsl:value-of select="concat('        secret ',@b64key,';',$nl,'};')"/>
+    <xsl:value-of select="concat('key ',@domain,' {',$nl,'        algorithm hmac-md5;',$nl)"/>
+    <xsl:value-of select="concat('        secret ',@b64key,';',$nl,'};',$nl)"/>
   </xsl:for-each>
 </xsl:template>
 
@@ -389,14 +389,15 @@ controls {
                 ::127.0.0.2;
         };
 };
+
 </xsl:text>
   <xsl:call-template name="printkeys"/>
 
   <xsl:if test="($smart64key != '') and ($dynzone != '') and ($dynzone != $domain)">
-    <xsl:value-of select="concat($nl,'key ',$dynzone,' {',$nl,'        algorithm hmac-md5;',$nl)"/>
+    <xsl:value-of select="concat('key ',$dynzone,' {',$nl,'        algorithm hmac-md5;',$nl)"/>
     <xsl:value-of select="concat('        secret ',$smart64key,';',$nl,'};',$nl)"/>
   </xsl:if>
-  <xsl:value-of select="concat($nl,'key ',$domain,' {',$nl,'        algorithm hmac-md5;',$nl)"/>
+  <xsl:value-of select="concat('key ',$domain,' {',$nl,'        algorithm hmac-md5;',$nl)"/>
   <xsl:value-of select="concat('        secret ',$dynb64key,';',$nl,'};',$nl)"/>
 
   <xsl:call-template name="intview"/>

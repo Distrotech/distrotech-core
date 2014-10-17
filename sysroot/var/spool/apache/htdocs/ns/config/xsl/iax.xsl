@@ -121,7 +121,6 @@ allow=ulaw
 allow=h263p
 allow=h263
 allow=h261
-
 </xsl:text>
   <xsl:if test="$haslocal = '1'">
     <xsl:text>#include /etc/asterisk/iax.conf.local&#xa;</xsl:text>
@@ -151,6 +150,7 @@ type=user
 auth=plaintext
 context=ddi
 trunk=yes
+
 </xsl:text>
 </xsl:template>
 </xsl:stylesheet>

@@ -183,7 +183,7 @@ include         /etc/openldap/schema/sendmail.schema
 
 modulepath /usr/libexec/openldap
 
-moduleload back_hdb.la
+moduleload back_mdb.la
 moduleload syncprov.la
 moduleload accesslog.la
 moduleload unique.la
@@ -1210,28 +1210,27 @@ pidfile		/var/run/slapd.pid
 argsfile	/var/run/slapd.args
 
 password-hash {CRYPT}
-password-crypt-salt-format $1$%.8s
+password-crypt-salt-format $6$%.12s
 
-database        hdb
+database        mdb
 suffix          "ou=Log"
 directory       /var/log/ldap
 rootdn          uid=admin,ou=Log
 index           default eq
 index           entryCSN,objectClass,reqEnd,reqResult,reqStart eq
 index           reqDN               eq
+maxsize         2097152
 
 overlay syncprov
 syncprov-nopresent TRUE
 syncprov-reloadhint TRUE
 
-database        hdb
+database        mdb
 suffix		""
 directory	/var/spool/ldap
 lastmod         on
 rootdn          </xsl:text><xsl:value-of select="/config/LDAP/Config/Option[@option = 'Login']"/><xsl:text>
-cachesize	10000
-cachefree	10
-idlcachesize	30000
+maxsize         2097152
 
 index           uid                     pres,sub,eq
 index           uidNumber               pres,eq

@@ -144,7 +144,7 @@ spdadd $dmznw $dmznw any -P out none;
 </xsl:template>
 
 <xsl:template match="/config">
-  <xsl:text>#!/bin/bash&#xa;</xsl:text>
+  <xsl:text>#!/bin/bash&#xa;&#xa;</xsl:text>
   <xsl:apply-templates select="/config/IP/GRE/Tunnels/Tunnel"/>
   <xsl:apply-templates select="/config/IP/ESP/Tunnels/ESPTunnel"/>
 

@@ -53,7 +53,7 @@ fi;
 
   <xsl:text>&#xa;</xsl:text>
   <xsl:if test="count(/config/IPv6/IPv6to4/SIT[@subnet &lt;= '16']) = 0">
-    <xsl:text>/sbin/ip -6 route add 2002::/16 dev sit0 metric 1 > /dev/null 2>&amp;1&#xa;</xsl:text>
+    <xsl:text>/sbin/ip -6 route add 2002::/16 dev sit1 metric 1 > /dev/null 2>&amp;1&#xa;</xsl:text>
   </xsl:if>
 
 <xsl:text>/sbin/ip -6 route add ::/0 via fe80::</xsl:text>

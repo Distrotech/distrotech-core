@@ -103,7 +103,7 @@ http://www.dpawson.co.uk/xsl/sect2/padding.html
 </xsl:template>
 
 <xsl:template name="fullconf">
-  <xsl:apply-templates select="/config/Proxy/Redirect/WWW"/>
+  <xsl:apply-templates select="/config/Proxy/Redirect/WWW[not(contains(@ipaddr,'/'))]"/>
   <xsl:if test="/config/DNS/Config/Option[@option = 'DynZone'] != ''">
     <xsl:call-template name="showhost">
       <xsl:with-param name="ipaddr" select="$intip"/>
