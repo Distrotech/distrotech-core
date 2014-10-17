@@ -1646,7 +1646,7 @@ sub printdynkey(){
   $dynkey=encode_base64($dnsconf{'SmartKey'});
   $dynzone=$dnsconf{'DynZone'};
   open(KEY,">zones/dyndns.key");
-  print KEY "$dnsconf{'DynZone'}. IN KEY 512 3 157 $dynkey\n";
+  print KEY "$dnsconf{'DynZone'}. IN KEY 512 3 157 $dynkey";
   close(KEY);
   open(PKEY,">zones/dyndns.private");
   print PKEY "Private-key-format: v1.2\n";
@@ -11832,7 +11832,7 @@ __EOB__
                                            $dnsconf{'Retry'}
                                            $dnsconf{'Expire'}
                                            $dnsconf{'DefaultTTL'})
-                                                                $dnsconf{'DefaultTTL'}       IN        NS    $dnsconf{'Hostname'}.$dnsconf{'Domain'}.
+                                                                $dnsconf{'DefaultTTL'}     IN     NS       $dnsconf{'Hostname'}.$dnsconf{'Domain'}.
 __EOB__
 #      ($ip3,$ip2,$ip1)=split(/\./,$classc);
 #      for ($cnt=0;$cnt < 256;$cnt ++) {
@@ -17345,7 +17345,7 @@ sub gen_tftpboot_tmpl() {
     $fqdn=$dnsconf{'Domain'}
   }
 
-  if (!-d "tftptmpl") {
+  if (! -d "tftptmpl") {
      mkdir("tftptmpl");
      chown(80,80,"tftptmpl");
      chmod(0755,"tftptmpl");
