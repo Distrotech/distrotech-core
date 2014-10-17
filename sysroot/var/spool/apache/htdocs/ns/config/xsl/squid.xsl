@@ -286,7 +286,7 @@ ipcache_size 4096
 ipcache_low  90
 ipcache_high 95
 fqdncache_size 4096
-cache_mem </xsl:text><xsl:value-of select="concat(floor(/config/Proxy/Config/Option[@option = 'CacheSize'] div 10),' MB')"/><xsl:text>
+cache_mem </xsl:text><xsl:value-of select="$cache_mem"/><xsl:text>
 cache_log /var/log/squid/cache.log
 cache_dir ufs /var/spool/squid </xsl:text><xsl:value-of select="/config/Proxy/Config/Option[@option = 'CacheSize']"/><xsl:text> 16 256
 cache_access_log /var/log/squid/access.log
