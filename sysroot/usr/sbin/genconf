@@ -87,6 +87,10 @@ $tblcnt=0;
 $vparent=0;
 $tdmgw=0;
 $ppplcnt=0;
+$vliflink=0;
+$vliface=0;
+$phiface=0;
+
 open(SV,">sysvars");
 while(<CF>) {
   chop $_;
@@ -102,11 +106,7 @@ while(<CF>) {
       $ishostip{@words[1]}=@words[3];
       if (@words[3] =~ m/^([a-zA-Z0-9\_]+$)|^([a-zA-Z0-9]+)\.([0-9]+$)/) {
         if ($1 ne "") {
-          if ($phiface eq "") {
-            $phiface=1;
-          } else {
-            $phiface++;
-          }
+          $phiface++;
           print SV "IP_ADDR\[" . $phiface . "\]=\"" . @words[1] . "\";\n";
           print SV "SN_ADDR\[" . $phiface . "\]=\"" . @words[2] . "\";\n";
           print SV "IP_SDHCP\[" . $phiface . "\]=\"" . @words[4] . "\";\n";
@@ -119,12 +119,7 @@ while(<CF>) {
           print SV "INT_IFACE\[" . $phiface . "\]=\"" . @words[3] . "\";\n";
           push(@pints,@words[3]);
         } else {
-          if ($vliface eq "") {
-            $vliface=1;
-          } else {
-            $vliface++;
-          }
-          $vliflink=$phiface;
+          $vliface++;
           print SV "VLAN\[" . $vliface . "\]=\"" . $3 . "\";\n";
           print SV "IP_ADDRV\[" . $vliface . "\]=\"" . @words[1] . "\";\n";
           print SV "SN_ADDRV\[" . $vliface . "\]=\"" . @words[2] . "\";\n";
@@ -143,12 +138,12 @@ while(<CF>) {
         } else {
           $aliface++;
         }
-        $vliflink=$phiface;
         print SV "ALIAS\[" . $aliface . "\]=\"" . $aiface . "\";\n";
         print SV "IP_ADDRA\[" . $aliface . "\]=\"" . @words[1] . "\";\n";
         print SV "SN_ADDRA\[" . $aliface . "\]=\"" . @words[2] . "\";\n";
         print SV "INT_NAMEA\[" . $aliface . "\]=\"" . @words[0]  . "\";\n";
       }
+      $vliflink=$phiface;
 
 #when activating remove old
 #ip rule |grep -E "^5[0-9]:" |awk -F: '{printf "ip rule del prio %s\n",$1}'
