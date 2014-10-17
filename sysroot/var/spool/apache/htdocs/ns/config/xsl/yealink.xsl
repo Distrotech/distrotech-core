@@ -45,7 +45,6 @@ TimeZone = +2
 TimeServer1 = </xsl:text><xsl:value-of select="$fqdn"/><xsl:text>
 TimeServer2 = </xsl:text><xsl:value-of select="$fqdn"/><xsl:text>
 SummerTime = 0
-
 </xsl:text>
 </xsl:template>
 </xsl:stylesheet>

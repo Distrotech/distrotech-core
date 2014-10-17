@@ -150,19 +150,22 @@ http://www.dpawson.co.uk/xsl/sect2/padding.html
 </xsl:template>
 
 <xsl:template name="records">
-  <xsl:call-template name="addzrec">
-    <xsl:with-param name="entry" select="'www'"/>
-    <xsl:with-param name="type" select="'CNAME'"/>
-    <xsl:with-param name="value" select="concat($fqdn,'.')"/>
-    <xsl:with-param name="ttl" select="$defttl"/>
-  </xsl:call-template>
+  <xsl:param name="domain"/>
+  <xsl:if test="$addrec = '1'">
+    <xsl:call-template name="addzrec">
+      <xsl:with-param name="entry" select="'www'"/>
+      <xsl:with-param name="type" select="'CNAME'"/>
+      <xsl:with-param name="value" select="concat($fqdn,'.')"/>
+      <xsl:with-param name="ttl" select="$defttl"/>
+    </xsl:call-template>
 
-  <xsl:call-template name="addzrec">
-    <xsl:with-param name="entry" select="'mail'"/>
-    <xsl:with-param name="type" select="'CNAME'"/>
-    <xsl:with-param name="value" select="concat($fqdn,'.')"/>
-    <xsl:with-param name="ttl" select="$defttl"/>
-  </xsl:call-template>
+    <xsl:call-template name="addzrec">
+      <xsl:with-param name="entry" select="'mail'"/>
+      <xsl:with-param name="type" select="'CNAME'"/>
+      <xsl:with-param name="value" select="concat($fqdn,'.')"/>
+      <xsl:with-param name="ttl" select="$defttl"/>
+    </xsl:call-template>
+  </xsl:if>
 
   <xsl:call-template name="addzrec">
     <xsl:with-param name="entry" select="'_iax._udp'"/>
