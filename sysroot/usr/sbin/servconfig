@@ -2381,23 +2381,7 @@ if [ ! -e /etc/.cdrom ];then
     chmod 644 /etc/mail/submit.cf
   fi;
 
-  if [ -e popper.conf ] && [ -e /etc/popper.conf ];then
-    PCDIFF=`diff popper.conf /etc/popper.conf`
-   else
-    if [ -e popper.conf ];then 
-      PCDIFF="NO FILE";
-    fi;
-  fi;
-
-  if [ "$PCDIFF" ] && [ ! -e networksentry-lite ];then
-    cp -p popper.conf /etc/
-    chmod 640 /etc/popper.conf
-    chown root.root /etc/popper.conf
-   else
-    touch /etc/popper.conf
-  fi;
-
-  if [ "$CDIFF" ] || [ "$CSDIFF" ] || [ "$SUDIFF" ] || [ "$PCDIFF" ];then
+  if [ "$CDIFF" ] || [ "$CSDIFF" ] || [ "$SUDIFF" ];then
     for poppid in `pidof popper`;do 
       kill -9 $poppid;
     done;
@@ -2530,10 +2514,10 @@ fi;
 
 if [ -e logon.bat ] && [ -e /var/spool/samba/netlogon/logon.bat ];then 
   LFDIFF=`diff logon.bat /var/spool/samba/netlogon/logon.bat`
+ elif [ -e logon.bat ];then 
+  LFDIFF="NO FILE";
  else
-  if [ -e logon.bat ];then 
-    LFDIFF="NO FILE";
-  fi;
+  LFDIFF="";
 fi;
 
 if [ "$LFDIFF" ] && [ ! -e networksentry-lite ];then

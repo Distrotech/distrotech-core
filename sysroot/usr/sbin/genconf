@@ -1391,7 +1391,7 @@ if ($sysconfig{'Type'} eq "full") {
 
 if ($sysconfig{'Type'} eq "full") {
   &printsqlpass();
-  &printpopconf();
+#  &printpopconf();
   &printattfilterconf();
 #  &printatalkconf();
   &printmscanconf();
