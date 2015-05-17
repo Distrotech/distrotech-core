@@ -32,7 +32,8 @@ init_rd_drivers() {
               net/packet/af_packet.ko.gz drivers/ptp drivers/pps/pps_core.ko.gz drivers/dca \
               net/ipv4/inet_lro.ko.gz drivers/misc/eeprom/eeprom_93cx6.ko.gz drivers/base/regmap/regmap-i2c.ko.gz \
               sound/ac97_bus.ko.gz drivers/hwmon drivers/input/input-polldev.ko.gz drivers/char/ipmi \
-              drivers/i2c/algos/i2c-algo-bit.ko.gz;do
+              drivers/i2c/algos/i2c-algo-bit.ko.gz drivers/net/vxlan.ko.gz lib/lz4/lz4_compress.ko.gz \
+              lib/lz4/lz4hc_compress.ko.gz;do
 
    if [ -f ${2}lib/modules/${kernel}/kernel/${kmod} ];then
      cp ${2}lib/modules/${kernel}/kernel/${kmod} ${1}/lib/modules/${kernel}/drivers
