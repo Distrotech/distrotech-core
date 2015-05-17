@@ -75,6 +75,22 @@ EOF
   /usr/libexec/distrotech/instpkg ${ARCH} ${INST_BASE} core 2>/dev/null |/usr/libexec/distrotech/instguage.pl |\
     dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install System Core Packages" 8 35
 
+  /usr/bin/yum -y --installroot=${INST_BASE} clean all
+
+  if [ -e /sbin/modprobe.static ];then
+    cp /sbin/modprobe.static ${INST_BASE}/sbin
+  fi;
+
+  if [ ! -e ${INST_BASE}/etc/shadow ];then
+    cp /etc/shadow ${INST_BASE}/etc
+  fi;
+
+  for pwd_file in passwd group;do
+    if [ -e ${INST_BASE}/etc/distrotech/${pwd_file}.dist ] && [ ! -e ${INST_BASE}/etc/${pwd_file} ];then
+      cp ${INST_BASE}/etc/distrotech/${pwd_file}.dist ${INST_BASE}/etc/${pwd_file}
+    fi;
+  done
+
   ls -d ${INST_BASE}/opt/*/${LIBDIR} |awk -v MNT=${INST_BASE} '{printf "%s\n",substr($1,length(MNT)+1)}' > ${INST_BASE}/etc/ld.so.conf.d/opt.conf
 
   for newdir in autofs cdrom floppy initrd;do
