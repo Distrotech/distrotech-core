@@ -57,9 +57,12 @@ install_to_dir() {
       RPM_PKG_LIST+="@${pkggrp}-${spkg} "
     done;
     if [ "${pkggrp}" == "buildroot" ];then
-      RPM_PKG_LIST+="@${pkggrp}-dev Xorg-dev.${ARCH} --exclude=gcc-libs --exclude=gcc --exclude=gcc-locale --exclude=gcc-dev
+      RPM_PKG_LIST+="@${pkggrp}-dev Xorg-dev.${ARCH} --exclude=gcc-libs.${ARCH} --exclude=gcc --exclude=gcc-locale --exclude=gcc-dev
         guile-dev gc-dev systemd-dev libatomic_ops-dev libunistring-dev ${ARCHKERN}-dev libevent-dev libpaper-dev gtk+-dev
-        gdk-pixbuf-dev atk-dev Mesa-dev gtk3-dev qt-4-dev mono-dev"
+        gdk-pixbuf-dev atk-dev Mesa-dev gtk3-dev qt-4-dev mono-dev";
+      if [ "${ARCH}" == "x86_32" ];then
+        yum -y --installroot=${INSTDIR} --exclude="*.x86_64" --exclude="*.i686" install gcc-libs
+      fi;
      elif [ "${pkggrp}" == "root" ] && [ "${ARCHKERN}" ];then
       for kernpkg in dahdi firmware modules;do
         RPM_PKG_LIST+=" ${ARCHKERN}-${kernpkg}.${ARCH}";
