@@ -27,6 +27,10 @@ init_rd_drivers() {
     rm -rf ${1}/lib/modules/${kernel}/drivers-net/i825xx/znet.ko.gz
   fi;
 
+  for blist_ata in tps65010 htc-pasic3;do
+    rm ${1}/lib/modules/${kernel}/drivers-ata/${blist_ata}.ko.gz
+  done
+
   for kmod in drivers/net/mdio.ko.gz drivers/uio/uio.ko.gz drivers/net/mii.ko.gz drivers/net/sungem_phy.ko.gz \
               drivers/net/phy/libphy.ko.gz net/ipv6/ipv6.ko.gz net/unix/unix.ko.gz \
               net/packet/af_packet.ko.gz drivers/ptp drivers/pps/pps_core.ko.gz drivers/dca \
@@ -197,15 +201,15 @@ initrd_config() {
 
 echo "Distrotech Linux Starting"
 
+/bin/mount -t proc none /proc
+/bin/mount -t sysfs none /sys
+/bin/mount -t devtmpfs none /dev
+
 for copt in \`cat /proc/cmdline\`;do
   if [ "\${copt#${KSUF}_bash=}" == "\${copt}" ];then
     ${KSUF}_bash="1";
   fi;
 done
-
-/bin/mount -t proc none /proc
-/bin/mount -t sysfs none /sys
-/bin/mount -t devtmpfs none /dev
 
 _EOF_
 
