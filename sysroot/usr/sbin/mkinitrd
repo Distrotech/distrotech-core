@@ -304,8 +304,10 @@ umount /var/lock/lvm
 echo 0x0100 > /proc/sys/kernel/real-root-dev
 
 /sbin/pivot_root /sysroot /sysroot/initrd
-mount -M /initrd/proc /proc
-mount -M /initrd/sys /sys
+mount -t proc none /proc
+mount -t sysfs none /sys
+umount /initrd/proc
+umount /initrd/sys
 umount /initrd/dev
 
 _EOF_
