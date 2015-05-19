@@ -37,7 +37,8 @@ init_rd_drivers() {
               net/ipv4/inet_lro.ko.gz drivers/misc/eeprom/eeprom_93cx6.ko.gz drivers/base/regmap/regmap-i2c.ko.gz \
               sound/ac97_bus.ko.gz drivers/hwmon drivers/input/input-polldev.ko.gz drivers/char/ipmi \
               drivers/i2c/algos/i2c-algo-bit.ko.gz drivers/net/vxlan.ko.gz lib/lz4/lz4_compress.ko.gz \
-              lib/lz4/lz4hc_compress.ko.gz;do
+              lib/lz4/lz4hc_compress.ko.gz net/bridge/bridge.ko.gz net/802/stp.ko.gz net/llc/llc.ko.gz \
+              net/ipv4/udp_tunnel.ko.gz net/ipv6/ip6_udp_tunnel.ko.gz drivers/net/phy/fixed_phy.ko.gz;do
 
    if [ -f ${2}lib/modules/${kernel}/kernel/${kmod} ];then
      cp ${2}lib/modules/${kernel}/kernel/${kmod} ${1}/lib/modules/${kernel}/drivers
@@ -54,7 +55,7 @@ init_rd_drivers() {
 
   for kmod in kernel/fs/fscache/fscache.ko.gz kernel/net/sunrpc/sunrpc.ko.gz kernel/fs/lockd/lockd.ko.gz \
               kernel/net/sunrpc/auth_gss/auth_rpcgss.ko.gz kernel/fs/nfs_common/nfs_acl.ko.gz \
-              /kernel/fs/nfs/nfs.ko.gz;do
+              /kernel/fs/nfs/nfs.ko.gz kernel/fs/nfs_common/grace.ko.gz;do
    if [ -f ${2}lib/modules/${kernel}/${kmod} ];then
      cp ${2}lib/modules/${kernel}/${kmod} ${1}/lib/modules/${kernel}/nfs
     elif [ -d ${2}lib/modules/${kernel}/${kmod} ];then
@@ -131,6 +132,9 @@ initrd_init() {
    else
     cp ${2}/usr/bin/modprobe.static ${1}/sbin/modprobe
   fi
+  if [ -x ${2}/sbin/mdadm ];then
+    cp ${2}/sbin/mdadm ${1}/sbin/
+  fi;
   if [ -x ${2}/bin/mount.static ];then
     cp ${2}/bin/mount.static ${1}/bin/mount
    else
@@ -590,7 +594,7 @@ mk_initrd() {
     TINIT=/tmp/initrd_$$${RANDOM}
   done;
 
-  (dd if=/dev/zero of=${TINIT} bs=1M count=20
+  (dd if=/dev/zero of=${TINIT} bs=1M count=24
   mkfs.ext2 -F -L initrd -i 1024 ${TINIT}
   losetup ${LOOP} ${TINIT}
   mount ${LOOP} ${1}) >/dev/null 2>&1
@@ -650,7 +654,7 @@ if [ "${1}" == "" ];then
     exit 1;
   fi;
 
-  (dd if=/dev/zero of=${INITRD} bs=1M count=20
+  (dd if=/dev/zero of=${INITRD} bs=1M count=24
   losetup ${ILOOP} ${INITRD}
   mkfs.ext2 -F -L initrd -i 1024 ${INITRD}
   mount ${ILOOP} ${TMPDIR}/) > /dev/null 2>&1
