@@ -229,9 +229,9 @@ _EOF_
 
 modprobe pata_acpi
 modprobe ata_generic
+modprobe ehci_hcd
 modprobe uhci_hcd
 modprobe ohci_hcd
-modprobe ehci_hcd
 modprobe bcma-hcd
 modprobe isp116x-hcd
 modprobe isp1362-hcd
