@@ -41,8 +41,6 @@ for mservice in /etc/rc.d/M.d/*;do
   fi;
 done
 
-(/etc/rc.d/rc.hfax;/usr/libexec/t38modem_start) > /dev/null 2>&1 &
-
 #Run AGI Agent
 if [ -x /usr/sbin/asterisk ];then
    /var/lib/asterisk/agi-bin/phpagi-fast.php > /dev/null 2>&1
@@ -57,17 +55,7 @@ if [ -x /etc/rc.d/rc.ppp ];then
   (/etc/rc.d/rc.ppp;/usr/sbin/servconfig;/usr/sbin/genconf) &
  else
   (/usr/sbin/servconfig;/usr/sbin/genconf) &
-fi
-
-while [ "`pidof racoon`" ] && [ "${RKCNT}" != "XXXXXX" ];do
-  /usr/bin/killall racoon
-  /usr/bin/sleep 1
-  RKCNT=${RKCNT}X
-done;
-if [ "`/bin/pidof racoon`" ];then 
-  /usr/bin/killall -9 racoon
-fi;
-rm /var/racoon/racoon.sock;)>/dev/null 2>&1
+fi)>/dev/null 2>&1
 
 (/usr/sbin/conntrack -F
 /usr/sbin/conntrack -F expect) > /dev/null 2>/dev/null
