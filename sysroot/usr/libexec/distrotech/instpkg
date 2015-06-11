@@ -25,10 +25,10 @@ do_yuminstall() {
   case ${NARCH} in
     x86_32|x86_64|i[3-6]86)
       case ${ARCH} in
-        x86_64)yum -y --installroot=${YINSTROOT} --exclude="*.x86_32" --exclude="*.i686" install $@;;
-        x86_32)yum -y --installroot=${YINSTROOT} --exclude="*.x86_64" --exclude="*.i686" install $@;;
-        i[3-6]86)yum -y --installroot=${YINSTROOT} --exclude="*.x86_64" --exclude="*.x86_32" install $@;;
-        *)yum --installroot=${YINSTROOT} --exclude="*.x86_64" --exclude="*.x86_32" --exclude="*.i686" install $@;;
+        x86_64)yum -y --installroot=${YINSTROOT} --exclude="*.x86_32 *.i686" install $@;;
+        x86_32)yum -y --installroot=${YINSTROOT} --exclude="*.x86_64 *.i686" install $@;;
+        i[3-6]86)yum -y --installroot=${YINSTROOT} --exclude="*.x86_64 *.x86_32" install $@;;
+        *)yum --installroot=${YINSTROOT} --exclude="*.x86_64 *.x86_32 *.i686" install $@;;
       esac;;
     *)if [ "${NARCH}" == "${ARCH}" ];then
         yum -y --installroot=${YINSTROOT} install $@;
@@ -58,9 +58,9 @@ install_to_dir() {
       done;
     fi;
     if [ "${pkggrp}" == "buildroot" ];then
-      RPM_PKG_LIST+="@${pkggrp}-dev Xorg-dev.${ARCH} --exclude=gcc-libs.${ARCH} --exclude=gcc --exclude=gcc-locale --exclude=gcc-dev
-        guile-dev gc-dev systemd-dev libatomic_ops-dev libunistring-dev ${ARCHKERN}-dev libevent-dev libpaper-dev gtk+-dev
-        gdk-pixbuf-dev atk-dev Mesa-dev gtk3-dev qt-4-dev mono-dev";
+      RPM_PKG_LIST+="@${pkggrp}-dev Xorg-dev guile-dev gc-dev systemd-dev libatomic_ops-dev
+        libunistring-dev ${ARCHKERN}-dev libevent-dev libpaper-dev gtk+-dev
+        gdk-pixbuf-dev atk-dev Mesa-dev gtk3-dev qt-4-dev mono-dev gcc-dev gcc-locale gcc gcc-libs";
       if [ "${ARCH}" == "x86_32" ];then
         yum -y --installroot=${INSTDIR} --exclude="*.x86_64" --exclude="*.i686" install gcc-libs
       fi;
