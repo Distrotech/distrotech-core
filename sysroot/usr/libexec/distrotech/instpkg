@@ -22,8 +22,6 @@ esac;
 do_yuminstall() {
   YINSTROOT=${1}
   shift
-  yum --installroot=${YINSTROOT} clean all
-  rpmdb --root=${YINSTROOT} --rebuilddb
   case ${NARCH} in
     x86_32|x86_64|i[3-6]86)
       case ${ARCH} in
@@ -45,7 +43,7 @@ install_to_dir() {
   shift;
 
   for dir in root proc sys dev tmp initrd media media/isofs media/install run run/udev;do
-    if [ ! -d ${INSTDIR}}/${dir} ];then
+    if [ ! -d ${INSTDIR}/${dir} ];then
       mkdir ${INSTDIR}/${dir}
     fi;
   done
@@ -53,9 +51,12 @@ install_to_dir() {
   RPM_PKG_LIST="";
   for pkggrp in $@;do
     RPM_PKG_LIST+="@${pkggrp} "
-    for spkg in libs conf locale;do
-      RPM_PKG_LIST+="@${pkggrp}-${spkg} "
-    done;
+    IFS=- read -a PKG_ARR <<< ${pkggrp}
+    if [ "${#PKG_ARR[@]}" == "1" ];then
+      for spkg in libs conf locale;do
+        RPM_PKG_LIST+="@${pkggrp}-${spkg} "
+      done;
+    fi;
     if [ "${pkggrp}" == "buildroot" ];then
       RPM_PKG_LIST+="@${pkggrp}-dev Xorg-dev.${ARCH} --exclude=gcc-libs.${ARCH} --exclude=gcc --exclude=gcc-locale --exclude=gcc-dev
         guile-dev gc-dev systemd-dev libatomic_ops-dev libunistring-dev ${ARCHKERN}-dev libevent-dev libpaper-dev gtk+-dev
