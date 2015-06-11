@@ -70,6 +70,9 @@ EOF
   fi;
   echo "${ARCH}-gnu-linux" > /etc/rpm/platform
 
+  yum --installroot=${INST_BASE} clean all
+  rpmdb --root=${INST_BASE} --rebuilddb
+
   /usr/libexec/distrotech/instpkg ${ARCH} ${INST_BASE} root 2>/dev/null |/usr/libexec/distrotech/instguage.pl |\
     dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install System Base Packages" 8 35
   /usr/libexec/distrotech/instpkg ${ARCH} ${INST_BASE} core 2>/dev/null |/usr/libexec/distrotech/instguage.pl |\
