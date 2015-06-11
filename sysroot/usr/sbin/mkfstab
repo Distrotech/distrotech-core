@@ -66,7 +66,7 @@ while(<MNT>) {
 open(FSW,"blkid -t TYPE=swap -s UUID |");
 while(<FSW>) {
   chop $_;
-  if (/^([\w\/-]+):\s(.*)\s/) {
+  if (/^(\/[\w\/]+):\s(.*)/) {
     if (index($1, "/dev/mapper/cryptswap") eq 0) {
       printf "%-45s %-50s %-10s nofail%-22s 0 0\n",$1,"none","swap","";
     } else {
