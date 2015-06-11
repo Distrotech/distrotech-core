@@ -4726,7 +4726,7 @@ print RC<<__EOB__;
 path certificate "/etc/ipsec.d/certs" ;
 path pre_shared_key "/etc/ipsec.d/psk.txt";
 listen {
-	adminsock "/var/racoon/racoon.sock" "root" "root" 0660;
+	adminsock "/var/run/racoon.sock" "root" "root" 0660;
 }
 __EOB__
 

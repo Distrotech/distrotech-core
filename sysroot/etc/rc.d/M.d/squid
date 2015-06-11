@@ -23,8 +23,8 @@ if [ ! -d /var/spool/squid/00 ];then
     mkdir /var/spool/squid
   fi;
   chown nobody.nogroup /var/spool/squid
-  /usr/bin/squid -z > /dev/null 2>&1
+  squid -z > /dev/null 2>&1
  else
-  /usr/bin/squid -z > /dev/null 2>&1
-fi;  
+  squid -z > /dev/null 2>&1
+fi;
 /usr/bin/RunCache > /dev/null 2>&1&
