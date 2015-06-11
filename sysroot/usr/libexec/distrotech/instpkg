@@ -50,12 +50,14 @@ install_to_dir() {
   chmod 1777 ${INSTDIR}/tmp
   RPM_PKG_LIST="";
   for pkggrp in $@;do
-    RPM_PKG_LIST+="@${pkggrp} "
     IFS=- read -a PKG_ARR <<< ${pkggrp}
     if [ "${#PKG_ARR[@]}" == "1" ];then
+      RPM_PKG_LIST+="@${pkggrp} "
       for spkg in libs conf locale;do
         RPM_PKG_LIST+="@${pkggrp}-${spkg} "
       done;
+     else
+      RPM_PKG_LIST="${pkggrp}"
     fi;
     if [ "${pkggrp}" == "buildroot" ];then
       RPM_PKG_LIST+="@${pkggrp}-dev guile-dev gc-dev systemd-dev libatomic_ops-dev
