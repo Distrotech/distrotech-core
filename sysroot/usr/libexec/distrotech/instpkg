@@ -62,9 +62,10 @@ install_to_dir() {
         libunistring-dev ${ARCHKERN}-dev libevent-dev libpaper-dev gtk+-dev
         gdk-pixbuf-dev atk-dev Mesa-dev gtk3-dev qt-4-dev mono-dev gcc-dev gcc-locale gcc gcc-libs";
       if [ "${ARCH}" == "x86_32" ];then
-        yum -y --installroot=${INSTDIR} --exclude="*.x86_64" --exclude="*.i686" install gcc-libs
+        yum -y --installroot=${INSTDIR} --exclude="*.x86_64 *.i686" install gcc-libs
       fi;
      elif [ "${pkggrp}" == "root" ] && [ "${ARCHKERN}" ];then
+      do_yuminstall ${INSTDIR} distrotech-core-conf
       for kernpkg in dahdi firmware modules;do
         RPM_PKG_LIST+=" ${ARCHKERN}-${kernpkg}.${ARCH}";
       done;
