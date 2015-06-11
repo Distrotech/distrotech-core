@@ -65,7 +65,6 @@ install_to_dir() {
         yum -y --installroot=${INSTDIR} --exclude="*.x86_64 *.i686" install gcc-libs
       fi;
      elif [ "${pkggrp}" == "root" ] && [ "${ARCHKERN}" ];then
-      do_yuminstall ${INSTDIR} distrotech-core-conf
       for kernpkg in dahdi firmware modules;do
         RPM_PKG_LIST+=" ${ARCHKERN}-${kernpkg}.${ARCH}";
       done;
