@@ -35,6 +35,8 @@ www::80:www
 nobody::99:
 radius::150:
 pctrust::200:
+input::400:
 git::418:
 squid::428:
+tss:x:1000:
 nogroup::65535:

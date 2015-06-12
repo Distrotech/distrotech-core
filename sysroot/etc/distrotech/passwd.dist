@@ -14,11 +14,16 @@ sweep:*:50:50:Sophos Anti Virus User:/dev/null:/usr/bin/true
 clamav:*:51:51:Clam Anti Virus User:/dev/null:/usr/bin/true
 avahi:*:59:59:Avahi User:/dev/null:/usr/bin/true
 messagebus:*:60:60:D-Bus:/var/run/dbus:/usr/bin/true
-pulse:*:61:61:Pulse:/var/run/dbus:/usr/bin/true
 www:*:80:10:Web Server:/var/spool/apache:/usr/bin/true
+pulse:*:102:102:Pulse:/var/run/dbus:/usr/bin/true
+man:x:103:103::/usr/share/man:/bin/bash
+tss:x:109:1000::/home/tss:/bin/bash
 mail:*:110:12:Email Shared Access:/dev/null:/usr/bin/true
 majordomo:*:123:45:Mailing List Manager:/opt/majordomo:/usr/sbin/smrsh
 sogo:*:143:100:SOGo Role Account:/var/home/sogo:/bin/bash
+polkitd:x:400:400:Polkitd User (Dbus):/dev/null:/usr/bin/true
+systemd-network:x:401:401:Systemd Network User (Dbus):/dev/null:/usr/bin/true
+systemd-resolve:x:402:402:Systemd Resolve User (Dbus):/dev/null:/usr/bin/true
 git:*:418:418:Git:/var/spool/git:/bin/bash
 squid:*:428:428::/var/spool/squid:/bin/bash
 nobody:*:65535:65535:Unprivliged User:/tmp:/usr/bin/true
