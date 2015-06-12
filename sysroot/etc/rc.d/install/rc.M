@@ -39,7 +39,3 @@ if [ ! -e /var/run/dhclient.pid ];then
     dhclient -6 -nw -pf /var/run/dhclient6.pid ethA
   fi;) >/dev/null 2>&1 &
 fi;
-
-/usr/libexec/distrotech/sysconfig
-clear
-init 6
