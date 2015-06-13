@@ -15,8 +15,10 @@ INSTDIR=${1}
 shift;
 
 case ${ARCH} in
-  x86_64|x86_32|i686)ARCHKERN="linux-intel-dts";;
+  x86_64|x86_32|i686)ARCHKERN="linux-intel-dts";
+    EXTRABASE="${ARCHKERN}-wanpipe.${ARCH}";;
   *)ARCHKERNEL="";
+    EXTRABASE="";;
 esac;
 
 do_yuminstall() {
@@ -67,8 +69,10 @@ install_to_dir() {
       for kernpkg in dahdi firmware modules;do
         RPM_PKG_LIST+=" ${ARCHKERN}-${kernpkg}.${ARCH}";
       done;
-     elif [ "${pkggrp}" == "core" ] && [ "${ARCHKERN}" ];then
       RPM_PKG_LIST+=" ${ARCHKERN}.${ARCH}";
+      if [ "${EXTRABASE}" ];then
+        RPM_PKG_LIST+=" ${EXTRABASE}";
+      fi;
     fi;
   done
   do_yuminstall ${INSTDIR} ${RPM_PKG_LIST}
