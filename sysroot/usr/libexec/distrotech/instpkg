@@ -53,23 +53,27 @@ install_to_dir() {
   RPM_PKG_LIST="";
   for pkggrp in $@;do
     IFS=- read -a PKG_ARR <<< ${pkggrp}
-    if [ "${#PKG_ARR[@]}" == "1" ];then
-      RPM_PKG_LIST+="@${pkggrp} "
-      for spkg in libs conf locale;do
-        RPM_PKG_LIST+="@${pkggrp}-${spkg} "
-      done;
+    if [ "${RPM_PKG_LIST}" ];then
+      RPM_PKG_LIST+=" ${pkggrp}"
      else
       RPM_PKG_LIST="${pkggrp}"
     fi;
-    if [ "${pkggrp}" == "buildroot" ];then
-      RPM_PKG_LIST+="@${pkggrp}-dev guile-dev gc-dev systemd-dev libatomic_ops-dev
+    if [ "${pkggrp:0:1}" == "@" ];then
+      for spkg in libs conf locale;do
+        RPM_PKG_LIST+=" ${pkggrp}-${spkg}"
+      done;
+    fi;
+    if [ "${pkggrp}" == "@buildroot" ];then
+      RPM_PKG_LIST+=" ${pkggrp}-dev guile-dev gc-dev systemd-dev libatomic_ops-dev
         libunistring-dev ${ARCHKERN}-dev libevent-dev libpaper-dev gtk+-dev
         gdk-pixbuf-dev atk-dev Mesa-dev gtk3-dev qt-4-dev";
-     elif [ "${pkggrp}" == "root" ] && [ "${ARCHKERN}" ];then
-      for kernpkg in dahdi firmware modules;do
-        RPM_PKG_LIST+=" ${ARCHKERN}-${kernpkg}.${ARCH}";
-      done;
-      RPM_PKG_LIST+=" ${ARCHKERN}.${ARCH}";
+     elif [ "${pkggrp}" == "root" ];then
+      if [ "${ARCHKERN}" ];then
+        for kernpkg in dahdi firmware modules;do
+          RPM_PKG_LIST+=" ${ARCHKERN}-${kernpkg}.${ARCH}";
+        done;
+        RPM_PKG_LIST+=" ${ARCHKERN}.${ARCH}";
+      fi;
       if [ "${EXTRABASE}" ];then
         RPM_PKG_LIST+=" ${EXTRABASE}";
       fi;
