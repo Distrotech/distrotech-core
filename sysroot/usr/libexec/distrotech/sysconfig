@@ -73,7 +73,7 @@ EOF
   (yum --installroot=${INST_BASE} clean all
   rpmdb --root=${INST_BASE} --rebuilddb) >/dev/null 2>&1
 
-  /usr/libexec/distrotech/instpkg ${ARCH} ${INST_BASE} distrotech-core-conf |/usr/libexec/distrotech/instguage.pl |\
+  /usr/libexec/distrotech/instpkg ${ARCH} ${INST_BASE} distrotech-core-conf 2>/dev/null |/usr/libexec/distrotech/instguage.pl |\
     dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install Essential Packages" 8 35
   /usr/libexec/distrotech/instpkg ${ARCH} ${INST_BASE} root 2>/dev/null |/usr/libexec/distrotech/instguage.pl |\
     dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install System Base Packages" 8 35
