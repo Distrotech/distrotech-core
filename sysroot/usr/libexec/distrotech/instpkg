@@ -63,11 +63,11 @@ install_to_dir() {
         RPM_PKG_LIST+=" ${pkggrp}-${spkg}"
       done;
     fi;
-    if [ "${pkggrp}" == "@buildroot" ];then
-      RPM_PKG_LIST+=" ${pkggrp}-dev guile-dev gc-dev systemd-dev libatomic_ops-dev
+    if [ "${pkggrp:1}" == "buildroot" ];then
+      RPM_PKG_LIST+=" ${pkggrp}-dev @root-dev @core-dev guile-dev gc-dev systemd-dev libatomic_ops-dev
         libunistring-dev ${ARCHKERN}-dev libevent-dev libpaper-dev gtk+-dev
         gdk-pixbuf-dev atk-dev Mesa-dev gtk3-dev qt-4-dev";
-     elif [ "${pkggrp}" == "root" ];then
+     elif [ "${pkggrp:1}" == "root" ];then
       if [ "${ARCHKERN}" ];then
         for kernpkg in dahdi firmware modules;do
           RPM_PKG_LIST+=" ${ARCHKERN}-${kernpkg}.${ARCH}";
