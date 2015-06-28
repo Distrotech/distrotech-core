@@ -15,7 +15,9 @@ INSTDIR=${1}
 shift;
 
 case ${ARCH} in
-  x86_64|x86_32|i686)ARCHKERN="linux-intel-dts";
+  x86_32)ARCHKERN="linux-intel-dts";
+    EXTRABASE="${ARCHKERN}-wanpipe.x86_64";;
+  x86_64|i686)ARCHKERN="linux-intel-dts";
     EXTRABASE="${ARCHKERN}-wanpipe.${ARCH}";;
   *)ARCHKERNEL="";
     EXTRABASE="";;
@@ -24,19 +26,18 @@ esac;
 do_yuminstall() {
   YINSTROOT=${1}
   shift
-  case ${NARCH} in
-    x86_32|x86_64|i[3-6]86)
-      case ${ARCH} in
-        x86_64)yum -y --installroot=${YINSTROOT} --exclude="*.x86_32 *.i686" install $@;;
-        x86_32)yum -y --installroot=${YINSTROOT} --exclude="*.x86_64 *.i686" install $@;;
-        i[3-6]86)yum -y --installroot=${YINSTROOT} --exclude="*.x86_64 *.x86_32" install $@;;
-        *)yum --installroot=${YINSTROOT} --exclude="*.x86_64 *.x86_32 *.i686" install $@;;
-      esac;;
-    *)if [ "${NARCH}" == "${ARCH}" ];then
-        yum -y --installroot=${YINSTROOT} install $@;
-       else
-        yum -y --installroot=${YINSTROOT} --exclude="*.${NARCH}" install $@;
-      fi;;
+
+  case ${ARCH} in
+    x86_64)yum -y --installroot=${YINSTROOT} --exclude="*.x86_32 *.i686" install $@;;
+    x86_32)yum -y --installroot=${YINSTROOT} --exclude="*.x86_64 *.i686" install $@;;
+    i[3-6]86)yum -y --installroot=${YINSTROOT} --exclude="*.x86_64 *.x86_32" install $@;;
+    arm|armv7l)yum -y --installroot=${YINSTROOT} --exclude="*.armv6l" install $@;;
+    armv6|armv6l)yum -y --installroot=${YINSTROOT} --exclude="*.armv7l" install $@;;
+    ppc)yum -y --installroot=${YINSTROOT} --exclude="*.ppc64" install $@;;
+    ppc64)yum -y --installroot=${YINSTROOT} --exclude="*.ppc" install $@;;
+    mips)yum -y --installroot=${YINSTROOT} --exclude="*.mips64" install $@;;
+    mips64)yum -y --installroot=${YINSTROOT} --exclude="*.mips" install $@;;
+    *)yum -y --installroot=${YINSTROOT} --exclude="*.x86_64 *.x86_32 *.i686" install $@;;
   esac;
 }
 
@@ -65,8 +66,11 @@ install_to_dir() {
     fi;
     if [ "${pkggrp:1}" == "buildroot" ];then
       RPM_PKG_LIST+=" ${pkggrp}-dev @root-dev @core-dev guile-dev gc-dev systemd-dev libatomic_ops-dev
-        libunistring-dev ${ARCHKERN}-dev libevent-dev libpaper-dev gtk+-dev
+        libunistring-dev libevent-dev libpaper-dev gtk+-dev
         gdk-pixbuf-dev atk-dev Mesa-dev gtk3-dev qt-4-dev";
+      if [ "${ARCHKERN}" ];then
+        RPM_PKG_LIST+=" ${ARCHKERN}-dev";
+      fi;
      elif [ "${pkggrp:1}" == "root" ];then
       if [ "${ARCHKERN}" ];then
         for kernpkg in dahdi firmware modules;do
@@ -82,4 +86,18 @@ install_to_dir() {
   do_yuminstall ${INSTDIR} ${RPM_PKG_LIST}
 }
 
+if [ ! -d /etc/rpm ];then
+  mkdir /etc/rpm
+fi;
+
+case ${ARCH} in
+  arm|armv7*)echo "armv7l-distrotech-linux-gnu" > /etc/rpm/platform;;
+  armv6*)echo "armv6l-distrotech-linux-gnu" > /etc/rpm/platform;;
+  arm64)echo "aarch64-distrotech-linux-gnu" > /etc/rpm/platform;;
+  mips)echo "mips32-distrotech-linux-gnu" > /etc/rpm/platform;;
+  *)echo "${ARCH}-distrotech-linux-gnu" > /etc/rpm/platform;;
+esac;
+
 install_to_dir ${INSTDIR} $@
+
+rm /etc/rpm/platform
