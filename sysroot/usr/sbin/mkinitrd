@@ -195,6 +195,49 @@ init_rd_drivers_scsi() {
   done
 }
 
+modprobe_modules() {
+  for driver in `ls ${1}/lib/modules/${2}/drivers-ata |cut -d. -f1`;do
+    echo "modprobe ${driver}"
+  done;
+
+  cat <<_EOF_
+
+modprobe pata_acpi
+modprobe ata_generic
+modprobe ehci_hcd
+modprobe uhci_hcd
+modprobe ohci_hcd
+modprobe bcma-hcd
+modprobe isp116x-hcd
+modprobe isp1362-hcd
+modprobe oxu210hp-hcd
+modprobe r8a66597-hcd
+modprobe sl811-hcd
+modprobe ssb-hcd
+modprobe u132-hcd
+modprobe xhci-hcd
+
+_EOF_
+
+  for driver in `ls ${1}/lib/modules/${2}/drivers-usb |cut -d. -f1`;do
+    echo "modprobe ${driver}"
+  done;
+
+  cat << EOF
+
+modprobe sd_mod
+modprobe sr_mod
+modprobe cdrom
+
+modprobe loop
+modprobe dm-mod
+modprobe usbhid
+modprobe hid-generic
+modprobe ext4
+
+EOF
+}
+
 initrd_config() {
   ROOTDEV=`grub-probe -t fs_uuid ${2} 2>/dev/null`
   if [ ! "${ROOTDEV}" ] && [ -e /dev/lvm/root ];then
@@ -221,41 +264,7 @@ _EOF_
     echo "modprobe ${driver}"
   done;
 
-  for driver in `ls ${1}/lib/modules/${3}/drivers-ata/ |cut -d. -f1`;do
-    echo "modprobe ${driver}"
-  done;
-
-  cat <<_EOF_
-
-modprobe pata_acpi
-modprobe ata_generic
-modprobe ehci_hcd
-modprobe uhci_hcd
-modprobe ohci_hcd
-modprobe bcma-hcd
-modprobe isp116x-hcd
-modprobe isp1362-hcd
-modprobe oxu210hp-hcd
-modprobe r8a66597-hcd
-modprobe sl811-hcd
-modprobe ssb-hcd
-modprobe u132-hcd
-modprobe xhci-hcd
-_EOF_
-
-  for driver in `ls ${1}/lib/modules/${3}/drivers-usb |cut -d. -f1`;do
-    echo "modprobe ${driver}"
-  done;
-
-  cat <<_EOF_
-modprobe sd_mod
-
-modprobe loop
-modprobe dm-mod
-modprobe usbhid
-modprobe hid-generic
-
-_EOF_
+  modprobe_modules ${1} ${3}
 
   if [ "$USBSLEEP" ];then
     echo "sleep ${USBSLEEP}"
@@ -270,6 +279,7 @@ _EOF_
     cat <<_EOF_
 /sbin/mdadm -Ebsc part > /etc/mdadm.conf
 /sbin/mdadm -As
+
 _EOF_
   fi;
 
@@ -297,14 +307,24 @@ _EOF_
     echo
   fi;
 
-cat <<_EOF_
-modprobe ext4
+  #Probe LVM volumes
+  cat <<_EOF_
 sleep 5
 vgchange -a y --sysinit lvm
 mount -t ramfs none /var/lock/lvm
 vgmknodes
 umount /var/lock/lvm
+
+_EOF_
+
+  #Mount LVM volume as sysroot [No Squash IMG's]
+  cat <<_EOF_
 /bin/mount -o ro -t ext4 -U ${ROOTDEV} /sysroot
+_EOF_
+
+  #Pivot Root And clean up initrd / mount proc/sys
+  cat <<_EOF_
+
 echo 0x0100 > /proc/sys/kernel/real-root-dev
 
 /sbin/pivot_root /sysroot /sysroot/initrd
@@ -323,42 +343,7 @@ mkbootimg_cfg() {
 
 EOF
 
-for driver in `ls ${1}/lib/modules/${2}/drivers-ata |cut -d. -f1`;do
-  echo "modprobe ${driver}"
-done;
-
-  cat << EOF
-
-modprobe pata_acpi
-modprobe ata_generic
-modprobe ehci_hcd
-modprobe uhci_hcd
-modprobe ohci_hcd
-modprobe bcma-hcd
-modprobe isp116x-hcd
-modprobe isp1362-hcd
-modprobe oxu210hp-hcd
-modprobe r8a66597-hcd
-modprobe sl811-hcd
-modprobe ssb-hcd
-modprobe u132-hcd
-modprobe xhci-hcd
-EOF
-
-for driver in `ls ${1}/lib/modules/${2}/drivers-usb |cut -d. -f1`;do
-  echo "modprobe ${driver}"
-done;
-
-  cat << EOF
-modprobe sd_mod
-modprobe sr_mod
-modprobe cdrom
-modprobe loop
-modprobe dm-mod
-modprobe usbhid
-modprobe hid-generic
-modprobe ext4
-EOF
+  modprobe_modules ${1} ${2}
 
   if [ "${3}" == "dvd" ];then
     cat << EOF
