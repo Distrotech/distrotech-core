@@ -107,10 +107,16 @@ init_rd_drivers() {
 }
 
 initrd_init() {
-  for tld in bin dev etc isofs media lib proc sbin sys sysroot var;do
+  for tld in bin dev etc isofs aufs media lib proc sbin sys sysroot var usr usr/bin;do
     if [ ! -d ${1}/${tld} ];then
       mkdir ${1}/${tld}
     fi;
+  done
+
+  #Symlinks to root img mount for shared libs needed by aufs
+  for libdir in lib lib64 libx32;do
+    ln -s /aufs/root/${libdir} ${1}/${libdir}
+    ln -s /aufs/root/usr/${libdir} ${1}/usr/${libdir}
   done
 
   if [ ! -d ${1}/var/lock/lvm ];then
@@ -142,6 +148,7 @@ initrd_init() {
   fi;
   if [ -x ${2}/sbin/mount.aufs ];then
     cp ${2}/sbin/mount.aufs ${1}/sbin/
+    ln -s /aufs/root/usr/bin/aufhsm ${1}/usr/bin/
   fi;
   cp ${2}/sbin/mount.nfs.static ${1}/sbin/mount.nfs
   mkdir -p ${1}/usr/share/udhcpc/
@@ -243,6 +250,12 @@ initrd_config() {
   if [ ! "${ROOTDEV}" ] && [ -e /dev/lvm/root ];then
     ROOTDEV=`blkid -s UUID -o value /dev/lvm/root`
   fi;
+
+  IMGDEV=`grub-probe -t fs_uuid ${2}/boot/images 2>/dev/null`
+  if [ ! "${IMGDEV}" ] && [ -e /dev/lvm/images ];then
+    IMGDEV=`blkid -s UUID -o value /dev/lvm/images`
+  fi;
+
   cat <<_EOF_
 #!/bin/ash
 
@@ -318,9 +331,39 @@ umount /var/lock/lvm
 _EOF_
 
   #Mount LVM volume as sysroot [No Squash IMG's]
-  cat <<_EOF_
+  if [ "${IMGDEV}" ] && [ -f ${2}/boot/images/root.img ] && [ -f ${2}/boot/images/core.img ];then
+    USE_AUFS=1;
+    cat <<_EOF_
+modprobe squashfs
+
+/bin/mount -t tmpfs none /aufs
+
+mkdir /aufs/user
+mkdir /aufs/images
+mkdir /aufs/tmp
+
+/bin/mount -o ro -t ext4 -U ${IMGDEV} /aufs/images
+
+AUFS_MNT="";
+for img_file in root core buildroot;do
+  if [ -f /aufs/images/\${img_file}.img ];then
+    mkdir /aufs/\${img_file}
+    FLOOP=\$(losetup -f)
+    losetup \${FLOOP} /aufs/images/\${img_file}.img
+    /bin/mount -n -o ro \${FLOOP} /aufs/\${img_file}
+    AUFS_MNT=":/aufs/\${img_file}=rr\${AUFS_MNT}"
+  fi;
+done
+
+/bin/mount -t aufs -o br:/aufs/tmp=rw\${AUFS_MNT} aufs-root /sysroot
+
+_EOF_
+   else
+    USE_AUFS=0;
+    cat <<_EOF_
 /bin/mount -o ro -t ext4 -U ${ROOTDEV} /sysroot
 _EOF_
+  fi;
 
   #Pivot Root And clean up initrd / mount proc/sys
   cat <<_EOF_
@@ -335,6 +378,16 @@ umount /initrd/sys
 umount /initrd/dev
 
 _EOF_
+  if [ "${USE_AUFS}" == "1" ];then
+    cat <<_EOF_
+mount -t devtmpfs none /dev
+fsck -aTC UUID=${ROOTDEV} && \
+mount -o rw -t ext4 -U ${ROOTDEV} /initrd/aufs/user && \
+mount -o remount,add:0:/initrd/aufs/user=rw+moo / && \
+mount -o remount,del:/initrd/aufs/tmp /
+umount /dev
+_EOF_
+  fi;
 }
 
 mkbootimg_cfg() {
@@ -592,6 +645,7 @@ mk_initrd() {
   ${2}/sbin/depmod -a -e -F ${2}/boot/System.map-${3} -b ${1} ${3}
 
   initrd_config ${1} ${2} ${3} > ${1}/linuxrc
+cp ${1}/linuxrc /tmp/linuxrc
   chmod 750 ${1}/linuxrc
 
   umount ${1}
@@ -620,6 +674,9 @@ if [ "${1}" == "" ];then
     mk_initrd /mnt/initrd / ${KERNEL}-${KSUF}
    else
     mk_initrd /mnt/initrd / ${KERNEL}
+  fi;
+  if [ -d /media/aufs/user ];then
+    export GRUB_DEVICE=$(grub-probe -t device /media/aufs/user)
   fi;
   grub-mkconfig -o /boot/grub/grub.cfg
  elif [ "${1}" == "bootimg" ];then
