@@ -28,9 +28,23 @@ fi;
 /usr/sbin/vgmknodes
 /bin/umount /var/lock/lvm
 
+#setup /dev/shm
+if [ ! -d /dev/shm ];then
+  mkdir /dev/shm
+fi;
+
 #Run File System Check On All Devices
-fsck -TCAa
+if [ -d /initrd/aufs ];then
+  if [ ! -d /media/aufs/user ];then
+    mkdir -p /media/aufs/user
+  fi;
+  fsck -RTCAa
+ else
+  mount -t tmpfs none /dev/shm
+  fsck -TCAa
+fi;
 RES=$?
+
 if [ ${RES} == 2 ];then
   echo "REBOOT REQUIRED"
   reboot -fn
@@ -68,6 +82,32 @@ if [ -e /etc/mtab ];then
 fi;
 ln -s /proc/self/mounts /etc/mtab
 
+#Mount All Mount Points
+mount -at nonfs,noecryptfs > /dev/null 2>&1
+
+if [ -d /initrd/aufs ];then
+#XXX Move prepend user drive to aufs to here from mkinitrd makesure the mount is in fstab
+#  mount -o remount,add:0:/initrd/aufs/user=rw+moo /
+#  mount -o remount,del:/initrd/aufs/tmp /
+  for img_file in root core buildroot;do
+    if [ -f /initrd/aufs/images/${img_file}.img ];then
+      if [ ! -d /media/aufs/${img_file} ];then
+        mkdir /media/aufs/${img_file}
+      fi;
+      mount -M /initrd/aufs/${img_file} /media/aufs/${img_file} && rm -rf /initrd/aufs/${img_file}
+    fi;
+  done;
+  mount -M /initrd/aufs/user /media/aufs/user && rm -rf /initrd/aufs/user
+
+  if [ ! -d /boot/images ];then
+    mkdir /boot/images
+  fi;
+  mount -M /initrd/aufs/images /boot/images && rm -rf /initrd/aufs/images
+
+  rm /initrd/aufs/aufhsm-*
+  mount -M /initrd/aufs /dev/shm && rm -rf /dev/shm/tmp
+fi;
+
 #Set the basic NSS conf
 if [ -e /etc/nsswitch.conf.boot ] && [ -e /etc/nsswitch.conf.ldap ];then
   cp /etc/nsswitch.conf.boot /etc/nsswitch.conf
@@ -79,12 +119,9 @@ mkdir /tmp
 grep -E "^MemTotal" /proc/meminfo |awk '$2 >= 1048576 {print "mount -t tmpfs none /tmp\n"}' |sh
 chmod 1777 /tmp)>/dev/null 2>&1
 
-#Mount All Mount Points
-mount -at nonfs,noecryptfs > /dev/null 2>&1
-
 /usr/sbin/vgchange -a y --poll y --monitor y > /dev/null 2>&1
 
-#Format crypted swap space 
+#Format crypted swap space
 if [ -e /etc/crypttab ];then
   (awk '/cryptswap/ {printf "\
         dd if=/dev/zero of=%s bs=512b count=1;\

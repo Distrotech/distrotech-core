@@ -26,12 +26,6 @@ if [ ! -d /dev/pts ];then
 fi;
 mount -t devpts none /dev/pts > /dev/null 2>&1
 
-#Mount SHM
-if [ ! -d /dev/shm ];then
-  mkdir /dev/shm
-fi;
-mount -t tmpfs none /dev/shm > /dev/null 2>&1
-
 #Link FD
 if [ ! -e /dev/fd ];then
   ln -s /proc/self/fd /dev
