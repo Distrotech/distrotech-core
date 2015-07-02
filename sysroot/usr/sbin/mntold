@@ -1,40 +1,105 @@
 #!/bin/bash
 
-MPNT=/mnt
+MPNT=/media/mnt
+if [ ! -d ${MPNT} ];then
+  mkdir -p ${MPNT}
+fi;
 
 (vgscan
 vgchange -a y) > /dev/null
 
-if [ "${1}" ];then
-  root=${1}
- elif [ -e /dev/lvm/root ];then
-  root=/dev/lvm/root
+Mount_Boot() {
+  if [ ! -d /media/aufs ];then
+    mkdir /media/aufs
+  fi;
+
+  mount -t tmpfs aufs-install-tmp /media/aufs
+  for aufs_dir in images boot user;do
+    mkdir /media/aufs/${aufs_dir}
+  done;
+
+  e2fsck -C 0 -p /dev/lvm/boot && mount /dev/lvm/boot /media/aufs/boot || return 1
+  e2fsck -C 0 -p /dev/lvm/images && mount /dev/lvm/images /media/aufs/images || return 1
+  e2fsck -C 0 -p /dev/lvm/root && mount /dev/lvm/root /media/aufs/user || return 1
+
+  for aufs_mnt_img in root core buildroot;do
+    if [ -f /media/aufs/images/${aufs_mnt_img}.img ];then
+      mkdir /media/aufs/${aufs_mnt_img}
+      mount /media/aufs/images/${aufs_mnt_img}.img /media/aufs/${aufs_mnt_img} || return 1
+    fi;
+  done;
+  mount -t aufs -o br:/media/aufs/user=rw+moo:/media/aufs/buildroot=rr:/media/aufs/core=rr:/media/aufs/root=rr aufs-install ${1} || return 1
+
+  mount -M /media/aufs/boot ${1}/boot
+  if [ ! -d ${1}/boot/images ];then
+    mkdir -p ${1}/boot/images
+  fi
+  mount -M /media/aufs/images ${1}/boot/images
+
+  if [ ! -d ${1}/media/aufs ];then
+    mkdir ${1}/media/aufs
+  fi;
+  mount -M /media/aufs ${1}/media/aufs
+}
+
+Umount_Old() {
+  for bind in dev proc sys;do
+    umount ${1}/${bind} >/dev/null 2>&1
+  done;
+
+  if [ -d ${1}/media/aufs ];then
+    (mount -M ${1}/media/aufs /media/aufs && rm -rf ${1}/media/aufs)>/dev/null 2>&1
+  fi;
+
+  if [ -d ${1}/boot/images/lost+found ];then
+    mount -M ${1}/boot/images /media/aufs/images >/dev/null 2>&1
+  fi;
+
+  if [ -d ${1}/boot/lost+found ];then
+    mount -M ${1}/boot /media/aufs/boot >/dev/null 2>&1
+  fi;
+
+  umount ${1} > /dev/null 2>&1
+  for aufs_mnt in root core buildroot images boot user;do
+    umount /media/aufs/${aufs_mnt} > /dev/null 2>&1
+  done
+  umount /media/aufs > /dev/null 2>&1
+  exit 1
+}
+
+if [ -e /dev/lvm/root ] && [ -e /dev/lvm/boot ];then
+  Mount_Boot ${MPNT} || Umount_Old ${MPNT}
  else
-  root=`findfs LABEL=root 2>/dev/null`
-fi;
+  if [ "${1}" ];then
+    root=${1}
+  elif [ -e /dev/lvm/root ];then
+    root=/dev/lvm/root
+   else
+    root=`findfs LABEL=root 2>/dev/null`
+  fi;
+  if [ ! "${root}" ];then
+    echo "No root device specified"
+    exit -1
+  fi;
 
-if [ ! "${root}" ];then
-  echo "No root device specified"
-  exit -1
-fi;
-
-mount ${root} ${MPNT} -o ro
-if [ $? != 0 ];then
-  echo "Mount failed"
-  exit -1
+  e2fsck -C 0 -p ${root} && mount ${root} ${MPNT}
+  if [ $? != 0 ];then
+    echo "Mount failed"
+    exit -1
+  fi;
 fi;
 
 for bind in dev proc sys;do
   mount --bind /${bind} ${MPNT}/${bind}
 done;
 
-chroot ${MPNT} fsck -TCAa
+rm ${MPNT}/etc/mtab
+ln -sr ${MPNT}/proc/self/mounts ${MPNT}/etc/mtab
+
+chroot ${MPNT} fsck -MRTCAa
 RES=$?
 if (( ${RES} >= 2 )) && (( ${RES} != 32 ));then
-  for bind in dev proc sys;do
-    umount ${MPNT}/${bind}
-  done;
-  umount ${MPNT}
+  Umount_Old ${MPNT}
   echo "FILE SYSTEM ERROR"
   if [ ${RES} == 2 ];then
     echo "REBOOT REQUIRED"
@@ -42,33 +107,9 @@ if (( ${RES} >= 2 )) && (( ${RES} != 32 ));then
   exit ${RES}
 fi;
 
-mount ${MPNT} -o remount,rw
-rm ${MPNT}/etc/mtab
-touch ${MPNT}/etc/mtab
-chroot ${MPNT} mount -f /
 chroot ${MPNT} swapon -a
 chroot ${MPNT} mount -a
 if [ -e ${MPNT}/etc/HOSTNAME ];then
   cp ${MPNT}/etc/hosts ${MPNT}/etc/resolv.conf /etc
   hostname -F ${MPNT}/etc/HOSTNAME
 fi;
-
-if [ "`findfs LABEL=UPGRADE`" ];then
-  mount -L UPGRADE -o ro ${MPNT}/mnt/update
-  if [ $? == 0 ];then
-    mount --bind / ${MPNT}/mnt/update/mnt/dev -o ro
-    if [ -e ${MPNT}/var/run/rsyncd.pid ];then
-      rm ${MPNT}/var/run/rsyncd.pid
-    fi;
-    cp -p /usr/sbin/vbox_upgrade /usr/sbin/flashutil /${MPNT}/usr/sbin
-    cp -pr /etc/rsyncd* ${MPNT}/etc
-    chroot ${MPNT} rsync --daemon --config /etc/rsyncd-update.conf
-  fi;
-fi;
-
-#chroot ${MPNT}
-#while [ "`pidof rsync`" ];do
-#  killall rsync
-#  sleep 2
-#done;
-#awk '/.* \/mnt/ {printf "%s:%s\n",length($2),$2}' /proc/mounts |sort -nr |awk -F: '{printf "umount %s\n",$2}' |sh
