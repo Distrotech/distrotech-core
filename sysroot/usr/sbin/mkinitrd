@@ -381,9 +381,9 @@ _EOF_
   if [ "${USE_AUFS}" == "1" ];then
     cat <<_EOF_
 mount -t devtmpfs none /dev
-fsck -aTC UUID=${ROOTDEV} && \
-mount -o rw -t ext4 -U ${ROOTDEV} /initrd/aufs/user && \
-mount -o remount,add:0:/initrd/aufs/user=rw+moo / && \
+fsck -aTC UUID=${ROOTDEV} && \\
+mount -o rw -t ext4 -U ${ROOTDEV} /initrd/aufs/user && \\
+mount -o remount,add:0:/initrd/aufs/user=rw+moo / && \\
 mount -o remount,del:/initrd/aufs/tmp /
 umount /dev
 _EOF_

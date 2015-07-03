@@ -94,7 +94,7 @@ for bind in dev proc sys;do
 done;
 
 rm ${MPNT}/etc/mtab
-ln -sr ${MPNT}/proc/self/mounts ${MPNT}/etc/mtab
+ln -s /proc/self/mounts ${MPNT}/etc/mtab
 
 chroot ${MPNT} fsck -MRTCAa
 RES=$?

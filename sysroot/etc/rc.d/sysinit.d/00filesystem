@@ -38,7 +38,11 @@ if [ -d /initrd/aufs ];then
   if [ ! -d /media/aufs/user ];then
     mkdir -p /media/aufs/user
   fi;
-  fsck -RTCAa
+  if [ -e /etc/mtab ];then
+    rm /etc/mtab
+  fi;
+  ln -s /proc/self/mounts /etc/mtab
+  fsck -MRTCAa
  else
   mount -t tmpfs none /dev/shm
   fsck -TCAa
