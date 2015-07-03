@@ -81,11 +81,6 @@ fi;
 #Remount Root Device Read Write
 mount -n -o remount,rw /
 
-if [ -e /etc/mtab ];then
-  rm /etc/mtab
-fi;
-ln -s /proc/self/mounts /etc/mtab
-
 #Mount All Mount Points
 mount -at nonfs,noecryptfs > /dev/null 2>&1
 

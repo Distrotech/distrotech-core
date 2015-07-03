@@ -203,6 +203,10 @@ init_rd_drivers_scsi() {
 }
 
 modprobe_modules() {
+  for driver in `ls ${1}/lib/modules/${2}/drivers-scsi/ |cut -d. -f1`;do
+    echo "modprobe ${driver}"
+  done;
+
   for driver in `ls ${1}/lib/modules/${2}/drivers-ata |cut -d. -f1`;do
     echo "modprobe ${driver}"
   done;
@@ -272,10 +276,6 @@ for copt in \`cat /proc/cmdline\`;do
 done
 
 _EOF_
-
-  for driver in `ls ${1}/lib/modules/${3}/drivers-scsi/ |cut -d. -f1`;do
-    echo "modprobe ${driver}"
-  done;
 
   modprobe_modules ${1} ${3}
 
@@ -396,8 +396,6 @@ mkbootimg_cfg() {
 
 EOF
 
-  modprobe_modules ${1} ${2}
-
   if [ "${3}" == "dvd" ];then
     cat << EOF
 sleep 5
@@ -445,8 +443,9 @@ mount -M /initrd/sys /sys
 mount -M /initrd/dev /dev
 
 EOF
-   elif [ "${3}" == "squashfs" ];then
+   elif [ "${3}" == "squashfs" ] || [ "${3}" == "buildroot" ];then
     cat << EOF
+
 modprobe vfat
 modprobe nls-cp437
 modprobe nls-iso8859-1
@@ -455,21 +454,34 @@ modprobe squashfs
 sleep 4
 
 mke2fs -q /dev/ram1 >/dev/null 2>&1
-mount -n /dev/ram1 /media
-mkdir /media/isofs
-mkdir /media/install
-mkdir /media/installer
-mkdir /media/user
+mount -n /dev/ram1 /aufs
+mkdir /aufs/isofs
+mkdir /aufs/install
+mkdir /aufs/user
 
-mount -n -o ro -L DTS_INSTALL /media/isofs
-losetup /dev/loop0 /media/isofs/\${squashimg}
+mount -n -o ro -L DTS_INSTALL /aufs/isofs
+AUFS_MNT=""
+if [ "\${squashimg}" ] && [ -f /aufs/isofs/\${squashimg} ];then
+  mkdir /aufs/root
+  FLOOP=\$(losetup -f)
+  losetup \${FLOOP} /aufs/isofs/\${squashimg}
+  mount -n -o ro \${FLOOP} /aufs/root
+  AUFS_MNT=":/aufs/root=rr";
+fi;
 
-mount -n -o ro /dev/loop0 /media/installer
-mount -t tmpfs tmprw /media/user
+if [ "\${buildimg}" ] && [ -f /aufs/isofs/\${buildimg} ];then
+  mkdir /aufs/buildroot
+  FLOOP=\$(losetup -f)
+  losetup \${FLOOP} /aufs/isofs/\${buildimg}
+  mount -o ro \${FLOOP} /aufs/buildroot
+  AUFS_MNT=":/aufs/buildroot=rr\${AUFS_MNT}";
+fi;
 
-mount -n -t aufs -o br:/media/user=rw+moo:/media/installer=rr none /sysroot >/dev/null 2>&1
+mount -t tmpfs tmprw /aufs/user
 
-mount -M /media /sysroot/media
+mount -n -t aufs -o br:/aufs/user=rw+moo\${AUFS_MNT} none /sysroot
+
+mount -M /aufs /sysroot/media
 
 echo 0x0100 > /proc/sys/kernel/real-root-dev
 
@@ -480,44 +492,9 @@ mount -M /initrd/sys /sys
 mount -M /initrd/dev /dev
 mount -t tmpfs rundir /run
 
-EOF
-   elif [ "${3}" == "buildroot" ];then
-    cat << EOF
-modprobe vfat
-modprobe nls-cp437
-modprobe nls-iso8859-1
-modprobe squashfs
-
-sleep 4
-
-mke2fs -q /dev/ram1 >/dev/null 2>&1
-mount -n /dev/ram1 /media
-mkdir /media/isofs
-mkdir /media/install
-mkdir /media/installer
-mkdir /media/buildroot
-mkdir /media/user
-
-mount -o ro -L DTS_INSTALL /media/isofs
-losetup /dev/loop0 /media/isofs/\${squashimg}
-losetup /dev/loop1 /media/isofs/\${buildimg}
-
-mount -o ro /dev/loop0 /media/installer
-mount -o ro /dev/loop1 /media/buildroot
-mount -t tmpfs tmprw /media/user
-
-mount -t aufs -o br:/media/user=rw+moo:/media/buildroot=rr:/media/installer=rr build /sysroot > /dev/null 2>&1
-
-mount -M /media /sysroot/media
-
-echo 0x0100 > /proc/sys/kernel/real-root-dev
-
-pivot_root /sysroot /sysroot/initrd
-
-mount -M /initrd/proc /proc
-mount -M /initrd/sys /sys
-mount -M /initrd/dev /dev
-mount -t tmpfs rundir /run
+#Prepare as a installer
+touch /etc/.install
+cp -a /etc/distrotech/install/* /etc/
 
 EOF
    else
@@ -578,6 +555,12 @@ for copt in \`cat /proc/cmdline\`;do
     export buildimg
   fi;
 done
+
+EOF
+
+  modprobe_modules ${1} ${3}
+
+  cat << EOF
 
 case \$${KSUF}_opt in
   dvd)exec /sbin/linuxrc.dvd;;
@@ -645,7 +628,6 @@ mk_initrd() {
   ${2}/sbin/depmod -a -e -F ${2}/boot/System.map-${3} -b ${1} ${3}
 
   initrd_config ${1} ${2} ${3} > ${1}/linuxrc
-cp ${1}/linuxrc /tmp/linuxrc
   chmod 750 ${1}/linuxrc
 
   umount ${1}
