@@ -12,12 +12,22 @@ export VERSION=$(lsb_release -r -s)
 eval export BRAND=$(lsb_release -d -s)
 export BT="${BRAND} ${VERSION} Kernel ${KVER} Install";
 
+IFS=- read -a KREL <<< ${KVER}
+KARCH=${KREL[1]}
+case ${KARCH} in
+  x86_64)ARCH="x86_64";
+    LIBDIR="lib64";;
+  x86_x32)ARCH="x86_32";
+    LIBDIR="libx32";;
+  x86)ARCH="i686";
+    LIBDIR="lib";;
+esac;
+
 setterm -blank 20
 
 if [ -e "/tmp/fstab.new" ];then
   rm /tmp/fstab.new
 fi;
-
 
 Set_Serial() {
   if [ -d /sys/class/net/br0 ];then
@@ -44,6 +54,7 @@ Install_System() {
   setterm -cursor off
   INST_BASE=/media/install
 
+  /usr/bin/dialog --backtitle "$BT" --title "Yum Repo." --infobox "Creating yum repo config." 7 35
   if [ ! -d /etc/yum/repos.d ];then
     mkdir -p /etc/yum/repos.d;
   fi;
@@ -53,29 +64,6 @@ name = Flash Installer
 baseurl = file:///media/isofs/repo
 EOF
 ) > /etc/yum/repos.d/installer.repo
-
-  IFS=- read -a KREL <<< ${KVER}
-  KARCH=${KREL[1]}
-  case ${KARCH} in
-    x86_64)ARCH="x86_64";
-      LIBDIR="lib64";;
-    x86_x32)ARCH="x86_32";
-      LIBDIR="libx32";;
-    x86)ARCH="i686";
-      LIBDIR="lib";;
-  esac;
-
-  (yum --installroot=${INST_BASE} clean all
-  rpmdb --root=${INST_BASE} --rebuilddb) >/dev/null 2>&1
-
-  /usr/libexec/distrotech/instpkg ${ARCH} ${INST_BASE} distrotech-core-conf 2>/dev/null |/usr/libexec/distrotech/instguage.pl |\
-    dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install Essential Packages" 8 35
-  /usr/libexec/distrotech/instpkg ${ARCH} ${INST_BASE} @root 2>/dev/null |/usr/libexec/distrotech/instguage.pl |\
-    dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install System Base Packages" 8 35
-  /usr/libexec/distrotech/instpkg ${ARCH} ${INST_BASE} @core 2>/dev/null |/usr/libexec/distrotech/instguage.pl |\
-    dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install System Core Packages" 8 35
-
-  /usr/bin/yum -y --installroot=${INST_BASE} clean all >/dev/null 2>&1
 
   if [ -e /sbin/modprobe.static ];then
     cp /sbin/modprobe.static ${INST_BASE}/sbin
@@ -179,7 +167,7 @@ EOF
 #  fi
 
   chmod 1777 ${INST_BASE}/tmp ${INST_BASE}/var/run
-  chown -R www.www ${INST_BASE}/var/spool/apache/htdocs
+#  chown -R www.www ${INST_BASE}/var/spool/apache/htdocs
   chmod 770 ${INST_BASE}/var/spool/clientmqueue
   chown 51.51 ${INST_BASE}/usr/share/clamav ${INST_BASE}/var/spool/avirus > /dev/null 2>&1
   chown smmsp.smmsp ${INST_BASE}/var/spool/clientmqueue/
@@ -212,14 +200,13 @@ EOF
   if [ -e ${INST_BASE}/etc/mtab ];then
     rm ${INST_BASE}/etc/mtab
   fi;
-  ln -s ../proc/self/mounts ${INST_BASE}/etc/mtab
+  ln -s /proc/self/mounts ${INST_BASE}/etc/mtab
   chroot ${INST_BASE} /usr/sbin/mkfstab > ${INST_BASE}/etc/fstab 2> /dev/null
   chroot ${INST_BASE} /usr/sbin/mkgrub > /dev/null 2>&1
 
   setterm -cursor on
 
   clear
-  return 0
 }
 
 Fdisk_Do() {
@@ -281,9 +268,19 @@ Fdisk_Do() {
 
 Format_LVM() {
   if [ "${3}" ];then
-    (lvcreate $1 -n $2 -l 100%VG -i ${3} -I 64) >/dev/tty4 2>/dev/tty4
+    (lvcreate $1 -n $2 -l 100%FREE -i ${3} -I 64) >/dev/tty4 2>/dev/tty4
    else
-    (lvcreate $1 -n $2 -l 100%VG) >/dev/tty4 2>/dev/tty4
+    (lvcreate $1 -n $2 -l 100%FREE) >/dev/tty4 2>/dev/tty4
+  fi;
+  (vgchange -a y $1
+  mkfs.ext4 -L $2 -j -v /dev/$1/$2 -L $2) >/dev/tty4 2>/dev/tty4
+}
+
+Create_LVM() {
+  if [ "${3}" ];then
+    (lvcreate $1 -n $2 -L ${3} -i ${4} -I 64) >/dev/tty4 2>/dev/tty4
+   else
+    (lvcreate $1 -n $2 -L ${3}) >/dev/tty4 2>/dev/tty4
   fi;
   (vgchange -a y $1
   mkfs.ext4 -L $2 -j -v /dev/$1/$2 -L $2) >/dev/tty4 2>/dev/tty4
@@ -334,9 +331,10 @@ Fdisk() {
     done;
 
     /usr/bin/dialog --backtitle "$BT" --title "Formating Root LV" --infobox "Formating Linux Partition" 4 35
+    Create_LVM lvm boot 512M ${LVSTRIPE}
+    Create_LVM lvm images 5632M ${LVSTRIPE}
     Format_LVM lvm root ${LVSTRIPE}
-    echo "/ /dev/lvm/root" >> /tmp/fstab.new
-    Mount_All
+    touch /tmp/fstab.new
     Local_Install
    else
     return
@@ -523,7 +521,46 @@ Date_Time() {
   done
 }
 
+Mount_Boot() {
+  mkdir /media/aufs
+  mount -t tmpfs aufs-install-tmp /media/aufs
+  for aufs_dir in boot user root core buildroot images;do
+    mkdir /media/aufs/${aufs_dir}
+  done;
+
+  mount /dev/lvm/boot /media/aufs/boot
+  mount /dev/lvm/images /media/aufs/images
+  mount /dev/lvm/root /media/aufs/user
+
+  for aufs_mnt_img in root core buildroot;do
+    /usr/bin/dialog --backtitle "$BT" --title "Image Copy" --infobox "Copying ${aufs_mnt_img}.img" 7 35
+    cp /media/isofs/boot/${ARCH}/images/${aufs_mnt_img}.img /media/aufs/images
+    mount /media/aufs/images/${aufs_mnt_img}.img /media/aufs/${aufs_mnt_img}
+  done;
+
+  /usr/bin/dialog --backtitle "$BT" --title "AUFS Mount" --infobox "Mounting AUFS images." 7 35
+  mount -t aufs -o br:/media/aufs/user=rw+moo:/media/aufs/buildroot=rr:/media/aufs/core=rr:/media/aufs/root=rr aufs-install ${1}
+
+  rsync -a ${1}/boot/ /media/aufs/boot/
+
+  if [ ! -d /media/aufs/boot/images ];then
+    mkdir /media/aufs/boot/images
+  fi;
+  mount -M /media/aufs/images /media/aufs/boot/images
+
+  mount -M /media/aufs/boot ${1}/boot
+  if [ ! -d ${1}/media/aufs ];then
+    mkdir ${1}/media/aufs
+  fi;
+  mount -M /media/aufs ${1}/media/aufs
+}
+
 Local_Install(){
+  #Image Based Install Images Go to "boot"
+  if [ -e /dev/lvm/root ] && [ -e /dev/lvm/boot ] && [ -e /dev/lvm/images ];then
+    Mount_Boot /media/install
+  fi;
+
   MNTRT=`grep "/media/install " /proc/mounts`;
   if [ "$MNTRT" == "" ];then
     /usr/bin/dialog --backtitle "$BT" --title "Cannot Install" --msgbox "No Root Partition Mounted" 5 35
@@ -561,6 +598,9 @@ if [ "${1}" == "install" ];then
   exit
  elif [ "${1}" == "format" ];then
   Format_LVM ${2} ${3} ${4}
+  exit
+ elif [ "${1}" == "lvcreate" ];then
+  Format_LVM ${2} ${3} ${4} ${5}
   exit
 fi;
 
