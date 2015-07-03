@@ -1,0 +1,193 @@
+#!/bin/bash
+
+NARCH=${NARCH:=$( uname -m )}
+
+BRAND="Distrotech Solutions";
+DTSSRVDIR=/srv/opt/dtsbuild
+IMG_OUTPUT_DIR=${DTSSRVDIR}/install
+
+syslinux_cfg_arch() {
+  cat <<EOF
+DEFAULT /boot/syslinux/vesamenu.c32
+TIMEOUT 50
+ONTIMEOUT install
+PROMPT 0
+NOESCAPE 1
+MENU TITLE ${BRAND}
+MENU BACKGROUND /boot/syslinux/background.jpg
+
+LABEL install
+  MENU LABEL ${BRAND} ${1} (Install)
+  KERNEL /boot/${1}/vmlinuz
+  INITRD /boot/${1}/initrd.img
+  APPEND ro root=/dev/loop0 nomodeset dts_opt=squashfs squashimg=/boot/${1}/images/root.img quiet
+LABEL rescue
+  MENU LABEL ${BRAND} ${1} (Rescue)
+  KERNEL /boot/${1}/vmlinuz
+  INITRD /boot/${1}/initrd.img
+  APPEND ro root=/dev/loop0 nomodeset dts_opt=squashfs squashimg=/boot/${1}/images/root.img S
+LABEL build
+  MENU LABEL ${BRAND} ${1} (Build)
+  KERNEL /boot/${1}/vmlinuz
+  INITRD /boot/${1}/initrd.img
+  APPEND ro root=/dev/loop0 nomodeset dts_opt=buildroot squashimg=/boot/${1}/images/root.img buildimg=/boot/${1}/images/buildroot.img S
+LABEL Main Menu
+  MENU LABEL Return To Main Menu
+  CONFIG /boot/syslinux/syslinux.cfg
+EOF
+}
+
+syslinux_cfg() {
+  INST_PATH=${1}
+  shift
+  cat <<EOF
+DEFAULT vesamenu.c32
+TIMEOUT 150
+ONTIMEOUT ${1}
+PROMPT 0
+NOESCAPE 1
+MENU TITLE ${BRAND}
+MENU BACKGROUND background.jpg
+
+EOF
+
+  for cfg_arch in $@;do
+    if [ ! -d ${INST_PATH}/boot/${cfg_arch}/images ];then
+      continue;
+    fi;
+    (syslinux_cfg_arch ${cfg_arch} > ${INST_PATH}/boot/syslinux/syslinux_${cfg_arch}.cfg)
+      cat <<EOF
+LABEL ${cfg_arch}
+  MENU LABEL Install options for ${cfg_arch}
+  CONFIG /boot/syslinux/syslinux_${cfg_arch}.cfg
+
+EOF
+  done;
+}
+
+sync_repo() {
+  for repo_arch in $@;do
+    if [ -d ${DTSSRVDIR}/yum/${ARCH_MAN}/${repo_arch} ];then
+      case ${repo_arch} in
+        i686|x86_32|x86_64)ARCH_MAN="intel";;
+        arm*)ARCH_MAN="arm";;
+        ppc*)ARCH_MAN="ppc";;
+        mips*)ARCH_MAN="mips";;
+      esac;
+      rsync --modify-window=1 --exclude="${repo_arch}/*/*/*-dbg-*.*.rpm" --delete -a ${DTSSRVDIR}/yum/${ARCH_MAN}/${repo_arch} ${INST_PATH}/repo/
+    fi;
+  done;
+
+  YUM_GRP_FILE=$(ls -t ${DTSSRVDIR}/yum/repodata/*-groups.xml |head -1)
+  if [ ! -d ${INST_PATH}/repo/repodata ];then
+    mkdir -p ${INST_PATH}/repo/repodata
+    cp ${YUM_GRP_FILE} ${INST_PATH}/repo/repodata/groups.xml
+    createrepo -g repodata/groups.xml ${INST_PATH}/repo
+   else
+    cp ${YUM_GRP_FILE} ${INST_PATH}/repo/repodata/groups.xml
+    createrepo -g repodata/groups.xml --skip-stat --update ${INST_PATH}/repo
+  fi;
+}
+
+config_installer() {
+  INST_PATH=${1}
+  shift;
+
+  if [ ! -d ${INST_PATH}/boot/syslinux ];then
+    mkdir -p ${INST_PATH}/boot/syslinux
+  fi;
+
+  for slinfile in vesamenu.c32 libcom32.c32 libutil.c32;do
+    if [ -e /usr/share/syslinux/${slinfile} ];then
+      cp /usr/share/syslinux/${slinfile} ${INST_PATH}/boot/syslinux
+    fi;
+  done
+
+  if [ -e /boot/grub/background.jpg ];then
+    cp /boot/grub/background.jpg ${INST_PATH}/boot/syslinux/
+  fi;
+
+  for img_arch in $@;do
+    if [ ! -d ${INST_PATH}/boot/${img_arch}/ ];then
+      mkdir -p ${INST_PATH}/boot/${img_arch}/
+    fi;
+    if [ -d ${DTSSRVDIR}/install/${img_arch} ];then
+      rsync --no-p --no-g -rLtvP --modify-window=1 ${DTSSRVDIR}/install/${img_arch}/ ${INST_PATH}/boot/${img_arch}/
+     elif [ ${img_arch} == ${NARCH} ] && [ -d /boot/images ];then
+      rsync --no-p --no-g -rLtvP --modify-window=1 --exclude=lost+found /boot/images /boot/vmlinuz ${INST_PATH}/boot/${img_arch}/
+      mkinitrd bootimg ${INST_PATH}/boot/${img_arch}/initrd.img / $(uname -r)
+     else
+      continue;
+    fi;
+  done;
+
+  if [ "$#" == "1" ];then
+    syslinux_cfg_arch ${1} > ${INST_PATH}/boot/syslinux/syslinux.cfg
+   else
+    syslinux_cfg ${INST_PATH} $@ > ${INST_PATH}/boot/syslinux/syslinux.cfg
+  fi;
+}
+
+image_create() {
+  if [ -x /usr/bin/qemu-img ];then
+    qemu-img create ${1} ${2}G
+   else
+    dd if=/dev/zero of=${1} count=${2} bs=1G
+  fi;
+  parted -s ${1} mklabel msdos
+  parted -s ${1} "mkpart primary 1 -1"
+  parted -s ${1} set 1 boot on
+  sleep 2
+}
+
+build_installer() {
+  INST_DEV=${1}
+  shift
+
+  TMPDIR=$(mktemp -d -p /tmp mkinstmnt.XXXXXXXXXXX)
+  if [ ! "${TMPDIR}" ] || [ ! -d ${TMPDIR} ];then
+    return 1
+  fi;
+
+  sleep 2
+  dosfsck -a ${INST_DEV} >/dev/null 2>&1
+  dosfslabel ${INST_DEV} DTS_INSTALL >/dev/null 2>&1
+  mount ${INST_DEV} ${TMPDIR} || return 1
+
+  config_installer ${TMPDIR} $@
+
+  umount ${TMPDIR}
+  syslinux -f -i -d boot/syslinux ${INST_DEV}
+
+  rm -rf ${TMPDIR}
+}
+
+if [ "${1}" ];then
+  INST_PATH=${1}
+  shift
+  if [ ! -b ${INST_PATH} ] && [ ! -e ${INST_PATH} ];then
+    image_create ${INST_PATH} 4
+    IMGLOOP=$(losetup -f --show ${INST_PATH})
+    INSTDEV=${IMGLOOP}p1
+    mkdosfs -F 32 -n DTS_INSTALL ${INSTDEV}
+   elif [ -e ${INST_PATH} ] && [ ! -b ${INST_PATH} ];then
+    IMGLOOP=$(losetup -f --show ${INST_PATH})
+    INSTDEV=${IMGLOOP}p1
+   elif [ -b ${INST_PATH} ] && [ -b ${INST_PATH}1 ];then
+    INSTDEV=${INST_PATH}1
+   else
+    exit 1
+  fi;
+
+  if [ "$#" == "0" ];then
+    (build_installer ${INSTDEV} ${NARCH})
+   else
+    (build_installer ${INSTDEV} $@)
+  fi;
+
+  dd if=/usr/share/syslinux/mbr.bin of=${INST_PATH} conv=notrunc bs=512b count=1
+
+  if [ "${IMGLOOP}" ] && [ -b ${IMGLOOP} ];then
+    losetup -d ${IMGLOOP}
+  fi;
+fi;
