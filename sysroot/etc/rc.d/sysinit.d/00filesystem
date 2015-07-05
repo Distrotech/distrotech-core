@@ -88,7 +88,7 @@ if [ -d /initrd/aufs ];then
 #XXX Move prepend user drive to aufs to here from mkinitrd makesure the mount is in fstab
 #  mount -o remount,add:0:/initrd/aufs/user=rw+moo /
 #  mount -o remount,del:/initrd/aufs/tmp /
-  for img_file in root core buildroot;do
+  for img_file in qemu root core buildroot;do
     if [ -f /initrd/aufs/images/${img_file}.img ];then
       if [ ! -d /media/aufs/${img_file} ];then
         mkdir /media/aufs/${img_file}
