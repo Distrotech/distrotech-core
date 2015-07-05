@@ -522,9 +522,11 @@ Date_Time() {
 }
 
 Mount_Boot() {
+  IMG_FILES="qemu root core buildroot";
+
   mkdir /media/aufs
   mount -t tmpfs aufs-install-tmp /media/aufs
-  for aufs_dir in boot user root core buildroot images;do
+  for aufs_dir in boot user images ${IMG_FILES};do
     mkdir /media/aufs/${aufs_dir}
   done;
 
@@ -532,14 +534,18 @@ Mount_Boot() {
   mount /dev/lvm/images /media/aufs/images
   mount /dev/lvm/root /media/aufs/user
 
-  for aufs_mnt_img in root core buildroot;do
-    /usr/bin/dialog --backtitle "$BT" --title "Image Copy" --infobox "Copying ${aufs_mnt_img}.img" 7 35
-    cp /media/isofs/boot/${ARCH}/images/${aufs_mnt_img}.img /media/aufs/images
-    mount /media/aufs/images/${aufs_mnt_img}.img /media/aufs/${aufs_mnt_img}
+  MOUNT_AUFS="";
+  for aufs_mnt_img in ${IMG_FILES};do
+    if [ -f /media/isofs/boot/${ARCH}/images/${aufs_mnt_img}.img ];then
+      /usr/bin/dialog --backtitle "$BT" --title "Image Copy" --infobox "Copying ${aufs_mnt_img}.img" 7 35
+      cp /media/isofs/boot/${ARCH}/images/${aufs_mnt_img}.img /media/aufs/images
+      mount /media/aufs/images/${aufs_mnt_img}.img /media/aufs/${aufs_mnt_img}
+      MOUNT_AUFS=":/media/aufs/${aufs_mnt_img}=rr${MOUNT_AUFS}";
+    fi;
   done;
 
   /usr/bin/dialog --backtitle "$BT" --title "AUFS Mount" --infobox "Mounting AUFS images." 7 35
-  mount -t aufs -o br:/media/aufs/user=rw+moo:/media/aufs/buildroot=rr:/media/aufs/core=rr:/media/aufs/root=rr aufs-install ${1}
+  mount -t aufs -o br:/media/aufs/user=rw+moo:${MOUNT_AUFS} aufs-install ${1}
 
   rsync -a ${1}/boot/ /media/aufs/boot/
 
