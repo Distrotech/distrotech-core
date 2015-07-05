@@ -64,14 +64,14 @@ install_to_dir() {
         RPM_PKG_LIST+=" ${pkggrp}-${spkg}"
       done;
     fi;
-    if [ "${pkggrp:1}" == "buildroot" ];then
+    if [ "${pkggrp}" == "@buildroot" ];then
       RPM_PKG_LIST+=" ${pkggrp}-dev @root-dev @core-dev guile-dev gc-dev systemd-dev libatomic_ops-dev
         libunistring-dev libevent-dev libpaper-dev gtk+-dev
         gdk-pixbuf-dev atk-dev Mesa-dev gtk3-dev qt-4-dev";
       if [ "${ARCHKERN}" ];then
         RPM_PKG_LIST+=" ${ARCHKERN}-dev";
       fi;
-     elif [ "${pkggrp:1}" == "root" ];then
+     elif [ "${pkggrp}" == "@root" ];then
       if [ "${ARCHKERN}" ];then
         for kernpkg in dahdi firmware modules;do
           RPM_PKG_LIST+=" ${ARCHKERN}-${kernpkg}.${ARCH}";
@@ -81,6 +81,8 @@ install_to_dir() {
       if [ "${EXTRABASE}" ];then
         RPM_PKG_LIST+=" ${EXTRABASE}";
       fi;
+     elif [ "${pkggrp}" == "@core" ];then
+      RPM_PKG_LIST+=" asterisk-moh_g729 asterisk-moh_gsm asterisk-sounds_en_g729 asterisk-sounds_en_gsm";
     fi;
   done
   do_yuminstall ${INSTDIR} ${RPM_PKG_LIST}
