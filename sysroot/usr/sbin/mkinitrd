@@ -107,6 +107,19 @@ init_rd_drivers() {
 }
 
 initrd_init() {
+  INITRD=$(mktemp -p /tmp initrd_XXXXXXX)
+  dd if=/dev/zero of=${INITRD} bs=1M count=24 > /dev/null 2>&1
+
+  ILOOP=$(losetup -f --show ${INITRD})
+  if [ ! "${ILOOP}" ] || [ ! -b ${LOOP} ];then
+    return 1
+  fi;
+
+  (mkfs.ext2 -F -L initrd -i 1024 ${ILOOP}
+  mount ${ILOOP} ${1}) > /dev/null 2>&1
+
+  export ILOOP INITRD
+
   for tld in bin dev etc isofs aufs media lib proc sbin sys sysroot var usr usr/bin;do
     if [ ! -d ${1}/${tld} ];then
       mkdir ${1}/${tld}
@@ -114,10 +127,13 @@ initrd_init() {
   done
 
   #Symlinks to root img mount for shared libs needed by aufs
-  for libdir in lib lib64 libx32;do
+  for libdir in lib64 libx32;do
     ln -s /aufs/root/${libdir} ${1}/${libdir}
     ln -s /aufs/root/usr/${libdir} ${1}/usr/${libdir}
   done
+  ln -s /aufs/root/lib ${1}/lib/i686
+  ln -s i686/ld-linux.so.2 ${1}/lib/ld-linux.so.2
+  ln -s /aufs/root/usr/lib ${1}/usr/lib
 
   if [ ! -d ${1}/var/lock/lvm ];then
     mkdir -p ${1}/var/lock/lvm
@@ -426,24 +442,7 @@ mount -M /initrd/sys /sys
 mount -M /initrd/dev /dev
 
 EOF
-   elif [ "${3}" == "rootfs" ];then
-    cat << EOF
-sleep 10
-vgchange -a y --sysinit
-mount -t ramfs none /var/lock/lvm
-vgmknodes
-umount /var/lock/lvm
-/bin/mount -n -o ro \${rootfs} /sysroot
-echo 0x0100 > /proc/sys/kernel/real-root-dev
-
-/sbin/pivot_root /sysroot /sysroot/initrd
-
-mount -M /initrd/proc /proc
-mount -M /initrd/sys /sys
-mount -M /initrd/dev /dev
-
-EOF
-   elif [ "${3}" == "squashfs" ] || [ "${3}" == "buildroot" ];then
+   elif [ "${3}" == "install" ];then
     cat << EOF
 
 modprobe vfat
@@ -455,9 +454,7 @@ sleep 4
 
 mke2fs -q /dev/ram1 >/dev/null 2>&1
 mount -n /dev/ram1 /aufs
-mkdir /aufs/isofs
-mkdir /aufs/install
-mkdir /aufs/user
+mkdir /aufs/isofs /aufs/install /aufs/user
 
 mount -n -o ro -L DTS_INSTALL /aufs/isofs
 AUFS_MNT=""
@@ -504,7 +501,7 @@ vgchange -a y --sysinit
 mount -t ramfs none /var/lock/lvm
 vgmknodes
 umount /var/lock/lvm
-/bin/mount -n -o ro -t ext4 -L INSTALL /sysroot
+/bin/mount -n -o ro \${rootfs} /sysroot
 echo 0x0100 > /proc/sys/kernel/real-root-dev
 
 /sbin/pivot_root /sysroot /sysroot/initrd
@@ -518,7 +515,7 @@ EOF
 }
 
 mkbootimg() {
-  initrd_init ${1} ${2} ${3}
+  initrd_init ${1} ${2} ${3} || return 1
 
   if [ ! -d ${1}/etc/modprobe.d ];then
     mkdir ${1}/etc/modprobe.d
@@ -565,9 +562,7 @@ EOF
 case \$${KSUF}_opt in
   dvd)exec /sbin/linuxrc.dvd;;
   nfs)exec /sbin/linuxrc.nfs;;
-  install)exec /sbin/linuxrc.install;;
-  squashfs)exec /sbin/linuxrc.squashfs;;
-  buildroot)exec /sbin/linuxrc.buildroot;;
+  squashfs|buildroot|install)exec /sbin/linuxrc.install;;
 esac
 
 exec /sbin/linuxrc.rootfs
@@ -576,51 +571,26 @@ EOF
 ) > ${1}/linuxrc
   chmod 750 ${1}/linuxrc
 
-  mkbootimg_cfg ${1} ${3} > ${1}/sbin/linuxrc.install
+  mkbootimg_cfg ${1} ${3} > ${1}/sbin/linuxrc.rootfs
   mkbootimg_cfg ${1} ${3} dvd > ${1}/sbin/linuxrc.dvd
   mkbootimg_cfg ${1} ${3} nfs > ${1}/sbin/linuxrc.nfs
-  mkbootimg_cfg ${1} ${3} rootfs > ${1}/sbin/linuxrc.rootfs
-  mkbootimg_cfg ${1} ${3} squashfs > ${1}/sbin/linuxrc.squashfs
-  mkbootimg_cfg ${1} ${3} buildroot > ${1}/sbin/linuxrc.buildroot
+  mkbootimg_cfg ${1} ${3} install > ${1}/sbin/linuxrc.install
 
   chmod 750 ${1}/sbin/linuxrc*
   ${2}/sbin/depmod -b ${1} -aeF ${2}/boot/System.map-${3} ${3}
 }
 
 mk_initrd() {
-  if [ -d /dev/loop ];then
-    rm -rf /dev/loop
-  fi;
-
-  if [ -h /boot/boot ];then
-    rm /boot/boot
-  fi;
-
   if [ ! -d ${2}/lib/modules/${3} ];then
     echo "No Kernel Directory ${2}/lib/modules/${3}"
-    return 255
+    return 1
   fi;
 
   if [ "$EXTRA_DEV" ];then
     EXTRA_DEV=" ${EXTRA_DEV}"
   fi;
 
-  LOOP=`losetup -f`
-  if [ ! "${LOOP}" ] || [ ! -e "${LOOP}" ];then
-    return 255
-  fi;
-
-  TINIT=/tmp/initrd_$$${RANDOM}
-  while [ -e ${TINIT} ];do
-    TINIT=/tmp/initrd_$$${RANDOM}
-  done;
-
-  (dd if=/dev/zero of=${TINIT} bs=1M count=24
-  mkfs.ext2 -F -L initrd -i 1024 ${TINIT}
-  losetup ${LOOP} ${TINIT}
-  mount ${LOOP} ${1}) >/dev/null 2>&1
-
-  initrd_init ${1} ${2} ${3}
+  initrd_init ${1} ${2} ${3} || return 1
   cp -r ${2}/etc/modprobe.d ${1}/etc/
 
   ${2}/sbin/depmod -a -F ${2}/boot/System.map-${3} -b ${2} ${3}
@@ -631,11 +601,11 @@ mk_initrd() {
   chmod 750 ${1}/linuxrc
 
   umount ${1}
-  losetup -d ${LOOP}
+  losetup -d ${ILOOP}
 
-  (e2fsck -Dfy ${TINIT}
-  dd if=${TINIT} bs=1k |gzip -c9 > ${2}/boot/initrd-${3}
-  rm ${TINIT} ${2}/boot/initrd.img ${2}/boot/vmlinuz ${2}/boot/System.map > /dev/null 2>&1
+  (e2fsck -Dfy ${INITRD}
+  dd if=${INITRD} bs=1k |gzip -c9 > ${2}/boot/initrd-${3}
+  rm ${2}/boot/initrd.img ${2}/boot/vmlinuz ${2}/boot/System.map > /dev/null 2>&1
 
   ln -s vmlinuz-${3} ${2}/boot/vmlinuz
   ln -s System.map-${3} ${2}/boot/System.map
@@ -644,47 +614,31 @@ mk_initrd() {
   return 0
 }
 
+TMPDIR=$(mktemp -d /tmp/bootinitrd-XXXXXXXX)
+if [ ! "${TMPDIR}" ] || [ ! -d ${TMPDIR} ];then
+  exit 1;
+fi
+
 if [ "${1}" == "" ];then
   if [ -e /etc/netsentry-version ];then
     eval `cat /etc/netsentry-version`
    else
     echo "No Config File"
-    exit -1
+    exit 1
   fi;
 
   if [ -d /lib/modules/${KERNEL}-${KSUF} ];then
-    mk_initrd /mnt/initrd / ${KERNEL}-${KSUF}
+    mk_initrd ${TMPDIR} / ${KERNEL}-${KSUF} || exit 1
    else
-    mk_initrd /mnt/initrd / ${KERNEL}
+    mk_initrd ${TMPDIR} / ${KERNEL} || exit 1
   fi;
+
   if [ -d /media/aufs/user ];then
     export GRUB_DEVICE=$(grub-probe -t device /media/aufs/user)
   fi;
   grub-mkconfig -o /boot/grub/grub.cfg
  elif [ "${1}" == "bootimg" ];then
-  shift
-  TMPDIR=$(mktemp -d /tmp/bootinitrd-XXXXXXXX)
-  if [ ! "${TMPDIR}" ] || [ ! -d ${TMPDIR} ];then
-    exit 1;
-  fi
-
-  INITRD=$(mktemp  /tmp/bootinitrd-XXXXXXXX)
-  if [ ! "${INITRD}" ] || [ ! -e ${INITRD} ];then
-    exit 1;
-  fi
-
-  ILOOP=`losetup -f`
-  if [ ! "${ILOOP}" ] || [ ! -e "${ILOOP}" ];then
-    exit 1;
-  fi;
-
-  (dd if=/dev/zero of=${INITRD} bs=1M count=24
-  losetup ${ILOOP} ${INITRD}
-  mkfs.ext2 -F -L initrd -i 1024 ${INITRD}
-  mount ${ILOOP} ${TMPDIR}/) > /dev/null 2>&1
-
-  mkbootimg ${TMPDIR} ${2} ${3}
-
+  mkbootimg ${TMPDIR} ${3} ${4} || exit 1
   sleep 2
   umount ${TMPDIR}
 
@@ -693,7 +647,7 @@ if [ "${1}" == "" ];then
   sleep 2
   losetup -d ${ILOOP}
 
-  (dd if=${INITRD} |gzip -c9 > ${1}) > /dev/null 2>&1
-
-  rm -rf ${TMPDIR} ${INITRD}
+  (dd if=${INITRD} |gzip -c9 > ${2}) > /dev/null 2>&1
 fi;
+
+rm -rf ${TMPDIR} ${INITRD}
