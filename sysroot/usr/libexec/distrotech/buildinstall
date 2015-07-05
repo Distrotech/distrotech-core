@@ -5,35 +5,36 @@ NARCH=${NARCH:=$( uname -m )}
 BRAND="Distrotech Solutions";
 DTSSRVDIR=/srv/opt/dtsbuild
 IMG_OUTPUT_DIR=${DTSSRVDIR}/install
+IMG_BOOT_DIR="/boot";
 
 syslinux_cfg_arch() {
   cat <<EOF
-DEFAULT /boot/syslinux/vesamenu.c32
+DEFAULT ${IMG_BOOT_DIR}/syslinux/vesamenu.c32
 TIMEOUT 50
 ONTIMEOUT install
 PROMPT 0
 NOESCAPE 1
 MENU TITLE ${BRAND}
-MENU BACKGROUND /boot/syslinux/background.jpg
+MENU BACKGROUND ${IMG_BOOT_DIR}/syslinux/background.jpg
 
 LABEL install
   MENU LABEL ${BRAND} ${1} (Install)
-  KERNEL /boot/${1}/vmlinuz
-  INITRD /boot/${1}/initrd.img
-  APPEND ro root=/dev/loop0 nomodeset dts_opt=squashfs squashimg=/boot/${1}/images/root.img quiet
+  KERNEL ${IMG_BOOT_DIR}/${1}/vmlinuz
+  INITRD ${IMG_BOOT_DIR}/${1}/initrd.img
+  APPEND ro root=/dev/loop0 nomodeset dts_opt=squashfs squashimg=${IMG_BOOT_DIR}/${1}/images/root.img quiet
 LABEL rescue
   MENU LABEL ${BRAND} ${1} (Rescue)
-  KERNEL /boot/${1}/vmlinuz
-  INITRD /boot/${1}/initrd.img
-  APPEND ro root=/dev/loop0 nomodeset dts_opt=squashfs squashimg=/boot/${1}/images/root.img S
+  KERNEL ${IMG_BOOT_DIR}/${1}/vmlinuz
+  INITRD ${IMG_BOOT_DIR}/${1}/initrd.img
+  APPEND ro root=/dev/loop0 nomodeset dts_opt=squashfs squashimg=${IMG_BOOT_DIR}/${1}/images/root.img S
 LABEL build
   MENU LABEL ${BRAND} ${1} (Build)
-  KERNEL /boot/${1}/vmlinuz
-  INITRD /boot/${1}/initrd.img
-  APPEND ro root=/dev/loop0 nomodeset dts_opt=buildroot squashimg=/boot/${1}/images/root.img buildimg=/boot/${1}/images/buildroot.img S
+  KERNEL ${IMG_BOOT_DIR}/${1}/vmlinuz
+  INITRD ${IMG_BOOT_DIR}/${1}/initrd.img
+  APPEND ro root=/dev/loop0 nomodeset dts_opt=buildroot squashimg=${IMG_BOOT_DIR}/${1}/images/root.img buildimg=${IMG_BOOT_DIR}/${1}/images/buildroot.img S
 LABEL Main Menu
   MENU LABEL Return To Main Menu
-  CONFIG /boot/syslinux/syslinux.cfg
+  CONFIG ${IMG_BOOT_DIR}/syslinux/syslinux.cfg
 EOF
 }
 
@@ -52,14 +53,14 @@ MENU BACKGROUND background.jpg
 EOF
 
   for cfg_arch in $@;do
-    if [ ! -d ${INST_PATH}/boot/${cfg_arch}/images ];then
+    if [ ! -d ${INST_PATH}${IMG_BOOT_DIR}/${cfg_arch}/images ];then
       continue;
     fi;
-    (syslinux_cfg_arch ${cfg_arch} > ${INST_PATH}/boot/syslinux/syslinux_${cfg_arch}.cfg)
+    (syslinux_cfg_arch ${cfg_arch} > ${INST_PATH}${IMG_BOOT_DIR}/syslinux/syslinux_${cfg_arch}.cfg)
       cat <<EOF
 LABEL ${cfg_arch}
   MENU LABEL Install options for ${cfg_arch}
-  CONFIG /boot/syslinux/syslinux_${cfg_arch}.cfg
+  CONFIG ${IMG_BOOT_DIR}/syslinux/syslinux_${cfg_arch}.cfg
 
 EOF
   done;
@@ -93,38 +94,38 @@ config_installer() {
   INST_PATH=${1}
   shift;
 
-  if [ ! -d ${INST_PATH}/boot/syslinux ];then
-    mkdir -p ${INST_PATH}/boot/syslinux
+  if [ ! -d ${INST_PATH}${IMG_BOOT_DIR}/syslinux ];then
+    mkdir -p ${INST_PATH}${IMG_BOOT_DIR}/syslinux
   fi;
 
   for slinfile in vesamenu.c32 libcom32.c32 libutil.c32;do
     if [ -e /usr/share/syslinux/${slinfile} ];then
-      cp /usr/share/syslinux/${slinfile} ${INST_PATH}/boot/syslinux
+      cp /usr/share/syslinux/${slinfile} ${INST_PATH}${IMG_BOOT_DIR}/syslinux
     fi;
   done
 
   if [ -e /boot/grub/background.jpg ];then
-    cp /boot/grub/background.jpg ${INST_PATH}/boot/syslinux/
+    cp /boot/grub/background.jpg ${INST_PATH}${IMG_BOOT_DIR}/syslinux/
   fi;
 
   for img_arch in $@;do
-    if [ ! -d ${INST_PATH}/boot/${img_arch}/ ];then
-      mkdir -p ${INST_PATH}/boot/${img_arch}/
+    if [ ! -d ${INST_PATH}${IMG_BOOT_DIR}/${img_arch}/ ];then
+      mkdir -p ${INST_PATH}${IMG_BOOT_DIR}/${img_arch}/
     fi;
     if [ -d ${DTSSRVDIR}/install/${img_arch} ];then
-      rsync --no-p --no-g -rLtvP --modify-window=1 ${DTSSRVDIR}/install/${img_arch}/ ${INST_PATH}/boot/${img_arch}/
+      rsync --no-p --no-g -rLtvP --modify-window=1 ${DTSSRVDIR}/install/${img_arch}/ ${INST_PATH}${IMG_BOOT_DIR}/${img_arch}/
      elif [ ${img_arch} == ${NARCH} ] && [ -d /boot/images ];then
-      rsync --no-p --no-g -rLtvP --modify-window=1 --exclude=lost+found /boot/images /boot/vmlinuz ${INST_PATH}/boot/${img_arch}/
-      mkinitrd bootimg ${INST_PATH}/boot/${img_arch}/initrd.img / $(uname -r)
+      rsync --no-p --no-g -rLtvP --modify-window=1 --exclude=lost+found /boot/images /boot/vmlinuz ${INST_PATH}${IMG_BOOT_DIR}/${img_arch}/
+      mkinitrd bootimg ${INST_PATH}${IMG_BOOT_DIR}/${img_arch}/initrd.img / $(uname -r)
      else
       continue;
     fi;
   done;
 
   if [ "$#" == "1" ];then
-    syslinux_cfg_arch ${1} > ${INST_PATH}/boot/syslinux/syslinux.cfg
+    syslinux_cfg_arch ${1} > ${INST_PATH}${IMG_BOOT_DIR}/syslinux/syslinux.cfg
    else
-    syslinux_cfg ${INST_PATH} $@ > ${INST_PATH}/boot/syslinux/syslinux.cfg
+    syslinux_cfg ${INST_PATH} $@ > ${INST_PATH}${IMG_BOOT_DIR}/syslinux/syslinux.cfg
   fi;
 }
 
