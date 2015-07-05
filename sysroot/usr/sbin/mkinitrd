@@ -557,9 +557,7 @@ mk_initrd() {
   (init_rd_drivers_scsi ${1} ${2} ${3})
   ${2}/sbin/depmod -a -e -F ${2}/boot/System.map-${3} -b ${1} ${3}
 
-#  initrd_config ${1} ${2} ${3} > ${1}/linuxrc
   mkbootimg ${1} ${2} ${3} || exit 1
-cp ${1}/linuxrc ${1}/sbin/linuxrc* /tmp/
 
   umount ${1}
   losetup -d ${ILOOP}
@@ -575,12 +573,7 @@ cp ${1}/linuxrc ${1}/sbin/linuxrc* /tmp/
   return 0
 }
 
-TMPDIR=$(mktemp -d /tmp/bootinitrd-XXXXXXXX)
-if [ ! "${TMPDIR}" ] || [ ! -d ${TMPDIR} ];then
-  exit 1;
-fi
-
-if [ "${1}" == "" ];then
+initrd_system() {
   if [ -e /etc/netsentry-version ];then
     eval `cat /etc/netsentry-version`
    else
@@ -589,42 +582,44 @@ if [ "${1}" == "" ];then
   fi;
 
   if [ -d /lib/modules/${KERNEL}-${KSUF} ];then
-    mk_initrd ${TMPDIR} / ${KERNEL}-${KSUF} || exit 1
+    mk_initrd ${1} / ${KERNEL}-${KSUF} || exit 1
    else
-    mk_initrd ${TMPDIR} / ${KERNEL} || exit 1
+    mk_initrd ${1} / ${KERNEL} || exit 1
   fi;
 
   if [ -d /media/aufs/user ];then
     export GRUB_DEVICE=$(grub-probe -t device /media/aufs/user)
   fi;
   grub-mkconfig -o /boot/grub/grub.cfg
- elif [ "${1}" == "bootimg" ];then
-  initrd_init ${TMPDIR} ${3} ${4} || return 1
+}
 
-  if [ ! -d ${TMPDIR}/etc/modprobe.d ];then
-    mkdir ${TMPDIR}/etc/modprobe.d
+initrd_install() {
+  initrd_init ${1} ${3} ${4} || return 1
+
+  if [ ! -d ${1}/etc/modprobe.d ];then
+    mkdir ${1}/etc/modprobe.d
   fi;
   (cat << EOF
 options loop meax_part=63
 options sg allow_dio=1
 EOF
-) > ${TMPDIR}/etc/modprobe.d/modprobe.conf
+) > ${1}/etc/modprobe.d/modprobe.conf
 
-  if [ ! -d ${TMPDIR}/etc/modprobe.d ];then
-    mkdir ${TMPDIR}/etc/modprobe.d
+  if [ ! -d ${1}/etc/modprobe.d ];then
+    mkdir ${1}/etc/modprobe.d
   fi;
   (cat << EOF
 options loop meax_part=63
 options sg allow_dio=1
 EOF
-) > ${TMPDIR}/etc/modprobe.d/modprobe.conf
+) > ${1}/etc/modprobe.d/modprobe.conf
 
-  mkbootimg ${TMPDIR} ${3} ${4} || exit 1
-  ${3}/sbin/depmod -b ${TMPDIR} -aeF ${3}/boot/System.map-${4} ${4}
+  mkbootimg ${1} ${3} ${4} || exit 1
+  ${3}/sbin/depmod -b ${1} -aeF ${3}/boot/System.map-${4} ${4}
 
 
   sleep 2
-  umount ${TMPDIR}
+  umount ${1}
 
   e2fsck -Dfy ${ILOOP} > /dev/null 2>&1
 
@@ -632,6 +627,18 @@ EOF
   losetup -d ${ILOOP}
 
   (dd if=${INITRD} |gzip -c9 > ${2}) > /dev/null 2>&1
+}
+
+TMPDIR=$(mktemp -d /tmp/bootinitrd-XXXXXXXX)
+if [ ! "${TMPDIR}" ] || [ ! -d ${TMPDIR} ];then
+  exit 1;
+fi
+
+if [ "${1}" == "" ];then
+  initrd_system ${TMPDIR}
+ elif [ "${1}" == "bootimg" ];then
+  shift
+  initrd_install ${TMPDIR} $@
 fi;
 
 rm -rf ${TMPDIR} ${INITRD}
