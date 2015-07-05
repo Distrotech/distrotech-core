@@ -545,7 +545,7 @@ Mount_Boot() {
   done;
 
   /usr/bin/dialog --backtitle "$BT" --title "AUFS Mount" --infobox "Mounting AUFS images." 7 35
-  mount -t aufs -o br:/media/aufs/user=rw+moo:${MOUNT_AUFS} aufs-install ${1}
+  mount -t aufs -o br:/media/aufs/user=rw+moo${MOUNT_AUFS} aufs-install ${1}
 
   rsync -a ${1}/boot/ /media/aufs/boot/
 
