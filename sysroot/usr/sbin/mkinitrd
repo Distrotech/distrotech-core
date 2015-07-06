@@ -243,6 +243,8 @@ modprobe sl811-hcd
 modprobe ssb-hcd
 modprobe u132-hcd
 modprobe xhci-hcd
+modprobe xhci-plat-hcd
+modprobe xhci-pci
 
 _EOF_
 
