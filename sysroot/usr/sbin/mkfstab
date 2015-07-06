@@ -28,8 +28,10 @@ while(<MNT>) {
   }
 
   if (/^(\/[\w\/-]+)\s(\/[\w\/-]+|\/)\s([\w]+)/) {
-    if (($2 eq "/boot/images") || ($2 eq "/install/tools") || 
-        ($2 eq "/media/isofs") || (! -e $1) || (! -d $2)) {
+    if (($2 eq "/boot/images") || ($2 eq "/install/tools") ||
+        ($2 eq "/media/isofs") || ($2 =~ /^\/usr\/gnemul/) ||
+        ($2 =~ /\/dtsbuild\/build$/) || ($2 =~ /\/dtsbuild\/tar$/) ||
+        (! -e $1) || (! -d $2)) {
       next;
     }
 
