@@ -2,10 +2,10 @@
 
 case ${1} in
         "deconfig")
-           /bin/ip link set dev ${interface} up
+           /sbin/ip link set dev ${interface} up
            ;;
 	"bound")
-           /bin/ip addr add ${ip}/${subnet} broadcast ${broadcast} dev ${interface}
-           /bin/mount -o ro ${router}:/mnt/dev /sysroot
+           /sbin/ip addr add ${ip}/${subnet} broadcast ${broadcast} dev ${interface}
+           /sbin/mount -o ro ${router}:/mnt/dev /sysroot
            ;;
 esac
