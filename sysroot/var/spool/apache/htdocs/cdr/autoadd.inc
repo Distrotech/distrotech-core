@@ -97,7 +97,7 @@ function createexten($mac,$phonetype,$prefix,$start,$tdmport) {
     }
     if ($cno <= $autovars['AutoEnd']) {
       $extennum=sprintf("%02u%02u",$autovars['DefaultPrefix'],$cno);
-      $newexten="'" . $autovars['DefaultPrefix'] . "'||lpad('" . $cno . "',2,0)";
+      $newexten="'" . $autovars['DefaultPrefix'] . "'||lpad('" . $cno . "',2,'0')";
       $newepass=randpwgen(8);
 
       if (($phonetype == "SNOM") || ($phonetype == "YEALINK") || ($phonetype == "POLYCOM") || (substr($phonetype,0,3) == "IP_")) {
