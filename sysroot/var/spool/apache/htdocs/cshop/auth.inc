@@ -19,6 +19,8 @@ if ($qlink[$matches[1]] != "") {
   if (($_POST['disppage'] == "") && ($_SESSION['disppage'] == "")) {
     $_POST['disppage']=$qlink[$matches[1]];
   }
+} else if ($_SERVER['SCRIPT_URL'] == "/cshop/") {
+    $_POST['disppage']="cshop";
 }
 
 if (($_POST['vboxlogoff'] == $sessid) && ($_POST['vboxlogoff'] != "")) {
