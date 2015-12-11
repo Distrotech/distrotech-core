@@ -108,7 +108,7 @@ $featarr=array("CDND","CFBU","CFIM","CFNA","CFFAX","ALTC","OFFICE","WAIT","RECOR
                 "ALOCK","NOPRES","DFEAT","NOVOIP","CRMPOP","NOVMAIL","FAXMAIL","DISPNAME","SNOMLOCK","POLYDIRLN","EFAXD",
                 "TOUT","DGROUP","ZAPLine","DDIPASS","ZAPProto","ZAPRXGain","ZAPTXGain","CLI","TRUNK","ACCESS",
                 "AUTHACCESS","IAXLine","H323Line","FWDU","Locked","SNOMMAC","VLAN","REGISTRAR","PTYPE","PURSE",
-                "DRING","SRING0","SRING1","SRING2","SRING3","faxgateway","ipnet","authreg");
+                "DRING","SRING0","SRING1","SRING2","SRING3","faxgateway","ipnet","authreg","parestrict");
 $lsysarr=array("profile","stunsrv","hostname","rxgain","txgain","vlan","nat");
 
 if ((isset($pbxupdate)) && ($pbxupdate == "Save Changes")) {
@@ -577,14 +577,17 @@ if ($usertype == 1) {
 <TR CLASS=list-color2>
   <TD ALIGN=LEFT onmouseover=myHint.show('ES11') ONMOUSEOUT=myHint.hide()><%print _("Pickup Group(s)");%></TD>
   <TD><INPUT TYPE=TEXT NAME=pickupgroup VALUE="<%print $pgroup;%>"></TD></TR>
+<TR CLASS=list-color1>
+  <TD onmouseover=myHint.show('ES10') ONMOUSEOUT=myHint.hide() ALIGN=LEFT><%print _("Only Allow Calls From Exten (PA)");%></TD>
+  <TD><INPUT TYPE=TEXT NAME=parestrict VALUE="<%print $origdata["parestrict"];%>"></TD></TR>
 <%
-    $cnt=0;
+    $cnt=1;
   } else {
-    $cnt=0;
+    $cnt=1;
 %>
 <INPUT TYPE=HIDDEN NAME=pgroup VALUE="<%print $pgroup;%>">
 <INPUT TYPE=HIDDEN NAME=cgroup VALUE="<%print $cgroup;%>">
-<TR CLASS=list-color1>
+<TR CLASS=list-color2>
 <%
 }
 %>
