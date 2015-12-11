@@ -610,6 +610,10 @@ RewriteCond %{HTTP_USER_AGENT}  ^yealink [OR]
 RewriteCond %{HTTP_USER_AGENT}  ^Yealink
 RewriteRule ^/y00000000000([0-9]).cfg /yealink/generic.php?version=$1 [L,T=application/x-httpd-php]
 
+#Duxbury Phones
+RewriteRule ^/(00[aA]859[0-9A-Fa-f]{6}).cfg /duxbury/config.php?mac=$1 [L,T=application/x-httpd-php]
+
+#Polycom
 RewriteRule ^/([0-9A-Fa-f]{12}).cfg /polycom/masterconf.php?mac=$1 [L,T=application/x-httpd-php]
 
 #CSV Download Magic
