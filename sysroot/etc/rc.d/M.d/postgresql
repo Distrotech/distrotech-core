@@ -160,9 +160,10 @@ create_db() {
   if [ ! -d ${PGDATA} ];then
     mkdir $PGDATA
     chown pgsql.pgsql $PGDATA
+    chmod 0700 ${PGDATA}
   fi;
   su pgsql -c /usr/bin/initdb > /dev/null 2>&1
- 
+
   check_sslcert
   if [ $? != 0 ];then
     rm -rf ${PGDATA}
