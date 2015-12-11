@@ -890,7 +890,7 @@ if ($SUPER_USER == 1) {
   <TD ALIGN=LEFT onmouseover=myHint.show('ES25') ONMOUSEOUT=myHint.hide()><%print _("Phone Manufacturer/Model.");%></TD>
   <TD>
     <SELECT NAME=PTYPE>
-      <OPTION VALUE=DUXBURY<%if ($origdata["ptype"] == "DUXBURY") {print " SELECTED";}%>>Snom
+      <OPTION VALUE=DUXBURY<%if ($origdata["ptype"] == "DUXBURY") {print " SELECTED";}%>>Duxbury
       <OPTION VALUE=SNOM<%if ($origdata["ptype"] == "SNOM") {print " SELECTED";}%>>Snom
       <OPTION VALUE=SNOM_M9<%if ($origdata["ptype"] == "SNOM_M9") {print " SELECTED";}%>>Snom M9
       <OPTION VALUE=LINKSYS<%if ($origdata["ptype"] == "LINKSYS") {print " SELECTED";}%>>Linksys/Audiocodes MP-202
