@@ -21,17 +21,12 @@ LABEL install
   MENU LABEL ${BRAND} ${1} (Install)
   KERNEL ${IMG_BOOT_DIR}/${1}/vmlinuz
   INITRD ${IMG_BOOT_DIR}/${1}/initrd.img
-  APPEND ro root=/dev/loop0 nomodeset dts_opt=squashfs squashimg=${IMG_BOOT_DIR}/${1}/images/root.img quiet
+  APPEND ro root=/dev/loop0 nomodeset dts_opt=squashfs img_path=${IMG_BOOT_DIR}/${1}/images quiet
 LABEL rescue
   MENU LABEL ${BRAND} ${1} (Rescue)
   KERNEL ${IMG_BOOT_DIR}/${1}/vmlinuz
   INITRD ${IMG_BOOT_DIR}/${1}/initrd.img
-  APPEND ro root=/dev/loop0 nomodeset dts_opt=squashfs squashimg=${IMG_BOOT_DIR}/${1}/images/root.img S
-LABEL build
-  MENU LABEL ${BRAND} ${1} (Build)
-  KERNEL ${IMG_BOOT_DIR}/${1}/vmlinuz
-  INITRD ${IMG_BOOT_DIR}/${1}/initrd.img
-  APPEND ro root=/dev/loop0 nomodeset dts_opt=buildroot squashimg=${IMG_BOOT_DIR}/${1}/images/root.img buildimg=${IMG_BOOT_DIR}/${1}/images/buildroot.img S
+  APPEND ro root=/dev/loop0 nomodeset dts_opt=squashfs img_path=${IMG_BOOT_DIR}/${1}/images S
 LABEL Main Menu
   MENU LABEL Return To Main Menu
   CONFIG ${IMG_BOOT_DIR}/syslinux/syslinux.cfg
@@ -171,6 +166,7 @@ if [ "${1}" ];then
     IMGLOOP=$(losetup -f --show ${INST_PATH})
     INSTDEV=${IMGLOOP}p1
     mkdosfs -F 32 -n DTS_INSTALL ${INSTDEV}
+    parted -s ${INST_PATH} set 1 lba on
    elif [ -e ${INST_PATH} ] && [ ! -b ${INST_PATH} ];then
     IMGLOOP=$(losetup -f --show ${INST_PATH})
     INSTDEV=${IMGLOOP}p1
@@ -191,4 +187,5 @@ if [ "${1}" ];then
   if [ "${IMGLOOP}" ] && [ -b ${IMGLOOP} ];then
     losetup -d ${IMGLOOP}
   fi;
+  parted -s ${INST_PATH} set 1 boot on
 fi;

@@ -245,6 +245,10 @@ modprobe u132-hcd
 modprobe xhci-hcd
 modprobe xhci-plat-hcd
 modprobe xhci-pci
+modprobe ohci-pci
+modprobe ehci-pci
+modprobe ohci-platform
+modprobe ehci-platform
 
 _EOF_
 
@@ -444,22 +448,21 @@ mount -n /dev/ram1 /aufs
 mkdir /aufs/isofs /aufs/install /aufs/user
 
 mount -n -o ro -L DTS_INSTALL /aufs/isofs
-AUFS_MNT=""
-if [ "\${squashimg}" ] && [ -f /aufs/isofs/\${squashimg} ];then
-  mkdir /aufs/root
-  FLOOP=\$(losetup -f)
-  losetup \${FLOOP} /aufs/isofs/\${squashimg}
-  mount -n -o ro \${FLOOP} /aufs/root
-  AUFS_MNT=":/aufs/root=rr";
+
+if [ ! "\${img_path}" ];then
+  img_path="/boot/\$(uname -m)/images"
 fi;
 
-if [ "\${buildimg}" ] && [ -f /aufs/isofs/\${buildimg} ];then
-  mkdir /aufs/buildroot
-  FLOOP=\$(losetup -f)
-  losetup \${FLOOP} /aufs/isofs/\${buildimg}
-  mount -o ro \${FLOOP} /aufs/buildroot
-  AUFS_MNT=":/aufs/buildroot=rr\${AUFS_MNT}";
-fi;
+AUFS_MNT="";
+for img_file in qemu root core buildroot;do
+  if [ -f /aufs/isofs/\${img_path}/\${img_file}.img ];then
+    mkdir /aufs/\${img_file}
+    FLOOP=\$(losetup -f)
+    losetup \${FLOOP} /aufs/isofs/\${img_path}/\${img_file}.img
+    /bin/mount -n -o ro \${FLOOP} /aufs/\${img_file}
+    AUFS_MNT=":/aufs/\${img_file}=rr\${AUFS_MNT}"
+  fi;
+done
 
 mount -t tmpfs tmprw /aufs/user
 
