@@ -20,6 +20,14 @@
 
 $exten=$_POST['exten'];
 
+$astpaths=array("lib64/x86_64", "libx32/i686", "lib/i686", "lib64", "lib");
+while(list($astidx, $astlib) = each($astpaths)) {
+  if (is_dir("/usr/" . $astlib . "/asterisk/modules-10/")) {
+    $astmodpath="/usr/" . $astlib . "/asterisk/modules-10/";
+  }
+}
+
+
 function newrpin($exten) {
   global $db;
 
@@ -1222,14 +1230,14 @@ if ($SUPER_USER == 1) {
   <TD onmouseover=myHint.show('ES44') ONMOUSEOUT=myHint.hide()><%print _("First Audio Codec Choice");%></TD>
   <TD>
     <SELECT NAME=acodec1>
-      <%if (is_file("/usr/lib/asterisk/modules-10/codec_g723.so")) {
+      <%if (is_file($astmodpath . "/codec_g723.so")) {
           print "<OPTION VALUE=0";
           if ($acodec[0] == $codec[0]) {
             print " SELECTED";
           }
           print ">" . $codecd[0] . "</OPTION>\n";
         }
-        if (is_file("/usr/lib/asterisk/modules-10/codec_g729.so")) {
+        if (is_file($astmodpath . "/codec_g729.so")) {
           print "<OPTION VALUE=1";
           if ($acodec[0] == $codec[1]) {
             print " SELECTED";
@@ -1241,7 +1249,7 @@ if ($SUPER_USER == 1) {
           if ($acodec[0] == $codec[$i]) {
             print " SELECTED";
           }
-          print ">" . $codecd[$i] . "</OPTION>\n";          
+          print ">" . $codecd[$i] . "</OPTION>\n";
         }%>
     </SELECT>
   </TD>
@@ -1251,14 +1259,14 @@ if ($SUPER_USER == 1) {
   <TD onmouseover=myHint.show('ES44') ONMOUSEOUT=myHint.hide()><%print _("Second Audio Codec Choice");%></TD>
   <TD>
     <SELECT NAME=acodec2>
-      <%if (is_file("/usr/lib/asterisk/modules-10/codec_g723.so")) {
+      <%if (is_file($astmodpath . "/codec_g723.so")) {
           print "<OPTION VALUE=0";
           if ($acodec[1] == $codec[0]) {
             print " SELECTED";
           }
           print ">" . $codecd[0] . "</OPTION>\n";
         }
-        if (is_file("/usr/lib/asterisk/modules-10/codec_g729.so")) {
+        if (is_file($astmodpath . "/codec_g729.so")) {
           print "<OPTION VALUE=1";
           if ($acodec[1] == $codec[1]) {
             print " SELECTED";
@@ -1270,7 +1278,7 @@ if ($SUPER_USER == 1) {
           if ($acodec[1] == $codec[$i]) {
             print " SELECTED";
           }
-          print ">" . $codecd[$i] . "</OPTION>\n";          
+          print ">" . $codecd[$i] . "</OPTION>\n";
         }%>
     </SELECT>
   </TD>
@@ -1280,14 +1288,14 @@ if ($SUPER_USER == 1) {
   <TD onmouseover=myHint.show('ES44') ONMOUSEOUT=myHint.hide()><%print _("Third Audio Codec Choice");%></TD>
   <TD>
     <SELECT NAME=acodec3>
-      <%if (is_file("/usr/lib/asterisk/modules-10/codec_g723.so")) {
+      <%if (is_file($astmodpath . "/codec_g723.so")) {
           print "<OPTION VALUE=0";
           if ($acodec[2] == $codec[0]) {
             print " SELECTED";
           }
           print ">" . $codecd[0] . "</OPTION>\n";
         }
-        if (is_file("/usr/lib/asterisk/modules-10/codec_g729.so")) {
+        if (is_file($astmodpath . "/codec_g729.so")) {
           print "<OPTION VALUE=1";
           if ($acodec[2] == $codec[1]) {
             print " SELECTED";
@@ -1299,7 +1307,7 @@ if ($SUPER_USER == 1) {
           if ($acodec[2] == $codec[$i]) {
             print " SELECTED";
           }
-          print ">" . $codecd[$i] . "</OPTION>\n";          
+          print ">" . $codecd[$i] . "</OPTION>\n";
         }%>
     </SELECT>
   </TD>
@@ -1314,7 +1322,7 @@ if ($SUPER_USER == 1) {
           if ($vcodec[0] == $codec[$i]) {
             print " SELECTED";
           }
-          print ">" . $codecd[$i] . "</OPTION>\n";          
+          print ">" . $codecd[$i] . "</OPTION>\n";
         }%>
     </SELECT>
   </TD>
@@ -1329,7 +1337,7 @@ if ($SUPER_USER == 1) {
           if ($vcodec[1] == $codec[$i]) {
             print " SELECTED";
           }
-          print ">" . $codecd[$i] . "</OPTION>\n";          
+          print ">" . $codecd[$i] . "</OPTION>\n";
         }%>
     </SELECT>
   </TD>
@@ -1344,7 +1352,7 @@ if ($SUPER_USER == 1) {
           if ($vcodec[2] == $codec[$i]) {
             print " SELECTED";
           }
-          print ">" . $codecd[$i] . "</OPTION>\n";          
+          print ">" . $codecd[$i] . "</OPTION>\n";
         }%>
     </SELECT>
   </TD>
