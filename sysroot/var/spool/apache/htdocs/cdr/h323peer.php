@@ -122,7 +122,7 @@ if ($gwid == "") {
 %>
 <TD WIDTH=50%><%print _("Select Gateway To Edit/Delete");%></TD>
 <TD>
-<SELECT NAME=gwid onchange=this.form.subme.click()>
+<SELECT NAME=gwid>
 <OPTION VALUE=""><%print _("Add New Gateway Bellow");%></OPTION>
 <%
 $dnum=pg_num_rows($qgetdata);

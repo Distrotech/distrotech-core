@@ -27,14 +27,14 @@ if (! $db) {
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <TR CLASS=list-color2>
 <%
-if ((isset($_POST['provupdate']) || isset($_POST['provsave'])) && (($_POST['trunkprefix'] != "") || (($_POST['trunkprefix'] == "") && ($newprov != "")))) {
-  if (($_POST['trunkprefix'] == "") && ($newprov != "")) {
-    pg_query($db,"INSERT INTO provider (name) VALUES ('" . $newprov . "')");
+if ((isset($_POST['provupdate']) || isset($_POST['provsave'])) && (($_POST['trunkprefix'] != "") || (($_POST['trunkprefix'] == "") && ($_POST['newprov'] != "")))) {
+  if (($_POST['trunkprefix'] == "") && ($_POST['newprov'] != "")) {
+    pg_query($db,"INSERT INTO provider (name) VALUES ('" . pg_escape_string($db, $_POST['newprov']) . "')");
     $provq=pg_query($db,"SELECT trunkprefix,name,removeprefix,nationalprefix,internationalprefix,nationallen FROM provider " .
-			"WHERE name = '" . $_POST['newprov'] . "' LIMIT 1");
+			"WHERE name = '" . pg_escape_string($db, $_POST['newprov']) . "' LIMIT 1");
   } else {
     if (isset($_POST['provsave'])) {
-      pg_query($db, "UPDATE provider SET name='" . $_POST['pname'] . "',removeprefix='" . $_POST['removeprefix'] . "'," .
+      pg_query($db, "UPDATE provider SET name='" . pg_escape_string($db, $_POST['pname']) . "',removeprefix='" . $_POST['removeprefix'] . "'," .
 		"nationalprefix='" . $_POST['pnatpre'] . "',internationalprefix='" . $_POST['pinatpre'] . "'," . 
 		"nationallen='" . $_POST['pnatlen'] . "' WHERE trunkprefix = " . $_POST['trunkprefix']);
     }
