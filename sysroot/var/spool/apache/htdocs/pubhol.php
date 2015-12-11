@@ -215,7 +215,7 @@ if (($_POST['print'] != "1") && ($ADMIN_USER != "pleb")) {
 print "<TH>" . _("Open/Closed (Office Hours)") . "</TH><TH>" . _("Day") . "</TH><TH>" . _("Month")  . "</TH><TH>" . _("Description") . "</TH></TR>\n";
 $rcol++;
 
-$tariffq1=pg_query($db,"SELECT starttime,stoptime,lpad(monthday,2,'0'),lpad(month,2,'0'),description,date_part('year',now()),index FROM officehours where (year='' OR date_part('year',now()) = year)  AND pubhol AND bgroup='" . $bgroup . "' ORDER BY lpad(month,2,0),lpad(monthday,2,0)");
+$tariffq1=pg_query($db,"SELECT starttime,stoptime,lpad(monthday,2,'0'),lpad(month,2,'0'),description,date_part('year',now()),index FROM officehours where (year='' OR CAST(date_part('year',now()) AS varchar(8)) = year)  AND pubhol AND bgroup='" . $bgroup . "' ORDER BY lpad(month,2,'0'),lpad(monthday,2,'0')");
 
 for($tcnt=0;$tcnt<pg_num_rows($tariffq1);$tcnt++) {
   $r=pg_fetch_array($tariffq1,$tcnt);
