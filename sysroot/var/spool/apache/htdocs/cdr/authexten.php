@@ -5,7 +5,7 @@
 include_once "auth.inc";
 $extens=pg_query($db,"SELECT name,fullname,ipaddr,snommac from users left outer join features on (name = exten) 
 			left outer join astdb as lpre on (lpre.family = 'LocalPrefix' and lpre.key = substr(name,0,3))
-                         where autoauth = 1 AND lpre.value='1' order by name");
+                         where autoauth = '1' AND lpre.value='1' order by name");
 
 if ($_POST['print'] != "1") {
   $colspan=5;

@@ -10,7 +10,7 @@ $extensq="SELECT name,fullname,ipaddr,snommac,useragent from users
 if ($SUPER_USER != 1) {
   $extensq.=" LEFT OUTER JOIN astdb AS bgrp ON (bgrp.family=name AND bgrp.key='BGRP')";
 }
-$extensq.=" where (fwdu = 0 OR fwdu is null) AND (zapline = 0 OR zapline is null) AND (extract(epoch from now()) - 3600 > regseconds OR regseconds is null ) AND (not h323neighbor  OR h323neighbor is null) AND lpre.value='1'";
+$extensq.=" where (fwdu = '0' OR fwdu is null) AND (zapline = '0' OR zapline is null) AND (extract(epoch from now()) - 3600 > CAST(regseconds AS int) OR regseconds is null ) AND (not h323neighbor  OR h323neighbor is null) AND lpre.value='1'";
 if ($SUPER_USER != 1) {
   $extensq.=" AND " . $clogacl;
 }
