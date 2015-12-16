@@ -22,7 +22,7 @@ include_once "auth.inc";
 
 if (isset($pbxupdate)) {
   if ($h323gwid != "") {
-    pg_query($db,"INSERT INTO users (defaultuser,name,password,h323permit,h323gkid,ipaddr,h323neighbor) VALUES ('" . $h323gwid . "','" . $h323gwid . "','','allow','" . $h323gkid . "','" . $h323permip . "','t')");
+    pg_query($db,"INSERT INTO users (defaultuser,name,h323permit,h323gkid,ipaddr,h323neighbor) VALUES ('" . $h323gwid . "','" . $h323gwid . "','allow','" . $h323gkid . "','" . $h323permip . "','t')");
   } else if ($key != "") {
     pg_query($db,"DELETE FROM users WHERE name='$key'");
   }

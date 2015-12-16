@@ -51,11 +51,11 @@ if ((isset($pbxupdate)) && ($queue == "") && ($qno != "") && (strlen($qno) == 2)
   $newlpass=randpwgen(8);
   $queue=$qpre . $qno;
   $exadd=pg_query($db,"INSERT INTO queue_table (name,timeout) VALUES ('" . $queue . "','" . $timeout . "')");
-  $exadd=pg_query($db,"INSERT INTO users (name,defaultuser,context,mailbox,password,fullname,email,secret) VALUES ('" . $queue . "','" . $queue . "','6','" . $queue . "','" . $queue . "','','','" . $newlpass . "')");
+  $exadd=pg_query($db,"INSERT INTO voicemail (context,mailbox,password,fullname,email) VALUES ('6','" . $queue . "','" . $queue . "','','')");
   include "qadmin.php";
 } else if (isset($pbxupdate)) {
   if ($queue != "") {
-    $exedit=pg_query($db,"SELECT mailbox FROM users WHERE mailbox='" . $queue . "'");
+    $exedit=pg_query($db,"SELECT mailbox FROM voicemail WHERE mailbox='" . $queue . "'");
     if (pg_num_rows($exedit) > 0) {
       include "qadmin.php";
     }
@@ -64,7 +64,7 @@ if ((isset($pbxupdate)) && ($queue == "") && ($qno != "") && (strlen($qno) == 2)
   if ((isset($delext)) && ($queue != "")) {
     pg_query($db,"DELETE FROM queue_table WHERE name='" . $queue . "'");
     pg_query($db,"DELETE FROM astdb WHERE family='" . $queue . "' OR family='Q" . $queue . "'");
-    pg_query($db,"DELETE FROM users WHERE mailbox='" . $queue . "'");
+    pg_query($db,"DELETE FROM voicemail WHERE mailbox='" . $queue . "'");
   }
 %>
   <TH CLASS=heading-body COLSPAN=2><%print _("Select Queue");%></TH>

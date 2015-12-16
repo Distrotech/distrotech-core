@@ -77,11 +77,13 @@ if (isset($_POST['adduser'])) {
     } else {
       $bnameout=$_POST['bname'];
     }
-    pg_query($db,"INSERT INTO users (name,defaultuser,fromuser,mailbox,secret,password,credit,callerid,tariff,
-                                     activated,usertype,fullname,email,agentid,qualify,nat,canreinvite) VALUES (
-                                     '$cno','$cno','$cno','$cno','$lpass','$vmpass','0','" . $_POST['defcli'] . "','" . $_POST['tariff'] . "','" . $_POST['active'] . "',
-                                     '1','$bnameout','" . $_POST['email'] . "'," . $_SESSION['resellerid'] . ",'yes',
-                                     '" . $_POST['nat'] . "','" . $_POST['canreinvite'] . "')");
+    $newac="INSERT INTO users (name,defaultuser,fromuser,secret,credit,callerid,tariff,
+                                     activated,usertype,fullname,agentid,qualify,nat,canreinvite,mailbox) VALUES (
+                                     '$cno','$cno','$cno','$lpass','0','" . $_POST['defcli'] . "','" . $_POST['tariff'] . "','" . $_POST['active'] . "',
+                                     '1','$bnameout'," . $_SESSION['resellerid'] . ",'yes',
+                                     '" . $_POST['nat'] . "','" . $_POST['canreinvite'] . "','" . $cno . "@6')";
+    pg_query($db,$newac);
+    pg_query($db,"INSERT INTO voicemail (mailbox,context,email,fullname,password) VALUES ('" . $cno . "',6,'" . $_POST['email'] . "','" . $bnameout . "','" . $vmpass . "')");
     pg_query($db,"INSERT INTO features (exten) VALUES ('$cno')");
     if ($_POST['aloccredit'] > 0) {
       $rcred=pg_query("SELECT credit,exchangerate,description,credit*oratio-rcallocated FROM reseller WHERE id='" . $_SESSION['resellerid'] . "'");

@@ -8,8 +8,9 @@
 <INPUT TYPE=HIDDEN NAME=print>
 <%
 include_once "auth.inc";
-$extensq="SELECT name,fullname,secret,password,roampass from users
+$extensq="SELECT name,users.fullname,secret,voicemail.password,roampass from users
  left outer join features on (name = exten)
+ left outer join voicemail on (name = voicemail.mailbox)
  left outer join astdb as lpre on (lpre.family = 'LocalPrefix' and lpre.key = substr(name,0,3))";
 if ($SUPER_USER != 1) {
   $extensq.=" LEFT OUTER JOIN astdb AS bgrp ON (name=bgrp.family AND bgrp.key='BGRP')";
@@ -19,7 +20,6 @@ if ($SUPER_USER != 1) {
   $extensq.=" AND " . $clogacl;
 }
 $extensq.=" order by name";
-
 $extens=pg_query($db,$extensq);
 
 function newpin($exten) {

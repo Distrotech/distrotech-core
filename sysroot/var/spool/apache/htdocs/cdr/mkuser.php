@@ -38,7 +38,7 @@ if ((isset($_POST['mmap'])) && (!isset($_POST['pbxupdate']))) {
 if ((isset($_POST['pbxupdate'])) && ($_POST['exten'] == "") && (($_POST['prefix'] != "") || ($npre != "")) && ($_POST['cno'] != "") && (strlen($_POST['cno']) == 2)) {
   $_POST['exten']=$_POST['prefix'] . $_POST['cno'];
 
-  $isval=pg_query($db,"SELECT 1 FROM users WHERE name='" . $_POST['exten'] . "'");
+  $isval=pg_query($db,"SELECT 1 FROM features WHERE exten='" . $_POST['exten'] . "'");
   if (pg_num_rows($isval) > 0) {
     include "vladmin.php";
   } else {
@@ -60,28 +60,29 @@ if ((isset($_POST['pbxupdate'])) && ($_POST['exten'] == "") && (($_POST['prefix'
     do {
       $rndpin=randpwgen(8);
     } while($rndpin == $_POST['exten']);
-    $exaddq="INSERT INTO users (context,name,defaultuser,mailbox,secret,password,usertype,
-                                     fullname,email,callgroup,pickupgroup,qualify) VALUES (
-                                     '6','" . $_POST['prefix'] . $_POST['cno'] . "','" . $_POST['prefix'] . $_POST['cno'] . "','" . $_POST['prefix'] . $_POST['cno'] . "',
-                                     '" . $rndpin . "','" . $_POST['prefix'] . $_POST['cno'] . "','0','Exten " . $_POST['prefix'] . $_POST['cno'] . "','','1','1','yes')";
+    $exaddq="INSERT INTO users (context,name,defaultuser,mailbox,secret,usertype,
+                                     fullname,callgroup,pickupgroup,qualify) VALUES (
+                                     '6','" . $_POST['prefix'] . $_POST['cno'] . "','" . $_POST['prefix'] . $_POST['cno'] . "','" . $_POST['prefix'] . $_POST['cno'] . "@6',
+                                     '" . $rndpin . "','0','Exten " . $_POST['prefix'] . $_POST['cno'] . "','1','1','yes')";
     $exadd=pg_query($db,$exaddq);
+    pg_query($db,"INSERT INTO voicemail (mailbox,context,email,fullname,password) SELECT users.name,context,'',fullname,name FROM users WHERE users.name = '" . $_POST['prefix'] . $_POST['cno'] . "'");
     pg_query($db,"INSERT INTO features (exten) VALUES ('" . $_POST['prefix'] . $_POST['cno'] . "')");
     setdefaults($_POST['prefix'] . $_POST['cno']);
     include "vladmin.php";
   }
 } else if ((isset($_POST['pbxupdate'])) && ($_POST['exten'] != "")) {
-  $exedit=pg_query($db,"SELECT substr(name,0,3),substr(name,3,3),secret,secret,fullname,
-                               email,callgroup,pickupgroup FROM users WHERE name='" . $_POST['exten'] . "'");
+  $exedit=pg_query($db,"SELECT exten FROM features WHERE exten='" . $_POST['exten'] . "'");
   if (pg_num_rows($exedit) > 0) {
     include "vladmin.php";
   }
 } else if ((!isset($_POST['pbxupdate'])) || ($_POST['exten'] == "")){
   if ((isset($delext)) && ($_POST['exten'] != "")) {
+    pg_query($db,"DELETE FROM voicemail USING features WHERE exten = mailbox AND exten='" . $_POST['exten'] . "'");
     pg_query($db,"DELETE FROM users WHERE name='" . $_POST['exten'] . "'");
     pg_query($db,"DELETE FROM astdb WHERE family='" . $_POST['exten'] . "'");
     pg_query($db,"DELETE FROM features WHERE exten='" . $_POST['exten'] . "'");
     pg_query($db,"DELETE FROM console WHERE mailbox='" . $_POST['exten'] . "'");
-    $delpre=pg_query($db,"SELECT name from users where name ~ '^" . substr($_POST['exten'],0,2) . "'");
+    $delpre=pg_query($db,"SELECT name from features where exten ~ '^" . substr($_POST['exten'],0,2) . "'");
     if (pg_num_rows($delpre) <= 0) {
       $delpre2=pg_query($db,"SELECT value from astdb where family = 'Setup' AND key = 'DefaultPrefix' AND value = '" . substr($_POST['exten'],0,2) . "'");
       if (pg_num_rows($delpre2) <= 0) {
@@ -120,7 +121,7 @@ if ((isset($_POST['pbxupdate'])) && ($_POST['exten'] == "") && (($_POST['prefix'
   $num=pg_num_rows($curext);
   for($i=0;$i < $num;$i++) {
     $r = pg_fetch_array($curext,$i,PGSQL_NUM);
-    print "    <OPTION VALUE=\"" .  $r[0] . "\">" . $r[1] . "</OPTION>\n";   
+    print "    <OPTION VALUE=\"" .  $r[0] . "\">" . $r[1] . "</OPTION>\n";
   }
 %>
   </SELECT>

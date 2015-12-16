@@ -5,7 +5,7 @@ include "../ldap/ldapbind.inc";
 
 header('Content-type: text/xml');
 
-$mac=strtoupper($mac);
+$mac=strtoupper($_GET['mac']);
 
 $auth_ussr=@ldap_search($ds,"ou=snom","(&(objectClass=person)(cn=snom))");
 
@@ -85,7 +85,7 @@ if ($domain == "" ) {
 
 $uadata=explode(";",$_SERVER['HTTP_USER_AGENT']);
 $curver=trim($uadata[3]," )");
-$linver="snom" . $phone . " linux 3.38";
+$linver="snom" . $_GET['phone'] . " linux 3.38";
 
 if ($sipver[0] < 8) {
   print "language&: English(UK)\n";
@@ -93,8 +93,8 @@ if ($sipver[0] < 8) {
   print "admin_mode_password&: 1234\n";
   print "update_policy&: auto_update\n";
 
-  if (($SERVER_NAME != "") && ($phone != "") && (is_file("snom" . $phone . "-fw.php"))) {
-    print "firmware_status&: http://" . $SERVER_NAME . "/snom/snom" . $phone . "-fw.php\n";
+  if (($SERVER_NAME != "") && ($_GET['phone'] != "") && (is_file("snom" . $_GET['phone'] . "-fw.php"))) {
+    print "firmware_status&: http://" . $SERVER_NAME . "/snom/snom" . $_GET['phone'] . "-fw.php\n";
   };
   if (($vlantag != "") && ($vlantag > 1)) {
     print "vlan&: " . $vlantag . " 5\n";

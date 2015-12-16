@@ -54,7 +54,7 @@ if (isset($pbxupdate)) {
   }
 
   pg_query($db,"UPDATE qfeatures SET timeout='" . $QTIMEOUT . "',penalty='" . $QAPENALTY . "' WHERE queue='" . $queue . "'");
-  pg_query($db,"UPDATE users SET fullname='$description',email='$email' WHERE mailbox='$queue'");
+  pg_query($db,"UPDATE voicemail SET fullname='$description',email='$email' WHERE mailbox='$queue'");
   pg_query($db,"UPDATE queue_table SET strategy='$strategy',timeout='$timeout',
                                        description='$description',wrapuptime='$wrapuptime',
                                        memberdelay='$memberdelay',servicelevel='$servicelevel',
@@ -64,9 +64,9 @@ if (isset($pbxupdate)) {
                                        playmusiconhold='$playmusiconhold'
                                    WHERE name='$queue'");
 
-                      
+
   if (($pass1 == $pass2) && ($pass1 != "")){
-    pg_query($db,"UPDATE users SET password='$pass1' WHERE mailbox='$queue'");
+    pg_query($db,"UPDATE voicemail SET password='$pass1' WHERE mailbox='$queue'");
   } else if ($pass1 != "") {
 %>
     <SCRIPT>
@@ -77,7 +77,7 @@ if (isset($pbxupdate)) {
 }
 
 $qgetdata=pg_query($db,"SELECT timeout,penalty FROM qfeatures WHERE queue='" . $queue . "'");
-$qgetudata=pg_query($db,"SELECT email,password FROM users WHERE mailbox='" . $queue . "'");
+$qgetudata=pg_query($db,"SELECT email,password FROM voicemail WHERE mailbox='" . $queue . "'");
 $qgetqdata=pg_query($db,"SELECT strategy,timeout,description,wrapuptime,
                                 memberdelay,retry,servicelevel,weight,maxlen,
                                 autopausedelay,announce_round_seconds,

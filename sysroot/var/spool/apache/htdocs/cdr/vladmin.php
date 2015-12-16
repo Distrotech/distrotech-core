@@ -266,7 +266,7 @@ if ((isset($pbxupdate)) && ($pbxupdate == "Save Changes")) {
 <%
   }
   if (($VMPass1 == $VMPass2) && ($VMPass1 != "") && ($VMPass1 != $password)) {
-    $pwcng.="password='$VMPass1',";
+    $vmpwcng.="password='$VMPass1',";
   } else if (($VMpass1 != "") && ($VMPass1 != $password)) {
 %>
     <SCRIPT>
@@ -282,7 +282,7 @@ if ((isset($pbxupdate)) && ($pbxupdate == "Save Changes")) {
     $_POST['encryption_taglen']="80";
   }
 
-  $userarr=array("nat","dtmfmode","fullname","email","canreinvite","qualify","activated",
+  $userarr=array("nat","dtmfmode","fullname","canreinvite","qualify","activated",
                  "language","callgroup","pickupgroup","insecure","h323prefix","simuse",
                  "tariff","h323gkid","h323permit","h323neighbor","t38pt_udptl","encryption",
                  "encryption_taglen");
@@ -294,6 +294,15 @@ if ((isset($pbxupdate)) && ($pbxupdate == "Save Changes")) {
   $userup="UPDATE users SET " . $dbq . $pwcng . "allow='" . $codecs . "' WHERE name='" . $_POST['exten'] . "'";
 //  print $userup . "\n";
   pg_query($db,$userup);
+
+  $vmarr=array("fullname","email","language");
+
+  $dbq="";
+  for($ucnt=0;$ucnt < count($vmarr);$ucnt++) {
+    $dbq.=$vmarr[$ucnt] . "='" . $_POST[$vmarr[$ucnt]] . "',";
+  }
+  $vmup="UPDATE voicemail SET " . $dbq . $vmpwcng . "context=users.context FROM users WHERE users.name='" . $_POST['exten'] . "' AND voicemail.mailbox=users.name";
+  pg_query($db,$vmup);
 
   if (! isset($agi)) {
     require_once("/var/lib/asterisk/agi-bin/phpagi/phpagi-asmanager.php");
@@ -317,13 +326,11 @@ $qgetdata=pg_query($db,"SELECT * FROM features WHERE exten='" . $_POST['exten'] 
 
 $qconsdata=pg_query($db,"SELECT context,count FROM console WHERE mailbox = '" . $_POST['exten'] . "'");
 
-$qgetudata=pg_query($db,"SELECT nat,dtmfmode,fullname,email,canreinvite,qualify,password,allow,callgroup,pickupgroup,
-                                insecure,h323permit,h323gkid,h323prefix,h323neighbor,ipaddr,language,secret,usertype,
+$qgetudata=pg_query($db,"SELECT nat,dtmfmode,users.fullname,voicemail.email,canreinvite,qualify,voicemail.password,allow,callgroup,pickupgroup,
+                                insecure,h323permit,h323gkid,h323prefix,h323neighbor,ipaddr,users.language,secret,usertype,
                                 activated,simuse,tariff,t38pt_udptl,
                                 case when (encryption_taglen = '32') then encryption||',32bit' else encryption end
-                              FROM users WHERE name='" . $_POST['exten'] . "'");
-
-
+                              FROM users LEFT OUTER JOIN voicemail ON (voicemail.mailbox = users.name) WHERE name='" . $_POST['exten'] . "'");
 $udata=pg_fetch_array($qgetudata,0);
 
 if (pg_num_rows($qconsdata) > 0) {

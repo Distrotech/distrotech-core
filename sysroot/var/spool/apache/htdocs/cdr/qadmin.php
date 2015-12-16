@@ -88,7 +88,7 @@ if ((isset($pbxupdate)) && (isset($update))) {
     pg_query("INSERT INTO astdb (family,key,value) VALUES ('Q" . $queue . "','BGRP','')");
   }
 
-  pg_query($db,"UPDATE users SET fullname='$description',email='$email' WHERE mailbox='$queue'");
+  pg_query($db,"UPDATE voicemail SET fullname='$description',email='$email' WHERE mailbox='$queue'");
   pg_query($db,"UPDATE queue_table SET strategy='$strategy',timeout='$timeout',monitor_format='',
                                        description='$description',wrapuptime='$wrapuptime',
                                        memberdelay='$memberdelay',servicelevel='$servicelevel',
@@ -97,9 +97,8 @@ if ((isset($pbxupdate)) && (isset($update))) {
                                        announce_round_seconds='$announce_round_seconds',autopausedelay='$autopausedelay'
                                    WHERE name='$queue'");
 
-                      
   if (($pass1 == $pass2) && ($pass1 != "")){
-    pg_query($db,"UPDATE users SET password='$pass1' WHERE mailbox='$queue'");
+    pg_query($db,"UPDATE voicemail SET password='$pass1' WHERE mailbox='$queue'");
   } else if ($pass1 != "") {
 %>
     <SCRIPT>
@@ -109,7 +108,7 @@ if ((isset($pbxupdate)) && (isset($update))) {
   }
 }
 
-$qgetudata=pg_query($db,"SELECT email,password FROM users WHERE mailbox='" . $queue . "'");
+$qgetudata=pg_query($db,"SELECT email,password FROM voicemail WHERE mailbox='" . $queue . "'");
 $qgetqdata=pg_query($db,"SELECT strategy,timeout,description,wrapuptime,
                                 memberdelay,retry,servicelevel,weight,maxlen,
                                 autopausedelay,announce_round_seconds,

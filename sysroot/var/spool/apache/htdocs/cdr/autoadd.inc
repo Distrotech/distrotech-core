@@ -112,11 +112,12 @@ function createexten($mac,$phonetype,$prefix,$start,$tdmport) {
         $transport="udp";
       }
 
-      $exaddq="INSERT INTO users (context,name,defaultuser,mailbox,secret,password,usertype,
-                                       fullname,email,callgroup,pickupgroup,qualify,encryption,transport) VALUES (
-                                       '6'," . $newexten . "," . $newexten . "," . $newexten . ",'" . $newepass . "'," . $newexten . "
-                                       ,'0','Exten '||" . $newexten . ",'','1','1','yes','" . $encrypt . "','" . $transport . "')";
+      $exaddq="INSERT INTO users (context,name,defaultuser,mailbox,secret,usertype,
+                                       fullname,callgroup,pickupgroup,qualify,encryption,transport) VALUES (
+                                       '6'," . $newexten . "," . $newexten . "," . $newexten . ",'" . $newepass .
+                                       "','0','Exten '||" . $newexten . ",'1','1','yes','" . $encrypt . "','" . $transport . "')";
       pg_query($db,$exaddq);
+      pg_query($db,"INSERT INTO voicemail (mailbox,context,email,fullname,password) SELECT users.name,context,'',fullname,name FROM users WHERE users.name = " . $newexten);
       pg_query($db,"DELETE FROM astdb where family=" . $newexten);
       pg_query($db,"DELETE FROM features where exten=" . $newexten);
       pg_query($db,"INSERT INTO features (exten) VALUES (" . $newexten . ")");

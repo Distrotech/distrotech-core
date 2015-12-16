@@ -80,16 +80,19 @@ if (($queue == "799") || ($defqueue != $queue)) {
     pg_query($db,"UPDATE astdb SET value='" . $AADelay . "' WHERE family='Setup' AND key='AADelay'");
 
 
-    $cdelvm=pg_query($db,"SELECT count(a.attname) FROM pg_catalog.pg_stat_user_tables AS t, pg_catalog.pg_attribute a WHERE t.relid = a.attrelid  AND t.relname='users' AND a.attname='deletevoicemail'");
+/*    $cdelvm=pg_query($db,"SELECT count(a.attname) FROM pg_catalog.pg_stat_user_tables AS t, pg_catalog.pg_attribute a WHERE t.relid = a.attrelid  AND t.relname='users' AND a.attname='deletevoicemail'");
     list($delvm)=pg_fetch_array($cdelvm,0);
     if ($delvm < 1) {
       pg_query($db,"ALTER TABLE users ADD deletevoicemail varchar(8) default 'no'");
+    }*/
+    $defemail=pg_query($db,"UPDATE voicemail SET deletevoicemail='yes',email='" . $_POST['AAEMAIL'] . "' WHERE mailbox='"  . $syshname . "'");
+    if (pg_affected_rows($defemail) == 0) {
+      pg_query($db,"INSERT INTO voicemail (mailbox,context,deletevoicemail,email,fullname,password) values ('" . $syshname . "','6','yes','" . $_POST['AAEMAIL'] . "','','')");
     }
-    pg_query($db,"UPDATE users SET mailbox=name,deletevoicemail='yes',email='" . $AAEMAIL . "' WHERE name='"  . $syshname . "'");
   }
 
-  $aavm=pg_query($db,"SELECT email FROM users WHERE name='" . $syshname . "'");
-  if (pg_num_rows($aavm) > 0) { 
+  $aavm=pg_query($db,"SELECT email FROM voicemail WHERE mailbox='" . $syshname . "'");
+  if (pg_num_rows($aavm) > 0) {
     list($AAEMAIL)=pg_fetch_array($aavm,0);
   }
 

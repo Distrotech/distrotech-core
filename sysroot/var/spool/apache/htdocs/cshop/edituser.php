@@ -30,8 +30,9 @@ if (isset($_POST['saveuser'])) {
     $_POST['ivrwarn']=sprintf("%d",$_POST['ivrwarn']*10000);
   }
   pg_query("UPDATE users SET password='" . $_POST['userpass'] . "',secret='" . $_POST['linepass'] . "',fullname='" . $_POST['firstname'] . "',ivrwarn=" . $_POST['ivrwarn'] .
-        ",tariff='" . $_POST['tariff'] . "',callerid= '" . $_POST['defcli'] . "',email= '" . $_POST['email'] . "',activated = '" . $_POST['acact'] . 
+        ",tariff='" . $_POST['tariff'] . "',callerid= '" . $_POST['defcli'] . "',activated = '" . $_POST['acact'] . 
         "',simuse='" .  $_POST['simuse'] . "' WHERE name='" . $_SESSION['number'] . "'");
+  pg_query("UPDATE voicemail SET email= '" . $_POST['email'] . "',fullname='" . $_POST['firstname'] . "' WHERE mailbox='" . $_SESSION['number'] . "'");
 } else if ($_POST['deluser'] == "1") {
   $boothq=pg_query($db,"SELECT id,credit
                      FROM users 
@@ -40,6 +41,7 @@ if (isset($_POST['saveuser'])) {
   $booth=pg_fetch_row($boothq,0);
   pg_query($db,"UPDATE reseller set rcallocated=rcallocated-" . $booth[1] . " WHERE id = " . $_SESSION['resellerid']);
   pg_query("DELETE FROM users WHERE name='" . $_SESSION['number'] . "'");
+  pg_query("DELETE FROM voicemail WHERE mailbox='" . $_SESSION['number'] . "'");
   pg_query("DELETE FROM astdb WHERE family='" . $_SESSION['number'] . "'");
   pg_query("DELETE FROM features WHERE exten='" . $_SESSION['number'] . "'");
   include "getbooth.php";
@@ -47,8 +49,8 @@ if (isset($_POST['saveuser'])) {
 }
 
 
-$boothq=pg_query($db,"SELECT password,fullname,tariff,email,activated,simuse,ivrwarn,callerid,secret
-                     FROM users
+$boothq=pg_query($db,"SELECT voicemail.password,users.fullname,tariff,voicemail.email,activated,simuse,ivrwarn,callerid,secret
+                     FROM users LEFT OUTER JOIN voicemail ON (voicemail.mailbox=name)
                      WHERE usertype=1 AND users.name='" . $_SESSION['number'] . "'
                            AND agentid = " . $_SESSION['resellerid'] . " LIMIT 1");
 

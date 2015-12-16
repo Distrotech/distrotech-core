@@ -79,7 +79,7 @@ if (isset($_POST['conftx'])) {
   printf("R%0.2f",abs($credin));
   print "</TD></TR>";
 
-  $udetail=pg_query("SELECT fullname,email,credit FROM users WHERE name='" . $_SESSION['acnum'] . "'");
+  $udetail=pg_query("SELECT users.fullname,voicemail.email,credit FROM users LEFT OUTER JOIN voicemail ON (voicemail.mailbox=name) WHERE name='" . $_SESSION['acnum'] . "'");
   $r=pg_fetch_row($udetail,0);
 
   $r[2]=sprintf("R%0.2f",($r[2]*$ccred[1])/10000);
@@ -89,7 +89,7 @@ if (isset($_POST['conftx'])) {
   print "</TABLE>";
   return;
 } else if (isset($_POST['ctfx'])) {
-  $udetail=pg_query("SELECT fullname,email,credit FROM users WHERE name='" . $_SESSION['acnum'] . "' AND agentid = " . $_SESSION['resellerid']);
+  $udetail=pg_query("SELECT users.fullname,voicemail.email,credit FROM users LEFT OUTER JOIN voicemail ON (voicemail.mailbox=name) WHERE name='" . $_SESSION['acnum'] . "' AND agentid = " . $_SESSION['resellerid']);
   $isuser=pg_num_rows($udetail);
   $isudat=pg_fetch_row($udetail,0);
 

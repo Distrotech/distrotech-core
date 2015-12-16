@@ -25,9 +25,9 @@ include "/var/spool/apache/htdocs/cshop/mkuser.inc";
 if (isset($_POST['addbooth'])) {
   $_POST['cno']=cardnum();	
   $pass=cardpin();
-  pg_query($db,"INSERT INTO users (name,defaultuser,fromuser,mailbox,secret,password,credit,tariff,
+  pg_query($db,"INSERT INTO users (name,defaultuser,fromuser,mailbox,secret,credit,tariff,
                                    activated,usertype,fullname,agentid) VALUES (
-                                   '" . $_POST['cno'] . "','" . $_POST['cno'] . "','" . $_POST['cno'] . "','','$pass','$pass','0','$tariff','f',
+                                   '" . $_POST['cno'] . "','" . $_POST['cno'] . "','" . $_POST['cno'] . "','','$pass','0','$tariff','f',
                                    '2','" . $_POST['bname'] . "'," . $_SESSION['resellerid'] . ")");
 %>
 <CENTER>

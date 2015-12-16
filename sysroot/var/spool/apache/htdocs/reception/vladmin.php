@@ -55,7 +55,7 @@ $codecd[8]=_("h263+ Video Codec");
 $codecd[9]=_("h263 Video Codec");
 $codecd[10]=_("h261 Video Codec");
 
-if (isset($pbxupdate)) {
+if (isset($_POST['pbxupdate'])) {
   if ($CFIM == "") {
     $CFIM="0";
   }
@@ -117,20 +117,19 @@ if (isset($pbxupdate)) {
   pg_query($db,"UPDATE astdb SET value='" . $TOUT . "' WHERE family='" . $exten . "' AND key='TOUT'");
   pg_query($db,"UPDATE astdb SET value='" . $Locked . "' WHERE family='" . $exten . "' AND key='Locked'");
 
-
-
   if (strlen($exten) > 4) {
     pg_query($db,"UPDATE astdb SET value='" . $IAXLine . "' WHERE family='" . $exten . "' AND key='IAXLine'");
     $codecs=$codec[$acodec1] . ";" . $codec[$acodec2] . ";" . $codec[$acodec3] . ";" . $codec[$vcodec1] . ";" . $codec[$vcodec2] . ";" . $codec[$vcodec3];
     pg_query($db,"UPDATE users SET nat='$nat',dtmfmode='$dtmfmode',fullname='$fullname',email='$email',
                                 canreinvite='$canreinvite',qualify='$qualify',allow='$codecs',activated='t'
-                                WHERE name='$exten'");
+                                WHERE name='" . $exten . "'");
+    pg_query($db,"UPDATE voicemail SET email='$email',fullname='$fullname' WHERE mailbox='" . $exten . "'");
   } else {
-    pg_query($db,"UPDATE users SET fullname='$fullname',email='$email',activated='t'
-                                  WHERE name='$exten'");
-  }                      
+    pg_query($db,"UPDATE users SET fullname='" . $_POST['fullname'] . "',activated='t' WHERE name='" . $exten . "'");
+    pg_query($db,"UPDATE voicemail SET fullname='" . $_POST['fullname'] . "',email='" . $_POST['email'] . "' WHERE mailbox='" . $exten . "'");
+  }
   if (($pass1 == $pass2) && ($pass1 != "")){
-    pg_query($db,"UPDATE users SET secret='$pass1',password='$pass1' WHERE name='$exten'");
+    pg_query($db,"UPDATE voicemail SET password='$pass1' WHERE mailbox='" . $exten  . "'");
   } else if ($pass1 != "") {
 %>
     <SCRIPT>
@@ -141,7 +140,8 @@ if (isset($pbxupdate)) {
 }
 
 $qgetdata=pg_query($db,"SELECT key,value FROM astdb WHERE family='" . $exten . "'");
-$qgetudata=pg_query($db,"SELECT nat,dtmfmode,fullname,email,canreinvite,qualify,password,allow FROM users WHERE name='" . $exten . "'");
+$qgetudata=pg_query($db,"SELECT nat,dtmfmode,users.fullname,voicemail.email,canreinvite,qualify,voicemail.password,allow FROM users 
+  LEFT OUTER JOIN voicemail ON (voicemail.mailbox=name) WHERE name='" . $exten . "'");
 
 $udata=pg_fetch_array($qgetudata,0);
 $nat=$udata[0];

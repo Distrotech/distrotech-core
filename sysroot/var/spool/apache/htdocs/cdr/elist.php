@@ -22,12 +22,13 @@ if (is_file("auth.inc")) {
   include_once "auth.inc";
   include "csvfunc.inc";
 } else {
-  include_once "reception/auth.inc";  
+  include_once "reception/auth.inc";
   $SUPER_USER=1;
   $dgroup=$msqldat[5];
 }
 
-$cclistq="SELECT name,fullname,email,altc,office FROM users
+$cclistq="SELECT name,users.fullname,voicemail.email,altc,office FROM users
+                         LEFT OUTER JOIN voicemail ON (voicemail.mailbox = name)
                          LEFT OUTER JOIN astdb ON (key=substr(name,1,2) AND Family='LocalPrefix')
                          LEFT OUTER JOIN features ON (name = exten)";
 if ($SUPER_USER != 1) {
@@ -42,7 +43,6 @@ if ($SUPER_USER != 1) {
   $cclistq.=" AND " . $clogacl;
 }
 $cclistq.=" ORDER BY name";
-
 
 $cclist=pg_query($db,$cclistq);
 
