@@ -15558,16 +15558,20 @@ sub printastagent() {
   $dbh = DBI->connect($dsn,"asterisk", $sqlvoippass) or return;
   open(AAC,">agents.conf");
   chmod(0600,"agents.conf");
-  print AAC "[agents]\n";
-  print AAC "autologoffunavail=yes\n";
+  print AAC "[my-agents](!)\n";
+  print AAC ";autologoffunavail=yes\n";
   print AAC "ackcall=no\n";
-  print AAC "endcall=no\n";
-  $getagent=$dbh->prepare("SELECT 'agent => '||name||',,'||fullname from users left outer join astdb on (family='LocalPrefix' AND key=substr(name,1,2)) where value='1' ORDER BY name");
+  print AAC ";endcall=no\n\n";
+  $getagent=$dbh->prepare("SELECT name,fullname from users left outer join astdb on (family='LocalPrefix' AND key=substr(name,1,2)) where value='1' ORDER BY name");
 #  $getagent=$dbh->prepare("SELECT 'agent => '||name||','||secret||','||fullname from users left outer join astdb on (family='LocalPrefix' AND key=substr(name,1,2)) where value='1'");
   $getagent->execute;
   
   while(@row=$getagent->fetchrow_array) {
-    print AAC @row[0] . "\n";
+    print AAC<<__EOF__;
+[@row[0]](my-agents)
+fullname=@row[1]
+
+__EOF__
   }
 
   close(AAC);
