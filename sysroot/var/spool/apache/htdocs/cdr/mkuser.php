@@ -77,7 +77,7 @@ if ((isset($_POST['pbxupdate'])) && ($_POST['exten'] == "") && (($_POST['prefix'
   }
 } else if ((!isset($_POST['pbxupdate'])) || ($_POST['exten'] == "")){
   if ((isset($delext)) && ($_POST['exten'] != "")) {
-    pg_query($db,"DELETE FROM voicemail USING features WHERE exten = mailbox AND exten='" . $_POST['exten'] . "'");
+    pg_query($db,"DELETE FROM voicemail WHERE mailbox='" . $_POST['exten'] . "'");
     pg_query($db,"DELETE FROM users WHERE name='" . $_POST['exten'] . "'");
     pg_query($db,"DELETE FROM astdb WHERE family='" . $_POST['exten'] . "'");
     pg_query($db,"DELETE FROM features WHERE exten='" . $_POST['exten'] . "'");

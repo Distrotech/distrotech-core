@@ -2126,20 +2126,6 @@ EOF
 
 use DBI;
 
-\\\$dbh = DBI->connect("DBI:ODBC:Asterisk","asterisk","$sqlvoippass");
-\\\$dbh->do("UPDATE users SET password='\@ARGV[2]' WHERE mailbox = '\@ARGV[1]' AND context='\@ARGV[0]'");
-
-EOF
-)>/usr/sbin/voippass
-chmod 700 /usr/sbin/voippass
-chown root.root /usr/sbin/voippass
-
-
-(cat << EOF
-#!/usr/bin/perl
-
-use DBI;
-
 \\\$dbh = DBI->connect("DBI:mysql:database=radius;host=$sqlradiusserv;port=3306","radius","$sqlradiuspass");
 \\\$asel=\\\$dbh->prepare("select CallingStationId  from radacct where FramedIPAddress='\@ARGV[0]' AND AcctStopTime=''");
 \\\$asel->execute;
@@ -14453,7 +14439,7 @@ BDATE=`date +%Y-%m-%d`
 BFILE=/var/spool/backup/backup-\${BDATE}.tar
 
 if [ `"whoami"` == "root" ] || [ `"whoami"` == "admin" ];then
-  /usr/bin/pg_dump -U asterisk -h 127.0.0.1 -cDt users -t interbranch -t atatable -t qfeatures -t features -t astdb -t queues -t queue_members \\
+  /usr/bin/pg_dump -U asterisk -h 127.0.0.1 -cDt users -t voicemail -t interbranch -t atatable -t qfeatures -t features -t astdb -t queues -t queue_members \\
                    -t queue_table -t dynspan -t zapspan -t zapchan -t zapgroup -t gsmchannels -t provider -t speed_dial \\
                    -t trunk -t officehours -t cc_callerid |/usr/bin/grep -vE "(^\$)|(^--)" |/usr/bin/gzip -c > /var/spool/backup/pbxdata-\${BDATE}.sql.gz
 fi;
@@ -14572,7 +14558,7 @@ if ( $voipbackup eq "true") {
   print BUS "echo $fcnt VOIP Configuration\n";
   print BUS "/bin/touch /tmp/asterisk.psql.gz\n/bin/chmod 600 /tmp/asterisk.psql.gz\n";
   print BUS <<__EOF__;
-pg_dump -U asterisk -h 127.0.0.1 -dat users -t interbranch -t atatable -t qfeatures -t features -t astdb -t queue_members -t queue_tables -t officehours -t dynspan \\
+pg_dump -U asterisk -h 127.0.0.1 -dat users -t voicemail -t interbranch -t atatable -t qfeatures -t features -t astdb -t queue_members -t queue_tables -t officehours -t dynspan \\
                                  -t zapchan -t zapspan -t zapgroup -t gsmchannels -t trunk -t speed_dial -t localrates \\
                                  -t provider -t tariff -t tariffrate -t reseller |gzip -c |dd of=/tmp/asterisk.psql.gz
 
@@ -16193,7 +16179,7 @@ __EOB__
 #    print ZC "\n";
 #  }
 
-  $zapchanq=" SELECT name as label,'\"'||fullname||'\" <'||name||'>' as callerid,mailbox||'\@'||context as mailbox,context,
+  $zapchanq=" SELECT name as label,'\"'||fullname||'\" <'||name||'>' as callerid,mailbox,context,
         callgroup,pickupgroup,case when (zapproto is not null) then zapproto else 'fxo_ks' end as signalling,
         case when (zaprxgain is not null) then zaprxgain else '0' end as rxgain,
         case when (zaptxgain is not null) then zaptxgain else '0' end as txgain,
@@ -16684,7 +16670,7 @@ sub printgnugkh323() {
     do {
       $_=join('',(0..9, 'A'..'Z', 'a'..'z')[rand 64, rand 64, rand 64, rand 64, rand 64, rand 64, rand 64,rand 64]);
     } until ((/[0-9]/) && (/[a-z]/) && (/[A-Z]/));
-    $addast=$dbh->prepare("INSERT INTO users (defaultuser,name,secret,password,h323permit,h323gkid,ipaddr,h323neighbor,agentid) VALUES ('" . $h323gwid . "','" . $h323gwid . "','" . $_ . "','" . $_ . "','allow','" . $h323gkid . "','" . $localip . "','t',0)");
+    $addast=$dbh->prepare("INSERT INTO users (defaultuser,name,secret,h323permit,h323gkid,ipaddr,h323neighbor,agentid) VALUES ('" . $h323gwid . "','" . $h323gwid . "','" . $_ . "','allow','" . $h323gkid . "','" . $localip . "','t',0)");
     $addast->execute;
   } else { 
     if (@row[0] ne "") {

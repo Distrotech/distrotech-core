@@ -114,7 +114,7 @@ function createexten($mac,$phonetype,$prefix,$start,$tdmport) {
 
       $exaddq="INSERT INTO users (context,name,defaultuser,mailbox,secret,usertype,
                                        fullname,callgroup,pickupgroup,qualify,encryption,transport) VALUES (
-                                       '6'," . $newexten . "," . $newexten . "," . $newexten . ",'" . $newepass .
+                                       '6'," . $newexten . "," . $newexten . "," . $newexten . "||'@6','" . $newepass .
                                        "','0','Exten '||" . $newexten . ",'1','1','yes','" . $encrypt . "','" . $transport . "')";
       pg_query($db,$exaddq);
       pg_query($db,"INSERT INTO voicemail (mailbox,context,email,fullname,password) SELECT users.name,context,'',fullname,name FROM users WHERE users.name = " . $newexten);

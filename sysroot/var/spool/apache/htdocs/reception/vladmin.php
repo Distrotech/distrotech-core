@@ -120,7 +120,7 @@ if (isset($_POST['pbxupdate'])) {
   if (strlen($exten) > 4) {
     pg_query($db,"UPDATE astdb SET value='" . $IAXLine . "' WHERE family='" . $exten . "' AND key='IAXLine'");
     $codecs=$codec[$acodec1] . ";" . $codec[$acodec2] . ";" . $codec[$acodec3] . ";" . $codec[$vcodec1] . ";" . $codec[$vcodec2] . ";" . $codec[$vcodec3];
-    pg_query($db,"UPDATE users SET nat='$nat',dtmfmode='$dtmfmode',fullname='$fullname',email='$email',
+    pg_query($db,"UPDATE users SET nat='$nat',dtmfmode='$dtmfmode',fullname='$fullname',
                                 canreinvite='$canreinvite',qualify='$qualify',allow='$codecs',activated='t'
                                 WHERE name='" . $exten . "'");
     pg_query($db,"UPDATE voicemail SET email='$email',fullname='$fullname' WHERE mailbox='" . $exten . "'");
