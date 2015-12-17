@@ -1014,6 +1014,21 @@ if ((@eidat[1] eq "0.0.0.0") && ($zcipaddr ne "")) {
   $interface{$sysconf{'Internal'}}=join("|",@eidat);
 }
 
+@astmoddirs=("lib64/x86_64","libx32/i686","lib/i686","lib64","lib64");
+
+foreach $libdir (@astmoddirs) {
+  for($ver=15;$ver >= 10;$ver--) {
+    if ($astmoddir eq "") {
+      $astmoddir="/usr/" . $libdir . "/asterisk/modules-" . $ver;
+    }
+    if ( ! -d $astmoddir ) {
+      $astmoddir="";
+    } else {
+      break;
+    }
+  }
+}
+
 print SV "DOM_WG=\"" . $smboption{'Domain'} . "\";\n";
 print SV "DTYPE=\"" . $smboption{'Security'} . "\";\n";
 print SV "DOM_ADS=\"" . $smboption{'ADSRealm'} . "\";\n";
@@ -14903,13 +14918,71 @@ print AM<<__EOB__;
 autoload=yes
 
 ;Make sure the db bits are loaded.
-preload => res_config.so
+preload => res_stun_monitor.so
+;preload => res_config.so
 preload => res_odbc.so
 preload => res_config_odbc.so
-preload => chan_local.so
-preload => chan_sip.so
-preload => chan_iax.so
-preload => chan_dahdi.so
+;preload => chan_local.so
+;preload => chan_sip.so
+;preload => chan_iax.so
+;preload => chan_dahdi.so
+
+;PJSIP Dont Load
+noload => chan_pjsip.so
+noload => func_pjsip_aor.so
+noload => func_pjsip_contact.so
+noload => func_pjsip_endpoint.so
+noload => res_hep_pjsip.so
+noload => res_pjsip.so
+noload => res_pjsip_acl.so
+noload => res_pjsip_authenticator_digest.so
+noload => res_pjsip_caller_id.so
+noload => res_pjsip_config_wizard.so
+noload => res_pjsip_dialog_info_body_generator.so
+noload => res_pjsip_diversion.so
+noload => res_pjsip_dlg_options.so
+noload => res_pjsip_dtmf_info.so
+noload => res_pjsip_endpoint_identifier_anonymous.so
+noload => res_pjsip_endpoint_identifier_ip.so
+noload => res_pjsip_endpoint_identifier_user.so
+noload => res_pjsip_exten_state.so
+noload => res_pjsip_header_funcs.so
+noload => res_pjsip_keepalive.so
+noload => res_pjsip_log_forwarder.so
+noload => res_pjsip_logger.so
+noload => res_pjsip_messaging.so
+noload => res_pjsip_multihomed.so
+noload => res_pjsip_mwi.so
+noload => res_pjsip_mwi_body_generator.so
+noload => res_pjsip_nat.so
+noload => res_pjsip_notify.so
+noload => res_pjsip_one_touch_record_info.so
+noload => res_pjsip_outbound_authenticator_digest.so
+noload => res_pjsip_outbound_publish.so
+noload => res_pjsip_outbound_registration.so
+noload => res_pjsip_path.so
+noload => res_pjsip_pidf_body_generator.so
+noload => res_pjsip_pidf_digium_body_supplement.so
+noload => res_pjsip_pidf_eyebeam_body_supplement.so
+noload => res_pjsip_publish_asterisk.so
+noload => res_pjsip_pubsub.so
+noload => res_pjsip_refer.so
+noload => res_pjsip_registrar.so
+noload => res_pjsip_registrar_expire.so
+noload => res_pjsip_rfc3326.so
+noload => res_pjsip_sdp_rtp.so
+noload => res_pjsip_send_to_voicemail.so
+noload => res_pjsip_session.so
+noload => res_pjsip_sips_contact.so
+noload => res_pjsip_t38.so
+noload => res_pjsip_transport_websocket.so
+noload => res_pjsip_xpidf_body_generator.so
+noload => res_pjsip_phoneprov_provider.so
+
+noload => res_calendar_icalendar.so
+noload => res_calendar_ews.so
+noload => res_calendar_caldav.so
+noload => res_calendar_exchange.so
 
 ;Fax Changes
 noload => app_faxdetect.so
@@ -14965,16 +15038,6 @@ __EOB__
 #noload => chan_oh323.so
 #noload => codec_speex.so
 #noload => app_fax.so
-
-if (( -e "/usr/lib64/x86_64/asterisk/modules-1.8/codec_g723.so") ||
-    ( -e "/usr/lib64/x86_64/asterisk/modules-10/codec_g723.so")) {
-  print AM ";Load g723\nload => codec_g723.so\n\n";
-}
-
-if (( -e "/usr/lib64/x86_64/asterisk/modules-1.8/codec_g729.so")  ||
-    ( -e "/usr/lib64/x86_64/asterisk/modules-10/codec_g729.so")) {
-  print AM ";Load g729\nload => codec_g729.so\n\n";
-}
 
 if ( ! -e "/dev/mISDN" )  {
   print AM<<__EOB__;
@@ -15169,8 +15232,7 @@ if ( -d "/etc/openssl/voipca") {
   print SC "tlsenable=no\n";
 }
 
-if (( -e "/usr/lib64/x86_64/asterisk/modules-1.8/codec_g729.so")  ||
-    ( -e "/usr/lib64/x86_64/asterisk/modules-10/codec_g729.so")) {
+if ( -e $astmoddir . "/codec_g729.so") {
   print SC "allow=g729\n";
 }
 
@@ -15179,8 +15241,7 @@ print SC "allow=speex\n";
 print SC "allow=ilbc\n";
 print SC "allow=g726\n";
 
-if (( -e "/usr/lib64/x86_64/asterisk/modules-1.8/codec_g723.so") ||
-    ( -e "/usr/lib64/x86_64/asterisk/modules-10/codec_g723.so")) {
+if ( -e $astmoddir . "/codec_g723.so") {
   print SC "allow=g723.1\n";
 }
 
@@ -15418,13 +15479,11 @@ rtcachefriends=yes
 calltokenoptional = 0.0.0.0/0.0.0.0
 __EOF__
 
-if (( -e "/usr/lib64/x86_64/asterisk/modules-1.8/codec_g723.so") ||
-    ( -e "/usr/lib64/x86_64/asterisk/modules-10/codec_g723.so")) {
+if ( -e $astmoddir . "/codec_g723.so") {
   print IC "allow=g723.1\n";
 }
 
-if (( -e "/usr/lib64/x86_64/asterisk/modules-1.8/codec_g729.so")  ||
-    ( -e "/usr/lib64/x86_64/asterisk/modules-10/codec_g729.so")) {
+if ( -e $astmoddir . "/codec_g729.so") {
   print IC "allow=g729\n";
 }
 print IC "allow=gsm\n";
