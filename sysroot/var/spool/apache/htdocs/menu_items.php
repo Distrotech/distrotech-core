@@ -349,6 +349,7 @@ if ($_SESSION['showmenu'] == "vroute") {
   $vroute[_(".. Voip Config")]=openpage("voip","");
 }
 $vroute[_("DDI Forwarding")]=openpage("vroute","cdr/ddiadmin.php");
+$vroute[_("DDI Forward Map")]=openpage("vroute","cdr/ddimap.php");
 $vroute[_("DDI Port Forwarding")]=openpage("vroute","cdr/ddipfwd.php");
 $vroute[_("DDI FAX Box")]=openpage("vroute","cdr/ddifax.php");
 //$vroute[_("DDI IVR Defaults")]=openpage("vroute","cdr/ddidefault.php");
