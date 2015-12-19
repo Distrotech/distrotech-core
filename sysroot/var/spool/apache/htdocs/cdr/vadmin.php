@@ -708,7 +708,7 @@ if ($origdata['FAXBOX'] == "") {
       <SELECT NAME=Attendant>
         <OPTION VALUE=0><%print _("Auto Attendant");%></OPTION>
 <%
-	$exusers=pg_query($db,"SELECT fullname,name FROM users LEFT OUTER JOIN astdb AS epre ON (epre.family='LocalPrefix' AND epre.key=substring(name,1,2)) WHERE length(name) = 4 AND epre.value=1 ORDER BY fullname");
+	$exusers=pg_query($db,"SELECT fullname,name FROM users LEFT OUTER JOIN astdb AS epre ON (epre.family='LocalPrefix' AND epre.key=substring(name,1,2)) WHERE length(name) = 4 AND epre.value='1' ORDER BY fullname");
         $unum=pg_num_rows($exusers);
         for($i=0;$i<$unum;$i++){
           $adata=pg_fetch_array($exusers,$i);
@@ -749,7 +749,7 @@ if ($origdata['FAXBOX'] == "") {
       <SELECT NAME=FAXT>
         <OPTION VALUE=><%print _("Auto Fax Detect & Receive");%></OPTION>
 <%
-	$exusers=pg_query($db,"SELECT fullname,name FROM users LEFT OUTER JOIN features ON (name=exten) LEFT OUTER JOIN astdb AS epre ON (epre.family='LocalPrefix' AND epre.key=substring(name,1,2)) WHERE length(name) = 4 AND (allow ~ '(ulaw)|(alaw)' OR zapline > 0) AND epre.value = 1 ORDER BY fullname");
+	$exusers=pg_query($db,"SELECT fullname,name FROM users LEFT OUTER JOIN features ON (name=exten) LEFT OUTER JOIN astdb AS epre ON (epre.family='LocalPrefix' AND epre.key=substring(name,1,2)) WHERE length(name) = 4 AND (allow ~ '(ulaw)|(alaw)' OR zapline > 0) AND epre.value = '1' ORDER BY fullname");
         $unum=pg_num_rows($exusers);
         for($i=0;$i<$unum;$i++){
           $adata=pg_fetch_array($exusers,$i);
