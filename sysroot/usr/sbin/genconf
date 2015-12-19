@@ -14918,6 +14918,7 @@ print AM<<__EOB__;
 autoload=yes
 
 ;Make sure the db bits are loaded.
+preload => func_periodic_hook.so
 preload => res_stun_monitor.so
 ;preload => res_config.so
 preload => res_odbc.so
@@ -15181,7 +15182,7 @@ dbuser=asterisk
 dbpass=$sqlvoippass
 dbhost=$sqlvoipserv
 dbname=asterisk
-nat=yes
+nat=force_rport,comedia
 disallow=all
 rtcachefriends=yes
 vmexten=100
@@ -15334,7 +15335,7 @@ __EOB__
       if ( -e "/etc/asterisk/res_stun_monitor.conf") {
         print SC "nat=no\nqualify=no\n";
       } else {
-        print SC "nat=yes\nqualify=yes\n";
+        print SC "nat=force_rport,comedia\nqualify=yes\n";
       }
       print SC<<__EOB__;
 directmedia=no
@@ -15365,7 +15366,7 @@ context=sipddi
 qualify=yes
 regexten=$sipexten
 directmedia=no
-nat=yes
+nat=force_rport,comedia
 insecure=port,invite$sipcodec
 sendrpid=yes
 trustrpid=yes
