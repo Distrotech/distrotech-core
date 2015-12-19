@@ -153,7 +153,7 @@ if (isset($queue)) {
     list($dqpenalty) = pg_fetch_array($defpenalty,0,PGSQL_NUM);
   }  
   if (isset($agentignore)) {
-    pg_query($db,"UPDATE queue_members SET callinuse=NOT callinuse WHERE queue_name='" .  $queue . "' AND interface='" . $agentignore . "'");
+    pg_query($db,"UPDATE queue_members SET ringinuse=NOT ringinuse WHERE queue_name='" .  $queue . "' AND interface='" . $agentignore . "'");
   }
   if (isset($delagent)) {
     pg_query($db,"DELETE FROM queue_members WHERE queue_name='" .  $queue . "' AND interface='" . $delagent . "'");
@@ -213,7 +213,7 @@ if (isset($queue)) {
     } else {
       $nobusy="'t'";
     }
-    pg_query($db,"INSERT INTO queue_members (queue_name,interface,penalty,defpenalty,callinuse) VALUES ('" . $queue . "','" . $channel . "','" . $weight . "','" . $oweight . "'," . $nobusy . ")");
+    pg_query($db,"INSERT INTO queue_members (queue_name,interface,penalty,defpenalty,ringinuse) VALUES ('" . $queue . "','" . $channel . "','" . $weight . "','" . $oweight . "'," . $nobusy . ")");
     $memup=pg_send_query($db,"UPDATE queue_members SET membername='" . $origchan . "' WHERE queue_name='" . $queue . "' AND interface='" . $channel . "'");
     $pgres=pg_get_result($db);
     if (pg_result_error($pgres)) {
@@ -229,7 +229,7 @@ if (isset($queue)) {
   print "</TR>";
   $getagentq="SELECT CAST(penalty AS INT) > 0 as active,CASE WHEN (users.uniqueid is not null) THEN users.fullname ELSE 'Unknown User' END as agent,
                      interface as channel,CASE WHEN (penalty is not null) THEN defpenalty ELSE '" . $dqpenalty. "' END as weight,
-                     CASE WHEN (name is not null) THEN name ELSE interface END, callinuse,paused > 0 
+                     CASE WHEN (name is not null) THEN name ELSE interface END, ringinuse,paused > 0 
                    from queue_members left outer join features ON (zapline=substr(interface,7)) 
                      left outer join users on (users.name=substring(interface from position('/' in interface)+1) OR exten=name)
                    where queue_name='" . $queue . "' ORDER BY defpenalty,name";
