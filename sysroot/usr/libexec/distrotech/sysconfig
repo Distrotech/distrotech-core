@@ -13,7 +13,14 @@ eval export BRAND=$(lsb_release -d -s)
 export BT="${BRAND} ${VERSION} Kernel ${KVER} Install";
 
 IFS=- read -a KREL <<< ${KVER}
-KARCH=${KREL[1]}
+if [ "${#KREL[*]}" == "4" ];then
+  KARCH=${KREL[2]};
+  KSUF=${KREL[3]};
+ else
+  KARCH=${KREL[1]};
+  KSUF=${KREL[2]};
+fi;
+
 case ${KARCH} in
   x86_64)ARCH="x86_64";
     LIBDIR="lib64";;
@@ -86,8 +93,8 @@ EOF
   done
 
   #Setup the kernel version in the config file used by mkinitd
-  LINKERNEL=$(rpm --root ${INST_BASE} -q -i linux-intel-${KREL[2]} |grep Version |sed -e "s/.*\s\(.*\)/\1/")
-  sed -e "s/\(KERNEL=\"\).*\"/\1${LINKERNEL}-${KARCH}-${KREL[2]}\"/" /etc/netsentry-version > ${INST_BASE}/etc/netsentry-version
+  LINKERNEL=$(rpm --root ${INST_BASE} -q -i linux-intel-${KSUF} |grep Version |sed -e "s/.*\s\(.*\)/\1/")
+  sed -e "s/\(KERNEL=\"\).*\"/\1${LINKERNEL}-${KARCH}-${KSUF}\"/" /etc/netsentry-version > ${INST_BASE}/etc/netsentry-version
 
   for newdir in usr/share/clamav var/spool/clientmqueue var/spool/MailScanner/incoming etc/MailScanner \
                 var/empty var/spool/apache/htdocs/ssl/sign var/spool/apache/htdocs/ssl/casign var/state/dhcp \
