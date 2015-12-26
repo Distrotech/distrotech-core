@@ -10320,7 +10320,6 @@ if ( -d "/usr/share/squid/errors/templates") {
 }
 
 print SC<<__EOB__;
-tcp_outgoing_address [::]
 hosts_file /etc/hosts
 cache_swap_low  80
 cache_swap_high 90

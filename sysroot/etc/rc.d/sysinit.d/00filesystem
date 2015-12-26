@@ -30,7 +30,7 @@ fi;
 
 #setup /dev/shm
 if [ ! -d /dev/shm ];then
-  mkdir /dev/shm
+  mkdir -m 1777 /dev/shm
 fi;
 
 #Run File System Check On All Devices
@@ -44,7 +44,7 @@ if [ -d /initrd/aufs ];then
   ln -s /proc/self/mounts /etc/mtab
   fsck -MRTCAa
  else
-  mount -t tmpfs none /dev/shm
+  mount -t tmpfs -o mode=1777 none /dev/shm
   fsck -TCAa
 fi;
 RES=$?
@@ -93,7 +93,7 @@ if [ -d /initrd/aufs ];then
       if [ ! -d /media/aufs/${img_file} ];then
         mkdir /media/aufs/${img_file}
       fi;
-      mount -M /initrd/aufs/${img_file} /media/aufs/${img_file} && rm -rf /initrd/aufs/${img_file}
+      (mount -M /initrd/aufs/${img_file} /media/aufs/${img_file} && rm -rf /initrd/aufs/${img_file}) > /dev/null 2>&1
     fi;
   done;
   mount -M /initrd/aufs/user /media/aufs/user && rm -rf /initrd/aufs/user
@@ -103,7 +103,7 @@ if [ -d /initrd/aufs ];then
   fi;
   mount -M /initrd/aufs/images /boot/images && rm -rf /initrd/aufs/images
 
-  rm /initrd/aufs/aufhsm-*
+  (rm /initrd/aufs/aufhsm-*) > /dev/null 2>&1
   mount -M /initrd/aufs /dev/shm && rm -rf /dev/shm/tmp
 fi;
 
