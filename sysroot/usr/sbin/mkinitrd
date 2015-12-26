@@ -1,7 +1,11 @@
 #!/bin/bash
 
 IFS=- read -a KREL <<< $(uname -r)
-KSUF=${KREL[2]}
+if [ "${#KREL[*]}" == "4" ];then
+  KSUF=${KREL[3]};
+ else
+  KSUF=${KREL[2]}
+fi;
 
 init_rd_drivers() {
   kernel=${3}
