@@ -155,6 +155,11 @@ EOF
     mount --bind /${sysdir} ${INST_BASE}/${sysdir}
   done;
 
+  if [ ! -d ${INST_BASE}/shm ];then
+    mkdir -m 1777 ${INST_BASE}/dev/shm
+  fi;
+  mount -t tmpfs -o mode=1777 none /dev/shm
+
   cp /var/spool/apache/htdocs/ns/config/netsentry.conf ${INST_BASE}/var/spool/apache/htdocs/ns/config/
   if [ -e ${INST_BASE}/var/spool/apache/htdocs/ns/config/networksentry-lite ];then
     rm ${INST_BASE}/var/spool/apache/htdocs/ns/config/networksentry-lite
