@@ -162,7 +162,7 @@ if [ "${1}" ];then
   INST_PATH=${1}
   shift
   if [ ! -b ${INST_PATH} ] && [ ! -e ${INST_PATH} ];then
-    image_create ${INST_PATH} 4
+    image_create ${INST_PATH} 8
     IMGLOOP=$(losetup -f --show ${INST_PATH})
     INSTDEV=${IMGLOOP}p1
     mkdosfs -F 32 -n DTS_INSTALL ${INSTDEV}
