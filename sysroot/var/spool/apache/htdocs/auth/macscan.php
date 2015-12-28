@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -20,16 +20,16 @@
 if (!isset($_SESSION['auth'])) {
   exit;
 }
-%>
+?>
 <CENTER>
 <FORM NAME=ppage METHOD=POST onsubmit="ajaxsubmit(this.name);return false">
 <INPUT TYPE=HIDDEN NAME=print>
 </FORM>
 <FORM METHOD=POST name=macform onsubmit="ajaxsubmit(this.name);return false">
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
-<INPUT TYPE=HIDDEN NAME=classi VALUE="<%print $euser;%>">
-<TR CLASS=list-color2><TH CLASS=heading-body COLSPAN=2><%print _("Mac Scan (ARP List)");%></TH></TR>
-<%
+<INPUT TYPE=HIDDEN NAME=classi VALUE="<?php print $euser;?>">
+<TR CLASS=list-color2><TH CLASS=heading-body COLSPAN=2><?php print _("Mac Scan (ARP List)");?></TH></TR>
+<?php
   include "../cdr/auth.inc";
   $sr=ldap_search($ds,"ou=Admin","(&(objectclass=groupofnames)(member=" . $ldn . ")(cn=Admin Access))");
   if ((ldap_count_entries($ds,$sr) == 1) || ($PHP_AUTH_USER == "admin")) {
@@ -77,14 +77,14 @@ if (!isset($_SESSION['auth'])) {
       }
     }
     if ($_POST['print'] != "1") {
-      print "<TR" . $bcol[$col % 2] . "><TH COLSPAN=2><INPUT TYPE=SUBMIT VALUE=Refresh>";%>
+      print "<TR" . $bcol[$col % 2] . "><TH COLSPAN=2><INPUT TYPE=SUBMIT VALUE=Refresh>";?>
 <INPUT TYPE=BUTTON NAME=pbutton VALUE="Print" ONCLICK="printpage(document.ppage)">
-<%
+<?php
       print "</TH></TR>";
     }
   } else {
     print "<TR CLASS=list-color1><TH CLASS=heading-body2>Administrator Access Required</TH></TR>";
   }
-%>
+?>
 </FORM>
 </TABLE>

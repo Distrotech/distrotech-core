@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -55,23 +55,23 @@ if (!isset($_SESSION['auth'])) {
   $iinfo = ldap_get_entries($ds, $sr);
   $dn=$iinfo[0]['dn'];
 
-%>
+?>
 
 <FORM METHOD=POST NAME=pwexpform onsubmit="ajaxsubmit(this.name);return false">
-<INPUT TYPE=HIDDEN NAME=classi VALUE="<%print $euser;%>">
-<INPUT TYPE=HIDDEN NAME=dn VALUE="<%print $dn;%>">
+<INPUT TYPE=HIDDEN NAME=classi VALUE="<?php print $euser;?>">
+<INPUT TYPE=HIDDEN NAME=dn VALUE="<?php print $dn;?>">
 <CENTER>
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
 <TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body>
-<%
+<?php
   if ($ADMIN_USER == "admin") {
     print "Editing ";
   } else {
     print "Viewing ";
   } 
-%>
+?>
 Pasword Validity</TH></TR>
-<%
+<?php
   for ($i=0; $i <= 2; $i++) {
     $rem=$i % 2;
     if ($rem == 1) {
@@ -83,13 +83,13 @@ Pasword Validity</TH></TR>
     if ($iinfo[0][$attr][0] == "") {
       $iinfo[0][$attr][0]="0";
     }
-%>
-    <TR<%print $bcolor;%>>
-      <TD onmouseover="myHint.show('<%print $iarr[$i];%>')" onmouseout="myHint.hide()" WIDTH=75%>
-        <% print $disc[$i];%>
+?>
+    <TR<?php print $bcolor;?>>
+      <TD onmouseover="myHint.show('<?php print $iarr[$i];?>')" onmouseout="myHint.hide()" WIDTH=75%>
+        <?php print $disc[$i];?>
       </TD>
       <TD>
-<%
+<?php
         if (($ADMIN_USER == "admin") && ($i > 1)) {
           $cyear=date("Y",$iinfo[0][$attr][0]);
           $cmonth=date("m",$iinfo[0][$attr][0]);
@@ -98,10 +98,10 @@ Pasword Validity</TH></TR>
           $chour=date("H",$iinfo[0][$attr][0]);
           $cmin=date("i",$iinfo[0][$attr][0]);
           $csec=date("s",$iinfo[0][$attr][0]);
-%>
+?>
           <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
           <TR><TD><SELECT NAME=pwday>
-<%
+<?php
           for($day=1;$day <= 31;$day++) {
             print "<OPTION VALUE=" . $day;
             if ($day == $cday) {
@@ -109,10 +109,10 @@ Pasword Validity</TH></TR>
             }
             print ">" . $day . "\n";
           }
-%>
+?>
           </SELECT></TD><TD>
           <SELECT NAME=pwmonth>
-<%
+<?php
           for($mth=1;$mth <= 12;$mth++) {
             print "<OPTION VALUE=" . $mth;
             if ($mth == $cmonth) {
@@ -120,14 +120,14 @@ Pasword Validity</TH></TR>
             }
             print ">" . $months[$mth-1] . "\n";
           }
-%>
+?>
           </SELECT></TD><TD>
           <SELECT NAME=pwyear>
-<%
+<?php
           $maxyear=date("Y",time())+10;
           if ($cyear > $maxyear) {
             $maxyear=$cyear;
-          }       
+          }
           for($year=date("Y",time());$year <= $maxyear;$year++) {
             print "<OPTION VALUE=" . $year;
             if ($year == $cyear) {
@@ -135,11 +135,11 @@ Pasword Validity</TH></TR>
             }
             print ">" . $year . "\n";
           }
-%>
+?>
           </SELECT></TD></TR>
           <TR><TD>
           <SELECT NAME=pwhour>
-<%
+<?php
           for($hour=0;$hour <= 23;$hour++) {
             print "<OPTION VALUE=" . $hour;
             if ($hour == $chour) {
@@ -147,10 +147,10 @@ Pasword Validity</TH></TR>
             }
             print ">" . $hour . "\n";
           }
-%>
+?>
           </SELECT></TD><TD>
           <SELECT NAME=pwmin>
-<%
+<?php
           for($min=0;$min < 60;$min++) {
             print "<OPTION VALUE=" . $min;
             if ($min == $cmin) {
@@ -158,10 +158,10 @@ Pasword Validity</TH></TR>
             }
             print ">" . $min . "\n";
           }
-%>
+?>
           </SELECT></TD><TD>
           <SELECT NAME=pwsec>
-<%
+<?php
           for($sec=0;$sec < 60;$sec++) {
             print "<OPTION VALUE=" . $sec;
             if ($sec == $csec) {
@@ -169,16 +169,16 @@ Pasword Validity</TH></TR>
             }
             print ">" . $sec . "\n";
           }
-%>
+?>
           </SELECT></TD>
           </TR></TABLE>
-<%
+<?php
         } else {
           print date("Y-m-d H:i:s",$iinfo[0][$attr][0]);
         }
-%>
+?>
       </TD></TR>
-<%
+<?php
   }
   $rem=$i % 2;
   if ($rem == 1) {
@@ -189,10 +189,10 @@ Pasword Validity</TH></TR>
     $bcol[1]=" CLASS=list-color2";
   }
   if ($ADMIN_USER == "admin") {
-%>
-<TR <%print $bcol[2];%>><TH COLSPAN=2>  
+?>
+<TR <?php print $bcol[2];?>><TH COLSPAN=2>
   <INPUT TYPE=SUBMIT VALUE="Modify" NAME=modrec></TH></TR>
-<%
+<?php
   }
-%>
+?>
 </TABLE></FORM>

@@ -1896,14 +1896,14 @@ EOF
 )>/etc/openldap/ldap.conf
 
 (cat <<EOF
-<\%
+<?php
   \\\$ds=ldap_connect("ldap://$repmaster");    
   ldap_set_option(\\\$ds, LDAP_OPT_PROTOCOL_VERSION,3);
   \\\$LDAP_LIMIT_DN="$ldapserv{'limited'}";
   \\\$LDAP_LIMIT_PW="\${LDAPLIMPW}";
   \\\$LOCAL_DOMAIN="$dnsconf{'Domain'}";
   \\\$LDAP_BDN="$vsuf";
-\%>
+?>
 EOF
 )>/var/spool/apache/htdocs/ldap/ldapcon.inc
 chmod 600 /var/spool/apache/htdocs/ldap/ldapcon.inc
@@ -2017,14 +2017,14 @@ EOF
 )>/etc/openldap/ldap.conf
 
 (cat <<EOF
-<\%
+<?php
   \\\$ds=ldap_connect("ldaps://$repmaster");    
   ldap_set_option(\\\$ds, LDAP_OPT_PROTOCOL_VERSION,3);
   \\\$LDAP_LIMIT_DN="$ldapserv{'limited'}";
   \\\$LDAP_LIMIT_PW="\${LDAPLIMPW}";
   \\\$LOCAL_DOMAIN="$dnsconf{'Domain'}";
   \\\$LDAP_BDN="$vsuf";
-\%>
+?>
 EOF
 )>/var/spool/apache/htdocs/ldap/ldapcon.inc
 chmod 600 /var/spool/apache/htdocs/ldap/ldapcon.inc
@@ -2059,19 +2059,19 @@ chmod 644 /etc/ldap.conf
 chown 0.139 /etc/ldap.conf
 
 (cat <<EOF
-<%
+<?php
   \\\$db=pg_connect("host=127.0.0.1 dbname=exchange user=exchange password=$exchangepass sslmode=allow");
-%>
+?>
 EOF
 ) > /var/spool/apache/htdocs/ldap/pgauth.inc
 chmod 600 /var/spool/apache/htdocs/ldap/pgauth.inc
 chown www.root /var/spool/apache/htdocs/ldap/pgauth.inc
 
 (cat <<EOF
-<%
+<?php
   \\\$db=mysql_connect("$sqlserver","admin","$sqladminpass");
   mysql_select_db("asterisk");
-%>
+?>
 EOF
 ) > /var/spool/apache/htdocs/ldap/myauth.inc
 chmod 600 /var/spool/apache/htdocs/ldap/myauth.inc
@@ -2079,23 +2079,23 @@ chown www.root /var/spool/apache/htdocs/ldap/myauth.inc
 
 
 (cat <<EOF
-<%
+<?php
   date_default_timezone_set("Africa/Johannesburg");
   \\\$dtime=getdate();
   \\\$syshname="$dnsconf{'Hostname'}";
   \\\$db=pg_connect("host=$sqlserver dbname=asterisk user=asterisk password=$sqlvoippass sslmode=allow");
-%>
+?>
 EOF
 ) > /var/spool/apache/htdocs/cdr/auth.inc
 chmod 600 /var/spool/apache/htdocs/cdr/auth.inc
 chown www.root /var/spool/apache/htdocs/cdr/auth.inc
 
 (cat <<EOF
-<%
+<?php
   date_default_timezone_set("Africa/Johannesburg");
   \\\$dtime=getdate();
   \\\$db=pg_connect("host=$sqlserver dbname=asterisk user=asterisk password=$sqlvoippass sslmode=allow");
-%>
+?>
 EOF
 ) > /var/lib/asterisk/agi-bin/auth.inc
 chmod 600 /var/lib/asterisk/agi-bin/auth.inc
@@ -2226,19 +2226,19 @@ fi;
 
 
 (cat <<EOF
-<%
+<?php
   \\\$link = mysql_connect("localhost", "logview", "$sqlulogdpass");
   mysql_select_db("networksentry_log");
-%>
+?>
 EOF
 )> /var/spool/apache/htdocs/logs/ulogauth.php
 chmod 640 /var/spool/apache/htdocs/logs/ulogauth.php
 chown www.www /var/spool/apache/htdocs/logs/ulogauth.php
 
 (cat <<EOF
-<%
+<?php
 \\\$db=pg_connect("host=$sqlradiusserv dbname=radius user=radius password=$sqlradiuspass sslmode=allow")
-%>
+?>
 EOF
 )> /var/spool/apache/htdocs/radius/opendb.inc
 chown www.www /var/spool/apache/htdocs/radius/opendb.inc
@@ -10481,7 +10481,7 @@ if (@pbypass[0] ne "") {
 #  print SC "http_access deny squidbypass\n";
 }
 
-#<%print "$squiddenyrule"%>
+#<?php print "$squiddenyrule"?>
 if (@pdeny[0] ne "")
   {
     print SC "http_access deny squiddeny\n";
@@ -16967,7 +16967,7 @@ sub printrrdlim() {
   open(II,">intinfo.inc");
   chmod(0600,"intinfo.inc");
   $lcnt=0;
-  print II "<%\n";
+  print II "<?php\n";
   if ($sysconf{'External'} eq "Dialup") {
     print II "\$ints[\"ppp0\"]=" . $tcctl{'Egress'}/8 . ";\n";
     print II "\$imq[\"ppp0\"]=0" . ";\n";
@@ -16984,7 +16984,7 @@ sub printrrdlim() {
     print II "\$imq[\"ppp" . $lcnt . "\"]=" . $lcnt . ";\n";
     print II "\$imqmax[" . $lcnt . "]=" . @ldata[3]/8 . ";\n";
   }
-  print II "%>\n";
+  print II "?>\n";
   close(II);
 }
 

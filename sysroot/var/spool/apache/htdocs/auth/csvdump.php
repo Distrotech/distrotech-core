@@ -1,4 +1,4 @@
-<%
+<?php
 if (!isset($_SESSION['auth'])) {
   exit;
 }
@@ -49,4 +49,4 @@ if ($filetype == "users") {
     print "\n";
   }
 }
-%>
+?>

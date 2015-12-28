@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -51,13 +51,13 @@ if ($delcert != "") {
     touch("/var/spool/apache/htdocs/ns/config/gensshauth");
   }
 }
-%>
+?>
 <CENTER>
 <FORM enctype="multipart/form-data" METHOD=POST>
-<INPUT TYPE=HIDDEN NAME=bdn VALUE="<%print $bdn;%>">
+<INPUT TYPE=HIDDEN NAME=bdn VALUE="<?php print $bdn;?>">
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
 <TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body>
-<%
+<?php
 
 if ($_FILES['newcert']['name'] != "") {
   $tmpssl=tempnam("/tmp","sslstore");
@@ -93,31 +93,31 @@ if ($_FILES['newcert']['name'] != "") {
   $sr=ldap_search($ds,$bdn,"(&(objectclass=usercertstore)(usercertificate;binary=*))",$iarr);
   $certcnt=ldap_count_entries($ds,$sr);
 
-  $iinfo=ldap_get_entries($ds,$sr);%>
+  $iinfo=ldap_get_entries($ds,$sr);?>
 <TR CLASS=list-color1>
 <TD WIDTH=50%>Certificate</TD><TD>
 <SELECT NAME=delcert>
 <OPTION VALUE="">Select Certificate To Delete Or Add New Certificate Bellow</OPTION>
-<%
+<?php
   for($cnt=0;$cnt<$iinfo['count'];$cnt++) {
     print "<OPTION VALUE=\"" . htmlspecialchars($iinfo[$cnt]["dn"]) . "\">";
     print " " . $iinfo[$cnt]["cn"][0] . "</OPTION>\n";
   }
-%>
+?>
 </SELECT>
-<% 
+<?php
 $rcnt=1;
-%>
-<TR CLASS=list-color<%print ($rcnt % 2) +1;$rcnt++%>><TD>
+?>
+<TR CLASS=list-color<?php print ($rcnt % 2) +1;$rcnt++?>><TD>
   New Certificate Or Request
 </TD><TD>
   <INPUT TYPE=FILE NAME=newcert>
 </TD></TR>
-<TR CLASS=list-color<%print ($rcnt % 2) +1;$rcnt++%>><TD ALIGN=MIDDLE COLSPAN=2>
+<TR CLASS=list-color<?php print ($rcnt % 2) +1;$rcnt++?>><TD ALIGN=MIDDLE COLSPAN=2>
 <INPUT TYPE=SUBMIT VALUE="Add/Delete Certificate">
 </TD></TR>
-<%
+<?php
 }
-%>
+?>
 </FORM>
 </TABLE>

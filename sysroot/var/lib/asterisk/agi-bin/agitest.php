@@ -1,4 +1,4 @@
-<%
+<?php
 if (! isset($agi)) {
   require_once("/var/lib/asterisk/agi-bin/phpagi/phpagi.php");
   $agi=new AGI();

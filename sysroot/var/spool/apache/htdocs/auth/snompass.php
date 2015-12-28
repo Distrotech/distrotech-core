@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -26,11 +26,11 @@ if (!isset($_SESSION['auth'])) {
   } else {
     $ADMIN_USER="pleb";
   }
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=snompassform onsubmit="ajaxsubmit(this.name);return false;">
 <TABLE WIDTH=90% CELLSPACING=0 CELLPADDING=0>
-<%
+<?php
   if (($pass1 == $pass2) && (isset($uppass)) && ($ADMIN_USER == "admin")) {
     $info["userpassword"]=$pass1;
 
@@ -64,15 +64,15 @@ if (!isset($_SESSION['auth'])) {
     print "<TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body>" . _("Password Mismatch") . "</TH></TR>";
     return;
   } else if ($ADMIN_USER == "admin") {
-%>
-<TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body><%print _("Changing Phone Book Password");%></TH></TR>
-<TR CLASS=list-color1><TD WIDTH=50% onmouseover="myHint.show('SP0')" onmouseout="myHint.hide()"><%print _("New Password");%></TD><TD><INPUT TYPE=PASSWORD NAME=pass1></TD></TR>
-<TR CLASS=list-color2><TD onmouseover="myHint.show('SP1')" onmouseout="myHint.hide()"><%print _("Confirm");%></TD><TD><INPUT TYPE=PASSWORD NAME=pass2></TD></TR>
-<TR CLASS=list-color1><TD COLSPAN=2 ALIGN=MIDDLE><INPUT TYPE=SUBMIT NAME=uppass VALUE="<%print _("Update Password");%>"></TD></TR>
-<%
+?>
+<TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body><?php print _("Changing Phone Book Password");?></TH></TR>
+<TR CLASS=list-color1><TD WIDTH=50% onmouseover="myHint.show('SP0')" onmouseout="myHint.hide()"><?php print _("New Password");?></TD><TD><INPUT TYPE=PASSWORD NAME=pass1></TD></TR>
+<TR CLASS=list-color2><TD onmouseover="myHint.show('SP1')" onmouseout="myHint.hide()"><?php print _("Confirm");?></TD><TD><INPUT TYPE=PASSWORD NAME=pass2></TD></TR>
+<TR CLASS=list-color1><TD COLSPAN=2 ALIGN=MIDDLE><INPUT TYPE=SUBMIT NAME=uppass VALUE="<?php print _("Update Password");?>"></TD></TR>
+<?php
   } else {
     print "<TR><TH>" . _("Administrive Access Is Required") . "</TH></TR>";
   }
-%>
+?>
 </TABLE>
 </FORM>

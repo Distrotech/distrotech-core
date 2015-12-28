@@ -641,4 +641,4 @@ function create_call($callauth,$reseller){
   }
   return 0;
 }
-%>
+?>

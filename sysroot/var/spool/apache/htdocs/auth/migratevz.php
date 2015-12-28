@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -38,14 +38,14 @@ if (!isset($_SESSION['auth'])) {
 
 $disc=array("File Server Quota","Home Directory Quota","Mail Box Quota","Allow Access To Proxy");
 
-%>
+?>
 <FORM METHOD=POST>
-<INPUT TYPE=HIDDEN NAME=classi VALUE="<%print $euser;%>">
+<INPUT TYPE=HIDDEN NAME=classi VALUE="<?php print $euser;?>">
 <CENTER>
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
 <TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body>
-<%print _("Transfer User To Zone");%></TH></TR>
-<%
+<?php print _("Transfer User To Zone");?></TH></TR>
+<?php
   $sr=ldap_search($ds,"ou=Admin","(&(objectclass=groupofnames)(member=" . $ldn . ")(cn=Admin Access))");
   if ((ldap_count_entries($ds,$sr) == 1) || ($PHP_AUTH_USER == "admin")) {
     $ADMIN_USER="admin";
@@ -177,10 +177,10 @@ $disc=array("File Server Quota","Home Directory Quota","Mail Box Quota","Allow A
   }
   print "</SELECT>\n</TD></TR>";
   if ($ADMIN_USER == "admin") {
-%>
-<TR CLASS=list-color2><TH COLSPAN=2>  
+?>
+<TR CLASS=list-color2><TH COLSPAN=2>
   <INPUT TYPE=SUBMIT VALUE="Modify" NAME=modrec></TH></TR>
-<%
+<?php
   }
-%>
+?>
 </TABLE></FORM>

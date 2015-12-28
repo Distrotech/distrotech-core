@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -35,13 +35,13 @@ if (!isset($_SESSION['auth'])) {
 
 $disc=array(_("File Server Quota"),_("Home Directory Quota"),_("Mail Box Quota"));
 
-%>
+?>
 <FORM METHOD=POST NAME=dquotform onsubmit="ajaxsubmit(this.name);return false">
-<INPUT TYPE=HIDDEN NAME=classi VALUE="<%print $euser;%>">
+<INPUT TYPE=HIDDEN NAME=classi VALUE="<?php print $euser;?>">
 <CENTER>
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
 <TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body>
-<%
+<?php
   $sr=ldap_search($ds,"ou=Admin","(&(objectclass=groupofnames)(member=" . $ldn . ")(cn=Admin Access))");
   if ((ldap_count_entries($ds,$sr) == 1) || ($PHP_AUTH_USER == "admin")) {
     $ADMIN_USER="admin";
@@ -64,11 +64,11 @@ $disc=array(_("File Server Quota"),_("Home Directory Quota"),_("Mail Box Quota")
   $dn=$iinfo[0]["dn"];
 
   if (isset($modrec)) {
-     %>
+     ?>
      <SCRIPT>
        alert("Quota Changes Are Updated Every 4 Hours\n(00:00 04:00 08:00 12:00 16:00 20:00)");
      </SCRIPT>
-     <%
+     <?php
 
     $minfo["quotafileserver"]=$quotafileserver;
     $minfo["quotamailspool"]=$quotamailspool;
@@ -107,21 +107,21 @@ $disc=array(_("File Server Quota"),_("Home Directory Quota"),_("Mail Box Quota")
     } else {
       $bcolor=" CLASS=list-color1";
     }
-%>
-    <TR<%print $bcolor;%>>
-      <TD onmouseover="myHint.show('<%print strtolower($iarr[$i]);%>')" onmouseout="myHint.hide()" WIDTH=75%>
-        <% print $disc[$i];%> (Mb)
+?>
+    <TR<?php print $bcolor;?>>
+      <TD onmouseover="myHint.show('<?php print strtolower($iarr[$i]);?>')" onmouseout="myHint.hide()" WIDTH=75%>
+        <?php print $disc[$i];?> (Mb)
       </TD>
       <TD>
-<%
+<?php
         $attr=$iarr[$i];
         if ($iinfo[0][$attr][0] == "") {
           $iinfo[0][$attr][0]="0";
         }
         if ($ADMIN_USER == "admin") {
-%>
-          <INPUT TYPE=TEXT NAME=<%print $iarr[$i];%> VALUE="<%print $iinfo[0][$attr][0];%>">
-<%
+?>
+          <INPUT TYPE=TEXT NAME=<?php print $iarr[$i];?> VALUE="<?php print $iinfo[0][$attr][0];?>">
+<?php
         } else {
           if ($iinfo[0][$attr][0] > 0) {
             print $iinfo[0][$attr][0];
@@ -129,9 +129,9 @@ $disc=array(_("File Server Quota"),_("Home Directory Quota"),_("Mail Box Quota")
             print "None";
           }
         }
-%>
+?>
       </TD></TR>
-<%
+<?php
   }
   $rem=$i % 2;
   if ($rem == 1) {
@@ -142,10 +142,10 @@ $disc=array(_("File Server Quota"),_("Home Directory Quota"),_("Mail Box Quota")
     $bcol[1]=" CLASS=list-color2";
   }
   if ($ADMIN_USER == "admin") {
-%>
-<TR <%print $bcol[2];%>><TH COLSPAN=2>  
-  <INPUT TYPE=SUBMIT VALUE="<%print _("Modify");%>" NAME=modrec></TH></TR>
-<%
+?>
+<TR <?php print $bcol[2];?>><TH COLSPAN=2>  
+  <INPUT TYPE=SUBMIT VALUE="<?php print _("Modify");?>" NAME=modrec></TH></TR>
+<?php
   }
-%>
+?>
 </TABLE></FORM>

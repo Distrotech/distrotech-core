@@ -1,4 +1,4 @@
-<%
+<?php
 
 include "/var/lib/asterisk/agi-bin/functions.inc";
 
@@ -78,4 +78,4 @@ if ($dstchan != "") {
   $agiinf=agisend($agicmd);
   verbose($agiinf);
 }
-%>
+?>

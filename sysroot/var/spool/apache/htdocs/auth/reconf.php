@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -267,12 +267,12 @@ if (($autovars["Trunk"] != "NONE") && ($autovars["Trunk"] != "mISDN/g:out/")){
 
 function inprog() {
   if (is_file("/var/spool/apache/htdocs/ns/config/netsentry-sysvars")) {
-%>
+?>
 <CENTER>
 <DIV CLASS=content>
 <DIV CLASS=list-color2 ID=headcol><DIV CLASS=heading-body>System Reconfigure In Progress</DIV></DIV>
 </DIV>
-<%
+<?php
     return true;
   }
 }
@@ -513,7 +513,7 @@ if (isset($saved)) {
     return;
   }
 }
-%>
+?>
 <FORM METHOD=POST NAME=confform onsubmit="ajaxsubmit(this.name);return false">
 <INPUT TYPE=HIDDEN NAME=curdiv VALUE=split0>
 <INPUT TYPE=HIDDEN NAME=saved VALUE="">
@@ -522,7 +522,7 @@ if (isset($saved)) {
 <DIV CLASS=list-color2 ID=headcol><DIV CLASS=heading-body>System Reconfigure</DIV></DIV>
 
 <DIV CLASS=list-color1><DIV CLASS=formrow>
-<%
+<?php
   $splitc=0;
   while (list($skey,$sval) = each($psplit)) {
     print "<DIV CLASS=formselect ID=split" . $splitc . "_but onclick=showdiv('split" . $splitc;
@@ -530,7 +530,7 @@ if (isset($saved)) {
     print $sval . "</DIV>\n";
     $splitc++;
   }
-%>
+?>
 <DIV CLASS=formselect ID=exten_but onclick=showdiv('exten',document.confform) onmouseover=showdiv('exten',document.confform)>Voip Ext.</DIV>
 <DIV CLASS=formselect ID=voip_but onclick=showdiv('voip',document.confform) onmouseover=showdiv('voip',document.confform)>PBX</DIV>
 <DIV CLASS=formselect ID=atten_but onclick=showdiv('atten',document.confform) onmouseover=showdiv('atten',document.confform)>Auto Atten.</DIV>
@@ -538,7 +538,7 @@ if (isset($saved)) {
 <DIV CLASS=formselect ID=save_but onclick=savereconfchanges() onmouseover=showdiv('save',document.confform)>Save</DIV>
 </DIV></DIV>
 
-<%
+<?php
   $splitc=0;
   $col=1;
   while(list($key,$val) = each($discrip)) {
@@ -638,10 +638,10 @@ if (isset($saved)) {
     }
     $col++;
   }
-%>
+?>
   </TABLE>
 </DIV>
-<%
+<?php
 $col=0;
 voipmenu($extenvar,"exten");
 $col=0;
@@ -649,52 +649,52 @@ voipmenu($voipvar,"voip");
 $col=0;
 voipmenu($attenvar,"atten");
 $col=0;
-%>
+?>
 
 <DIV id=lcr CLASS=formpart>
 <TABLE WIDTH=100% cellspacing=0 cellpadding=0>
     <tr class="list-color2">
       <td width="50%">Account</td>
-      <td><input size="52" name="LCRAC" value="<%print $conf["LCRAC"];%>" type="text"></td>
+      <td><input size="52" name="LCRAC" value="<?php print $conf["LCRAC"];?>" type="text"></td>
     </tr>
     <tr class="list-color1">
       <td width="50%">Password</td>
-      <td><input size="52" name="LCRPW" value="<%print $conf["LCRPW"];%>" type="text"></td>
+      <td><input size="52" name="LCRPW" value="<?php print $conf["LCRPW"];?>" type="text"></td>
     </tr>
     <tr class="list-color2">
       <td width="50%">Server</td>
-      <td><input size="52" name="LCRSRV" value="<%print $conf["LCRSRV"];%>" type="text"></td>
+      <td><input size="52" name="LCRSRV" value="<?php print $conf["LCRSRV"];?>" type="text"></td>
     </tr>
     <tr class="list-color1">
       <td width="50%">Protocol</td>
       <td><SELECT NAME=LCRPROTO><OPTION VALUE="SIP">SIP</OPTION>
-      <OPTION VALUE="IAX"<%if ($conf['LCRPROTO'] == "IAX") { print " SELECTED";}%>>IAX2</OPTION>
-      <OPTION VALUE="H.323"<%if ($conf['LCRPROTO'] == "H.323") { print " SELECTED";}%>>H.323</OPTION>
+      <OPTION VALUE="IAX"<?php if ($conf['LCRPROTO'] == "IAX") { print " SELECTED";}?>>IAX2</OPTION>
+      <OPTION VALUE="H.323"<?php if ($conf['LCRPROTO'] == "H.323") { print " SELECTED";}?>>H.323</OPTION>
       </TD>
     </tr>
     <tr class="list-color2">
       <td width="50%">Register</td>
-      <td><INPUT TYPE=CHECKBOX NAME=LCRREG<%if ($conf['LCRREG'] == "true") { print " CHECKED";}%>>
+      <td><INPUT TYPE=CHECKBOX NAME=LCRREG<?php if ($conf['LCRREG'] == "true") { print " CHECKED";}?>>
       </TD>
     </tr>
     <tr class="list-color1">
       <td width="50%">Use DTMF INFO (SIP)</td>
-      <td><INPUT TYPE=CHECKBOX NAME=LCRDTMF<%if ($conf['LCRDTMF'] == "info") { print " CHECKED";}%>>
+      <td><INPUT TYPE=CHECKBOX NAME=LCRDTMF<?php if ($conf['LCRDTMF'] == "info") { print " CHECKED";}?>>
       </TD>
     </tr>
     <tr class="list-color2">
       <td width="50%">Use SRTP (SIP)</td>
-      <td><INPUT TYPE=CHECKBOX NAME=LCRSRTP<%if ($conf['LCRSRTP'] == "true") { print " CHECKED";}%>>
+      <td><INPUT TYPE=CHECKBOX NAME=LCRSRTP<?php if ($conf['LCRSRTP'] == "true") { print " CHECKED";}?>>
       </TD>
     </tr>
     <tr class="list-color1">
       <td width="50%">Use From User (SIP [Disables Sending CLI])</td>
-      <td><INPUT TYPE=CHECKBOX NAME=LCRFROMU<%if ($conf['LCRFROMU'] == "true") { print " CHECKED";}%>>
+      <td><INPUT TYPE=CHECKBOX NAME=LCRFROMU<?php if ($conf['LCRFROMU'] == "true") { print " CHECKED";}?>>
       </TD>
     </tr>
     <tr class="list-color2">
       <td width="50%">Disable Video</td>
-      <td><INPUT TYPE=CHECKBOX NAME=LCRVIDEO<%if ($conf['LCRVIDEO'] == "true") { print " CHECKED";}%>>
+      <td><INPUT TYPE=CHECKBOX NAME=LCRVIDEO<?php if ($conf['LCRVIDEO'] == "true") { print " CHECKED";}?>>
       </TD>
     </tr>
 </TABLE>
@@ -704,7 +704,7 @@ $col=0;
 <TABLE WIDTH=100% cellspacing=0 cellpadding=0>
     <tr class="list-color2">
       <td width="50%">Serial Key</td>
-      <td><input size="52" name="SERIAL" value="<%print $conf["SERIAL"];%>" type="text"></td>
+      <td><input size="52" name="SERIAL" value="<?php print $conf["SERIAL"];?>" type="text"></td>
     </tr>
 </TABLE>
 </DIV>

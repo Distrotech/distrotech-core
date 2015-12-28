@@ -1,5 +1,5 @@
 #!/usr/bin/php
-<%
+<?php
 include "/var/lib/asterisk/agi-bin/functions.inc";
 include "/var/spool/apache/htdocs/cdr/apifunc.inc";
 
@@ -35,4 +35,4 @@ if (count($chanlist) > 0) {
     }
   }
 }
-%>
+?>

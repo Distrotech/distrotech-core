@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -35,15 +35,15 @@ if (isset($addreq)) {
     };
   };
 }else {
-%>
+?>
 <CENTER>
   <FORM enctype="multipart/form-data" METHOD=POST TARGET=_BLANK ACTION=ps2pdf.php>
 
   <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
-    <TR CLASS=list-color2><TH CLASS=heading-body COLSPAN=2><%print _("Select A Post Script File To Convert To PDF Format");%></TH></TR>
+    <TR CLASS=list-color2><TH CLASS=heading-body COLSPAN=2><?php print _("Select A Post Script File To Convert To PDF Format");?></TH></TR>
     <TR CLASS=list-color1>
       <TD  onmouseover="myHint.show('PDF')" onmouseout="myHint.hide()" WIDTH=50%>
-        <%print _("File To Be Converted To PDF");%>
+        <?php print _("File To Be Converted To PDF");?>
       </TD>
       <TD WIDTH=50%>
         <INPUT TYPE=FILE NAME=topdf>
@@ -56,6 +56,6 @@ if (isset($addreq)) {
     <TR>
   </TABLE>
   </FORM>
-<%
+<?php
 }
-%>
+?>

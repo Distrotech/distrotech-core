@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -49,4 +49,4 @@ if (($info == "userpkcs12") && ($keyt != "1") && (($euser == $PHP_AUTH_USER) || 
  print $cinf[0];
 }
 ldap_unbind($ds);
-%>
+?>

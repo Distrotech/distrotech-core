@@ -49,4 +49,4 @@ $ratequery=odbcquery($rateq);
 
 $agi->set_variable("ACNUM",$ratequery[0]);
 verbose("OK!!!!!!!");
-%>
+?>

@@ -1,5 +1,5 @@
 #!/usr/bin/php -d safe_mode=no
-<%
+<?php
 
 $pwlen=8;
 $validpw="(name=secret OR length(secret) != " . $pwlen . " OR secret='' OR secret IS NULL OR secret !~ '[0-9]' OR secret !~ '[a-z]' OR secret !~ '[A-Z]')";
@@ -73,4 +73,4 @@ while(list($phone,$query) = each($ptype)) {
   }
 }
 $agi->disconnect();
-%>
+?>

@@ -1,5 +1,5 @@
 #!/usr/bin/php -q
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -82,4 +82,4 @@ if (pcntl_fork() == 0) {
 } else {
   exit;
 }
-%>
+?>

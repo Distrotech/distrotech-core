@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -39,15 +39,15 @@ if (!isset($_SESSION['auth'])) {
   if (($_SESSION['classi'] == "") && ($_SESSION['utype'] == "")) {
     $_SESSION['classi']=$PHP_AUTH_USER;
   }
-%>
+?>
 <FORM METHOD=POST NAME=radmod onsubmit="ajaxsubmit(this.name);return false">
-<INPUT TYPE=HIDDEN NAME=disppage VALUE="<%print $showpage;%>">
-<INPUT TYPE=HIDDEN NAME=nomenu VALUE="<%if ($_POST['nomnenu'] < 2) {print $_POST['nomenu'];}%>">
-<INPUT TYPE=HIDDEN NAME=utype VALUE="<%print $_POST['utype'];%>">
+<INPUT TYPE=HIDDEN NAME=disppage VALUE="<?php print $showpage;?>">
+<INPUT TYPE=HIDDEN NAME=nomenu VALUE="<?php if ($_POST['nomnenu'] < 2) {print $_POST['nomenu'];}?>">
+<INPUT TYPE=HIDDEN NAME=utype VALUE="<?php print $_POST['utype'];?>">
 <CENTER>
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
 <TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body>
-<%
+<?php
 
   $sr=ldap_search($ds,"ou=Admin","(&(objectclass=groupofnames)(member=" . $ldn . ")(cn=Admin Access))");
   if ((ldap_count_entries($ds,$sr) == 1) || ($PHP_AUTH_USER == "admin")) {
@@ -177,13 +177,13 @@ if (!isset($_SESSION['auth'])) {
   if ((($radrealm == "") && ($newradrealm == "")) || (isset($raddel))) {
     $sr=ldap_search($ds,$basedn,"(&(radiusrealm=*))",$dnarr);
     $iinfo = ldap_get_entries($ds, $sr);
-%>
+?>
       <TR onmouseover="myHint.show('RP1')" onmouseout="myHint.hide()" CLASS=list-color1>
         <TD WIDTH=50%>
-          <%print _("Modify/Add Realm");%>
+          <?php print _("Modify/Add Realm");?>
         </TD>
         <TD><SELECT NAME=radrealm>
-<%
+<?php
     if ($ADMIN_USER == "admin") {
       print "<OPTION VALUE=\"\">" . _("Add New Realm To User") . "</OPTION>";
     }
@@ -193,11 +193,11 @@ if (!isset($_SESSION['auth'])) {
         print "<OPTION VALUE=\"" . $iinfo[$cnt]["dn"] . "\">" .  $iinfo[$cnt]["radiusrealm"][0] . "</OPTION>\n";
       }
     }
-%>
+?>
     </TD></TR>
-<%
+<?php
       if ($ADMIN_USER == "admin") {
-%>
+?>
         <TR CLASS=list-color2>
           <TD onmouseover="myHint.show('RP1')" onmouseout="myHint.hide()" WIDTH=50%>
             New Realm
@@ -205,29 +205,29 @@ if (!isset($_SESSION['auth'])) {
             <INPUT TYPE=TEXT NAME=newradrealm>
       </TD></TR>
         <TR CLASS=list-color1>
-<%
+<?php
         } else {
-%>
+?>
         <TR CLASS=list-color2>
-<%
+<?php
         }
-%>
+?>
           <TD COLSPAN=2 ALIGN=CENTER>
-	    <INPUT TYPE=HIDDEN NAME=basedn VALUE="<%print $basedn%>">
-<%
+	    <INPUT TYPE=HIDDEN NAME=basedn VALUE="<?php print $basedn?>">
+<?php
           if ($ADMIN_USER == "admin") {
-%>
-             <INPUT TYPE=SUBMIT onclick=this.name='raddel' VALUE="<%print _("Delete");%>">
-             <INPUT TYPE=SUBMIT onclick=this.name='radup' VALUE="<%print _("Update/Add");%>">
-<%
+?>
+             <INPUT TYPE=SUBMIT onclick=this.name='raddel' VALUE="<?php print _("Delete");?>">
+             <INPUT TYPE=SUBMIT onclick=this.name='radup' VALUE="<?php print _("Update/Add");?>">
+<?php
           } else {
-%>
+?>
              <INPUT TYPE=SUBMIT onclick=this.name='radup' VALUE="View">
-<%
+<?php
           }
-%>
+?>
     </TD></TR></TABLE></FORM>
-<%
+<?php
     return;
   } else if (($radrealm == "") && ($newradrealm != "") && (isset($radup))) {
     $radrealm="radiusRealm=" . $newradrealm . "," . $basedn;
@@ -268,24 +268,24 @@ if (!isset($_SESSION['auth'])) {
     }
     $attr=$iarr[$i];
     if (!$listitem[$attr]) {
-%>
-      <TR<%print $bcolor;%>><TD WIDTH=50% onmouseover="myHint.show('<%print $jshint[$i];%>')" onmouseout="myHint.hide()"><% print $disc[$i];%></TD><TD>
-<%
+?>
+      <TR<?php print $bcolor;?>><TD WIDTH=50% onmouseover="myHint.show('<?php print $jshint[$i];?>')" onmouseout="myHint.hide()"><?php print $disc[$i];?></TD><TD>
+<?php
     }
         if ($ADMIN_USER == "admin") {
           if ($attr == "radiusporttype") {
-%>
-            <SELECT NAME=<%print $iarr[$i];%>>
-              <OPTION VALUE="Async" <%if ($iinfo[0][$attr][0] == "Async") {print "SELECTED";};%>>Modem
-              <OPTION VALUE="ISDN" <%if ($iinfo[0][$attr][0] == "ISDN") {print "SELECTED";};%>>ISDN
-              <OPTION VALUE="ISDN-V110" <%if ($iinfo[0][$attr][0] == "ISDN-V110") {print "SELECTED";};%>>ISDN V.110
-              <OPTION VALUE="ISDN-V120" <%if ($iinfo[0][$attr][0] == "ISDN-V120") {print "SELECTED";};%>>ISDN V.120
-              <OPTION VALUE="Virtual" <%if ($iinfo[0][$attr][0] == "Virtual") {print "SELECTED";};%>>Virtual
-              <OPTION VALUE="xDSL" <%if ($iinfo[0][$attr][0] == "xDSL") {print "SELECTED";};%>>xDSL
-              <OPTION VALUE="Wireless-802.11" <%if ($iinfo[0][$attr][0] == "Wireless-802.11") {print "SELECTED";};%>>Wireless-802.11
-              <OPTION VALUE="" <%if ($iinfo[0][$attr][0] == "") {print "SELECTED";};%>>All
+?>
+            <SELECT NAME=<?php print $iarr[$i];?>>
+              <OPTION VALUE="Async" <?php if ($iinfo[0][$attr][0] == "Async") {print "SELECTED";};?>>Modem
+              <OPTION VALUE="ISDN" <?php if ($iinfo[0][$attr][0] == "ISDN") {print "SELECTED";};?>>ISDN
+              <OPTION VALUE="ISDN-V110" <?php if ($iinfo[0][$attr][0] == "ISDN-V110") {print "SELECTED";};?>>ISDN V.110
+              <OPTION VALUE="ISDN-V120" <?php if ($iinfo[0][$attr][0] == "ISDN-V120") {print "SELECTED";};?>>ISDN V.120
+              <OPTION VALUE="Virtual" <?php if ($iinfo[0][$attr][0] == "Virtual") {print "SELECTED";};?>>Virtual
+              <OPTION VALUE="xDSL" <?php if ($iinfo[0][$attr][0] == "xDSL") {print "SELECTED";};?>>xDSL
+              <OPTION VALUE="Wireless-802.11" <?php if ($iinfo[0][$attr][0] == "Wireless-802.11") {print "SELECTED";};?>>Wireless-802.11
+              <OPTION VALUE="" <?php if ($iinfo[0][$attr][0] == "") {print "SELECTED";};?>>All
 
-<%
+<?php
           } elseif ($attr == "dialupaccess") {
             if (($iinfo[0]["radiusrealm"][0] == "DEFAULT") || (! $virtzone)) {
               print _("Alter In Users Profile") . "<INPUT TYPE=HIDDEN NAME=dialupaccess VALUE=";
@@ -302,12 +302,12 @@ if (!isset($_SESSION['auth'])) {
               print ">";
            }
           } elseif ($attr == "radiusframedcompression") {
-%>
-            <SELECT NAME=<%print $iarr[$i];%>>
-              <OPTION VALUE="None" <%if ($iinfo[0][$attr][0] == "None") {print "SELECTED";};%>>No Compression
-              <OPTION VALUE="Van-Jacobson-TCP-IP" <%if (($iinfo[0][$attr][0] == "Van-Jacobson-TCP-IP") | ($iinfo[0][$attr][0] == "")) {print "SELECTED";};%>>Van Jacobson
+?>
+            <SELECT NAME=<?php print $iarr[$i];?>>
+              <OPTION VALUE="None" <?php if ($iinfo[0][$attr][0] == "None") {print "SELECTED";};?>>No Compression
+              <OPTION VALUE="Van-Jacobson-TCP-IP" <?php if (($iinfo[0][$attr][0] == "Van-Jacobson-TCP-IP") | ($iinfo[0][$attr][0] == "")) {print "SELECTED";};?>>Van Jacobson
 
-<%
+<?php
           } elseif ($attr == "radiusrealm") {
              if ($iinfo[0]["radiusrealm"][0] == "DEFAULT") {
                print _("Default Profile");
@@ -332,11 +332,11 @@ if (!isset($_SESSION['auth'])) {
                    $bcolor=" CLASS=list-color1";
                  }
                  if (($attr == "radiusreplyitem") || (($attr == "radiuscheckitem") && ($iinfo[0][$attr][$licnt] != "Realm = \"" . $iinfo[0]["radiusrealm"][0] . "\""))) {
-%>
-                   <TR<%print $bcolor;%>><TD WIDTH=25%><INPUT TYPE=CHECKBOX NAME="del<%print $attr . $licnt;%>">
-                     <INPUT TYPE=HIDDEN NAME=delh<%print $attr . $licnt;%> VALUE="<%print htmlentities($iinfo[0][$attr][$licnt]);%>">
-                   </TD><TD><%print $iinfo[0][$attr][$licnt];%></TD></TR>
-<%
+?>
+                   <TR<?php print $bcolor;?>><TD WIDTH=25%><INPUT TYPE=CHECKBOX NAME="del<?php print $attr . $licnt;?>">
+                     <INPUT TYPE=HIDDEN NAME=delh<?php print $attr . $licnt;?> VALUE="<?php print htmlentities($iinfo[0][$attr][$licnt]);?>">
+                   </TD><TD><?php print $iinfo[0][$attr][$licnt];?></TD></TR>
+<?php
                    $rem=$icol % 2;
                    if ($rem == 1) {
                      $bcolor=" CLASS=list-color1";
@@ -352,9 +352,9 @@ if (!isset($_SESSION['auth'])) {
                $icol--;
              }
           } else {
-%>
-              <INPUT TYPE=TEXT NAME=<%print $iarr[$i];%> VALUE="<%print $iinfo[0][$attr][0];%>">
-<%
+?>
+              <INPUT TYPE=TEXT NAME=<?php print $iarr[$i];?> VALUE="<?php print $iinfo[0][$attr][0];?>">
+<?php
           }
         } else {
           if (($ADMIN_USER != "admin") && ($listitem[$attr])) {
@@ -394,9 +394,9 @@ if (!isset($_SESSION['auth'])) {
             }
           }
         }
-%>
+?>
       </TD></TR>
-<%
+<?php
     $icol++;
   }
   $rem=$icol % 2;
@@ -408,25 +408,25 @@ if (!isset($_SESSION['auth'])) {
     $bcol[2]=" CLASS=list-color2";
   }
   if ($ADMIN_USER == "admin") {
-%>
-<TR <%print $bcol[1];%>><TH COLSPAN=2 CLASS=heading-body2><%print _("Check And Reply Extensions");%></TH></TR>
-<TR <%print $bcol[2];%>><TD onmouseover="myHint.show('RP12')" onmouseout="myHint.hide()"><%print _("Add Additional Reply Item");%></TD><TD><INPUT TYPE=TEXT NAME=newrep></TD></TR>  
-<TR <%print $bcol[1];%>><TD onmouseover="myHint.show('RP13')" onmouseout="myHint.hide()"><%print _("Add Additional Check Item");%></TD><TD><INPUT TYPE=TEXT NAME=newcheck></TD></TR>  
-<TR <%print $bcol[2];%>><TH COLSPAN=2>  
-  <INPUT TYPE=HIDDEN NAME=radrealm VALUE="<%print $radrealm%>">
+?>
+<TR <?php print $bcol[1];?>><TH COLSPAN=2 CLASS=heading-body2><?php print _("Check And Reply Extensions");?></TH></TR>
+<TR <?php print $bcol[2];?>><TD onmouseover="myHint.show('RP12')" onmouseout="myHint.hide()"><?php print _("Add Additional Reply Item");?></TD><TD><INPUT TYPE=TEXT NAME=newrep></TD></TR>  
+<TR <?php print $bcol[1];?>><TD onmouseover="myHint.show('RP13')" onmouseout="myHint.hide()"><?php print _("Add Additional Check Item");?></TD><TD><INPUT TYPE=TEXT NAME=newcheck></TD></TR>  
+<TR <?php print $bcol[2];?>><TH COLSPAN=2>
+  <INPUT TYPE=HIDDEN NAME=radrealm VALUE="<?php print $radrealm?>">
   <INPUT TYPE=HIDDEN NAME=newcheckval>
   <INPUT TYPE=HIDDEN NAME=newrepval>
   <INPUT TYPE=HIDDEN NAME=modrec VALUE=1>
-  <INPUT TYPE=BUTTON VALUE="<%print _("Modify");%>" ONCLICK=javascript:addnewradrealm()>
-<%
+  <INPUT TYPE=BUTTON VALUE="<?php print _("Modify");?>" ONCLICK=javascript:addnewradrealm()>
+<?php
 if (($iinfo[0]["radiusrealm"][0] != "DEFAULT") && (!$virtzone)){
-%>
-  <INPUT TYPE=SUBMIT onclick=this.name='raddel' VALUE="<%print _("Delete");%>">
-<%
+?>
+  <INPUT TYPE=SUBMIT onclick=this.name='raddel' VALUE="<?php print _("Delete");?>">
+<?php
 }
-%>
+?>
 </TH></TR>
-<%
+<?php
   }
-%>
+?>
 </TABLE></FORM>

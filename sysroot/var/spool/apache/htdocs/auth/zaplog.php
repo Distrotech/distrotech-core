@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -20,12 +20,12 @@
 if (!isset($_SESSION['auth'])) {
   exit;
 }
-%>
+?>
 <CENTER>
 <FORM METHOD=POST>
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
-<TR CLASS=list-color2><TH CLASS=heading-body COLSPAN=2><%print _("ISDN PRI Error Log");%></TH></TR>
-<%
+<TR CLASS=list-color2><TH CLASS=heading-body COLSPAN=2><?php print _("ISDN PRI Error Log");?></TH></TR>
+<?php
   $sr=ldap_search($ds,"ou=Admin","(&(objectclass=groupofnames)(member=" . $ldn . ")(|(cn=Admin Access)(cn=Voip Admin)))");
   if ((ldap_count_entries($ds,$sr) == 1) || ($PHP_AUTH_USER == "admin")) {
     $ADMIN_USER="admin";
@@ -61,6 +61,6 @@ if (!isset($_SESSION['auth'])) {
   } else {
     print "<TR CLASS=list-color1><TH CLASS=heading-body2>Administrator Access Required</TH></TR>";
   }
-%>
+?>
 </FORM>
 </TABLE>

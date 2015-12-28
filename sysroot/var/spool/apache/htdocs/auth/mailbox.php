@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -25,14 +25,14 @@ if (!isset($_SESSION['auth'])) {
   } else {
     $euser=$_SESSION['classi'];
   }
-%>
+?>
 
 <FORM METHOD=POST NAME=mbform onsubmit="ajaxsubmit(this.name);return false">
-<INPUT TYPE=HIDDEN NAME=classi VALUE="<%print $euser;%>">
+<INPUT TYPE=HIDDEN NAME=classi VALUE="<?php print $euser;?>">
 <CENTER>
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
 <TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body>
-<%
+<?php
   if (($_SESSION['utype'] != "system") && ($_SESSION['utype'] != "pdc")) {
     $sr=ldap_search($ds,"cn=" . $_SESSION['utype'] . ",ou=Vadmin","(&(objectclass=virtZoneSettings)(member=" . $ldn . ")(cn=" . $_SESSION['utype'] . "))");
   } else {
@@ -46,9 +46,9 @@ if (!isset($_SESSION['auth'])) {
   $ADMIN_USER="admin";
 
   print _("Editing Additional Mailbox");
-%>
+?>
 </TH></TR>
-<%
+<?php
   $disc=array(_("Login"),_("Name"),_("Destination"),_("Mail Relay"),_("Aliases"));
   $iarr=array("uid","cn","mailroutingaddress","mailhost","maillocaladdress");
   $jshint=array("MB2","MB3","MB7","MB4","MB8");
@@ -76,10 +76,10 @@ if (!isset($_SESSION['auth'])) {
 
     if (($newamboxpass1 == $newamboxpass2 ) && ($newamboxpass1 != "")) {
       $minfo["userPassword"]="{CRYPT}" . crypt($newamboxpass1);
-    } else if ($newamboxpass1 != "") {%>
+    } else if ($newamboxpass1 != "") {?>
 <SCRIPT>
   alert("Password Unchanged !\nPassword Mismatch.");
-</SCRIPT><%
+</SCRIPT><?php
     }
 
 
@@ -126,10 +126,10 @@ if (!isset($_SESSION['auth'])) {
     if (($newamboxpass1 == $newamboxpass2 ) && ($newamboxpass1 != "")) {
       $info["userPassword"]="{CRYPT}" . crypt($newamboxpass1);
     } else {
-      $info["userPassword"]="{CRYPT}" . crypt($newambox);%>
+      $info["userPassword"]="{CRYPT}" . crypt($newambox);?>
 <SCRIPT>
   alert("Password Set To User Name !\nNo Password Supplied Or Password Mismatch.");
-</SCRIPT><%
+</SCRIPT><?php
     }
     ldap_add($ds,$ambox,$info);
     $newambox="";
@@ -161,53 +161,53 @@ if (!isset($_SESSION['auth'])) {
 
     $sr=ldap_search($ds,$basedn,"(&(objectclass=inetLocalMailRecipient)(gidnumber=300))",$dnarr);
     $iinfo = ldap_get_entries($ds, $sr);
-%>
+?>
     <TR CLASS=list-color1>
-    <%if ($maxmbox == "0") {%>
+    <?php if ($maxmbox == "0") {?>
       <TH CLASS=heading-body2 COLSPAN=2>
       No Mailboxes Allowed</TH>
-    <%} else if ($iinfo['count'] < $maxmbox) {%>
+    <?php } else if ($iinfo['count'] < $maxmbox) {?>
       <TD onmouseover="myHint.show('MB1')" onmouseout="myHint.hide()" WIDTH=75%>
-      <%print _("Modify/Add Mailbox");%></TD>
-    <%} else {%>
+      <?php print _("Modify/Add Mailbox");?></TD>
+    <?php } else {?>
       <TD onmouseover="myHint.show('MB1')" onmouseout="myHint.hide()" WIDTH=75%>
-      <%print _("Modify Mailbox");%></TD>
-    <%}
+      <?php print _("Modify Mailbox");?></TD>
+    <?php }
     if ($maxmbox > 0) {
-    %>
-      <TD><SELECT NAME=ambox><%
-      if ($iinfo['count'] < $maxmbox) {%>
-        <OPTION VALUE=""><%print _("Add New Mailbox To User");%></OPTION><%
+    ?>
+      <TD><SELECT NAME=ambox><?php
+      if ($iinfo['count'] < $maxmbox) {?>
+        <OPTION VALUE=""><?php print _("Add New Mailbox To User");?></OPTION><?php
       }
       for($cnt=0;$cnt<$iinfo['count'];$cnt++) {
         $mbuid=ldap_explode_dn($iinfo[$cnt]["dn"],1);
         print "<OPTION VALUE=\"" . $iinfo[$cnt]["dn"] . "\">" .  $iinfo[$cnt]["cn"][0] . " (" . $mbuid[0] . ")</OPTION>\n";
-      }%>
-      </TD></TR><%
-      if ($iinfo['count'] < $maxmbox) {%>
-        <TR CLASS=list-color2><TD onmouseover="myHint.show('MB2')" onmouseout="myHint.hide()" WIDTH=75%><B><%print _("New Mailbox Login");%></TD>
-        <TD WIDTH=75%><INPUT TYPE=TEXT NAME=newambox></TD></TR>
-        <TR CLASS=list-color1><TD onmouseover="myHint.show('MB3')" onmouseout="myHint.hide()" WIDTH=75%><%print _("Mailbox Owners Name")%></TD>
-        <TD WIDTH=75%><INPUT TYPE=TEXT NAME=newamboxcn></TD></TR>
-        <TR CLASS=list-color2><TD onmouseover="myHint.show('MB4')" onmouseout="myHint.hide()" WIDTH=75%><%print _("Mail Host To Redirect To");%></TD>
-        <TD WIDTH=75%><INPUT TYPE=TEXT NAME=newamboxmh></TD></TR>
-        <TR CLASS=list-color1><TD onmouseover="myHint.show('MB5')" onmouseout="myHint.hide()" WIDTH=75%><%print _("New Mailbox Password");%></TD>
-        <TD WIDTH=75%><INPUT TYPE=PASSWORD NAME=newamboxpass1></TD></TR>
-        <TR CLASS=list-color2><TD onmouseover="myHint.show('MB6')" onmouseout="myHint.hide()" WIDTH=75%><%print _("Confirm Password")%></TD>
-        <TD WIDTH=75%><INPUT TYPE=PASSWORD NAME=newamboxpass2></TD></TR>
-        <TR CLASS=list-color1><%
-      } else {%>
-        <TR CLASS=list-color2><%
-      }%>
-      <TD COLSPAN=2 ALIGN=CENTER><INPUT TYPE=HIDDEN NAME=basedn VALUE="<%print $basedn%>"><INPUT TYPE=SUBMIT onclick=this.name='amboxdel' VALUE="Delete"><%
-      if ($iinfo['count'] < $maxmbox) {%>
-        <INPUT TYPE=SUBMIT onclick=this.name='amboxup' VALUE="<%print _("Update/Add");%>"><%
-      } else {%>
-        <INPUT TYPE=SUBMIT onclick=this.name='amboxup' VALUE="<%print _("Update");%>"><%
+      }?>
+      </TD></TR><?php
+      if ($iinfo['count'] < $maxmbox) {?>
+        <TR CLASS=list-color2><TD onmouseover="myHint.show('MB2')" onmouseout="myHint.hide()" WIDTH=75%><B><?php print _("New Mailbox Login");?></TD>
+        <TD WIDTH=75?><INPUT TYPE=TEXT NAME=newambox></TD></TR>
+        <TR CLASS=list-color1><TD onmouseover="myHint.show('MB3')" onmouseout="myHint.hide()" WIDTH=75%><?php print _("Mailbox Owners Name")?></TD>
+        <TD WIDTH=75?><INPUT TYPE=TEXT NAME=newamboxcn></TD></TR>
+        <TR CLASS=list-color2><TD onmouseover="myHint.show('MB4')" onmouseout="myHint.hide()" WIDTH=75%><?php print _("Mail Host To Redirect To");?></TD>
+        <TD WIDTH=75?><INPUT TYPE=TEXT NAME=newamboxmh></TD></TR>
+        <TR CLASS=list-color1><TD onmouseover="myHint.show('MB5')" onmouseout="myHint.hide()" WIDTH=75%><?php print _("New Mailbox Password");?></TD>
+        <TD WIDTH=75?><INPUT TYPE=PASSWORD NAME=newamboxpass1></TD></TR>
+        <TR CLASS=list-color2><TD onmouseover="myHint.show('MB6')" onmouseout="myHint.hide()" WIDTH=75%><?php print _("Confirm Password")?></TD>
+        <TD WIDTH=75?><INPUT TYPE=PASSWORD NAME=newamboxpass2></TD></TR>
+        <TR CLASS=list-color1><?php
+      } else {?>
+        <TR CLASS=list-color2><?php
+      }?>
+      <TD COLSPAN=2 ALIGN=CENTER><INPUT TYPE=HIDDEN NAME=basedn VALUE="<?php print $basedn?>"><INPUT TYPE=SUBMIT onclick=this.name='amboxdel' VALUE="Delete"><?php
+      if ($iinfo['count'] < $maxmbox) {?>
+        <INPUT TYPE=SUBMIT onclick=this.name='amboxup' VALUE="<?php print _("Update/Add");?>"><?php
+      } else {?>
+        <INPUT TYPE=SUBMIT onclick=this.name='amboxup' VALUE="<?php print _("Update");?>"><?php
       }
-    }%>
+    }?>
     </TD></TR></TABLE></FORM>
-<%
+<?php
     return;
   }
 
@@ -224,23 +224,23 @@ if (!isset($_SESSION['auth'])) {
       $bcolor=" CLASS=list-color1";
     }
     $attr=strtolower($iarr[$i]);
-%>
-    <TR<%print $bcolor;%>>
-      <TD onmouseover="myHint.show('<%print $jshint[$i];%>')" onmouseout="myHint.hide()" WIDTH=75%>
-        <% print $disc[$i];%> 
+?>
+    <TR<?php print $bcolor;?>>
+      <TD onmouseover="myHint.show('<?php print $jshint[$i];?>')" onmouseout="myHint.hide()" WIDTH=75%>
+        <?php print $disc[$i];?> 
       </TD>
       <TD>
-<%
+<?php
         if ($attr == "maillocaladdress") {
-           %><INPUT TYPE=BUTTON VALUE="Modify Aliases" onclick=javascript:openaliasedit('<%print urlencode($iinfo[0]['uid'][0]);%>')><%
+           ?><INPUT TYPE=BUTTON VALUE="Modify Aliases" onclick=javascript:openaliasedit('<?php print urlencode($iinfo[0]['uid'][0]);?>')><?php
         } elseif ($attr == "uid") {
            print $uidinf[0];
-        } else {%>
-            <INPUT TYPE=TEXT NAME=<%print $iarr[$i];%> VALUE="<%print $iinfo[0][$attr][0];%>"><%
+        } else {?>
+            <INPUT TYPE=TEXT NAME=<?php print $iarr[$i];?> VALUE="<?php print $iinfo[0][$attr][0];?>"><?php
         }
-%>
+?>
       </TD></TR>
-<%
+<?php
   }
   $rem=$i % 2;
   if ($rem == 1) {
@@ -250,26 +250,26 @@ if (!isset($_SESSION['auth'])) {
     $bcol[2]=" CLASS=list-color1";
     $bcol[1]=" CLASS=list-color2";
   }
-%>
-              <TR <%print $bcol[2];%>>
+?>
+              <TR <?php print $bcol[2];?>>
               <TD onmouseover="myHint.show('MB5')" onmouseout="myHint.hide()" WIDTH=75%>
                  New Mailbox Password
               </TD><TD WIDTH=75%>
                 <INPUT TYPE=PASSWORD NAME=newamboxpass1>
               </TD></TR>
 
-              <TR <%print $bcol[1];%>>
+              <TR <?php print $bcol[1];?>>
               <TD onmouseover="myHint.show('MB6')" onmouseout="myHint.hide()" WIDTH=75%>
                  Confirm Password
               </TD><TD WIDTH=75%>
                 <INPUT TYPE=PASSWORD NAME=newamboxpass2>
               </TD></TR>
 
-<TR <%print $bcol[2];%>><TH COLSPAN=2>  
-  <INPUT TYPE=HIDDEN NAME=ambox VALUE="<%print $ambox%>">
+<TR <?php print $bcol[2];?>><TH COLSPAN=2>
+  <INPUT TYPE=HIDDEN NAME=ambox VALUE="<?php print $ambox?>">
   <INPUT TYPE=SUBMIT VALUE="Modify" onclick=this.name='modrec'>
-  <%if ($ADMIN_USER == "admin") {%>
-    <INPUT TYPE=SUBMIT onclick=this.name='amboxdel' VALUE="Delete"><%
-  }%>
+  <?php if ($ADMIN_USER == "admin") {?>
+    <INPUT TYPE=SUBMIT onclick=this.name='amboxdel' VALUE="Delete"><?php
+  }?>
 </TH></TR>
 </TABLE></FORM>

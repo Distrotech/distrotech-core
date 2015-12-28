@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -20,13 +20,13 @@
 if (!isset($_SESSION['auth'])) {
   exit;
 }
-%>
+?>
 <CENTER>
 <FORM METHOD=POST>
-<INPUT TYPE=HIDDEN NAME=classi VALUE="<%print $euser;%>">
+<INPUT TYPE=HIDDEN NAME=classi VALUE="<?php print $euser;?>">
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
-<TR CLASS=list-color2><TH COLSPAN=3 CLASS=heading-body><%print _("ISDN BRI Error Log");%></TH></TR>
-<%
+<TR CLASS=list-color2><TH COLSPAN=3 CLASS=heading-body><?php print _("ISDN BRI Error Log");?></TH></TR>
+<?php
   $sr=ldap_search($ds,"ou=Admin","(&(objectclass=groupofnames)(member=" . $ldn . ")(|(cn=Admin Access)(cn=Voip Admin)))");
   if ((ldap_count_entries($ds,$sr) == 1) || ($PHP_AUTH_USER == "admin")) {
     $ADMIN_USER="admin";
@@ -37,13 +37,13 @@ if (!isset($_SESSION['auth'])) {
     $col=0;
     $bcol[0]=" CLASS=list-color2";
     $bcol[1]=" CLASS=list-color1";
-%>
+?>
     <TR CLASS=list-color1>
        <TH CLASS=heading-body2 ALIGN=LEFT>Date</TH>
        <TH CLASS=heading-body2 ALIGN=LEFT>Port</TH>
        <TH CLASS=heading-body2>Error</TH>
     </TR>
-<%
+<?php
     $fp=popen("grep -vEf /etc/misdnlfilt  /var/log/asterisk/misdn.log |tail -250","r");
     $outa=array();
 
@@ -68,6 +68,6 @@ if (!isset($_SESSION['auth'])) {
   } else {
     print "<TR CLASS=list-color1><TH CLASS=heading-body2>Administrator Access Required</TH></TR>";
   }
-%>
+?>
 </FORM>
 </TABLE>

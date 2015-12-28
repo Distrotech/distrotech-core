@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -20,13 +20,13 @@
 if (!isset($_SESSION['auth'])) {
   exit;
 }
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=ratelim onsubmit="ajaxsubmit(this.name);return false">
-<INPUT TYPE=HIDDEN NAME=classi VALUE="<%print $euser;%>">
+<INPUT TYPE=HIDDEN NAME=classi VALUE="<?php print $euser;?>">
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
-<TR CLASS=list-color2><TH CLASS=heading-body COLSPAN=5><%print _("Last 100 Rate Limiter Events");%></TH></TR>
-<%
+<TR CLASS=list-color2><TH CLASS=heading-body COLSPAN=5><?php print _("Last 100 Rate Limiter Events");?></TH></TR>
+<?php
   $sr=ldap_search($ds,"ou=Admin","(&(objectclass=groupofnames)(member=" . $ldn . ")(cn=Admin Access))");
   if ((ldap_count_entries($ds,$sr) == 1) || ($PHP_AUTH_USER == "admin")) {
     $ADMIN_USER="admin";
@@ -74,6 +74,6 @@ if (!isset($_SESSION['auth'])) {
   } else {
     print "<TR CLASS=list-color1><TH CLASS=heading-body2>Administrator Access Required</TH></TR>";
   }
-%>
+?>
 </FORM>
 </TABLE>

@@ -1,4 +1,4 @@
-<%
+<?php
 include_once "../session.inc";
 $sessid=session_id();
 if ($sessid == "") {
@@ -86,4 +86,4 @@ for($rcnt=0;$rcnt<$sinfo['count'];$rcnt++) {
   }
 }
 print "</users>\n";
-%>
+?>

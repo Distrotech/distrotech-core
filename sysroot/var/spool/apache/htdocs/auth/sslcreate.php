@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -34,14 +34,14 @@ if (!isset($_SESSION['auth'])) {
   }
 
 
-%>
+?>
 <FORM METHOD=POST NAME=usercert onsubmit="ajaxsubmit(this.name);return false">
-<INPUT TYPE=HIDDEN NAME=classi VALUE="<%print $euser;%>">
+<INPUT TYPE=HIDDEN NAME=classi VALUE="<?php print $euser;?>">
 <CENTER>
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
-<TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body><%print _("Updating/Creating SSL Certificate");%></TH></TR>
-<TR CLASS=list-color1><TH COLSPAN=2 CLASS=heading-body2><%print _("Compulsory Information");%></TH></TR>
-<%
+<TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body><?php print _("Updating/Creating SSL Certificate");?></TH></TR>
+<TR CLASS=list-color1><TH COLSPAN=2 CLASS=heading-body2><?php print _("Compulsory Information");?></TH></TR>
+<?php
   $sr=ldap_search($ds,"ou=Admin","(&(objectclass=groupofnames)(member=" . $ldn . ")(cn=Admin Access))");
   if ((ldap_count_entries($ds,$sr) == 1) || ($PHP_AUTH_USER == "admin")) {
     $ADMIN_USER="admin";
@@ -88,11 +88,11 @@ if (!isset($_SESSION['auth'])) {
 
     if ((((($ppass1 != "") && ($pass2 == $ppass1)) && ($certupdate == "NEWKEY:")) || (($ppass1 != "") && ($certupdat="NEWREQ"))) && 
         (($c != "") && ($st != "") && ($l != "") && ($o != "") && ($ou != "") && ($cn != "") && ($mail != ""))) {
-      %>
+      ?>
       <SCRIPT>
         alert("Certificates Generated Will Need\nTo Be Verifyed By A System Administrator\nThe Certificate Will Not Be Trusted\nUntil Signed.\nOnce Signed You Will Need To\nUpdate Your Certificate With The\nPassphrase.\nUpdating The PKCS#7 File\nDoes Not Require The\nPassphrase.\n");
       </SCRIPT>
-<%
+<?php
       $newpass=$ppass1;
       $x509file=tempnam("/tmp","sslreq");
 
@@ -269,28 +269,28 @@ issuerAltName          = $certsubname\n");
     }
     $attr=$iarr[$i];
     $lattr=strtolower($attr);
-%>
-    <TR<%print $bcolor;%>>
-      <TD WIDTH=75% onmouseover="myHint.show('<%print $attr;%>')" onmouseout="myHint.hide()">
-        <% print $descrip[$attr];%>
+?>
+    <TR<?php print $bcolor;?>>
+      <TD WIDTH=75% onmouseover="myHint.show('<?php print $attr;?>')" onmouseout="myHint.hide()">
+        <?php print $descrip[$attr];?>
       </TD>
-<%
+<?php
     if ($attr == "certificateGenerate") {
-%>
+?>
       <TD><INPUT TYPE=PASSWORD SIZE=40 NAME=ppass1 VALUE=""></TD></TR>
-      <TR <%print "$bcolor1";$cnt++%>><TD WIDTH=50% onmouseover="myHint.show('<%print $attr . "2";%>')" onmouseout="myHint.hide()">Confirm Pass Phrase (For New Private Key)</TD>
+      <TR <?php print "$bcolor1";$cnt++?>><TD WIDTH=50% onmouseover="myHint.show('<?php print $attr . "2";?>')" onmouseout="myHint.hide()">Confirm Pass Phrase (For New Private Key)</TD>
         <TD WIDTH=50%><INPUT TYPE=PASSWORD SIZE=40 NAME=ppass2 VALUE=""></TD></TR>
-      <TR <%print "$bcolor";%>><TD WIDTH=50% onmouseover="myHint.show('<%print $attr . "3";%>')" onmouseout="myHint.hide()">Type Of Certificate Update<BR><FONT SIZE=1>This Certificate Must Be Signed By A Admin User To Be Trusted</FONT></TD>
+      <TR <?php print "$bcolor";?>><TD WIDTH=50% onmouseover="myHint.show('<?php print $attr . "3";?>')" onmouseout="myHint.hide()">Type Of Certificate Update<BR><FONT SIZE=1>This Certificate Must Be Signed By A Admin User To Be Trusted</FONT></TD>
         <TD><SELECT NAME=certupdate>
                 <OPTION VALUE="UPDATE:">Update Certificate
                 <OPTION VALUE="NEWREQ:">Create A New Public Certificate
                 <OPTION VALUE="NEWKEY:">Create A New Private And Public Certificate
               </SELECT>
-<%} else {%>
+<?php } else {?>
       <TD>
-          <INPUT TYPE=TEXT SIZE=40 NAME=<%print $iarr[$i];%> VALUE="<%print $iinfo[0][$lattr][0];%>">
+          <INPUT TYPE=TEXT SIZE=40 NAME=<?php print $iarr[$i];?> VALUE="<?php print $iinfo[0][$lattr][0];?>">
       </TD></TR>
-<%
+<?php
     }
     $cnt++;
   }
@@ -302,7 +302,7 @@ issuerAltName          = $certsubname\n");
     $bcol[2]=" CLASS=list-color1";
     $bcol[1]=" CLASS=list-color2";
   }
-%>
-<TR <%print $bcol[2];%>><TH COLSPAN=2>  
+?>
+<TR <?php print $bcol[2];?>><TH COLSPAN=2>  
   <INPUT TYPE=SUBMIT VALUE="Modify" NAME=modrec></TH></TR>
 </TABLE></FORM>

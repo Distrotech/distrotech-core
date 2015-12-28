@@ -1,5 +1,5 @@
 #!/usr/bin/php -d safe_mode=no
-<%
+<?php
 
 
 function do_report($repname, $username, $additional) {
@@ -269,4 +269,4 @@ foreach($uinf['users'] as $key => $value) {
   unset($files);
   unset($acd);
 }
-%>
+?>

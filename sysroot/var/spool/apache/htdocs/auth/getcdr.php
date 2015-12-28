@@ -1,4 +1,4 @@
-<%
+<?php
 include "/var/spool/apache/htdocs/cdr/auth.inc";
 
 header("Content-type: application/ms-excel");
@@ -23,4 +23,4 @@ for($i=0;$i < pg_num_rows($cdrr);$i++) {
 }
 
 fclose($csvout);
-%>
+?>
