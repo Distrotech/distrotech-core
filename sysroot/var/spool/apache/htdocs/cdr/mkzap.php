@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -21,12 +21,12 @@
 if (! $db) {
   include "auth.inc";
 }
-%>
+?>
 <FORM METHOD=POST NAME=mkzform onsubmit="ajaxsubmit(this.name);return false;">
 <CENTER>
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <TR CLASS=list-color2>
-<%
+<?php
 if ((isset($pbxupdate)) && ($zaptrunk != "")) {
   $zedit=pg_query($db,"SELECT zaptrunk FROM zapgroup WHERE zaptrunk='" . $zaptrunk . "'");
   if (pg_num_rows($zedit) == 0) {
@@ -34,23 +34,23 @@ if ((isset($pbxupdate)) && ($zaptrunk != "")) {
   }
   include "zapadmin.php";
 } else {
-%>
-  <TH CLASS=heading-body COLSPAN=2><%print _("Select Trunk Group");%></TH>
+?>
+  <TH CLASS=heading-body COLSPAN=2><?php print _("Select Trunk Group");?></TH>
 </TR>
 <TR CLASS=list-color1>
-  <TD ALIGN=LEFT WIDTH=50% onmouseover="myHint.show('Z0')" onmouseout="myHint.hide()"><%print _("Trunk Group To Configure");%></TH>
+  <TD ALIGN=LEFT WIDTH=50% onmouseover="myHint.show('Z0')" onmouseout="myHint.hide()"><?php print _("Trunk Group To Configure");?></TH>
   <TD WIDTH=50% ALIGN=LEFT>
   <INPUT TYPE=HIDDEN NAME=pbxupdate VALUE=1>
   <SELECT NAME=zaptrunk onchange="ajaxsubmit(this.form.name)">
   <OPTION VALUE=""></OPTION>
-<%
+<?php
   for($i=1;$i <= 4;$i++) {
     print "    <OPTION VALUE=\"" .  $i . "\">" . _("Digium Trunk Group") . " " . $i . "</OPTION>\n";
   }
-%>
+?>
   </SELECT>
   </TABLE>
   </FORM>
-<%
+<?php
 }
-%>
+?>

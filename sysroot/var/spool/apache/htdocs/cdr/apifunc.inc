@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -213,4 +213,4 @@ function apihangupchan($channel,$socket) {
   fputs($socket,"Channel: " . $channel . "\r\n");
   fputs($socket,"\r\n");  
 }
-%>
+?>

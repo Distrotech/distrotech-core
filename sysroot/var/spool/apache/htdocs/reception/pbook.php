@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -36,10 +36,10 @@ if (! $qgetdata) {
   pg_query($db,"CREATE UNIQUE INDEX snom_pbook_uniqe ON snom_pbook USING btree (exten, number)");
   $qgetdata=pg_query($db,$gdbquery);
 }
-%>
+?>
 
 <CENTER>
-<link rel="stylesheet" type="text/css" href="/style.php?style=<%print $style;%>">
+<link rel="stylesheet" type="text/css" href="/style.php?style=<?php print $style;?>">
 <FORM METHOD=POST>
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
 <TR CLASS=list-color2>
@@ -51,7 +51,7 @@ if (! $qgetdata) {
 <TH CLASS=heading-body2 WIDTH=30%>Number</TH>
 <TH CLASS=heading-body2 WIDTH=30%>Type</TH>
 </TR>
-<%
+<?php
 
 $rcnt=0;
 $dnum=pg_num_rows($qgetdata);
@@ -79,15 +79,15 @@ for($i=0;$i<$dnum;$i++){
     $bcol[0]="CLASS=list-color1";
     $bcol[1]="CLASS=list-color2";
   }
-%>
+?>
 </TR>
 
-<%
+<?php
 if ($rcnt < 100) {
-%>
-  <TR <%print $bcol[0];%>>
+?>
+  <TR <?php print $bcol[0];?>>
   <TH COLSPAN=4 CLASS=heading-body2>Add New Entry</TH></TR>
-  <TR <%print $bcol[1];%>>
+  <TR <?php print $bcol[1];?>>
   <TD>&nbsp;</TD>
   <TD><INPUT NAME=pbname SIZE=50 VALUE=""></TD>
   <TD><INPUT NAME=pbnumber></TD>
@@ -99,18 +99,18 @@ if ($rcnt < 100) {
   <option value="VIP">VIP</option>
   <option value="Deny">Deny List</option>
   </SELECT></TD></TR>
-<%
+<?php
 }
-%>
-<TR <%print $bcol[0];%>>
+?>
+<TR <?php print $bcol[0];?>>
   <TD ALIGN=MIDDLE COLSPAN=4>
     <INPUT TYPE=SUBMIT NAME=pbxupdate VALUE="Save Changes">
     <INPUT TYPE=RESET>
   </TD>
 </TR>
-<TR <%print $bcol[1];%>>
+<TR <?php print $bcol[1];?>>
   <TD ALIGN=MIDDLE COLSPAN=4>
-  <A HREF=/reception/vladmin.php?style=<%print $style;%>>Account Configuration</A>
+  <A HREF=/reception/vladmin.php?style=<?php print $style;?>>Account Configuration</A>
 </TD>
 </TR>
 </TABLE>

@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -190,4 +190,4 @@
   if ($_POST['print'] != "2") {
     print "</TABLE>";
   }
-%>
+?>

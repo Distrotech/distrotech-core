@@ -6,7 +6,7 @@
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <INPUT TYPE=HIDDEN NAME=index VALUE="">
 <INPUT TYPE=HIDDEN NAME=timerange VALUE="">
-<%
+<?php
 
 include_once "cdr/auth.inc";
 include_once "ldap/auth.inc";
@@ -284,6 +284,6 @@ if ($_POST['print'] != "1") {
   }
   print "<INPUT TYPE=BUTTON NAME=pbutton VALUE=\"" . _("Print") . "\" ONCLICK=\"printpage(document.ppage)\"></TH></TR>\n";
 }
-%>
+?>
 </FORM>
 </TABLE>

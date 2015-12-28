@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -54,4 +54,4 @@
 //  @ldap_unbind($ds);
     $r=@ldap_bind($ds,$ldn,$_SERVER['PHP_AUTH_PW']);
   }
-%>
+?>

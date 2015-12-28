@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -29,35 +29,35 @@ if ((isset($pbxdelete)) && ($key != "")){
 
 if ($key == "") {
   $qgetdata=pg_query($db,"SELECT trunkprefix,name FROM provider ORDER BY name");
-%>
+?>
 
 <CENTER>
 <FORM METHOD=POST NAME=h323pform onsubmit="ajaxsubmit(this.name);return false;">
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
 <TR CLASS=list-color2>
-  <TH COLSPAN=2 CLASS=heading-body><%print _("Select Voip Provider");%></TH>
+  <TH COLSPAN=2 CLASS=heading-body><?php print _("Select Voip Provider");?></TH>
 </TR>
 <TR CLASS=list-color1>
-<TD WIDTH=50%><%print _("Select Provider To Edit/Delete");%></TD>
+<TD WIDTH=50%><?php print _("Select Provider To Edit/Delete");?></TD>
 <TD WIDTH=50%><SELECT NAME=key onchange=this.form.subme.click()>
 <OPTION>Select Gateway Provider</OPTION>
-<%
+<?php
 $dnum=pg_num_rows($qgetdata);
 for($i=0;$i<$dnum;$i++){
   $getdata=pg_fetch_array($qgetdata,$i);
   print "<OPTION VALUE=" . $getdata[0] . ">" . $getdata[1] . "</OPTION>"; 
 }
-%>
+?>
 </SELECT>
 </TR>
 <TR CLASS=list-color2>
   <TD ALIGN=MIDDLE COLSPAN=2>
-    <INPUT TYPE=SUBMIT NAME=subme onclick=this.name='pbxupdate' VALUE="<%print _("Edit Gateways");%>">
+    <INPUT TYPE=SUBMIT NAME=subme onclick=this.name='pbxupdate' VALUE="<?php print _("Edit Gateways");?>">
   </TD>
 </TR>
 </TABLE>
 </FORM>
-<%
+<?php
 } else {
   if ((isset($gwdelete)) && ($gwid != "")) {
     pg_query($db,"DELETE FROM trunk WHERE gwid='" . $gwid . "'");
@@ -102,29 +102,29 @@ for($i=0;$i<$dnum;$i++){
   } else {
     $qgetdata=pg_query($db,"SELECT gwid,description||' ('||trunk.h323gkid||':'||providerip||' On '||users.h323gkid||':'||fullname||')' FROM trunk left outer join users on (h323reggk=users.h323gkid) WHERE h323neighbor = 't' AND trunkprefix='" . $key . "' AND protocol = 'OH323' ORDER BY description");
   }
-%>
+?>
 
 <CENTER>
 <FORM METHOD=POST NAME=h323pform onsubmit="ajaxsubmit(this.name);return false;">
-<INPUT TYPE=HIDDEN NAME=key VALUE="<%print $key;%>">
-<%
+<INPUT TYPE=HIDDEN NAME=key VALUE="<?php print $key;?>">
+<?php
 if ($gwid != "") {
   print "<INPUT TYPE=HIDDEN NAME=gwidup VALUE=\"" . $gwid . "\">";
 }
-%>
+?>
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
 <TR CLASS=list-color2>
-  <TH COLSPAN=2 CLASS=heading-body><%print _("Gateway Configuration");%></TH>
+  <TH COLSPAN=2 CLASS=heading-body><?php print _("Gateway Configuration");?></TH>
 </TR>
 <TR CLASS=list-color1>
-<%
+<?php
 if ($gwid == "") {
-%>
-<TD WIDTH=50%><%print _("Select Gateway To Edit/Delete");%></TD>
+?>
+<TD WIDTH=50%><?php print _("Select Gateway To Edit/Delete");?></TD>
 <TD>
 <SELECT NAME=gwid>
-<OPTION VALUE=""><%print _("Add New Gateway Bellow");%></OPTION>
-<%
+<OPTION VALUE=""><?php print _("Add New Gateway Bellow");?></OPTION>
+<?php
 $dnum=pg_num_rows($qgetdata);
 for($i=0;$i<$dnum;$i++){
   $getdata=pg_fetch_array($qgetdata,$i);
@@ -137,39 +137,39 @@ for($i=0;$i<$dnum;$i++){
   print "<OPTION VALUE=" . $getdata[0] . ">" . $getdata[1] . "</OPTION>"; 
 }
 
-%>
+?>
 </SELECT>
-<%
+<?php
 } else {
   $getdata=pg_fetch_array($qgetdata,$i);
-%>
-<TH COLSPAN=2 CLASS=heading-body2>Editing <%print $getdata[0]%></TH>
-<%
+?>
+<TH COLSPAN=2 CLASS=heading-body2>Editing <?php print $getdata[0]?></TH>
+<?php
 }
-%>
+?>
 </TR>
 
 <TR CLASS=list-color2>
-<TD WIDTH=50%><%print _("Description");%></TD>
-<TD><INPUT TYPE=TEXT NAME=description VALUE="<%print $description;%>"></TD>
+<TD WIDTH=50%><?php print _("Description");?></TD>
+<TD><INPUT TYPE=TEXT NAME=description VALUE="<?php print $description;?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-<TD><%print _("I.P. Address/Peer Name");%></TD>
-<TD><INPUT TYPE=TEXT NAME=providerip VALUE="<%print $providerip;%>"></TD>
+<TD><?php print _("I.P. Address/Peer Name");?></TD>
+<TD><INPUT TYPE=TEXT NAME=providerip VALUE="<?php print $providerip;?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-<TD><%print _("Gateway ID");%></TD>
-<TD><INPUT TYPE=TEXT NAME=h323gkid VALUE="<%print $h323gkid;%>"></TD>
+<TD><?php print _("Gateway ID");?></TD>
+<TD><INPUT TYPE=TEXT NAME=h323gkid VALUE="<?php print $h323gkid;?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-<TD><%print _("Gateway Prefix (Sent)");%></TD>
-<TD><INPUT TYPE=TEXT NAME=h323prefix VALUE="<%print $h323prefix;%>"></TD>
+<TD><?php print _("Gateway Prefix (Sent)");?></TD>
+<TD><INPUT TYPE=TEXT NAME=h323prefix VALUE="<?php print $h323prefix;?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-<TD><%print _("Connect Endpoint To") . " ...";%></TD>
+<TD><?php print _("Connect Endpoint To") . " ...";?></TD>
 <TD>
   <SELECT NAME=h323reggk>
-<%
+<?php
     $qgetdata=pg_query($db,"SELECT h323gkid,fullname||' ('||h323gkid||')' from users where h323neighbor = 't'");
     $dnum=pg_num_rows($qgetdata);
     for($i=0;$i<$dnum;$i++){
@@ -180,39 +180,39 @@ for($i=0;$i<$dnum;$i++){
       }
       print ">" . $getdata[1] . "</OPTION>"; 
     }
-%>
+?>
   </SELECT>
 </TD>
 <TR CLASS=list-color1>
-<TD><%print _("Protocol");%></TD>
+<TD><?php print _("Protocol");?></TD>
 <TD>
   <SELECT NAME=protocol>
-    <OPTION VALUE="OH323"<%if ($protocol == "OH323") {print " SELECTED";}%>>H323
-    <OPTION VALUE="SIP"<%if ($protocol == "SIP") {print " SELECTED";}%>>SIP
-    <OPTION VALUE="IAX2"<%if ($protocol == "IAX2") {print " SELECTED";}%>>IAX
-    <OPTION VALUE="Local"<%if ($protocol == "Local") {print " SELECTED";}%>>Local
-    <OPTION VALUE="Peer"<%if ($protocol == "Peer") {print " SELECTED";}%>>Peer
-<%
+    <OPTION VALUE="OH323"<?php if ($protocol == "OH323") {print " SELECTED";}?>>H323
+    <OPTION VALUE="SIP"<?php if ($protocol == "SIP") {print " SELECTED";}?>>SIP
+    <OPTION VALUE="IAX2"<?php if ($protocol == "IAX2") {print " SELECTED";}?>>IAX
+    <OPTION VALUE="Local"<?php if ($protocol == "Local") {print " SELECTED";}?>>Local
+    <OPTION VALUE="Peer"<?php if ($protocol == "Peer") {print " SELECTED";}?>>Peer
+<?php
  
-%>
+?>
   </SELECT>
 </TD>
 <TR CLASS=list-color2>
   <TD ALIGN=MIDDLE COLSPAN=2>
     <INPUT TYPE=RESET>
-<%
+<?php
   if ($gwid == "") {
     print "<INPUT TYPE=SUBMIT onclick=this.name='gwdelete' VALUE=\"" . _("Delete Gateway") . "\">";
     print "<INPUT TYPE=SUBMIT name=subme onclick=this.name='gwselect' VALUE=\"" . _("Add/Edit Gateway") . "\">";
   } else {
     print "<INPUT TYPE=SUBMIT onclick=this.name='gwupdate' VALUE=\"" . _("Save Changes") . "\">";
   }
-%>
+?>
   </TD>
 </TR>
 </TABLE>
 </FORM>
 
-<%
+<?php
 }
-%>
+?>

@@ -1,5 +1,5 @@
 
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -54,7 +54,7 @@ $cdr=pg_query($db,$cdrq);
 $bcolor[0]="list-color1";
 $bcolor[1]="list-color2";
 
-%>
+?>
 <link rel=stylesheet type=text/css href=/style.php>
 <DIV CLASS=popup>
 <CENTER>
@@ -69,7 +69,7 @@ $bcolor[1]="list-color2";
 <TH ALIGN=LEFT><FONT SIZE=1>Avg Call length</TH>
 <TH ALIGN=LEFT><FONT SIZE=1>Previos Date Count</TH>
 </tr>
-<%
+<?php
 
 $num=pg_num_rows($cdr);
 $total="0";
@@ -102,14 +102,14 @@ for ($i=0; $i < $num; $i++)
 
 $rem=$i % 2; 
 print "<TR CLASS=" . $bcolor[$rem] . ">";
-%>
+?>
 <TD COLSPAN=2><FONT SIZE=1>&nbsp;</TD>
-<TD ALIGN=LEFT><FONT SIZE=1><%print $total%></TD>
-<TD ALIGN=LEFT><FONT SIZE=1><%print $totalans%></TD>
-<TD ALIGN=LEFT><FONT SIZE=1><%print $totalfail%></TD>
-<TD ALIGN=LEFT><FONT SIZE=1><%print ($totalratio/$num)%></TD>
-<TD ALIGN=LEFT><FONT SIZE=1><%$totmin=gtime($totmin);print $totmin;%></TD>
-<TD ALIGN=LEFT><FONT SIZE=1><%print $totprecount;%></TD>
+<TD ALIGN=LEFT><FONT SIZE=1><?php print $total?></TD>
+<TD ALIGN=LEFT><FONT SIZE=1><?php print $totalans?></TD>
+<TD ALIGN=LEFT><FONT SIZE=1><?php print $totalfail?></TD>
+<TD ALIGN=LEFT><FONT SIZE=1><?php print ($totalratio/$num)?></TD>
+<TD ALIGN=LEFT><FONT SIZE=1><?php $totmin=gtime($totmin);print $totmin;?></TD>
+<TD ALIGN=LEFT><FONT SIZE=1><?php print $totprecount;?></TD>
 </tr>
 </TABLE>
 </DIV>

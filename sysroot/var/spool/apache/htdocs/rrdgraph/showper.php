@@ -1,4 +1,4 @@
-<%
+<?php
 function graph_do($name,$max,$period) {
   $valname[0]="Max";
   $valname[1]="Average";
@@ -55,35 +55,35 @@ function graph_do($name,$max,$period) {
   }
   print "</TABLE>";
 }
-%>
+?>
 <META HTTP-EQUIV="Refresh" CONTENT="300;url=/auth">
 <META HTTP-EQUIV="Cache-Control" content="no-cache">
 <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
-<META HTTP-EQUIV="Expires" CONTENT="<%print gmdate("D, d M Y G:i:s T");%>">
+<META HTTP-EQUIV="Expires" CONTENT="<?php print gmdate("D, d M Y G:i:s T");?>">
 
-<H1>Traffic Data For <%print $name;%></H1> 
+<H1>Traffic Data For <?php print $name;?></H1> 
 <TABLE> 
- <TR><TD>Description:</TD><TD><%print $name;%></TD></TR> 
- <TR><TD>Max Speed:</TD><TD><%print $max;%></TD></TR>
+ <TR><TD>Description:</TD><TD><?php print $name;?></TD></TR> 
+ <TR><TD>Max Speed:</TD><TD><?php print $max;?></TD></TR>
 </TABLE>
-<HR>The statistics were last updated <B><%
+<HR>The statistics were last updated <B><?php
 $last=rrd_last("/var/spool/apache/htdocs/mrtg/bw-$name.rrd");
 print date("D M j G:i:s T Y",$last);
-%></B>
+?></B>
 
 <HR>
 <B>`Daily' Graph (5 Minute Average)</B><BR>
-<%graph_do($name,$max,1);%>
+<?phpgraph_do($name,$max,1);?>
 
 <HR>
 <B>`Weekly' Graph (30 Minute Average)</B><BR>
-<%graph_do($name,$max,7);%>
+<?phpgraph_do($name,$max,7);?>
 
 <HR>
 <B>`Monthly' Graph (2 Hour Average)</B><BR>
-<%graph_do($name,$max,30);%>
+<?phpgraph_do($name,$max,30);?>
 
 <HR>
 <B>`Yearly' Graph (1 Day Average)</B><BR>
-<%graph_do($name,$max,365);%>
+<?phpgraph_do($name,$max,365);?>
 

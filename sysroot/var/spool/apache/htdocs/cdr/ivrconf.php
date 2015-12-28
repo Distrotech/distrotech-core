@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -172,34 +172,34 @@ if (isset($_POST['saveivr'])) {
     $agi->disconnect();
   }
 }
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=ivrconf enctype="multipart/form-data" onsubmit=sendform.submit(this)>
-<INPUT TYPE=hidden NAME=ivr VALUE=<%print $_POST['ivr'];%>>
-<INPUT TYPE=hidden NAME=hours VALUE=<%print $_POST['hours'];%>>
+<INPUT TYPE=hidden NAME=ivr VALUE=<?php print $_POST['ivr'];?>>
+<INPUT TYPE=hidden NAME=hours VALUE=<?php print $_POST['hours'];?>>
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <TR CLASS=list-color2>
-  <TH class=heading-body COLSPAN=3>IVR DDI Configuration for <%
+  <TH class=heading-body COLSPAN=3>IVR DDI Configuration for <?php
 print $_POST['ivr'];
 if ($_POST['hours'] != "") {
   print " (" . $sper[$_POST['hours']] . ")";
 }
-%></TH>
+?></TH>
 </TR>
-<%
+<?php
 if (($_POST['hours'] >= 1) && ($_POST['hours'] < 3)) {
-%>
+?>
   <TR CLASS=list-color1>
     <TH CLASS=heading-body2 WIDTH=10%>Option</TH>
     <TH CLASS=heading-body2 WIDTH=45%>Selection</TH>
     <TH CLASS=heading-body2 WIDTH=45%>Destination</TH>
   </TR>
-<%
-  for($selxml=0;$selxml < 10;$selxml++) {%>
-  <TR align=center CLASS=list-color<%print ((($selxml+1) % 2) + 1);%>>
-    <Td><%print $selxml;%></Td>
+<?php
+  for($selxml=0;$selxml < 10;$selxml++) {?>
+  <TR align=center CLASS=list-color<?php print ((($selxml+1) % 2) + 1);?>>
+    <Td><?php print $selxml;?></Td>
     <Td>
-      <select name=selection<%print $selxml;%> onchange=ivropt[<%print $selxml;%>].submit() style="width:80%">
+      <select name=selection<?php print $selxml;?> onchange=ivropt[<?php print $selxml;?>].submit() style="width:80%">
         <option value=""></option>
         <option value="Extension">Extension</option>
         <option value="Queue">Queue</option>
@@ -210,13 +210,13 @@ if (($_POST['hours'] >= 1) && ($_POST['hours'] < 3)) {
       </select>
     </Td>
     <Td>
-      <select name="destination<%print $selxml;%>" style="width:80%">
+      <select name="destination<?php print $selxml;?>" style="width:80%">
       </select>
     </Td> 
   </TR>
-<%
+<?php
   }
-%>
+?>
   <TR align=center CLASS=list-color2>
     <Td>Default</Td>
     <Td>
@@ -256,10 +256,10 @@ if (($_POST['hours'] >= 1) && ($_POST['hours'] < 3)) {
       </select>
     </Td>
   </TR>
-<%
+<?php
 }
-%>
-<TR CLASS=list-color1><%
+?>
+<TR CLASS=list-color1><?php
 if (file_exists($snddir . $ifile . ".WAV")) {
   print "<TH CLASS=heading-body2 WIDTH=100 COLSPAN=3>Greeting File</TH></TR>";
   print "<TR align=center CLASS=list-color1><TD COLSPAN=3 ALIGN=MIDDLE>";
@@ -270,7 +270,7 @@ if (file_exists($snddir . $ifile . ".WAV")) {
   print "<TR align=center CLASS=list-color1><TD COLSPAN=3 ALIGN=MIDDLE>";
   print "<input name=greet size=27 type=file>";
 }
-%>
+?>
   </TD>
 </TR>
 <TR align=center CLASS=list-color2>
@@ -280,13 +280,13 @@ if (file_exists($snddir . $ifile . ".WAV")) {
 </TR>
 </TABLE>
 </FORM>
-<%
+<?php
 if (($_POST['hours'] >= 1) && ($_POST['hours'] < 3)) {
   print "<script>\n";
-  for($selxml=0;$selxml < $maxopt;$selxml++) {%>
-  ivropt[<%print $selxml;%>] = new XMLSelect(document.ivrconf.selection<%print $selxml;%>,"/cdr/ivrxml.php",document.ivrconf.destination<%print $selxml;%>);
-<%
+  for($selxml=0;$selxml < $maxopt;$selxml++) {?>
+  ivropt[<?php print $selxml;?>] = new XMLSelect(document.ivrconf.selection<?php print $selxml;?>,"/cdr/ivrxml.php",document.ivrconf.destination<?php print $selxml;?>);
+<?php
   }
   print "</script>\n";
 }
-%>
+?>

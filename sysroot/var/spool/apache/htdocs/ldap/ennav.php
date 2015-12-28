@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -44,67 +44,67 @@ if (($_SESSION['utype'] != "system") && ($_SESSION['utype'] != "pdc") && ($_SESS
   $_SESSION['classi']="system";
 }
 
-%>
+?>
 
 <CENTER>
 <FORM METHOD=POST NAME=ldapuform onsubmit="ajaxsubmit(this.name);return false">
 <table border="0" width="90%" cellspacing="0" cellpadding="0">
   <INPUT TYPE=HIDDEN NAME=disppage VALUE="ldap/ldap.php">
   <INPUT TYPE=HIDDEN NAME=ldtype VALUE="abook">
-  <INPUT TYPE=HIDDEN NAME=baseou VALUE="<%print $_SESSION['classi'];%>">
+  <INPUT TYPE=HIDDEN NAME=baseou VALUE="<?php print $_SESSION['classi'];?>">
 
-  <tr CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body><%print _("Search For") . " " . $usert[$_SESSION['classi']];%> User</TH></TR>
-  <TR CLASS=list-color1><TD WIDTH=50% onmouseover="myHint.show('0')" onmouseout=myHint.hide()><%print _("Search For") . " " . $usert[$baseou] . " " . _("Where");%>	...</TD><TD>
-        <SELECT NAME=what><%
-          if ($_SESSION['classi'] == "mserver") {%>
-            <OPTION VALUE=cn><%print _("Host Name");%></OPTION><%
-          } else if ($_SESSION['classi'] == "trust") {%>
-            <OPTION VALUE=cn><%print _("IP Address");%></OPTION><%
-          } else {%>
-            <OPTION VALUE=cn><%print _("Common Name");%></OPTION><%
+  <tr CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body><?php print _("Search For") . " " . $usert[$_SESSION['classi']];?> User</TH></TR>
+  <TR CLASS=list-color1><TD WIDTH=50% onmouseover="myHint.show('0')" onmouseout=myHint.hide()><?php print _("Search For") . " " . $usert[$baseou] . " " . _("Where");?>	...</TD><TD>
+        <SELECT NAME=what><?php
+          if ($_SESSION['classi'] == "mserver") {?>
+            <OPTION VALUE=cn><?php print _("Host Name");?></OPTION><?php
+          } else if ($_SESSION['classi'] == "trust") {?>
+            <OPTION VALUE=cn><?php print _("IP Address");?></OPTION><?php
+          } else {?>
+            <OPTION VALUE=cn><?php print _("Common Name");?></OPTION><?php
           }
-          if (($_SESSION['classi'] == "pdc") || ($_SESSION['classi'] == "system")) {%>
-            <OPTION VALUE=uid<%if ($what == "uid") {print " SELECTED";}%>><%print _("Username");%></OPTION>
-            <OPTION VALUE=givenname<%if ($what == "givenname") {print " SELECTED";}%>><%print _("First Name");%></OPTION>
-            <OPTION VALUE=sn<%if ($what == "sn") {print " SELECTED";}%>><%print _("Last Name");%></OPTION>
-            <OPTION VALUE=mail<%if ($what == "mail") {print " SELECTED";}%>><%print _("Email Address");%></OPTION>
-            <OPTION VALUE=maillocaladdress<%if ($what == "maillocaladdress") {print " SELECTED";}%>><%print _("Email Alias")%></OPTION>
-            <OPTION VALUE=o<%if ($what == "o") {print " SELECTED";}%>><%print _("Company");%></OPTION>
-            <OPTION VALUE=ou<%if ($what == "ou") {print " SELECTED";}%>><%print _("Division");%></OPTION>
-            <OPTION VALUE=st<%if ($what == "st") {print " SELECTED";}%>><%print _("State")%></OPTION>
-            <OPTION VALUE=l<%if ($what == "l") {print " SELECTED";}%>><%print _("City");%></OPTION>
-            <OPTION VALUE=postalcode<%if ($what == "postalcode") {print " SELECTED";}%>><%print _("Postal Code");%></OPTION>
-            <OPTION VALUE=telephonenumber<%if ($what == "telephonenumber") {print " SELECTED";}%>><%print _("Work Phone Number");%></OPTION>
-            <OPTION VALUE=homephone<%if ($what == "homephone") {print " SELECTED";}%>><%print _("Home Phone Number");%></OPTION>
-            <OPTION VALUE=mobile<%if ($what == "mobile") {print " SELECTED";}%>><%print _("Cell Phone");%></OPTION>
-            <OPTION VALUE=hostedfpsite<%if ($what == "hostedfpsite") {print " SELECTED";}%>><%print _("Front Page Site");%></OPTION>
-            <OPTION VALUE=hostedsite<%if ($what == "hostedsite") {print " SELECTED";}%>><%print _("Web Site");%></OPTION>
-          } else if ($_SESSION['classi'] == "snom") {%>
-            <OPTION VALUE=telephonenumber<%if ($what == "telephonenumber") {print " SELECTED";}%>><%print _("Phone Number");%></OPTION><%
-          } else if ($_SESSION['classi'] == "trust") {%>
-            <OPTION VALUE=uid<%if ($what == "uid") {print " SELECTED";}%>><%print _("Host Name");%></OPTION><%
-          } else if ($_SESSION['classi'] == "mserver") {%>
-            <OPTION VALUE=uid<%if ($what == "uid") {print " SELECTED";}%>><%print _("Login Name");%></OPTION>
-            <OPTION VALUE=l<%if ($what == "l") {print " SELECTED";}%>><%print _("Location");%></OPTION>
-            <OPTION VALUE=iphostnumber<%if ($what == "iphostnumber") {print " SELECTED";}%>><%print _("IP Address");p%></OPTION>
-            <OPTION VALUE=description<%if ($what == "description") {print " SELECTED";}%>><%print _("Description");%></OPTION><%
+          if (($_SESSION['classi'] == "pdc") || ($_SESSION['classi'] == "system")) {?>
+            <OPTION VALUE=uid<?php if ($what == "uid") {print " SELECTED";}?>><?php print _("Username");?></OPTION>
+            <OPTION VALUE=givenname<?php if ($what == "givenname") {print " SELECTED";}?>><?php print _("First Name");?></OPTION>
+            <OPTION VALUE=sn<?php if ($what == "sn") {print " SELECTED";}?>><?php print _("Last Name");?></OPTION>
+            <OPTION VALUE=mail<?php if ($what == "mail") {print " SELECTED";}?>><?php print _("Email Address");?></OPTION>
+            <OPTION VALUE=maillocaladdress<?php if ($what == "maillocaladdress") {print " SELECTED";}?>><?php print _("Email Alias")?></OPTION>
+            <OPTION VALUE=o<?php if ($what == "o") {print " SELECTED";}?>><?php print _("Company");?></OPTION>
+            <OPTION VALUE=ou<?php if ($what == "ou") {print " SELECTED";}?>><?php print _("Division");?></OPTION>
+            <OPTION VALUE=st<?php if ($what == "st") {print " SELECTED";}?>><?php print _("State")?></OPTION>
+            <OPTION VALUE=l<?php if ($what == "l") {print " SELECTED";}?>><?php print _("City");?></OPTION>
+            <OPTION VALUE=postalcode<?php if ($what == "postalcode") {print " SELECTED";}?>><?php print _("Postal Code");?></OPTION>
+            <OPTION VALUE=telephonenumber<?php if ($what == "telephonenumber") {print " SELECTED";}?>><?php print _("Work Phone Number");?></OPTION>
+            <OPTION VALUE=homephone<?php if ($what == "homephone") {print " SELECTED";}?>><?php print _("Home Phone Number");?></OPTION>
+            <OPTION VALUE=mobile<?php if ($what == "mobile") {print " SELECTED";}?>><?php print _("Cell Phone");?></OPTION>
+            <OPTION VALUE=hostedfpsite<?php if ($what == "hostedfpsite") {print " SELECTED";}?>><?php print _("Front Page Site");?></OPTION>
+            <OPTION VALUE=hostedsite<?php if ($what == "hostedsite") {print " SELECTED";}?>><?php print _("Web Site");?></OPTION>
+          } else if ($_SESSION['classi'] == "snom") {?>
+            <OPTION VALUE=telephonenumber<?php if ($what == "telephonenumber") {print " SELECTED";}?>><?php print _("Phone Number");?></OPTION><?php
+          } else if ($_SESSION['classi'] == "trust") {?>
+            <OPTION VALUE=uid<?php if ($what == "uid") {print " SELECTED";}?>><?php print _("Host Name");?></OPTION><?php
+          } else if ($_SESSION['classi'] == "mserver") {?>
+            <OPTION VALUE=uid<?php if ($what == "uid") {print " SELECTED";}?>><?php print _("Login Name");?></OPTION>
+            <OPTION VALUE=l<?php if ($what == "l") {print " SELECTED";}?>><?php print _("Location");?></OPTION>
+            <OPTION VALUE=iphostnumber<?php if ($what == "iphostnumber") {print " SELECTED";}?>><?php print _("IP Address");p?></OPTION>
+            <OPTION VALUE=description<?php if ($what == "description") {print " SELECTED";}?>><?php print _("Description");?></OPTION><?php
           }
-          if ($_SESSION['classi'] == "system") {%>
-            <OPTION VALUE=accountSuspended<%if ($what == "accountSuspended") {print " SELECTED";}%>><%print _("All Suspended Accounts");%></OPTION><%
-          }%>
+          if ($_SESSION['classi'] == "system") {?>
+            <OPTION VALUE=accountSuspended<?php if ($what == "accountSuspended") {print " SELECTED";}?>><?php print _("All Suspended Accounts");?></OPTION><?php
+          }?>
         </SELECT></TD></TR>
   <TR CLASS=list-color2><TD onmouseover="myHint.show('1')" onmouseout=myHint.hide()>... </TD><TD>
         <SELECT NAME=type>
-          <OPTION VALUE=in<%if ($type == "in") {print " SELECTED";}%>><%print _("Contains");%></OPTION>
-          <OPTION VALUE=start<%if ($type == "start") {print " SELECTED";}%>><%print _("Begins With");%></OPTION>
-          <OPTION VALUE=end<%if ($type == "end") {print " SELECTED";}%>><%print _("Ends With");%></OPTION>
-          <OPTION VALUE="eq"<%if ($type == "eq") {print " SELECTED";}%>><%print _("Equals");%></OPTION>
+          <OPTION VALUE=in<?php if ($type == "in") {print " SELECTED";}?>><?php print _("Contains");?></OPTION>
+          <OPTION VALUE=start<?php if ($type == "start") {print " SELECTED";}?>><?php print _("Begins With");?></OPTION>
+          <OPTION VALUE=end<?php if ($type == "end") {print " SELECTED";}?>><?php print _("Ends With");?></OPTION>
+          <OPTION VALUE="eq"<?php if ($type == "eq") {print " SELECTED";}?>><?php print _("Equals");?></OPTION>
         </SELECT></TD></TR>
   <TR CLASS=list-color1><TD onmouseover="myHint.show('2')" onmouseout=myHint.hide()>... </TD><TD>
-        <INPUT TYPE=TEXT NAME=search VALUE="<%print $search;%>" autocomplete="off" SIZE=50></TD></TR>
+        <INPUT TYPE=TEXT NAME=search VALUE="<?php print $search;?>" autocomplete="off" SIZE=50></TD></TR>
   <TR CLASS=list-color2><TD COLSPAN=2 ALIGN=CENTER>
-        <INPUT TYPE=SUBMIT onclick="this.name='find'" VALUE="<%print _("Search");%>">
-        <INPUT TYPE=SUBMIT onclick=this.name='add' VALUE="<%print _("Add");%>">
+        <INPUT TYPE=SUBMIT onclick="this.name='find'" VALUE="<?php print _("Search");?>">
+        <INPUT TYPE=SUBMIT onclick=this.name='add' VALUE="<?php print _("Add");?>">
     </td>
   </tr>
 </table>

@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -37,7 +37,7 @@
     include "/var/spool/apache/htdocs/ldap/addmserv.php";
     return 0;
   } else if ((isset($add)) && ($baseou == "pdc")) {
-%>
+?>
 <html>
 <head>
 </head>
@@ -46,7 +46,7 @@
 <H1>PDC Users Cannot Be Added</H1>
 </body>
 </html>
-<%
+<?php
     return 0;
   }
 
@@ -204,14 +204,14 @@
      }
      
      if ($info[$i]["comment"][0] != "") {
-%>
+?>
        </TR><TR CLASS=list-color2><TD COLSPAN=4>
        <TABLE WIDTH=100% cellspacing=0 cellpadding=0>
        <TR CLASS=list-color2><TD VALIGN=TOP>
          <font SIZE=1>Notes</font></TD></TR>
        <TR CLASS=list-color1 COLSPAN=4><TD VALIGN=TOP>
          <font SIZE=2>
-<%
+<?php
        print "<PRE>" . $info[$i]["comment"][0] . "</PRE></font></TD></TABLE></TD>";
 /*
        Notes</font></TD>
@@ -230,13 +230,13 @@
     print "</TABLE>\n";
     print "</body></html>";
   } else {
-%>
+?>
 
 <FORM METHOD=POST>
 <CENTER>
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
 
-<%
+<?php
   $modify=false;
   if (isset($delete)) {
     $ld=ldap_delete($ds,$dn);
@@ -417,51 +417,51 @@
     }
     
     if (! $hidea[$attr]) {
-%>
-      <TR <%print $bcolor;%>><TD WIDTH=50%>
-<%
+?>
+      <TR <?php print $bcolor;?>><TD WIDTH=50%>
+<?php
         if ((isset($submited)) && ($rejar[$attr])) {
            print "<FONT COLOR=RED>*</FONT>";
         } else if ($rejar[$attr]) {
           print "<B>";
         }
         print $descrip[$attr];
-%>
+?>
       </TD>
       <TD WIDTH=50%
-<%
+<?php
         if (($modify) && ($dnaa[$attr])) {
-%>
-          ><INPUT TYPE=HIDDEN NAME=<%print $attr;%> VALUE="<%print $$attr;%>"><%print $$attr;%>
-<%
+?>
+          ><INPUT TYPE=HIDDEN NAME=<?php print $attr;?> VALUE="<?php print $$attr;?>"><?php print $$attr;?>
+<?php
         } else {
           if ($mline[$attr]) {
-%>
-            ><TEXTAREA NAME=<%print $attr;%> COLS=40 ROWS=5><%print $$attr;%></TEXTAREA>
-<%
+?>
+            ><TEXTAREA NAME=<?php print $attr;?> COLS=40 ROWS=5><?php print $$attr;?></TEXTAREA>
+<?php
           } elseif ($b64[$attr]) {
             $tmpval=$$attr;
-%>
-            ><TEXTAREA NAME=<%print $attr;%> COLS=40 ROWS=5><%print $tmpval;%></TEXTAREA>
-<%
+?>
+            ><TEXTAREA NAME=<?php print $attr;?> COLS=40 ROWS=5><?php print $tmpval;?></TEXTAREA>
+<?php
           } elseif ($bfile[$attr]) {
-%>
-            ><INPUT TYPE=FILE  NAME=<%print $attr;%> COLS=40 ROWS=5>
-<%
+?>
+            ><INPUT TYPE=FILE  NAME=<?php print $attr;?> COLS=40 ROWS=5>
+<?php
           } elseif ($cert[$attr]) {
-%>
-            ><INPUT TYPE=FILE  NAME=<%print $attr;%> COLS=40 ROWS=5>
-<%
+?>
+            ><INPUT TYPE=FILE  NAME=<?php print $attr;?> COLS=40 ROWS=5>
+<?php
           } else {
-%>
-            ><INPUT TYPE=TEXT SIZE=40 NAME=<%print $attr;%> VALUE="<%print $$attr;%>">
-<%
+?>
+            ><INPUT TYPE=TEXT SIZE=40 NAME=<?php print $attr;?> VALUE="<?php print $$attr;?>">
+<?php
           }
         }
-%>
+?>
       </TD>
     </TR>
-<%
+<?php
       $cnt ++;
     }
   }
@@ -471,10 +471,10 @@
     } else {
       $bcolor=" class=list-color2";
     }
-%>
-  <TR<% print "$bcolor"%>>
+?>
+  <TR<?php print "$bcolor"?>>
     <TD COLSPAN=2 ALIGN=MIDDLE>
-<%
+<?php
       if ($modify) {
         print "<INPUT TYPE=SUBMIT VALUE=Modify NAME=update>";
         print "<INPUT TYPE=SUBMIT VALUE=Delete NAME=delete>";
@@ -482,12 +482,12 @@
       } else {
         print "<INPUT TYPE=SUBMIT VALUE=Add NAME=submited>";
       }
-%>
+?>
     </TD>
   </TR>
 </TABLE>
 </FORM>
-<%
+<?php
   }
-%>
+?>
 

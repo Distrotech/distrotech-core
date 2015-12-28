@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -60,29 +60,29 @@
     <script language="JavaScript" src="/hints.js" type="text/javascript"></script>
     <script language="JavaScript" src="/hints_cfg.php?disppage=reception%2Fc2c.php" type="text/javascript"></script>
 */
-%>
-    <link rel="stylesheet" type="text/css" href="/style.php?style=<%print $style;%>">
+?>
+    <link rel="stylesheet" type="text/css" href="/style.php?style=<?php print $style;?>">
     <CENTER>
     <FORM METHOD=POST>
     <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
       <TR CLASS=list-color2>
-        <TH COLSPAN=2 ALIGN=CENTER CLASS=heading-body><%print _("Agent Application Pannel");%></TH>
+        <TH COLSPAN=2 ALIGN=CENTER CLASS=heading-body><?php print _("Agent Application Pannel");?></TH>
       </TR><TR  CLASS=list-color1>
-        <TD ALIGN=LEFT onmouseover="myHint.show('QC0')" onmouseout="myHint.hide()" WIDTH=50%><%print _("Action");%></TD>
+        <TD ALIGN=LEFT onmouseover="myHint.show('QC0')" onmouseout="myHint.hide()" WIDTH=50%><?php print _("Action");?></TD>
         <TD>
           <SELECT NAME=action>
-            <OPTION VALUE=login <%if ($status == 0) {print " SELECTED";}%>>Log In</OPTION>
+            <OPTION VALUE=login <?php if ($status == 0) {print " SELECTED";}?>>Log In</OPTION>
             <OPTION VALUE=logout>Log Out</OPTION>
-            <OPTION VALUE=pause <%if ($status > 0) {print " SELECTED";}%>>Pause</OPTION>
-            <OPTION VALUE=unpause <%if ($status == -1) {print " SELECTED";}%>>Resume</OPTION>
+            <OPTION VALUE=pause <?php if ($status > 0) {print " SELECTED";}?>>Pause</OPTION>
+            <OPTION VALUE=unpause <?php if ($status == -1) {print " SELECTED";}?>>Resume</OPTION>
           </SELECT>
         </TD>
       </TR><TR  CLASS=list-color2>
-        <TD ALIGN=LEFT onmouseover="myHint.show('QC1')" onmouseout="myHint.hide()"><%print _("Reason ...");%></TD>
+        <TD ALIGN=LEFT onmouseover="myHint.show('QC1')" onmouseout="myHint.hide()"><?php print _("Reason ...");?></TD>
         <TD><INPUT TYPE=TEXT NAME=reason></TD>
       </TR><TR  CLASS=list-color1>
-        <TD ALIGN=LEFT onmouseover="myHint.show('QC1')" onmouseout="myHint.hide()"><%print _("Agent Name");%></TD>
-        <TD><INPUT TYPE=TEXT NAME=agentname VALUE="<%print $agentname;%>"></TD>
+        <TD ALIGN=LEFT onmouseover="myHint.show('QC1')" onmouseout="myHint.hide()"><?php print _("Agent Name");?></TD>
+        <TD><INPUT TYPE=TEXT NAME=agentname VALUE="<?php print $agentname;?>"></TD>
       </TR><TR CLASS=list-color2>
         <TD COLSPAN=2 ALIGN=CENTER><INPUT TYPE=SUBMIT NAME=agentup></TD>
       </TR>

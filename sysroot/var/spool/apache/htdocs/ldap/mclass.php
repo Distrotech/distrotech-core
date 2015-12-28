@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -20,12 +20,12 @@
   if (! $rdn) {
     include "auth.inc";
   }
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=mclassf onsubmit="ajaxsubmit(this.name);return false">
 <table border="0" width="90%" cellspacing="0" cellpadding="0">
 <TR CLASS=list-color2><TH CLASS=heading-body COLSPAN=2>
-<%
+<?php
 $abdn="ou=Email";
 
 $ccname["R"]=_("Relay Domains (Enter Domains To Allow Relaying Or Spooling)");
@@ -102,7 +102,7 @@ if ($_POST['classi'] != "") {
   print "</SELECT><P>\n";
   print "<INPUT TYPE=SUBMIT NAME=classsel><P>\n";
 }
-%>
+?>
 </FORM>
   </TD></TR>
 </table>

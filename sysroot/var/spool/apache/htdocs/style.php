@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -54,46 +54,46 @@ if ($_SESSION['print'] == "1") {
 } else {
   $borderw="0";
 }
-%>
+?>
 /* background color or image*/
 body.popup {
 	margin: 0px 0px 0px 0px;
-<%if ($_SESSION['print'] != "1") {%>
+<?php if ($_SESSION['print'] != "1") {?>
 	overflow: hidden;
-<%}%>
+<?php }?>
 }
 body {
 	margin: 0px 0px 0px 0px;
-<%if ($_SESSION['print'] != "1") {%>
+<?php if ($_SESSION['print'] != "1") {?>
 	overflow: hidden;
-<%
+<?php
 }
-if ($bgimg != "") {%>
-	background-image:  url("<%print $bgimg;%>");
+if ($bgimg != "") {?>
+	background-image:  url("<?php print $bgimg;?>");
 	background-attachment:fixed;
-<%} else {%>
-	background-color: <%print $bgcolor;%>;
-<%}%>
+<?php } else {?>
+	background-color: <?php print $bgcolor;?>;
+<?php }?>
 	color: #000000;
 }
 /* color and appearance of normal cells */
 td {
-	color: <%print $fontcolor;%>;
+	color: <?php print $fontcolor;?>;
 	font-weight:normal;
 	font-size:12;
 	font-family: Arial, Helvetica, sans-serif;
 	text-decoration: none;
-	border: solid black <%print $borderw;%>px;
+	border: solid black <?php print $borderw;?>px;
 }
 /* color and appearance of normal headings cells */
 th {
-	color: <%print $fontcolor;%>;
+	color: <?php print $fontcolor;?>;
 	font-weight:bold;
 	font-size:14;
 	font-family: Arial, Helvetica, sans-serif;
 	text-decoration: none;
 	vertical-align: middle;
-	border: solid black <%print $borderw;%>px;
+	border: solid black <?php print $borderw;?>px;
 }
 .table-cell1 {
 	font-size: 12;
@@ -101,11 +101,11 @@ th {
 }
 /* light color for rows */
 .list-color1 {
-	background-color: <%print $rowcol1;%>;
+	background-color: <?php print $rowcol1;?>;
 }
 /* dark color for rows */
 .list-color2 {
-	background-color: <%print $rowcol2;%>;
+	background-color: <?php print $rowcol2;?>;
 }
 .option-green {
 	border: solid black 1px;
@@ -124,8 +124,8 @@ th {
 }
 /* menu non highlighted options */
 .menu-color1 {
-	color: <%print $menufg1;%>;
-	background-color: <%print $menubg1;%>;
+	color: <?php print $menufg1;?>;
+	background-color: <?php print $menubg1;?>;
 	font-weight:normal;
 	font-size:10;
 	font-family:arial;
@@ -137,8 +137,8 @@ th {
 }
 /* menu highlighted options */
 .menu-color2 {
-	color: <%print $menufg2;%>;
-	background-color: <%print $menubg2;%>;
+	color: <?php print $menufg2;?>;
+	background-color: <?php print $menubg2;?>;
 	font-weight:normal;
 	font-family:arial;
 	font-size: 10;
@@ -183,19 +183,19 @@ div.heading-body {
 }
 /* color for links on page */
 a:link {
-	color: <%print $fontcolor;%>;
+	color: <?php print $fontcolor;?>;
 }
 a:visited {
-	color: <%print $fontcolor;%>;
+	color: <?php print $fontcolor;?>;
 }
 a:active {
 	text-decoration: none;
-	color: <%print $fontcolor;%>;
+	color: <?php print $fontcolor;?>;
 }
 a:hover {
 	text-decoration: none;
 	font-weight: bold;
-	color: <%print $fontcolor;%>;
+	color: <?php print $fontcolor;?>;
 }
 a.red:link {
 	color: #d33831;
@@ -283,14 +283,14 @@ div.main-scroll {
 	top: 20px;
 	width: 100%;
 	height: 100%;
-<%if ($_SESSION['print'] != "1") {%>
+<?php if ($_SESSION['print'] != "1") {?>
 	overflow: auto;
-<%}%>
+<?php }?>
 	padding-top: 0px;
 	padding-bottom: 0px;
 	padding-left: 0px;
 	padding-right: 0px;
-	border: solid black 0px;<%if ($mainbgcol != "") {print "\t\nbackground-color: " . $mainbgcol . ";\n";}%>
+	border: solid black 0px;<?php if ($mainbgcol != "") {print "\t\nbackground-color: " . $mainbgcol . ";\n";}?>
 	text-align: left;
 }
 div.logo {
@@ -300,7 +300,7 @@ div.logo {
 	width: 100%;
 	text-align: right;
 	padding-right: 20px;
-	border: solid black 0px;<%if ($mainbgcol != "") {print "\t\nbackground-color: " . $mainbgcol . ";\n";}%>
+	border: solid black 0px;<?php if ($mainbgcol != "") {print "\t\nbackground-color: " . $mainbgcol . ";\n";}?>
 }
 div.logo-left {
 	position: relative;
@@ -310,7 +310,7 @@ div.logo-left {
 	height: 100%;
 	text-align: right;
 	padding-right: 0px;
-	border: solid black 0px;<%if ($smenubg != "") {print "\t\nbackground-color: " . $smenubg . ";\n";}%>
+	border: solid black 0px;<?php if ($smenubg != "") {print "\t\nbackground-color: " . $smenubg . ";\n";}?>
 }
 div.side-bar {
 	position: absolute;
@@ -322,7 +322,7 @@ div.side-bar {
 	padding-bottom: 0px;
 	padding-left: 0px;
 	padding-right: 0px;
-	<%if ($smenubgimg != "") {print "background-image: url(" . $smenubgimg . ");\n";} else if ($smenubg != "") {print "background-color: " . $smenubg . ";\n";}%>
+	<?php if ($smenubgimg != "") {print "background-image: url(" . $smenubgimg . ");\n";} else if ($smenubg != "") {print "background-color: " . $smenubg . ";\n";}?>
 	border: solid black 0px;
 }
 div.menu-bar {
@@ -331,7 +331,7 @@ div.menu-bar {
 	left: 0px;
         height: 20px;
 	width: 100%;
-	<%if ($menubgimg != "") {print "background-image: url(" . $menubgimg . ");\n";} else if ($menubg1 != "") {print "background-color: " . $menubg1 . ";\n";}%>
+	<?php if ($menubgimg != "") {print "background-image: url(" . $menubgimg . ");\n";} else if ($menubg1 != "") {print "background-color: " . $menubg1 . ";\n";}?>
 	border: solid black 0px;
 	z-index: 1;
 }
@@ -350,25 +350,25 @@ div.formpart {
 	width: 90%;
 }
 div {
-	color: <%print $fontcolor;%>;
+	color: <?php print $fontcolor;?>;
 	font-weight:normal;
 	font-size:12;
 	font-family: Arial, Helvetica, sans-serif;
 	text-decoration: none;
-	border: solid black <%print $borderw;%>px;
+	border: solid black <?php print $borderw;?>px;
 }
 #popUpDiv {
         position:absolute;
         z-index: 9002;
-	border: solid black 2px;<%if ($mainbgcol != "") {print "\t\nbackground-color: " . $mainbgcol . ";\n";} else { print "\n";}%>
+	border: solid black 2px;<?php if ($mainbgcol != "") {print "\t\nbackground-color: " . $mainbgcol . ";\n";} else { print "\n";}?>
         visibility: hidden;
-<%
-if ($bgimg != "") {%>
-	background-image:  url("<%print $bgimg;%>");
+<?php
+if ($bgimg != "") {?>
+	background-image:  url("<?php print $bgimg;?>");
 	background-attachment:fixed;
-<%} else {%>
-	background-color: <%print $bgcolor;%>;
-<%}%>
+<?php } else {?>
+	background-color: <?php print $bgcolor;?>;
+<?php }?>
 }
 #blanket {
         background-color: #111;
@@ -385,55 +385,55 @@ div.popup {
 	position: relative;
 	width: 100%;
 	height: 100%;
-<%if ($_SESSION['print'] != "1") {%>
+<?php if ($_SESSION['print'] != "1") {?>
 	overflow: auto;
-<%}%>
+<?php }?>
 	padding-top: 0px;
 	padding-bottom: 0px;
 	padding-left: 0px;
 	padding-right: 0px;
-	border: solid black 0px;<%if ($mainbgcol != "") {print "\t\nbackground-color: " . $mainbgcol . ";\n";}%>
+	border: solid black 0px;<?php if ($mainbgcol != "") {print "\t\nbackground-color: " . $mainbgcol . ";\n";}?>
 	text-align: left;
-	color: <%print $fontcolor;%>;
+	color: <?php print $fontcolor;?>;
 }
 div.content {
 	margin: 0 auto;
-	color: <%print $fontcolor;%>;
+	color: <?php print $fontcolor;?>;
 	font-weight:normal;
 	font-size:12;
 	font-family: Arial, Helvetica, sans-serif;
 	text-decoration: none;
-	border: solid black <%print $borderw;%>px;
+	border: solid black <?php print $borderw;?>px;
 	width: 90%;
 }
 div.cell {
-	color: <%print $fontcolor;%>;
+	color: <?php print $fontcolor;?>;
 	font-weight:normal;
 	font-size:12;
 	font-family: Arial, Helvetica, sans-serif;
 	text-decoration: none;
-	border: solid black <%print $borderw;%>px;
+	border: solid black <?php print $borderw;?>px;
 }
 div.heading-body {
-	color: <%print $fontcolor;%>;
+	color: <?php print $fontcolor;?>;
 	font-size: 16;
 	font-style:italic;
 	font-weight: bold;
 	font-family: Arial, Helvetica, sans-serif;
 	text-decoration: none;
 	vertical-align: middle;
-	border: solid black <%print $borderw;%>px;
+	border: solid black <?php print $borderw;?>px;
 	margin: 0 auto;
 	text-align: center;
 }
 div.heading-body2 {
-	color: <%print $fontcolor;%>;
+	color: <?php print $fontcolor;?>;
 	font-size: 12;
 	font-style:bold;
 	font-family: Arial, Helvetica, sans-serif;
 	text-decoration: none;
 	vertical-align: middle;
-	border: solid black <%print $borderw;%>px;
+	border: solid black <?php print $borderw;?>px;
 }
 .formselect {
 	position: static;
@@ -441,26 +441,26 @@ div.heading-body2 {
 	float: left;
 	text-decoration: none;
 	font-weight: bold;
-	color: <%print $menufg1;%>;
+	color: <?php print $menufg1;?>;
 	border: solid black 0px;
 	padding-right: 5px;
 	padding-left: 5px;
 	border: solid black 0px;
 	height: 16px;
-	background-color: <%print $menubg1;%>;
+	background-color: <?php print $menubg1;?>;
 	cursor: pointer;
 }
 .formrow {
 	height: 16px;
 	vertical-align: bottom;
-	background-color: <%print $menubg1;%>;
+	background-color: <?php print $menubg1;?>;
 }
 .formtable {
 	border-collapse: collapse;
 	width: 100%;
 }
-<%
+<?php
 if ($_SESSION['print'] == "1") {
   $_SESSION['print']=0;
 }
-%>
+?>

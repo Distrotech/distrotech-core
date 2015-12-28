@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -17,12 +17,12 @@
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-%>
+?>
 <html>
 <head>
 <title>Ldap Admin</title>
 <base target="_self">
-<%
+<?php
   include "opendb.inc";
   if (! $rdn) {
     include "../ldap/auth.inc";
@@ -116,4 +116,4 @@
   }
   print "</TABLE>\n";
 
-%>
+?>

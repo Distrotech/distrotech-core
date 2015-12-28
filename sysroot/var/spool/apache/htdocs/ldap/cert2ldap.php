@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -40,4 +40,4 @@ if ($cinf[0] != "") {
 } else {
   header("Location: https://$SERVER_NAME:666/auth/index.php?navpage=ldap/ennav.php");
 }
-%>
+?>

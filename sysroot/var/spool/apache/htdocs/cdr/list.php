@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -22,7 +22,7 @@
   if ($ADMIN_USER != "admin") {
     return;
   }
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=crepform onsubmit="ajaxsubmit(this.name);return false">
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
@@ -32,7 +32,7 @@
   Month
 </TD><TD>
 <SELECT NAME=date>
-<%
+<?php
   $getcdr=pg_query($db,"SELECT date_part('year', min(calldate)),date_part('month', min(calldate)),
                                date_part('year', max(calldate)),date_part('month', max(calldate)) from cdr");
 
@@ -54,40 +54,40 @@
       print ">" . $year . "/" . $mon . "\n"; 
     }
   }
-%>
+?>
 </SELECT></TD></TR>
 <TR CLASS=list-color2><TD>
   Query
 </TD><TD>
 <SELECT NAME=type>
-<OPTION VALUE=0<%if ($type == "0") {print " SELECTED";}%>>All Calls
-<OPTION VALUE=3<%if ($type == "3") {print " SELECTED";}%>>Internal Calls
-<OPTION VALUE=4<%if (($type == "4") || ($type == "")) {print " SELECTED";}%>>National Calls
-<OPTION VALUE=9<%if ($type == "9") {print " SELECTED";}%>>Cellular Calls
-<OPTION VALUE=8<%if ($type == "8") {print " SELECTED";}%>>International Calls
-<OPTION VALUE=1<%if ($type == "1") {print " SELECTED";}%>>Inter Branch Calls
-<OPTION VALUE=7<%if ($type == "7") {print " SELECTED";}%>>Prepaid Users Calls
-<OPTION VALUE=5<%if ($type == "5") {print " SELECTED";}%>>Incoming Calls
-<OPTION VALUE=6<%if ($type == "6") {print " SELECTED";}%>>Call Queues
+<OPTION VALUE=0<?php if ($type == "0") {print " SELECTED";}?>>All Calls
+<OPTION VALUE=3<?php if ($type == "3") {print " SELECTED";}?>>Internal Calls
+<OPTION VALUE=4<?php if (($type == "4") || ($type == "")) {print " SELECTED";}?>>National Calls
+<OPTION VALUE=9<?php if ($type == "9") {print " SELECTED";}?>>Cellular Calls
+<OPTION VALUE=8<?php if ($type == "8") {print " SELECTED";}?>>International Calls
+<OPTION VALUE=1<?php if ($type == "1") {print " SELECTED";}?>>Inter Branch Calls
+<OPTION VALUE=7<?php if ($type == "7") {print " SELECTED";}?>>Prepaid Users Calls
+<OPTION VALUE=5<?php if ($type == "5") {print " SELECTED";}?>>Incoming Calls
+<OPTION VALUE=6<?php if ($type == "6") {print " SELECTED";}?>>Call Queues
 </SELECT></TD></TR>
 <TR CLASS=list-color1><TD>
 Order Results By
 </TD><TD>
 <SELECT NAME=morder>
-<OPTION VALUE="accountcode"<%if ($morder == "accountcode") {print " SELECTED";}%>>Source
-<OPTION VALUE="callcnt"<%if ($morder == "callcnt") {print " SELECTED";}%>>Number Of Calls
-<OPTION VALUE="tottime"<%if (($morder == "tottime") || ($morder == "")){print " SELECTED";}%>>Total Time
-<OPTION VALUE="avtime"<%if ($morder == "avtime") {print " SELECTED";}%>>Average Time
-<OPTION VALUE="dv8"<%if ($morder == "dv8") {print " SELECTED";}%>>Standard Deviation
-<OPTION VALUE="holdtime"<%if ($morder == "holdtime") {print " SELECTED";}%>>Av. Hold Time
-<OPTION VALUE="disposition"<%if ($morder == "disposition") {print " SELECTED";}%>>Call State
+<OPTION VALUE="accountcode"<?php if ($morder == "accountcode") {print " SELECTED";}?>>Source
+<OPTION VALUE="callcnt"<?php if ($morder == "callcnt") {print " SELECTED";}?>>Number Of Calls
+<OPTION VALUE="tottime"<?php if (($morder == "tottime") || ($morder == "")){print " SELECTED";}?>>Total Time
+<OPTION VALUE="avtime"<?php if ($morder == "avtime") {print " SELECTED";}?>>Average Time
+<OPTION VALUE="dv8"<?php if ($morder == "dv8") {print " SELECTED";}?>>Standard Deviation
+<OPTION VALUE="holdtime"<?php if ($morder == "holdtime") {print " SELECTED";}?>>Av. Hold Time
+<OPTION VALUE="disposition"<?php if ($morder == "disposition") {print " SELECTED";}?>>Call State
 </SELECT></TD></TR>
 <TR CLASS=list-color2><TD>
 Highlight Results Differing By
 </TD><TD>
 <SELECT NAME=exep>
 <OPTION VALUE="0">No Exeptions
-<%
+<?php
 if (! isset($exep)) {
   $exep=35;
 }
@@ -98,7 +98,7 @@ for ($pct=5;$pct <= 100;$pct=$pct+5) {
   }
   print ">" . $pct . "%\n";
 }
-%>
+?>
 </SELECT></TD></TR>
 <TR CLASS=list-color1><TD>
 Descending Order</TD><TD>
@@ -106,7 +106,7 @@ Descending Order</TD><TD>
 </TD></TR>
 <TR CLASS=list-color2><TD>
 Exceptions Only</TD><TD>
-<INPUT TYPE=CHECKBOX NAME=xexep<%if ($xexep == "on") {print " CHECKED";}%>>
+<INPUT TYPE=CHECKBOX NAME=xexep<?php if ($xexep == "on") {print " CHECKED";}?>>
 </TD></TR>
 <TR CLASS=list-color1><TD COLSPAN=2 ALIGN=MIDDLE>
 <INPUT TYPE=SUBMIT>

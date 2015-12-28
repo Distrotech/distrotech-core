@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -54,4 +54,4 @@ function randpwgen($len) {
   } while (!ereg("[a-z]",$newcode) || !ereg("[A-Z]",$newcode) || !ereg("[0-9]",$newcode));
   return $newcode;
 };
-%>
+?>

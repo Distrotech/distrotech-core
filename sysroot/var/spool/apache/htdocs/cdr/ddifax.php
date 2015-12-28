@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -53,19 +53,19 @@ if (isset($pbxupdate)) {
 $qgetdata=pg_query($db,"SELECT astdb.key,astdb.value,grp.value FROM astdb LEFT OUTER JOIN astdb AS grp ON (astdb.key=grp.family AND grp.key='BGRP') WHERE astdb.family='DDIFAX'");
 
 
-%>
+?>
 
 <CENTER>
 <FORM METHOD=POST NAME=ddifaxf onsubmit="ajaxsubmit(this.name);return false">
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
 <TR CLASS=list-color2>
-  <TH CLASS=heading-body COLSPAN=2><%print _("Asterisk PBX DDI FAX Configuration");%></TH>
+  <TH CLASS=heading-body COLSPAN=2><?php print _("Asterisk PBX DDI FAX Configuration");?></TH>
 </TR>
 <TR CLASS=list-color1>
-<TD onmouseover="myHint.show('DA0')" onmouseout="myHint.hide()"><%print _("Select DDI FAX Route To Delete");%></TD>
+<TD onmouseover="myHint.show('DA0')" onmouseout="myHint.hide()"><?php print _("Select DDI FAX Route To Delete");?></TD>
 <TD><SELECT NAME=key>
-<OPTION VALUE=""><%print _("Add New DDI FAX Route Below");%></OPTION>
-<%
+<OPTION VALUE=""><?php print _("Add New DDI FAX Route Below");?></OPTION>
+<?php
 $dnum=pg_num_rows($qgetdata);
 for($i=0;$i<$dnum;$i++){
   $getdata=pg_fetch_array($qgetdata,$i);
@@ -75,23 +75,23 @@ for($i=0;$i<$dnum;$i++){
   }
   print "</OPTION>"; 
 }
-%>
+?>
 </SELECT>
 </TR>
 <TR CLASS=list-color2>
-<TD onmouseover="myHint.show('DA1')" onmouseout="myHint.hide()"><%print _("New DDI FAX");%></TD>
+<TD onmouseover="myHint.show('DA1')" onmouseout="myHint.hide()"><?php print _("New DDI FAX");?></TD>
 <TD><INPUT TYPE=TEXT NAME=newkey></TD>
 </TR>
 <TR CLASS=list-color1>
-<TD onmouseover="myHint.show('DA2')" onmouseout="myHint.hide()"><%print _("Mailbox To Send To");%></TD>
+<TD onmouseover="myHint.show('DA2')" onmouseout="myHint.hide()"><?php print _("Mailbox To Send To");?></TD>
 <TD><INPUT TYPE=TEXT NAME=newval></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover=myHint.show('ES29') ONMOUSEOUT=myHint.hide()><%print _("Billing Group");%></TD>
+  <TD onmouseover=myHint.show('ES29') ONMOUSEOUT=myHint.hide()><?php print _("Billing Group");?></TD>
   <TD>
     <SELECT NAME=bgroup>
-      <OPTION VALUE=""><%print _("Select Existing Group/Add New Group Bellow");%></OPTION>
-<%
+      <OPTION VALUE=""><?php print _("Select Existing Group/Add New Group Bellow");?></OPTION>
+<?php
       $bgroups=pg_query("SELECT DISTINCT value FROM astdb WHERE key='BGRP' AND value != '' ORDER BY value;");
       $bgnum=pg_num_rows($bgroups);
 
@@ -99,14 +99,14 @@ for($i=0;$i<$dnum;$i++){
         $getbgdata=pg_fetch_array($bgroups,$i);
         print "<OPTION VALUE=" . $getbgdata[0] . ">" . $getbgdata[0] . "</OPTION>\n";
       }
-%>
+?>
     </SELECT><BR>
     <INPUT TYPE=TEXT NAME=newbgroup>
 </TR>
 <TR CLASS=list-color1>
   <TD ALIGN=MIDDLE COLSPAN=2>
     <INPUT TYPE=RESET>
-    <INPUT TYPE=SUBMIT NAME=subme onclick=this.name='pbxupdate' VALUE="<%print _("Save Changes");%>">
+    <INPUT TYPE=SUBMIT NAME=subme onclick=this.name='pbxupdate' VALUE="<?php print _("Save Changes");?>">
   </TD>
 </TR>
 </TABLE>

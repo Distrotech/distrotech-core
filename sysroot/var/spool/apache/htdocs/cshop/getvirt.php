@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -33,7 +33,7 @@ $num=pg_num_rows($virtc);
 $bcolor[0]="list-color1";
 $bcolor[1]="list-color2";
 $_SESSION['disppage']="cshop/editvirt.php";
-%>
+?>
 <CENTER>
 <FORM NAME=editvc METHOD=POST onsubmit="ajaxsubmit(this.name);return false">
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
@@ -44,7 +44,7 @@ $_SESSION['disppage']="cshop/editvirt.php";
 <TH ALIGN=LEFT CLASS=heading-body2>Contact</TH>
 <TH ALIGN=LEFT CLASS=heading-body2>Email</TH>
 <TH ALIGN=LEFT CLASS=heading-body2>Number</TH></TR>
-<%
+<?php
 for ($i=0; $i < $num; $i++) {
   $r = pg_fetch_row($virtc,$i);
   $rem=$i % 2; 
@@ -58,6 +58,6 @@ for ($i=0; $i < $num; $i++) {
   }
   print "</TR>\n";
 }
-%>
+?>
 </FORM>
 </TABLE>

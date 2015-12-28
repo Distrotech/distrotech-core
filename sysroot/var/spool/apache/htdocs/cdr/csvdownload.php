@@ -1,4 +1,4 @@
-<%
+<?php
 include "/var/spool/apache/htdocs/auth/auth.inc";
 
 include "csvfunc.inc";
@@ -481,7 +481,7 @@ if (isset($_GET['filetype'])) {
     }
   } 
 } else {
-%>
+?>
 
 
 <CENTER>
@@ -504,6 +504,6 @@ if (isset($_GET['filetype'])) {
  </TABLE>
  </FORM>
 
-<%
+<?php
 }
-%>
+?>

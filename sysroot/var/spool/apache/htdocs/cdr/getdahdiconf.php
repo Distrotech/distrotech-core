@@ -1,4 +1,4 @@
-<%
+<?php
 
 include_once "auth.inc";
 
@@ -56,12 +56,12 @@ if ($bcol == "0") {
 }
 
 print "<TR CLASS=list-color" . (($bcol %2) + 1). ">";
-%>
+?>
   
-    <TH COLSPAN=2 CLASS=heading-body><%print _("DAHDI Channels");%></TH>
+    <TH COLSPAN=2 CLASS=heading-body><?php print _("DAHDI Channels");?></TH>
   </TR>
 
-<%
+<?php
 
 $bcol++;
 print "<TR CLASS=list-color" . (($bcol % 2) + 1). "><TD COLSPAN=2 ALIGN=MIDDLE>";
@@ -77,6 +77,6 @@ foreach(explode("\n",$chans['data']) as $line) {
 }
 print "</TD></TR>\n";
 $agi->disconnect();
-%>
+?>
 </TABLE>
 </FORM>

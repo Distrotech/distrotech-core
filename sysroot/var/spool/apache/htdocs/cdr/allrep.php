@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -571,20 +571,20 @@
     print "</TABLE>";
   }
 if ($_POST['print'] < 2) {
-%>
+?>
 <FORM METHOD=POST NAME=allrep>
-<INPUT TYPE=HIDDEN NAME=disppage VALUE="<%print $_SESSION['disppage'];%>">
+<INPUT TYPE=HIDDEN NAME=disppage VALUE="<?php print $_SESSION['disppage'];?>">
 <INPUT TYPE=HIDDEN NAME=print VALUE="0">
-<INPUT TYPE=HIDDEN NAME=type VALUE="<%print $type;%>">
-<INPUT TYPE=HIDDEN NAME=exep VALUE="<%print $exep;%>">
-<INPUT TYPE=HIDDEN NAME=xexep VALUE="<%print $xexep;%>">
-<INPUT TYPE=HIDDEN NAME=date VALUE="<%print $date;%>">
-<INPUT TYPE=HIDDEN NAME=date2 VALUE="<%print $date2;%>">
-<INPUT TYPE=HIDDEN NAME=dom VALUE="<%print $dom;%>">
-<INPUT TYPE=HIDDEN NAME=dom2 VALUE="<%print $dom2;%>">
-<INPUT TYPE=HIDDEN NAME=sortby VALUE="<%print $sortby;%>">
-<INPUT TYPE=HIDDEN NAME=gsortby VALUE="<%print $gsortby;%>">
-<INPUT TYPE=HIDDEN NAME=usortby VALUE="<%print $usortby;%>">
+<INPUT TYPE=HIDDEN NAME=type VALUE="<?php print $type;?>">
+<INPUT TYPE=HIDDEN NAME=exep VALUE="<?php print $exep;?>">
+<INPUT TYPE=HIDDEN NAME=xexep VALUE="<?php print $xexep;?>">
+<INPUT TYPE=HIDDEN NAME=date VALUE="<?php print $date;?>">
+<INPUT TYPE=HIDDEN NAME=date2 VALUE="<?php print $date2;?>">
+<INPUT TYPE=HIDDEN NAME=dom VALUE="<?php print $dom;?>">
+<INPUT TYPE=HIDDEN NAME=dom2 VALUE="<?php print $dom2;?>">
+<INPUT TYPE=HIDDEN NAME=sortby VALUE="<?php print $sortby;?>">
+<INPUT TYPE=HIDDEN NAME=gsortby VALUE="<?php print $gsortby;?>">
+<INPUT TYPE=HIDDEN NAME=usortby VALUE="<?php print $usortby;?>">
 <INPUT TYPE=HIDDEN NAME=disp>
 <INPUT TYPE=HIDDEN NAME=exten>
 </FORM>
@@ -593,15 +593,15 @@ if ($_POST['print'] < 2) {
 <INPUT TYPE=HIDDEN NAME=type VALUE="">
 <INPUT TYPE=HIDDEN NAME=trunk VALUE="">
 <INPUT TYPE=HIDDEN NAME=nomenu VALUE="1">
-<INPUT TYPE=HIDDEN NAME=date VALUE="<%print $date%>">
-<INPUT TYPE=HIDDEN NAME=date2 VALUE="<%print $date2;%>">
-<INPUT TYPE=HIDDEN NAME=dom VALUE="<%print $dom;%>">
-<INPUT TYPE=HIDDEN NAME=dom2 VALUE="<%print $dom2;%>">
+<INPUT TYPE=HIDDEN NAME=date VALUE="<?php print $date?>">
+<INPUT TYPE=HIDDEN NAME=date2 VALUE="<?php print $date2;?>">
+<INPUT TYPE=HIDDEN NAME=dom VALUE="<?php print $dom;?>">
+<INPUT TYPE=HIDDEN NAME=dom2 VALUE="<?php print $dom2;?>">
 <INPUT TYPE=HIDDEN NAME=mweight VALUE="on">
 <INPUT TYPE=HIDDEN NAME=morder VALUE="sum(cost)">
 <INPUT TYPE=HIDDEN NAME=disp VALUE="ANSWERED">
 <INPUT TYPE=HIDDEN NAME=exten>
 <INPUT TYPE=HIDDEN NAME=pclass>
-</FORM><%
+</FORM><?php
 }
-%>
+?>

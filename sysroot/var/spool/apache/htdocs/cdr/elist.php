@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -50,26 +50,26 @@ $bcolor[0]="list-color2";
 $bcolor[1]="list-color1";
 
 if ($_POST['print'] < 2) {
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=printform>
 <INPUT TYPE=HIDDEN NAME=print>
-<INPUT TYPE=HIDDEN NAME=disppage VALUE="<%print $_SESSION['disppage'];%>">
+<INPUT TYPE=HIDDEN NAME=disppage VALUE="<?php print $_SESSION['disppage'];?>">
 </FORM>
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 
 </FORM>
 <TR CLASS=list-color2>
-<TH CLASS=heading-body COLSPAN=5><%print _("Extension List");%></TH>
+<TH CLASS=heading-body COLSPAN=5><?php print _("Extension List");?></TH>
 </TR>
 <TR CLASS=list-color1>
-<TH CLASS=heading-body2 WIDTH=12%><%print _("Exten.");%></TH>
-<TH CLASS=heading-body2 WIDTH=22%><%print _("User");%></TH>
-<TH CLASS=heading-body2 WIDTH=22%><%print _("Email");%></TH>
-<TH CLASS=heading-body2 WIDTH=22%><%print _("Alt Contact");%></TH>
-<TH CLASS=heading-body2 WIDTH=22%><%print _("Office/Loc.");%></TH>
+<TH CLASS=heading-body2 WIDTH=12%><?php print _("Exten.");?></TH>
+<TH CLASS=heading-body2 WIDTH=22%><?php print _("User");?></TH>
+<TH CLASS=heading-body2 WIDTH=22%><?php print _("Email");?></TH>
+<TH CLASS=heading-body2 WIDTH=22%><?php print _("Alt Contact");?></TH>
+<TH CLASS=heading-body2 WIDTH=22%><?php print _("Office/Loc.");?></TH>
 </TR>
-<%
+<?php
 } else {
     $data=array(_("Exten."),_("User"),_("Email"),_("Alt Contact"),_("Office/Loc."));
     $dataout="\"" . str_replace(array("\"","--!@#--"),array("\"\"","\",\""),implode("--!@#--",$data)). "\"\n";
@@ -119,4 +119,4 @@ for ($i=0; $i < $num; $i++) {
 if ($_POST['print'] < 2) {
   print "</TABLE>\n";
 }
-%>
+?>

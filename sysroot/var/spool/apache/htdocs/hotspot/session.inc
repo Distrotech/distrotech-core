@@ -1,4 +1,4 @@
-<%
+<?php
 include "../session.inc";
 
 session_name("hotspot_auth");
@@ -35,4 +35,4 @@ if ($_GET['save_login'] == "on") {
   $_SESSION['password']="";
   $_SESSION['save_login']=false;
 }
-%>
+?>

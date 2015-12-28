@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -32,16 +32,16 @@ if (isset($pbxupdate)) {
     pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('BROUTE','$bgroup','$newroute')");
   }
 }
-%>
+?>
 
 <CENTER>
 <FORM METHOD=POST NAME=grrtform onsubmit="ajaxsubmit(this.name);return false">
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
 <TR CLASS=list-color2>
-  <TH CLASS=heading-body COLSPAN=2><%print _("Asterisk PBX Group Routing Configuration");%></TH>
+  <TH CLASS=heading-body COLSPAN=2><?php print _("Asterisk PBX Group Routing Configuration");?></TH>
 </TR>
 <TR CLASS=list-color1>
-<%
+<?php
 $bgroups=pg_query("SELECT DISTINCT grp.value,route.value FROM astdb AS grp LEFT OUTER JOIN astdb AS route ON (route.key=grp.value AND route.family='BROUTE') WHERE grp.key='BGRP' AND grp.value != '' ORDER BY grp.value;");
 $bgnum=pg_num_rows($bgroups);
 
@@ -55,22 +55,22 @@ if ($bgnum > 0) {
     }
     print "</OPTION>\n";
   }
-%>
+?>
   </SELECT>
   </TD></TR>
-  <TR CLASS=list-color2><TD><%print _("Destination To Route To When Reception Is Not Available/After Hours");%></TD><TD>
+  <TR CLASS=list-color2><TD><?php print _("Destination To Route To When Reception Is Not Available/After Hours");?></TD><TD>
     <INPUT TYPE=TEXT NAME=newroute></TD></TR>
   </TR>
   <TR CLASS=list-color1>
     <TD ALIGN=MIDDLE COLSPAN=2>
       <INPUT TYPE=RESET>
-      <INPUT TYPE=SUBMIT NAME=subme onclick=this.name='pbxupdate' VALUE="<%print _("Save Changes");%>">
+      <INPUT TYPE=SUBMIT NAME=subme onclick=this.name='pbxupdate' VALUE="<?php print _("Save Changes");?>">
     </TD>
-<%
+<?php
 } else {
   print "<TH COLSPAN=2>" . _("There Are No Groups Configured") . "</TH>";
 }
-%>
+?>
 </TR>
 </TABLE>
 </FORM>

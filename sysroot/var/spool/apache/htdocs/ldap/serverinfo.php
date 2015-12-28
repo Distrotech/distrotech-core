@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -24,13 +24,13 @@
     $ld=ldap_delete($ds,$dn);
     return;
   }
-%>
+?>
 <FORM METHOD=POST>
-<INPUT TYPE=HIDDEN NAME=euser VALUE="<%print $euser;%>">
+<INPUT TYPE=HIDDEN NAME=euser VALUE="<?php print $euser;?>">
 <CENTER>
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
 
-<%
+<?php
   $sr=ldap_search($ds,"ou=Admin","(&(objectclass=groupofnames)(member=" . $ldn . ")(cn=Admin Access))");
   if (ldap_count_entries($ds,$sr) == 1) {
     $ADMIN_USER="admin";
@@ -221,52 +221,52 @@
     }
     
     if (! $hidea[$attr]) {
-%>
-      <TR<% print "$bcolor"%>><TD WIDTH=50%>
-<%
+?>
+      <TR<?php print "$bcolor"?>><TD WIDTH=50%>
+<?php
         if ((isset($submited)) && ($rejar[$attr])) {
            print "<FONT COLOR=RED>*</FONT>";
         } else if ($rejar[$attr]) {
           print "<B>";
         }
         print $descrip[$attr];
-%>
+?>
       </TD>
       <TD WIDTH=50%
-<%
+<?php
         if (($dnaa[$attr]) || ($PHP_AUTH_USER != $euser) && ($PHP_AUTH_USER != "admin") && ($ADMIN_USER != "admin")) {
-%>
-          ><INPUT TYPE=HIDDEN NAME=<%print $attr;%> VALUE="<%print $$attr;%>"><%print $$attr;%>
-<%
+?>
+          ><INPUT TYPE=HIDDEN NAME=<?php print $attr;?> VALUE="<?php print $$attr;?>"><?php print $$attr;?>
+<?php
         } else {
           if (($mline[$attr]) || ($b64[$attr])){
-%>
-            ><TEXTAREA NAME=<%print $attr;%> COLS=40 ROWS=5><%print $$attr;%></TEXTAREA>
-<%
+?>
+            ><TEXTAREA NAME=<?php print $attr;?> COLS=40 ROWS=5><?php print $$attr;?></TEXTAREA>
+<?php
           } elseif ($bfile[$attr]) {
-%>
-            ><INPUT TYPE=FILE  NAME=<%print $attr;%> COLS=40 ROWS=5>
-<%
+?>
+            ><INPUT TYPE=FILE  NAME=<?php print $attr;?> COLS=40 ROWS=5>
+<?php
           } else {
             if ($attr != "userPassword") {
-%>
-              ><INPUT TYPE=TEXT SIZE=40 NAME=<%print $attr;%> VALUE="<%print $$attr;%>">
-<%
+?>
+              ><INPUT TYPE=TEXT SIZE=40 NAME=<?php print $attr;?> VALUE="<?php print $$attr;?>">
+<?php
             } else {
-%>
+?>
               ><INPUT TYPE=PASSWORD SIZE=40 NAME=pass1 VALUE="">
-              <TR <%print "$bcolor2"%>><TD WIDTH=50%>Confirm Password</TD>
+              <TR <?php print "$bcolor2"?>><TD WIDTH=50%>Confirm Password</TD>
               <TD WIDTH=50%>
               <INPUT TYPE=PASSWORD SIZE=40 NAME=pass2 VALUE="">
-<%
+<?php
               $cnt ++;
             }
           }
         }
-%>
+?>
       </TD>
     </TR>
-<%
+<?php
       $cnt ++;
     }
   }
@@ -277,20 +277,20 @@
       $bcolor=" CLASS=list-color2";
     }
     if (($PHP_AUTH_USER == $euser) || ($PHP_AUTH_USER == "admin") || ($ADMIN_USER="admin")) {
-%>
-      <TR<% print "$bcolor"%>>
+?>
+      <TR<?php print "$bcolor"?>>
         <TD COLSPAN=2 ALIGN=MIDDLE>
-<%
+<?php
          print "<INPUT TYPE=SUBMIT VALUE=Modify NAME=update>";
          if (($ADMIN_USER == "admin") || ($PHP_AUTH_USER == "admin")) {
            print "<INPUT TYPE=SUBMIT VALUE=Delete NAME=delete>";
          }
          print "<INPUT TYPE=RESET VALUE=Reset>";
-%>
+?>
        </TD>
     </TR>
-<%
+<?php
     }
-%>
+?>
 </TABLE>
 </FORM>

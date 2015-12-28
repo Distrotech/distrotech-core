@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -37,15 +37,15 @@ if (isset($_POST['addagent'])) {
   $uncheck=pg_query($db,"SELECT realmid FROM reseller 
                                    WHERE username = '" . $_POST['username'] . "' AND
                                          realmid = " . $_SESSION['realmid'] . " LIMIT 1");
-  if (pg_num_rows($uncheck) != 0) {%>
+  if (pg_num_rows($uncheck) != 0) {?>
     <SCRIPT>
       alert("Username In Use.\nNot Added!");
-    </SCRIPT><%
+    </SCRIPT><?php
     $_POST['username']="";
-  } else if ($pass == "") {%>
+  } else if ($pass == "") {?>
     <SCRIPT>
       alert("Password Mismatch.\nNot Added!");
-    </SCRIPT><%
+    </SCRIPT><?php
   } else {
     $action="Editing ";
     $_POST['edituser']=$_POST['username'];
@@ -127,10 +127,10 @@ if (isset($_POST['addagent'])) {
                                       WHERE id = '" . $editid . "'");
       }
     }
-  } else {%>
+  } else {?>
     <SCRIPT>
       alert("Password Mismatch.\nNot Modified!");
-    </SCRIPT><%
+    </SCRIPT><?php
     $action="Adding ";
     $admin="";
     $_POST['description']="";
@@ -178,44 +178,44 @@ if (isset($_POST['addagent'])) {
 if (!isset($_POST['seslimit'])) {
   $_POST['seslimit']="180";
 }
-%>
+?>
 <FORM NAME=editagent METHOD=POST onsubmit="ajaxsubmit(this.name);return false">
 <CENTER>
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <TR CLASS=list-color2>
-<TH COLSPAN=2 CLASS=heading-body><%print $action;%> <%if ($admin == "t") {print "Reseller";} else {print "Operator";}%>
-<%if ($_POST['edituser'] != "") {print " (" . $_POST['edituser'] . ")";}%></TH>
+<TH COLSPAN=2 CLASS=heading-body><?php print $action;?> <?php if ($admin == "t") {print "Reseller";} else {print "Operator";}?>
+<?php if ($_POST['edituser'] != "") {print " (" . $_POST['edituser'] . ")";}?></TH>
 </TR>
-<%if ($_POST['edituser'] == "") {
+<?php if ($_POST['edituser'] == "") {
   $bcolor[0]="2";
   $bcolor[1]="1";
-%><TR CLASS=list-color1>
+?><TR CLASS=list-color1>
   <TD WIDTH=50%>Username</TD>
   <TD WIDTH=50% ALIGN=LEFT>
-  <INPUT TYPE=TEXT NAME=username VALUE="<%print $_POST['username'];%>">
+  <INPUT TYPE=TEXT NAME=username VALUE="<?php print $_POST['username'];?>">
 </TD></TR>
-<%} else {
+<?php } else {
   $bcolor[0]="1";
   $bcolor[1]="2";
-%>
-  <INPUT TYPE=HIDDEN NAME=username VALUE="<%print $_POST['edituser'];%>">
-<%
+?>
+  <INPUT TYPE=HIDDEN NAME=username VALUE="<?php print $_POST['edituser'];?>">
+<?php
 }
 if (($_POST['edituser'] != "admin") || ($_SESSION['resellerid'] == 0)) {
-%>
-<TR CLASS=list-color<%print $bcolor[0];%>>
+?>
+<TR CLASS=list-color<?php print $bcolor[0];?>>
   <TD WIDTH=50%>Password</TD>
-  <TD WIDTH=50% ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=userpass1  VALUE="<%print $pass;%>"></TD></TR>
-<TR CLASS=list-color<%print $bcolor[1];%>>
+  <TD WIDTH=50% ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=userpass1  VALUE="<?php print $pass;?>"></TD></TR>
+<TR CLASS=list-color<?php print $bcolor[1];?>>
   <TD WIDTH=50%>Confirm Password</TD>
-  <TD WIDTH=50% ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=userpass2  VALUE="<%print $pass;%>"></TD></TR>
-<TR CLASS=list-color<%print $bcolor[0];%>>
+  <TD WIDTH=50% ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=userpass2  VALUE="<?php print $pass;?>"></TD></TR>
+<TR CLASS=list-color<?php print $bcolor[0];?>>
   <TD>Description</TD>
-  <TD><INPUT TYPE=TEXT NAME=description  VALUE="<%print $_POST['description'];%>"></TD>
-<TR CLASS=list-color<%print $bcolor[1];%>>
+  <TD><INPUT TYPE=TEXT NAME=description  VALUE="<?php print $_POST['description'];?>"></TD>
+<TR CLASS=list-color<?php print $bcolor[1];?>>
   <TD>Session Limit</TD>
-  <TD><INPUT TYPE=TEXT NAME=seslimit  VALUE="<%print $_POST['seslimit'];%>"></TD>
-<%
+  <TD><INPUT TYPE=TEXT NAME=seslimit  VALUE="<?php print $_POST['seslimit'];?>"></TD>
+<?php
   if (isset($_POST['edituser'])) {
     $bcolor[1]="2";
     $bcolor[0]="1";
@@ -225,11 +225,11 @@ if (($_POST['edituser'] != "admin") || ($_SESSION['resellerid'] == 0)) {
   $bcolor[1]="1";
 }
 if ($admin == "t") {
-%>
-<TR CLASS=list-color<%print $bcolor[0];%>>
+?>
+<TR CLASS=list-color<?php print $bcolor[0];?>>
   <TD>Answer Charge Increment Sold To End User(s)</TD>
   <TD><SELECT NAME=minperiod>
-<%
+<?php
   for ($i=0;$i<count($mperiod);$i++) {
     print "<OPTION VALUE=" . $mperiod[$i];
     if ($_POST['minperiod'] == $mperiod[$i]) {
@@ -237,12 +237,12 @@ if ($admin == "t") {
     }
     print ">" . $mperiod[$i] . "</OPTION>";
   }
-%>
+?>
 </SELECT></TD></TR>
-<TR CLASS=list-color<%print $bcolor[1];%>>
+<TR CLASS=list-color<?php print $bcolor[1];?>>
   <TD>Call Time Increments Sold To End User(s)</TD>
   <TD><SELECT NAME=sellperiod>
-<%
+<?php
   for ($i=0;$i<count($speriod);$i++) {
     print "<OPTION VALUE=" . $speriod[$i];
     if ($_POST['sellperiod'] == $speriod[$i]) {
@@ -250,24 +250,24 @@ if ($admin == "t") {
     }
     print ">" . $speriod[$i] . "</OPTION>";
   }
-%>
-</SELECT></TD></TR><%
-  if (($editid != $_SESSION['resellerid']) || ($_SESSION['resellerid'] == "0")) {%>
-  <TR CLASS=list-color<%print $bcolor[0];%>>
+?>
+</SELECT></TD></TR><?php
+  if (($editid != $_SESSION['resellerid']) || ($_SESSION['resellerid'] == "0")) {?>
+  <TR CLASS=list-color<?php print $bcolor[0];?>>
     <TD>Answer Charge Increment Bought</TD>
-    <TD><SELECT NAME=buyminperiod><%
+    <TD><SELECT NAME=buyminperiod><?php
     for ($i=0;$i<count($mperiod);$i++) {
       print "<OPTION VALUE=" . $mperiod[$i];
       if ($_POST['buyminperiod'] == $mperiod[$i]) {
         print " SELECTED";
       }
       print ">" . $mperiod[$i] . "</OPTION>";  
-    }%>
+    }?>
   </SELECT></TD></TR>
-  <TR CLASS=list-color<%print $bcolor[1];%>>
+  <TR CLASS=list-color<?php print $bcolor[1];?>>
     <TD>Call Time Increments Bought</TD>
     <TD><SELECT NAME=buyperiod>
-  <%
+  <?php
     for ($i=0;$i<count($speriod);$i++) {
       print "<OPTION VALUE=" . $speriod[$i];
       if ($_POST['buyperiod'] == $speriod[$i]) {
@@ -279,10 +279,10 @@ if ($admin == "t") {
     if ($editid != $_SESSION['resellerid']) {
       $tariff=pg_query($db,"SELECT tariffcode,tariffname
                          FROM tariff WHERE tariffcode LIKE '" . $_SESSION['resellerid'] . "-%' ORDER BY tariffname");
-      $num=pg_num_rows($tariff);%>
-    <TR CLASS=list-color<%print $bcolor[0];%>>
+      $num=pg_num_rows($tariff);?>
+    <TR CLASS=list-color<?php print $bcolor[0];?>>
       <TD>Supplied Rate</TD>
-      <TD><SELECT NAME=buyrate><%
+      <TD><SELECT NAME=buyrate><?php
       for ($i=0; $i < $num; $i++) {
         $r = pg_fetch_row($tariff,$i);
         $rcode=substr($r[0],strpos($r[0],"-")+1);
@@ -295,10 +295,10 @@ if ($admin == "t") {
       print "</SELECT></TD></TR>";
       if (($_SESSION['resellerid'] == "0") && ($editid != $_SESSION['resellerid'])) {
         $realms=pg_query($db,"SELECT id,description FROM realm ORDER BY description");
-        $num=pg_num_rows($realms);%>
-      <TR CLASS=list-color<%print $bcolor[1];%>>
+        $num=pg_num_rows($realms);?>
+      <TR CLASS=list-color<?php print $bcolor[1];?>>
         <TD>Authentication Realm</TD>
-        <TD><SELECT NAME=userrealm><%
+        <TD><SELECT NAME=userrealm><?php
         for ($i=0; $i < $num; $i++) {
           $r = pg_fetch_row($realms,$i);
           print  "<OPTION VALUE=" . $r[0];
@@ -330,28 +330,28 @@ if ($admin == "t") {
 } else {
   /*Add/Edit Operator*/
   if (isset($_POST['edituser'])) {
-%>
-    <TR CLASS=list-color<%print $bcolor[0];%>><%
-  } else {%>
-    <TR CLASS=list-color<%print $bcolor[0];%>><%
+?>
+    <TR CLASS=list-color<?php print $bcolor[0];?>><?php
+  } else {?>
+    <TR CLASS=list-color<?php print $bcolor[0];?>><?php
   }
 }
 
-if ($_POST['edituser'] == "") {%>
+if ($_POST['edituser'] == "") {?>
   <TD ALIGN=MIDDLE COLSPAN=2><INPUT TYPE=SUBMIT onclick=this.name='addagent' VALUE="Add">
-<%} else {%>
+<?php } else {?>
   <TD ALIGN=MIDDLE COLSPAN=2>
   <INPUT TYPE=SUBMIT onclick=this.name='updateuser' VALUE="Update">
-<%
+<?php
     if ($editid != $_SESSION['resellerid']) {
-%>
+?>
       <INPUT TYPE=HIDDEN NAME=deluser>
-      <INPUT TYPE=BUTTON ONCLICK="deleteconf('This <%if ($admin == "t") {print "Reseller";} else {print "Operator";}%>',document.editagent,document.editagent.deluser)" VALUE="Delete">
+      <INPUT TYPE=BUTTON ONCLICK="deleteconf('This <?php if ($admin == "t") {print "Reseller";} else {print "Operator";}?>',document.editagent,document.editagent.deluser)" VALUE="Delete">
   
-<%
+<?php
     }
   }
-%>
+?>
   </TD></TR>
 </TABLE>
 </FORM>

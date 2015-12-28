@@ -5,7 +5,7 @@
 <INPUT TYPE=HIDDEN NAME=dbfam>
 
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
-<%
+<?php
 include_once "uauth.inc";
 include_once "apifunc.inc";
 include_once "autoadd.inc";
@@ -59,19 +59,19 @@ if (($_POST['print'] != "1") &&  ($SUPER_USER == 1)) {
 }
 
 
-%>
+?>
 <TH CLASS=heading-body2>Extension</TH>
 <TH CLASS=heading-body2>Port</TH>
 
 <TH CLASS=heading-body2>DND</TH>
-<TH CLASS=heading-body2><%print _("Fwd. Imm.");%></TH>
-<TH CLASS=heading-body2><%print _("Fwd. Busy");%></TH>
-<TH CLASS=heading-body2><%print _("Fwd. NA");%></TH>
-<TH CLASS=heading-body2><%print _("R. Time");%></TH>
-<TH CLASS=heading-body2><%print _("V. Mail");%></TH>
-<TH CLASS=heading-body2><%print _("C. Wait.");%></TH></TR>
+<TH CLASS=heading-body2><?php print _("Fwd. Imm.");?></TH>
+<TH CLASS=heading-body2><?php print _("Fwd. Busy");?></TH>
+<TH CLASS=heading-body2><?php print _("Fwd. NA");?></TH>
+<TH CLASS=heading-body2><?php print _("R. Time");?></TH>
+<TH CLASS=heading-body2><?php print _("V. Mail");?></TH>
+<TH CLASS=heading-body2><?php print _("C. Wait.");?></TH></TR>
 
-<%
+<?php
 $apiinf=apiquery($apiquery);
 
 $chaninf=array();
@@ -91,11 +91,11 @@ for ($pkt=0;$pkt < count($apiinf);$pkt++) {
       if ($$toadd == "on") {
         $nexten=createexten("","","","",$port);
         if ($nexten == "") {
-%>
+?>
 <SCRIPT>
 alert('Error: Cannot Create A Extension Please Add Manualy.');
 </SCRIPT>
-<%
+<?php
         }
       }
     }
@@ -254,7 +254,7 @@ if ($_POST['print'] != "1") {
   print "<TR CLASS=list-color" . (($rcol % 2)+1) . "><TH COLSPAN=" . $colspan . " CLASS=heading-body>
 <INPUT TYPE=SUBMIT onclick=this.name='authexten' VALUE=\"Add/Delete\"><INPUT TYPE=BUTTON NAME=pbutton VALUE=\"" . _("Print") . "\" ONCLICK=\"printpage(document.ppage)\"></TH></TR>";
 }
-%>
+?>
 </FORM>
 </TABLE>
 <FORM NAME=ppage METHOD=POST>

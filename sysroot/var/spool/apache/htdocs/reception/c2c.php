@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -63,31 +63,31 @@
  //   print $wrets; 
 
     fclose($socket);
-%>
+?>
     <SCRIPT>
       window.close();
     </SCRIPT>
-<%
-  } else {%>
-    <link rel="stylesheet" type="text/css" href="/style.php?style=<%print $style;%>">
+<?php
+  } else {?>
+    <link rel="stylesheet" type="text/css" href="/style.php?style=<?php print $style;?>">
     <script language="JavaScript" src="/hints.js" type="text/javascript"></script>
     <script language="JavaScript" src="/hints_cfg.php?disppage=reception%2Fc2c.php" type="text/javascript"></script>
     <CENTER>
     <FORM METHOD=POST>
     <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
       <TR CLASS=list-color2>
-        <TH COLSPAN=2 ALIGN=CENTER CLASS=heading-body><%print _("Web Quick Dial");%></TH>
+        <TH COLSPAN=2 ALIGN=CENTER CLASS=heading-body><?php print _("Web Quick Dial");?></TH>
       </TR><TR  CLASS=list-color1>
-        <TD ALIGN=LEFT onmouseover="myHint.show('QC0')" onmouseout="myHint.hide()"><%print _("Number/Telemail To Dial");%></TD>
+        <TD ALIGN=LEFT onmouseover="myHint.show('QC0')" onmouseout="myHint.hide()"><?php print _("Number/Telemail To Dial");?></TD>
         <TD><INPUT TYPE=TEXT NAME=numtocall></TD>
       </TR><TR  CLASS=list-color2>
-        <TD ALIGN=LEFT onmouseover="myHint.show('QC1')" onmouseout="myHint.hide()"><%print _("Call Me Back On (optional)");%></TD>
+        <TD ALIGN=LEFT onmouseover="myHint.show('QC1')" onmouseout="myHint.hide()"><?php print _("Call Me Back On (optional)");?></TD>
         <TD><INPUT TYPE=TEXT NAME=callback></TD>
       </TR><TR CLASS=list-color1>
         <TD COLSPAN=2 ALIGN=CENTER><INPUT TYPE=SUBMIT></TD>
       </TR>
     </TABLE>
     </FORM>
-    <%
+    <?php
   }
-%>
+?>

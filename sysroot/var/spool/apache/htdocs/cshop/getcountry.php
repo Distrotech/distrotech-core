@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -69,10 +69,10 @@ if (($_POST['newplan'] != "") && (isset($_POST['mkplan']))) {
   if ((pg_num_rows($tcount) > 0 ) && ($_POST['overwrite'] != "on")){
     $tcode=pg_fetch_array($tcount,0);
     $_SESSION['tariffcode']=$tcode[0];
-%>
+?>
       <SCRIPT>
         alert("Tariff Plan Already Exists Not Adding")
-      </SCRIPT><%
+      </SCRIPT><?php
   } else {
     $tcount=pg_query("SELECT tariffcode FROM tariff WHERE tariffcode LIKE '" . $_SESSION['resellerid'] . "-%'");
     $ntcode=pg_num_rows($tcount);
@@ -126,7 +126,7 @@ if (($_POST['newplan'] != "") && (isset($_POST['mkplan']))) {
   return;
 }
 $_SESSION['disppage']="cshop/getcsub.php";
-%>
+?>
 <CENTER>
 <FORM NAME=getcountry METHOD=POST onsubmit="ajaxsubmit(this.name);return false">
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
@@ -137,7 +137,7 @@ $_SESSION['disppage']="cshop/getcsub.php";
 <TD WIDTH=50%>Select Country To Alter</TD>
 <TD>
 <SELECT NAME=country>
-<%
+<?php
 
 for ($i=0; $i < $num; $i++) {
   $r = pg_fetch_row($country,$i);
@@ -147,24 +147,24 @@ for ($i=0; $i < $num; $i++) {
   }
   print ">" . $r[1] . "</OPTION>\n";
 }
-%>
+?>
 </SELECT></TD></TR>
 <TR CLASS=list-color2><TH COLSPAN=2>
 <INPUT TYPE=BUTTON ONCLICK=openpage('cshop/gettplan.php','tariffs') VALUE="<<">
 <INPUT TYPE=SUBMIT onclick=this.name='getcountry' VALUE="Edit Country">
-<%  
-if ($_SESSION['resellerid'] == 0) {%>
+<?php  
+if ($_SESSION['resellerid'] == 0) {?>
   <INPUT TYPE=BUTTON ONCLICK="deleteconf('This Country',document.getcountry,document.getcountry.delcountry)" VALUE="Delete Country">
-<%
+<?php
 }
-if (isset($_SESSION['country'])) {%>
+if (isset($_SESSION['country'])) {?>
   <INPUT TYPE=BUTTON ONCLICK=openpage('cshop/getcsub.php','tariffs') VALUE=">>">
-<% 
+<?php 
 }
-%>
+?>
 </TH></TR>
-<%
-if ($_SESSION['resellerid'] == 0) {%>
+<?php
+if ($_SESSION['resellerid'] == 0) {?>
 <TR CLASS=list-color1>
 <TH COLSPAN=2 CLASS=heading-body2>Add NEW Country</TH>
 </TR>
@@ -177,7 +177,7 @@ if ($_SESSION['resellerid'] == 0) {%>
 <TD><INPUT NAME=newcountrycode VALUE=""></TD>
 </TR>
 <TR CLASS=list-color2><TD ALIGN=MIDDLE COLSPAN=2><INPUT TYPE=SUBMIT onclick=this.name='addcountry'></TD></TR>
-<%}%>
+<?php }?>
 <INPUT TYPE=HIDDEN NAME=delcountry>
 </FORM>
 </TABLE>

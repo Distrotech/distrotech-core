@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -18,8 +18,8 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 include "auth.inc";
-%>
-<title>Voice Over IP Server/Firewall Operator Panel (<%print $msqldat[2] . " [" . $msqldat[3] . "]";%>)</title>
+?>
+<title>Voice Over IP Server/Firewall Operator Panel (<?php print $msqldat[2] . " [" . $msqldat[3] . "]";?>)</title>
 <style>
 <!--
 html,body {
@@ -35,11 +35,11 @@ html,body {
 
 <object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,0,0" width="100%" height="100%" id="operator_panel" align="left">
 <param name="allowScriptAccess" value="sameDomain" />
-<param name="movie" value="operator_panel.swf?mybutton=<%print $msqldat[1]%>&<% if ($msqldat[4] == "1") { print "url=mypage.php&target=crmpopup&"; }%>context=<%print $msqldat[3]%>" />
+<param name="movie" value="operator_panel.swf?mybutton=<?php print $msqldat[1]?>&<?php if ($msqldat[4] == "1") { print "url=mypage.php&target=crmpopup&"; }?>context=<?php print $msqldat[3]?>" />
 <param name="quality" value="high" />
 <param name="bgcolor" value="#ffffff" />
 <param name="scale" value="exactfit" />
-<embed src="operator_panel.swf?mybutton=<%print $msqldat[1]%>&<% if ($msqldat[4] == "1") { print "url=mypage.php&target=crmpopup&"; }%>context=<%print $msqldat[3]%>" quality="high" scale="exactfit" bgcolor="#ffffff" width="100%" height="100%" name="operator_panel" align="left" allowScriptAccess="sameDomain" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" />
+<embed src="operator_panel.swf?mybutton=<?php print $msqldat[1]?>&<?php if ($msqldat[4] == "1") { print "url=mypage.php&target=crmpopup&"; }?>context=<?php print $msqldat[3]?>" quality="high" scale="exactfit" bgcolor="#ffffff" width="100%" height="100%" name="operator_panel" align="left" allowScriptAccess="sameDomain" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" />
 </object>
 </body>
 </html>

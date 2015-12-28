@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -32,35 +32,35 @@ if (isset($pbxupdate)) {
 
 $qgetdata=pg_query($db,"SELECT key FROM astdb WHERE family='LocalPrefix' AND value='1' ORDER BY key;");
 
-%>
+?>
 
 <CENTER>
 <FORM METHOD=POST NAME=lpreform onsubmit="ajaxsubmit(this.name);return false">
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
 <TR CLASS=list-color2>
-  <TH CLASS=heading-body COLSPAN=2><%print _("Asterisk PBX Local Prefix Configuration");%></TH>
+  <TH CLASS=heading-body COLSPAN=2><?php print _("Asterisk PBX Local Prefix Configuration");?></TH>
 </TR>
 <TR CLASS=list-color1>
-<TD onmouseover="myHint.show('LP0')" onmouseout="myHint.hide()"><%print _("Select Prefix To Delete");%></TD>
+<TD onmouseover="myHint.show('LP0')" onmouseout="myHint.hide()"><?php print _("Select Prefix To Delete");?></TD>
 <TD><SELECT NAME=key>
-<OPTION VALUE=""><%print _("Add New Prefix Bellow");%></OPTION>
-<%
+<OPTION VALUE=""><?php print _("Add New Prefix Bellow");?></OPTION>
+<?php
 $dnum=pg_num_rows($qgetdata);
 for($i=0;$i<$dnum;$i++){
   $getdata=pg_fetch_array($qgetdata,$i);
   print "<OPTION VALUE=" . $getdata[0] . ">" . $getdata[0] . "</OPTION>"; 
 }
-%>
+?>
 </SELECT>
 </TR>
 <TR CLASS=list-color2>
-<TD onmouseover="myHint.show('LP1')" onmouseout="myHint.hide()"><%print _("New Prefix");%></TD>
+<TD onmouseover="myHint.show('LP1')" onmouseout="myHint.hide()"><?php print _("New Prefix");?></TD>
 <TD><INPUT TYPE=TEXT NAME=newkey></TD>
 </TR>
 <TR CLASS=list-color1>
   <TD ALIGN=MIDDLE COLSPAN=2>
     <INPUT TYPE=RESET>
-    <INPUT TYPE=SUBMIT NAME=subme onclick=this.name='pbxupdate' VALUE="<%print _("Save Changes");%>">
+    <INPUT TYPE=SUBMIT NAME=subme onclick=this.name='pbxupdate' VALUE="<?php print _("Save Changes");?>">
   </TD>
 </TR>
 </TABLE>

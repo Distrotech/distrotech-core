@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -23,20 +23,20 @@ if (is_file("auth.inc")) {
 } else {
   include_once "reception/auth.inc";
 }
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=irateform onsubmit="ajaxsubmit(this.name);return false">
-<INPUT TYPE=HIDDEN NAME=countrycode VALUE="<%print $countrycode;%>">
-<INPUT TYPE=HIDDEN NAME=subcode VALUE="<%print $subcode;%>">
+<INPUT TYPE=HIDDEN NAME=countrycode VALUE="<?php print $countrycode;?>">
+<INPUT TYPE=HIDDEN NAME=subcode VALUE="<?php print $subcode;?>">
 <INPUT TYPE=HIDDEN NAME=nomenu VALUE=1>
 
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
   <TR CLASS=list-color2>
-    <TH CLASS=heading-body COLSPAN=2><%print _("International Rate Setup");%></TH>
+    <TH CLASS=heading-body COLSPAN=2><?php print _("International Rate Setup");?></TH>
   </TR>
   <TR CLASS=list-color1>
 
-<%
+<?php
 
 if (isset($uprate)) {
   $peaksec=sprintf("%d",($peaksec*100000)/60);
@@ -52,21 +52,21 @@ if (pg_num_rows($qgetdata) > 0) {
   $qgetdata=pg_query($db,"SELECT peaksec*60/100000.0,offpeaksec*60/100000.0 FROM intrates WHERE validfrom < now() AND validto > now() AND countrycode='" . $countrycode . "' AND subcode='" . $subcode . "'");
   $getdata=pg_fetch_array($qgetdata,0);
 }
-%>
+?>
   <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('GR5')" onmouseout="myHint.hide()"><%print _("Peak Rate/m");%></TD>
-  <TD><INPUT TYPE=TEXT SIZE=12 NAME=peaksec VALUE="<%print sprintf("%0.4f",$getdata[0]);%>">
+  <TD onmouseover="myHint.show('GR5')" onmouseout="myHint.hide()"><?php print _("Peak Rate/m");?></TD>
+  <TD><INPUT TYPE=TEXT SIZE=12 NAME=peaksec VALUE="<?php print sprintf("%0.4f",$getdata[0]);?>">
   </TR>
   <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('GR6')" onmouseout="myHint.hide()"><%print _("Off Peak Rate/m");%></TD>
-  <TD><INPUT TYPE=TEXT SIZE=12 NAME=offpeaksec VALUE="<%print sprintf("%0.4f",$getdata[1]);%>">
+  <TD onmouseover="myHint.show('GR6')" onmouseout="myHint.hide()"><?php print _("Off Peak Rate/m");?></TD>
+  <TD><INPUT TYPE=TEXT SIZE=12 NAME=offpeaksec VALUE="<?php print sprintf("%0.4f",$getdata[1]);?>">
   </TR>
-  <INPUT TYPE=HIDDEN NAME=router VALUE="<%print $router;%>">
-  <INPUT TYPE=HIDDEN NAME=channel VALUE="<%print $channel;%>">
+  <INPUT TYPE=HIDDEN NAME=router VALUE="<?php print $router;?>">
+  <INPUT TYPE=HIDDEN NAME=channel VALUE="<?php print $channel;?>">
   <TR CLASS=list-color1>
     <TD ALIGN=MIDDLE COLSPAN=2>
       <INPUT TYPE=RESET>
-      <INPUT TYPE=SUBMIT NAME=uprate VALUE="<%print _("Modify");%>">
+      <INPUT TYPE=SUBMIT NAME=uprate VALUE="<?php print _("Modify");?>">
     </TD>
 </TR>
 </TABLE>

@@ -1,4 +1,4 @@
-<%
+<?php
 include "../cdr/auth.inc";
 
 $cellw=72;
@@ -36,7 +36,7 @@ if (($key != "") && ($key != "")) {
  $agi->disconnect();
 }
 
-%>
+?>
 <SCRIPT>
 function editkey(keyno) {
   document.fkeyedit.dest.value=prompt('Please Enter The Extension Number To Assign To Key'+keyno+'\nEnter 0 To Delete The Maping');
@@ -48,7 +48,7 @@ function editkey(keyno) {
 </SCRIPT>
 
 <MAP NAME=EXPANEL ID=EXPANEL>
-<%
+<?php
 
 if ($type == "kp" ) {
   $amax=12;
@@ -93,8 +93,8 @@ for($key=1;$key <= $amax;$key++) {
 
 print "</MAP>\n";
 
-%>
-<IMG SRC=/images/snom-<%print $exten . "-" . $type;%>.png USEMAP=#EXPANEL BORDER=0>
+?>
+<IMG SRC=/images/snom-<?php print $exten . "-" . $type;?>.png USEMAP=#EXPANEL BORDER=0>
 
 <FORM NAME=fkeyedit METHOD=POST>
   <INPUT TYPE=HIDDEN NAME=key>

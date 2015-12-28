@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -147,12 +147,12 @@ if ($zdata['echocancel'] == "yes") {
 }
 
 
-%>
-<INPUT TYPE=HIDDEN NAME=zaptrunk VALUE=<%print $zaptrunk;%>>
+?>
+<INPUT TYPE=HIDDEN NAME=zaptrunk VALUE=<?php print $zaptrunk;?>>
 <INPUT TYPE=HIDDEN NAME=update VALUE=seen>
-  <TH CLASS=heading-body COLSPAN=2><%print _("Configuration For Digium Trunk Group") . " " . $zaptrunk;%></TH>
+  <TH CLASS=heading-body COLSPAN=2><?php print _("Configuration For Digium Trunk Group") . " " . $zaptrunk;?></TH>
 </TR>
-<%
+<?php
 $col=0;
 while(list($zapopt,$zapval)=each($zdata)) {
   if ($label[$zapopt] != "") {
@@ -188,11 +188,11 @@ while(list($zapopt,$zapval)=each($zdata)) {
   print "\n  </TD>\n</TR>";
   $col++;
 }
-%>
-<TR CLASS=list-color<%print (($col % 2) +1);%>>
+?>
+<TR CLASS=list-color<?php print (($col % 2) +1);?>>
   <TD ALIGN=MIDDLE COLSPAN=2>
     <INPUT TYPE=RESET>
-    <INPUT TYPE=SUBMIT NAME=pbxupdate VALUE="<%print _("Save");%>">
+    <INPUT TYPE=SUBMIT NAME=pbxupdate VALUE="<?php print _("Save");?>">
   </TD>
 </TR>
 </TABLE>

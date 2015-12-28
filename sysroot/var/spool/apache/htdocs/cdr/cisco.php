@@ -1,4 +1,4 @@
-<%
+<?php
 include "cisco.inc";
 include "auth.inc";
 
@@ -8,4 +8,4 @@ include "auth.inc";
 
 ciscoxml("0463","1925","192.168.2.1","0022555DE1C3");
 ciscoxml("0464","1864","192.168.2.1","002290036AEE");
-%>
+?>

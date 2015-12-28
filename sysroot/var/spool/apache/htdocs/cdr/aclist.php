@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -23,14 +23,14 @@ if ($ADMIN_USER != "admin") {
   return;
 }
 
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=mrepform onsubmit="ajaxsubmit(this.name);return false">
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <TR CLASS=list-color2><TH CLASS=heading-body COLSPAN=2>Monthly Call Report</TH></TR>
 <INPUT TYPE=HIDDEN NAME=disppage VALUE="cdr/allcalls.php">
 
-<%
+<?php
   $getcdr=pg_query($db,"SELECT date_part('month',calldate) AS month,
                                date_part('year',calldate) AS year
                              from cdr where 
@@ -44,18 +44,18 @@ if ($ADMIN_USER != "admin") {
     $r = pg_fetch_row($getcdr, $i);
     array_push($amon,array('year'=>$r[1],'mon'=>$r[0]));
   }
-%>
+?>
 <TR CLASS=list-color1><TD WIDTH=50%>
   From Month
 </TD><TD WIDTH=50%>
 <SELECT NAME=dom>
-<%
+<?php
   for($dcnt=1;$dcnt <= 31;$dcnt++) {
     print "<OPTION VALUE=" . $dcnt . ">" . $dcnt . "\n";
   }
-%>
+?>
 </SELECT>
-<SELECT NAME=date><%
+<SELECT NAME=date><?php
   for($rcnt=0;$rcnt < count($amon);$rcnt++) {
     print "<OPTION VALUE=\"" . $amon[$rcnt]['mon'] . "/" . $amon[$rcnt]['year'] . "\"";
     if ((($dtime['year'] == $amon[$rcnt]['year']) && ($dtime['mon'] == $amon[$rcnt]['mon']) && (! isset($date))) ||
@@ -67,19 +67,19 @@ if ($ADMIN_USER != "admin") {
     }
     print ">" . $amon[$rcnt]['mon'] . "/" . $amon[$rcnt]['year'] . "\n"; 
   }
-%>
+?>
 </SELECT></TD></TR>
 <TR CLASS=list-color2><TD WIDTH=50%>
   To Month
 </TD><TD WIDTH=50%>
 <SELECT NAME=dom2>
-<%
+<?php
   for($dcnt=31;$dcnt > 0;$dcnt--) {
     print "<OPTION VALUE=" . $dcnt . ">" . $dcnt . "\n";
   }
-%>
+?>
 </SELECT>
-<SELECT NAME=date2><%
+<SELECT NAME=date2><?php
   for($rcnt=0;$rcnt < count($amon);$rcnt++) {
     print "<OPTION VALUE=\"" . $amon[$rcnt]['mon'] . "/" . $amon[$rcnt]['year'] . "\"";
     if ((($dtime['year'] == $amon[$rcnt]['year']) && ($dtime['mon'] == $amon[$rcnt]['mon']) && (! isset($date))) ||
@@ -91,7 +91,7 @@ if ($ADMIN_USER != "admin") {
     }
     print ">" . $amon[$rcnt]['mon'] . "/" . $amon[$rcnt]['year'] . "\n"; 
   }
-%>
+?>
 </SELECT></TD></TR>
 
 <TR CLASS=list-color1><TD WIDTH=50%>
@@ -103,8 +103,8 @@ if ($ADMIN_USER != "admin") {
 </SELECT></TD></TR>
 
 
-<TR CLASS=list-color2><TD WIDTH=50%><%print _("Search Number");%></TD><TD><INPUT NAME=search></TD></TR>
-<TR CLASS=list-color1><TD WIDTH=50%><%print _("Search Extension");%></TD><TD><INPUT NAME=extsearch></TD></TR>
+<TR CLASS=list-color2><TD WIDTH=50%><?php print _("Search Number");?></TD><TD><INPUT NAME=search></TD></TR>
+<TR CLASS=list-color1><TD WIDTH=50%><?php print _("Search Extension");?></TD><TD><INPUT NAME=extsearch></TD></TR>
 
 <TR CLASS=list-color2><TD COLSPAN=2 ALIGN=MIDDLE>
 <INPUT TYPE=SUBMIT>

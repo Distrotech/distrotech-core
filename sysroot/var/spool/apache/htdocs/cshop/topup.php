@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -21,14 +21,14 @@ if (! $db) {
   include "/var/spool/apache/htdocs/cshop/auth.inc";
 }
 
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=credtx onsubmit="ajaxsubmit(this.name);return false">
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <SCRIPT>
   var creditsearch=new TextComplete(document.credtx.acnum,ldapautodata,'creditxml.php',setautosearchurl,document.credtx,creditsearch);
 </SCRIPT>
-<%
+<?php
 
 $rlab[0]="Full Name";
 $rlab[1]="Email Address";
@@ -110,18 +110,18 @@ if (isset($_POST['conftx'])) {
     for ($j=0;$j < count($r);$j++) {
       print "<TR " . $bcolor[$j % 2] . "><TD WIDTH=50%>" . $rlab[$j] . "</TD><TD>" . $r[$j]  . "</TD></TR>";
     }
-%>
-    <TR <%print $bcolor[1];%>>    
+?>
+    <TR <?php print $bcolor[1];?>>    
     <TD>Account Name/Number</TD>
-    <TD><%print $_SESSION['acnum'];%>
+    <TD><?php print $_SESSION['acnum'];?>
     </TD></TR>
-    <TR <%print $bcolor[0];%>>
-      <TD>Ammount To Transfer (R) <%printf("%0.2f",$cavail);%> Avail.</TD>
-      <TD><%printf("R%0.2f",$_SESSION['credit']);%></TD></TR>
-    <TR <%print $bcolor[1];%>><TD ALIGN=MIDDLE COLSPAN=2><INPUT TYPE=SUBMIT VALUE="Topup Account" NAME=conftx></TD></TR>
+    <TR <?php print $bcolor[0];?>>
+      <TD>Ammount To Transfer (R) <?php printf("%0.2f",$cavail);?> Avail.</TD>
+      <TD><?php printf("R%0.2f",$_SESSION['credit']);?></TD></TR>
+    <TR <?php print $bcolor[1];?>><TD ALIGN=MIDDLE COLSPAN=2><INPUT TYPE=SUBMIT VALUE="Topup Account" NAME=conftx></TD></TR>
     </FORM>
   </TABLE>
-<%
+<?php
     return;
   } else {
     $bcolor[0]="CLASS=list-color2";
@@ -148,17 +148,17 @@ if (isset($_POST['conftx'])) {
   $ccred=pg_fetch_row($rcred,0);
   $cavail=$ccred[0];
 
-%>
-  <TR <%print $bcolor[$rcnt % 2];$rcnt ++;%>>
+?>
+  <TR <?php print $bcolor[$rcnt % 2];$rcnt ++;?>>
   <TH COLSPAN=2 CLASS=heading-body>Transfer Credit To A Account</TH>
   <TR>
-  <TR <%print $bcolor[$rcnt % 2];$rcnt ++;%>>
+  <TR <?php print $bcolor[$rcnt % 2];$rcnt ++;?>>
   <TD>Account/Card/Phone Number</TD>
     <TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=acnum autocomplete=off SIZE=40>
   </TD></TR>
-  <TR <%print $bcolor[$rcnt % 2];$rcnt++;%>>
-    <TD>Ammount To Transfer (R) <%printf("%0.2f",$cavail);%> Avail.</TD>
+  <TR <?php print $bcolor[$rcnt % 2];$rcnt++;?>>
+    <TD>Ammount To Transfer (R) <?php printf("%0.2f",$cavail);?> Avail.</TD>
     <TD><INPUT TYPE=TEXT NAME=credit></TD></TR>
-  <TR <%print $bcolor[$rcnt % 2];%>><TD COLSPAN=2 ALIGN=MIDDLE><INPUT TYPE=SUBMIT VALUE="Confirm Details" NAME=ctfx></TD></TR>
+  <TR <?php print $bcolor[$rcnt % 2];?>><TD COLSPAN=2 ALIGN=MIDDLE><INPUT TYPE=SUBMIT VALUE="Confirm Details" NAME=ctfx></TD></TR>
   </FORM>
 </TABLE>

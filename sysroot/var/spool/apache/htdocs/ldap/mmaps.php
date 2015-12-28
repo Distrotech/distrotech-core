@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -20,13 +20,13 @@
   if (! $rdn) {
     include "auth.inc";
   }
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=mmapform onsubmit="ajaxsubmit(this.name);return false">
-<INPUT TYPE=HIDDEN NAME=mmap VALUE="<%print $_POST['mmap'];%>">
+<INPUT TYPE=HIDDEN NAME=mmap VALUE="<?php print $_POST['mmap'];?>">
 <table border="0" width="90%" cellspacing="0" cellpadding="0">
 <TR CLASS=list-color2><TH CLASS=heading-body ALIGN=MIDDLE COLSPAN=2>
-<%
+<?php
 $abdn="ou=Email";
 
 $mdisc["virtuser"]=_("Virtual Users (Non System Users)");
@@ -128,18 +128,18 @@ if ($mdisc[$_POST['mmap']] != "") {
   print "<INPUT TYPE=SUBMIT onclick=this.name='mapmod' VALUE=\"" . _("Delete") . "\">\n";
   print "</TD></TR>";
 } else {
-%>
+?>
 Select Map To Edit<P><SELECT NAME=mmap>
-<OPTION VALUE="virtuser"><%print _("Virtual Users (Non System Users)");%>
-<OPTION VALUE="access"><%print _("Access Control (Deny Servers Access)");%>
-<OPTION VALUE="mailer"><%print _("Mailertable (SMTP Redirects)");%>
-<OPTION VALUE="domain"><%print _("Domaintable (Domain Rewriting)");%>
-<OPTION VALUE="horde"><%print _("Horde Domain Map (Webmail Settings)");%>
+<OPTION VALUE="virtuser"><?php print _("Virtual Users (Non System Users)");?>
+<OPTION VALUE="access"><?php print _("Access Control (Deny Servers Access)");?>
+<OPTION VALUE="mailer"><?php print _("Mailertable (SMTP Redirects)");?>
+<OPTION VALUE="domain"><?php print _("Domaintable (Domain Rewriting)");?>
+<OPTION VALUE="horde"><?php print _("Horde Domain Map (Webmail Settings)");?>
 </SELECT><P>
 <INPUT TYPE=SUBMIT onclick=this.name='mapedit' VALUE="Modify">
-<%
+<?php
 }
-%>
+?>
 </FORM>
   </TD></TR>
 </table>

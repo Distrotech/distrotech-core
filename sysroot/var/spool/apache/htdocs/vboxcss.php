@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -27,4 +27,4 @@ if (file_exists("/var/spool/apache/htdocs/images/" . $owner . "/style.css")) {
 }
 include "style.css";
 include "netsentry.css";
-%>
+?>

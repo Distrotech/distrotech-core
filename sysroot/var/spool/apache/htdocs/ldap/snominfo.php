@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -28,12 +28,12 @@
     return;
   }
 
-%>
+?>
 <FORM METHOD=POST NAME=snominfo onsubmit="ajaxsubmit(this.name);return false">
 
 <CENTER>
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
-<%
+<?php
   $sr=ldap_search($ds,"ou=Admin","(&(objectclass=groupofnames)(member=" . $ldn . ")(|(cn=Admin Access)(cn=Voip Admin)))");
   if (ldap_count_entries($ds,$sr) == 1) {
     $ADMIN_USER="admin";
@@ -174,44 +174,44 @@
     }
     
     if (! $hidea[$attr]) {
-%>
-      <TR<% print "$bcolor"%>><TD WIDTH=50% onmouseover="myHint.show('<%print $attr;%>')" onmouseout="myHint.hide()">
-<%
+?>
+      <TR<?php print "$bcolor"?>><TD WIDTH=50% onmouseover="myHint.show('<?php print $attr;?>')" onmouseout="myHint.hide()">
+<?php
         if ((isset($submited)) && ($rejar[$attr])) {
            print "<FONT COLOR=RED>*</FONT>";
         } else if ($rejar[$attr]) {
           print "<B>";
         }
         print $descrip[$attr];
-%>
+?>
       </TD>
       <TD WIDTH=50%
-<%
+<?php
         if (($dnaa[$attr]) || ($PHP_AUTH_USER != $_SESSION['classi']) && ($PHP_AUTH_USER != "admin") && ($ADMIN_USER != "admin")) {
-%>
-          ><INPUT TYPE=HIDDEN NAME=<%print $attr;%> VALUE="<%print $$attr;%>"><%print $$attr;%>
-<%
+?>
+          ><INPUT TYPE=HIDDEN NAME=<?php print $attr;?> VALUE="<?php print $$attr;?>"><?php print $$attr;?>
+<?php
         } else {
           if (($mline[$attr]) || ($b64[$attr])){
-%>
-            ><TEXTAREA NAME=<%print $attr;%> COLS=40 ROWS=5><%print $$attr;%></TEXTAREA>
-<%
+?>
+            ><TEXTAREA NAME=<?php print $attr;?> COLS=40 ROWS=5><?php print $$attr;?></TEXTAREA>
+<?php
           } elseif ($bfile[$attr]) {
-%>
-            ><INPUT TYPE=FILE  NAME=<%print $attr;%> COLS=40 ROWS=5>
-<%
+?>
+            ><INPUT TYPE=FILE  NAME=<?php print $attr;?> COLS=40 ROWS=5>
+<?php
           } else {
             if ($attr != "userPassword") {
-%>
-              ><INPUT TYPE=TEXT SIZE=40 NAME=<%print $attr;%> VALUE="<%print $$attr;%>">
-<%
+?>
+              ><INPUT TYPE=TEXT SIZE=40 NAME=<?php print $attr;?> VALUE="<?php print $$attr;?>">
+<?php
             }
           }
         }
-%>
+?>
       </TD>
     </TR>
-<%
+<?php
       $cnt ++;
     }
   }
@@ -222,20 +222,20 @@
       $bcolor=" CLASS=list-color1";
     }
     if (($PHP_AUTH_USER == $_SESSION['classi']) || ($PHP_AUTH_USER == "admin") || ($ADMIN_USER="admin")) {
-%>
-      <TR<% print "$bcolor"%>>
+?>
+      <TR<?php print "$bcolor"?>>
         <TD COLSPAN=2 ALIGN=MIDDLE>
-<%
+<?php
          print "<INPUT TYPE=SUBMIT VALUE=Modify onclick=this.name='update'>";
          if (($ADMIN_USER == "admin") || ($PHP_AUTH_USER == "admin")) {
            print "<INPUT TYPE=SUBMIT VALUE=Delete onclick=this.name='delete'>";
          }
          print "<INPUT TYPE=RESET VALUE=Reset>";
-%>
+?>
        </TD>
     </TR>
-<%
+<?php
     }
-%>
+?>
 </TABLE>
 </FORM>

@@ -1,4 +1,4 @@
-<%
+<?php
 $putdata = fopen("php://input", "r");
 
 $ruripath= explode("/", $REQUEST_URI);
@@ -9,4 +9,4 @@ while ($data = fread($putdata, 1024))
 
 fclose($fp);
 fclose($putdata);
-%>
+?>

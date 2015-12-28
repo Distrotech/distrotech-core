@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -20,18 +20,18 @@
 if (!$rdn) {
   include "auth.inc";
 }
-%>
+?>
 
 <FORM METHOD=POST NAME=mbform onsubmit="ajaxsubmit(this.name);return false">
-<INPUT TYPE=HIDDEN NAME=classi VALUE="<%print $euser;%>">
+<INPUT TYPE=HIDDEN NAME=classi VALUE="<?php print $euser;?>">
 <CENTER>
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
 <TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body>
-<%
+<?php
   print _("Editing Mail Routing");
-%>
+?>
 </TH></TR>
-<%
+<?php
   $disc=array(_("Name"),_("Destination"),_("Mail Relay"),_("Aliases"));
   $iarr=array("cn","mailroutingaddress","mailhost","maillocaladdress");
   $jshint=array("MB2","MB3","MB7","MB4","MB8");
@@ -87,27 +87,27 @@ if (!$rdn) {
 
     $sr=ldap_search($ds,"ou=email","(&(objectclass=nisMailAlias)(objectclass=inetLocalMailRecipient))",$dnarr);
     $iinfo = ldap_get_entries($ds, $sr);
-%>
+?>
     <TR CLASS=list-color1>
       <TD onmouseover="myHint.show('MB1')" onmouseout="myHint.hide()" WIDTH=75%>
-      <%print _("Modify/Add Mailbox");%></TD>
+      <?php print _("Modify/Add Mailbox");?></TD>
       <TD><SELECT NAME=ambox>
-        <OPTION VALUE=""><%print _("Add New Mail Routing");%></OPTION><%
+        <OPTION VALUE=""><?php print _("Add New Mail Routing");?></OPTION><?php
       for($cnt=0;$cnt<$iinfo['count'];$cnt++) {
         print "<OPTION VALUE=\"" . $iinfo[$cnt]["dn"] . "\">" .  $iinfo[$cnt]["cn"][0] . "</OPTION>\n";
-      }%>
+      }?>
       </TD></TR>
-        <TR CLASS=list-color2><TD onmouseover="myHint.show('MB3')" onmouseout="myHint.hide()" WIDTH=75%><%print _("Description")%></TD>
+        <TR CLASS=list-color2><TD onmouseover="myHint.show('MB3')" onmouseout="myHint.hide()" WIDTH=75%><?php print _("Description")?></TD>
         <TD WIDTH=75%><INPUT TYPE=TEXT NAME=newambox><TD></TR>
-        <TR CLASS=list-color1><TD onmouseover="myHint.show('MB4')" onmouseout="myHint.hide()" WIDTH=75%><%print _("Mail Host To Redirect To");%></TD>
+        <TR CLASS=list-color1><TD onmouseover="myHint.show('MB4')" onmouseout="myHint.hide()" WIDTH=75%><?php print _("Mail Host To Redirect To");?></TD>
         <TD WIDTH=75%><INPUT TYPE=TEXT NAME=newamboxmh></TD></TR>
-        <TR CLASS=list-color2><TD onmouseover="myHint.show('MB4')" onmouseout="myHint.hide()" WIDTH=75%><%print _("Destination Routing Address");%></TD>
+        <TR CLASS=list-color2><TD onmouseover="myHint.show('MB4')" onmouseout="myHint.hide()" WIDTH=75%><?php print _("Destination Routing Address");?></TD>
         <TD WIDTH=75%><INPUT TYPE=TEXT NAME=newamboxmr></TD></TR>
         <TR CLASS=list-color1>
-      <TD COLSPAN=2 ALIGN=CENTER><INPUT TYPE=HIDDEN NAME=basedn VALUE="<%print $basedn%>"><INPUT TYPE=SUBMIT onclick=this.name='amboxdel' VALUE="Delete">
-        <INPUT TYPE=SUBMIT onclick=this.name='amboxup' VALUE="<%print _("Update/Add");%>">
+      <TD COLSPAN=2 ALIGN=CENTER><INPUT TYPE=HIDDEN NAME=basedn VALUE="<?php print $basedn?>"><INPUT TYPE=SUBMIT onclick=this.name='amboxdel' VALUE="Delete">
+        <INPUT TYPE=SUBMIT onclick=this.name='amboxup' VALUE="<?php print _("Update/Add");?>">
     </TD></TR></TABLE></FORM>
-<%
+<?php
     return;
   }
 
@@ -124,23 +124,23 @@ if (!$rdn) {
       $bcolor=" CLASS=list-color1";
     }
     $attr=strtolower($iarr[$i]);
-%>
-    <TR<%print $bcolor;%>>
-      <TD onmouseover="myHint.show('<%print $jshint[$i];%>')" onmouseout="myHint.hide()" WIDTH=75%>
-        <% print $disc[$i];%> 
+?>
+    <TR<?php print $bcolor;?>>
+      <TD onmouseover="myHint.show('<?php print $jshint[$i];?>')" onmouseout="myHint.hide()" WIDTH=75%>
+        <?php print $disc[$i];?> 
       </TD>
       <TD>
-<%
+<?php
         if ($attr == "maillocaladdress") {
-           %><INPUT TYPE=BUTTON VALUE="Modify Aliases" onclick=javascript:openaliasedit('<%print urlencode($iinfo[0]['cn'][0]);%>')><%
+           ?><INPUT TYPE=BUTTON VALUE="Modify Aliases" onclick=javascript:openaliasedit('<?php print urlencode($iinfo[0]['cn'][0]);?>')><?php
         } elseif ($attr == "cn") {
            print $uidinf[0];
-        } else {%>
-            <INPUT TYPE=TEXT NAME=<%print $iarr[$i];%> VALUE="<%print $iinfo[0][$attr][0];%>"><%
+        } else {?>
+            <INPUT TYPE=TEXT NAME=<?php print $iarr[$i];?> VALUE="<?php print $iinfo[0][$attr][0];?>"><?php
         }
-%>
+?>
       </TD></TR>
-<%
+<?php
   }
   $rem=$i % 2;
   if ($rem == 1) {
@@ -150,13 +150,13 @@ if (!$rdn) {
     $bcol[2]=" CLASS=list-color1";
     $bcol[1]=" CLASS=list-color2";
   }
-%>
+?>
 
-<TR <%print $bcol[2];%>><TH COLSPAN=2>  
-  <INPUT TYPE=HIDDEN NAME=ambox VALUE="<%print $ambox%>">
+<TR <?php print $bcol[2];?>><TH COLSPAN=2>  
+  <INPUT TYPE=HIDDEN NAME=ambox VALUE="<?php print $ambox?>">
   <INPUT TYPE=SUBMIT VALUE="Modify" onclick=this.name='modrec'>
-  <%if ($ADMIN_USER == "admin") {%>
-    <INPUT TYPE=SUBMIT onclick=this.name='amboxdel' VALUE="Delete"><%
-  }%>
+  <?php if ($ADMIN_USER == "admin") {?>
+    <INPUT TYPE=SUBMIT onclick=this.name='amboxdel' VALUE="Delete"><?php
+  }?>
 </TH></TR>
 </TABLE></FORM>

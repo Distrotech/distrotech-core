@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -28,11 +28,11 @@ if ($clogaccess <= 0) {
 }
 
 if ($_POST['print'] < 2){
-%>
+?>
 
 
 
-<%
+<?php
   }
   if ($sortby == "") {
     $sortby="calldate";
@@ -109,56 +109,56 @@ if ($_POST['print'] < 2){
 //  print $getcdrq . "<BR>\n";
   $getcdr=pg_query($db,$getcdrq);
 
-  if ($_POST['print'] < 2) {%>
+  if ($_POST['print'] < 2) {?>
 <FORM NAME=sortform METHOD=post>
-  <INPUT TYPE=HIDDEN NAME=sortby VALUE="<%print $osortby;%>">
-  <INPUT TYPE=HIDDEN NAME=direction VALUE="<%print $mweight;%>">
-  <INPUT TYPE=HIDDEN NAME=tavg VALUE="<%print $tavg;%>">
-  <INPUT TYPE=HIDDEN NAME=thold VALUE="<%print $thold;%>">
-  <INPUT TYPE=HIDDEN NAME=nomenu VALUE="<%print $_POST['nomenu']%>">
-  <INPUT TYPE=HIDDEN NAME=type VALUE="<%print $type;%>">
-  <INPUT TYPE=HIDDEN NAME=exep VALUE="<%print $exep;%>">
-  <INPUT TYPE=HIDDEN NAME=exten VALUE="<%print $exten;%>">
-  <INPUT TYPE=HIDDEN NAME=group VALUE="<%print $group;%>">
-  <INPUT TYPE=HIDDEN NAME=filter VALUE="<%print $ofilter;%>">
-  <INPUT TYPE=HIDDEN NAME=xexep VALUE="<%print $xexep;%>">
-  <INPUT TYPE=HIDDEN NAME=date VALUE="<%print $date;%>">
-  <INPUT TYPE=HIDDEN NAME=date2 VALUE="<%print $date2;%>">
-  <INPUT TYPE=HIDDEN NAME=dom VALUE="<%print $dom;%>">
-  <INPUT TYPE=HIDDEN NAME=dom2 VALUE="<%print $dom2;%>">
-  <INPUT TYPE=HIDDEN NAME=trunk VALUE="<%print $trunk;%>">
-  <INPUT TYPE=HIDDEN NAME=mweight VALUE="<%print $mweight;%>">
-  <INPUT TYPE=HIDDEN NAME=morder VALUE="<%print $morder;%>">
-  <INPUT TYPE=HIDDEN NAME=disp VALUE="<%print $disp;%>">
-  <INPUT TYPE=HIDDEN NAME=exten VALUE="<%print $exten;%>">
-  <INPUT TYPE=HIDDEN NAME=usern VALUE="<%print $usern;%>">
+  <INPUT TYPE=HIDDEN NAME=sortby VALUE="<?php print $osortby;?>">
+  <INPUT TYPE=HIDDEN NAME=direction VALUE="<?php print $mweight;?>">
+  <INPUT TYPE=HIDDEN NAME=tavg VALUE="<?php print $tavg;?>">
+  <INPUT TYPE=HIDDEN NAME=thold VALUE="<?php print $thold;?>">
+  <INPUT TYPE=HIDDEN NAME=nomenu VALUE="<?php print $_POST['nomenu']?>">
+  <INPUT TYPE=HIDDEN NAME=type VALUE="<?php print $type;?>">
+  <INPUT TYPE=HIDDEN NAME=exep VALUE="<?php print $exep;?>">
+  <INPUT TYPE=HIDDEN NAME=exten VALUE="<?php print $exten;?>">
+  <INPUT TYPE=HIDDEN NAME=group VALUE="<?php print $group;?>">
+  <INPUT TYPE=HIDDEN NAME=filter VALUE="<?php print $ofilter;?>">
+  <INPUT TYPE=HIDDEN NAME=xexep VALUE="<?php print $xexep;?>">
+  <INPUT TYPE=HIDDEN NAME=date VALUE="<?php print $date;?>">
+  <INPUT TYPE=HIDDEN NAME=date2 VALUE="<?php print $date2;?>">
+  <INPUT TYPE=HIDDEN NAME=dom VALUE="<?php print $dom;?>">
+  <INPUT TYPE=HIDDEN NAME=dom2 VALUE="<?php print $dom2;?>">
+  <INPUT TYPE=HIDDEN NAME=trunk VALUE="<?php print $trunk;?>">
+  <INPUT TYPE=HIDDEN NAME=mweight VALUE="<?php print $mweight;?>">
+  <INPUT TYPE=HIDDEN NAME=morder VALUE="<?php print $morder;?>">
+  <INPUT TYPE=HIDDEN NAME=disp VALUE="<?php print $disp;?>">
+  <INPUT TYPE=HIDDEN NAME=exten VALUE="<?php print $exten;?>">
+  <INPUT TYPE=HIDDEN NAME=usern VALUE="<?php print $usern;?>">
   <INPUT TYPE=HIDDEN NAME=print>
 </FORM>
 
 <FORM NAME=printform METHOD=post>
-  <INPUT TYPE=HIDDEN NAME=sortby VALUE="<%print $osortby;%>">
-  <INPUT TYPE=HIDDEN NAME=disppage VALUE="<%print $disppage;%>">
-  <INPUT TYPE=HIDDEN NAME=direction VALUE="<%print $mweight;%>">
-  <INPUT TYPE=HIDDEN NAME=tavg VALUE="<%print $tavg;%>">
-  <INPUT TYPE=HIDDEN NAME=thold VALUE="<%print $thold;%>">
-  <INPUT TYPE=HIDDEN NAME=nomenu VALUE="<%print $_POST['nomenu']%>">
-  <INPUT TYPE=HIDDEN NAME=type VALUE="<%print $type;%>">
-  <INPUT TYPE=HIDDEN NAME=exep VALUE="<%print $exep;%>">
-  <INPUT TYPE=HIDDEN NAME=exten VALUE="<%print $exten;%>">
-  <INPUT TYPE=HIDDEN NAME=filter VALUE="<%print $ofilter;%>">
-  <INPUT TYPE=HIDDEN NAME=xexep VALUE="<%print $xexep;%>">
-  <INPUT TYPE=HIDDEN NAME=date VALUE="<%print $date;%>">
-  <INPUT TYPE=HIDDEN NAME=date2 VALUE="<%print $date2;%>">
-  <INPUT TYPE=HIDDEN NAME=dom VALUE="<%print $dom;%>">
-  <INPUT TYPE=HIDDEN NAME=dom2 VALUE="<%print $dom2;%>">
-  <INPUT TYPE=HIDDEN NAME=trunk VALUE="<%print $trunk;%>">
-  <INPUT TYPE=HIDDEN NAME=mweight VALUE="<%print $mweight;%>">
-  <INPUT TYPE=HIDDEN NAME=morder VALUE="<%print $morder;%>">
-  <INPUT TYPE=HIDDEN NAME=disp VALUE="<%print $disp;%>">
-  <INPUT TYPE=HIDDEN NAME=exten VALUE="<%print $exten;%>">
-  <INPUT TYPE=HIDDEN NAME=usern VALUE="<%print $usern;%>">
+  <INPUT TYPE=HIDDEN NAME=sortby VALUE="<?php print $osortby;?>">
+  <INPUT TYPE=HIDDEN NAME=disppage VALUE="<?php print $disppage;?>">
+  <INPUT TYPE=HIDDEN NAME=direction VALUE="<?php print $mweight;?>">
+  <INPUT TYPE=HIDDEN NAME=tavg VALUE="<?php print $tavg;?>">
+  <INPUT TYPE=HIDDEN NAME=thold VALUE="<?php print $thold;?>">
+  <INPUT TYPE=HIDDEN NAME=nomenu VALUE="<?php print $_POST['nomenu']?>">
+  <INPUT TYPE=HIDDEN NAME=type VALUE="<?php print $type;?>">
+  <INPUT TYPE=HIDDEN NAME=exep VALUE="<?php print $exep;?>">
+  <INPUT TYPE=HIDDEN NAME=exten VALUE="<?php print $exten;?>">
+  <INPUT TYPE=HIDDEN NAME=filter VALUE="<?php print $ofilter;?>">
+  <INPUT TYPE=HIDDEN NAME=xexep VALUE="<?php print $xexep;?>">
+  <INPUT TYPE=HIDDEN NAME=date VALUE="<?php print $date;?>">
+  <INPUT TYPE=HIDDEN NAME=date2 VALUE="<?php print $date2;?>">
+  <INPUT TYPE=HIDDEN NAME=dom VALUE="<?php print $dom;?>">
+  <INPUT TYPE=HIDDEN NAME=dom2 VALUE="<?php print $dom2;?>">
+  <INPUT TYPE=HIDDEN NAME=trunk VALUE="<?php print $trunk;?>">
+  <INPUT TYPE=HIDDEN NAME=mweight VALUE="<?php print $mweight;?>">
+  <INPUT TYPE=HIDDEN NAME=morder VALUE="<?php print $morder;?>">
+  <INPUT TYPE=HIDDEN NAME=disp VALUE="<?php print $disp;?>">
+  <INPUT TYPE=HIDDEN NAME=exten VALUE="<?php print $exten;?>">
+  <INPUT TYPE=HIDDEN NAME=usern VALUE="<?php print $usern;?>">
   <INPUT TYPE=HIDDEN NAME=print>
-</FORM><%
+</FORM><?php
     print "<P><CENTER><TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>\n";
     print "<TR CLASS=list-color2>";
     print "<TH COLSPAN=" . $cspan . " CLASS=heading-body>Call Report For ";
@@ -343,4 +343,4 @@ if ($_POST['print'] < 2){
     $dataout="\"" . str_replace(array("\"","--!@#%^&--"),array("\"\"","\",\""),implode("--!@#%^&--",$data)). "\"\n";
     print $dataout;
   }
-%>
+?>

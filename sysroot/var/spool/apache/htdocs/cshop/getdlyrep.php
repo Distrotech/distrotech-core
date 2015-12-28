@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -24,7 +24,7 @@ $cdr=pg_query($db,"SELECT distinct date_part('year',starttime),date_part('month'
 $bcolor[0]="list-color1";
 $bcolor[1]="list-color2";
 
-%>
+?>
 <SCRIPT>
 </SCRIPT>
 <CENTER>
@@ -36,7 +36,7 @@ $bcolor[1]="list-color2";
 <INPUT TYPE=HIDDEN NAME=disppage VALUE="cshop/dlyrep.php">
 
 <TD><SELECT NAME=bmon>
-<%
+<?php
 
 $date = getdate();
 $num=pg_num_rows($cdr);
@@ -54,12 +54,12 @@ for ($i=0; $i < $num; $i++)
 
 $rem=$i % 2; 
 
-%>
+?>
 </SELECT></TD></TR>
 <TR CLASS=list-color2>
 <TH ALIGN=LEFT>Select Day</TH>
 <TD><SELECT NAME=bday>
-<%
+<?php
 $num=pg_num_rows($cdr);
 $total="0";
 for ($i=1; $i <= 31; $i++) 
@@ -74,7 +74,7 @@ for ($i=1; $i <= 31; $i++)
 
 }
 $rem=$i % 2; 
-%>
+?>
 </SELECT></TD></TR>
 <TR CLASS=list-color1>
 <TD COLSPAN=2 ALIGN=CENTER><INPUT TYPE=SUBMIT VALUE="Show Report"></TD></TR>

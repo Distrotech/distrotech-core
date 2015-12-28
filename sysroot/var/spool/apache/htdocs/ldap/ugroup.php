@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -20,11 +20,11 @@
  if (! $rdn) {
    include "auth.inc";
  }
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=ugrpform onsubmit="ajaxsubmit(this.name);return false">
 <table border="0" width="90%" cellspacing="0" cellpadding="0">
-<%
+<?php
 $abdn="ou=Groups";
 
 if (($groupedit == _("Delete")) && ($group != "")){
@@ -234,7 +234,7 @@ if (($group != "") && ($groupedit == _("Modify"))){
   print "<INPUT TYPE=SUBMIT onclick=this.name='groupedit' VALUE=\"" . _("Modify") . "\">\n";
   print "<INPUT TYPE=SUBMIT onclick=this.name='groupedit' VALUE=\"" . _("Delete") . "\">\n";
 }
-%>
+?>
 </TD></TR>
 </FORM>
 </table>

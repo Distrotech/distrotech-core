@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -51,7 +51,7 @@ $num=pg_num_rows($users);
 
 $bcolor[1]="list-color1";
 $bcolor[0]="list-color2";
-%>
+?>
 <CENTER>
 <FORM NAME=editac METHOD=POST onsubmit="ajaxsubmit(this.name);return false">
 <SCRIPT>
@@ -63,7 +63,7 @@ $bcolor[0]="list-color2";
 <TR CLASS=list-color2>
 <TH ALIGN=LEFT CLASS=heading-body2>Reseller</TH>
 <TH ALIGN=LEFT CLASS=heading-body2>DDI</TH>
-<%
+<?php
 if ($_SESSION['resellerid'] == 0) {
 //  print "<TH ALIGN=LEFT CLASS=heading-body2>Reseller</TH>";
 }
@@ -89,6 +89,6 @@ for ($i=0; $i < $num; $i++) {
 //$i++;
 $rem=$i % 2; 
 print "<TR CLASS=" . $bcolor[$rem] . "><TD ALIGN=MIDDLE COLSPAN=2><INPUT TYPE=submit NAME=setddi VALUE=Save></TD></TR>";
-%>
+?>
 </FORM>
 </TABLE>

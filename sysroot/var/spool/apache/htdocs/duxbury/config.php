@@ -1,4 +1,4 @@
-<%
+<?php
 include "../cdr/auth.inc";
 include "../cdr/autoadd.inc";
 include "../ldap/ldapbind.inc";
@@ -52,13 +52,13 @@ if ($domain == "" ) {
   $domain=$_SERVER['SERVER_NAME'];
 }
 
-%>
+?>
 <<VOIP CONFIG FILE>>Version:2.0002
 
 <GLOBAL CONFIG MODULE>
 DHCP Auto DNS      :1
 DHCP Auto Time     :1
-Host Name          :<%print "exten-" . $exten. "\n"%>
+Host Name          :<?php print "exten-" . $exten. "\n"?>
 RTP Initial Port   :10000
 RTP Port Quantity  :200
 SNTP Timeout       :60
@@ -205,19 +205,19 @@ Strict BranchPrefix:0
 Video Mute Attr    :0
 Enable Group Backup:0
 --SIP Line List--  :
-SIP1 Phone Number  :<%print $exten . "\n";%>
-SIP1 Display Name  :<%print $name . "\n";%>
+SIP1 Phone Number  :<?php print $exten . "\n";?>
+SIP1 Display Name  :<?php print $name . "\n";?>
 SIP1 Sip Name      :
-SIP1 Register Addr :<%print $domain . "\n";%>
+SIP1 Register Addr :<?php print $domain . "\n";?>
 SIP1 Register Port :5060
-SIP1 Register User :<%print $exten . "\n";%>
-SIP1 Register Pswd :<%print $pass . "\n";%>
+SIP1 Register User :<?php print $exten . "\n";?>
+SIP1 Register Pswd :<?php print $pass . "\n";?>
 SIP1 Register TTL  :1800
 SIP1 Enable Reg    :1
-SIP1 Proxy Addr    :<%print $domain . "\n";%>
+SIP1 Proxy Addr    :<?php print $domain . "\n";?>
 SIP1 Proxy Port    :5060
-SIP1 Proxy User    :<%print $exten . "\n";%>
-SIP1 Proxy Pswd    :<%print $pass . "\n";%>
+SIP1 Proxy User    :<?php print $exten . "\n";?>
+SIP1 Proxy Pswd    :<?php print $pass . "\n";?>
 SIP1 BakProxy Addr :
 SIP1 BakProxy Port :5060
 SIP1 Enable Failbac:0
@@ -338,7 +338,7 @@ LLDP Refresh Time  :60
 LLDP Learn Policy  :1
 Singalling DSCP    :46
 Voice DSCP         :46
-VLAN ID            :<%print $vlantag . "\n";%>
+VLAN ID            :<?php print $vlantag . "\n";?>
 Signalling Priority:0
 Voice Priority     :0
 VLAN Recv Check    :1
@@ -361,7 +361,7 @@ KeyLock Password   :123
 Fast Keylock Code  :
 Enable KeyLock     :0
 Emergency Call     :110
-LCD Title          :<%print $name . " (" . $exten . ")\n";%>
+LCD Title          :<?php print $name . " (" . $exten . ")\n";?>
 LCD Constrast      :5
 LCD Luminance      :1
 Backlight Off Time :30

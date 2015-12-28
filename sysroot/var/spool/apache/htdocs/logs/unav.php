@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -17,7 +17,7 @@
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-%>
+?>
   <CENTER>
   <FORM METHOD=POST NAME=ulog onsubmit="ajaxsubmit(this.name);return false;">
   <INPUT TYPE=HIDDEN NAME=disppage VALUE="logs/ulog.php">
@@ -37,7 +37,7 @@
             <TH CLASS=heading-body2>Year</TH></TR>
           <TR CLASS=list-color2><TD>
             <SELECT NAME=time_day>
-<%
+<?php
   include "uloginc.php";
   if (! isset($slog)) {
     $cur_date=getdate();
@@ -53,11 +53,11 @@
       print "    <OPTION SELECTED VALUE=$dom>$dom\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD>
   <SELECT NAME=time_month>
-<%
+<?php
   $mon_name['1']="January";
   $mon_name['2']="Febuary";
   $mon_name['3']="March";
@@ -91,11 +91,11 @@
       print "    <OPTION SELECTED VALUE=$month>$month\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD>
   <SELECT NAME=time_year>
-<%
+<?php
   for($year=2000;$year <= 2050;$year++) {
     if (($year != $cur_date['year']) && ($time_year != $year)){
       print "    <OPTION VALUE=$year>$year\n";
@@ -103,7 +103,7 @@
       print "    <OPTION SELECTED VALUE=$year>$year\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD></TR>
 <TR CLASS=list-color1 WIDTH=100%>
@@ -112,7 +112,7 @@
 <TH CLASS=heading-body2>Second</TH></TR>
 <TR CLASS=list-color2><TD><FONT SIZE=1>
   <SELECT NAME=time_hour>
-<%
+<?php
   for($hour=0;$hour < 24;$hour++) {
     if (($hour != $cur_date['hours']-1) && ($hour != $time_hour)){
       print "    <OPTION VALUE=$hour>$hour\n";
@@ -120,11 +120,11 @@
       print "    <OPTION SELECTED VALUE=$hour>$hour\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=time_min>
-<%
+<?php
   for($minute=0;$minute < 60;$minute++) {
     if (($minute != $cur_date['minutes']) && ($minute != $time_min)){
       print "    <OPTION VALUE=$minute>$minute\n";
@@ -132,11 +132,11 @@
       print "    <OPTION SELECTED VALUE=$minute>$minute\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=time_sec>
-<%
+<?php
   for($second=0;$second < 60;$second++) {
     if (($second != $cur_date['seconds']) && ($second != $time_sec)){
       print "    <OPTION VALUE=$second>$second\n";
@@ -144,7 +144,7 @@
       print "    <OPTION SELECTED VALUE=$second>$second\n";
     }
   }
-%>
+?>
   </SELECT>
 </TABLE></TD></TR>
 <TR><TD>
@@ -157,7 +157,7 @@
 <TH CLASS=heading-body2>Year</TH></TR>
 <TR CLASS=list-color1><TD>
   <SELECT NAME=mtime_day>
-<%
+<?php
   if (! isset($slog)) {
     $cur_date=getdate();
   }
@@ -168,11 +168,11 @@
       print "    <OPTION SELECTED VALUE=$dom>$dom\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD>
   <SELECT NAME=mtime_month>
-<%
+<?php
   for($month=1;$month <= 12;$month++) {
     if (($month != $cur_date['mon']) && ($mtime_month != $month)){
       print "    <OPTION VALUE=$month>$month\n";
@@ -180,11 +180,11 @@
       print "    <OPTION SELECTED VALUE=$month>$month\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD>
   <SELECT NAME=mtime_year>
-<%
+<?php
   for($year=2000;$year <= 2050;$year++) {
     if (($year != $cur_date['year']) && ($mtime_year != $year)){
       print "    <OPTION VALUE=$year>$year\n";
@@ -192,7 +192,7 @@
       print "    <OPTION SELECTED VALUE=$year>$year\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD></TR>
 <TR CLASS=list-color2 WIDTH=100%>
@@ -201,7 +201,7 @@
 <TH CLASS=heading-body2>Second</TH></TR>
 <TR CLASS=list-color1><TD>
   <SELECT NAME=mtime_hour>
-<%
+<?php
   for($hour=0;$hour < 24;$hour++) {
     if (($hour != $cur_date['hours']) && ($mtime_hour != $hour)){
       print "    <OPTION VALUE=$hour>$hour\n";
@@ -209,11 +209,11 @@
       print "    <OPTION SELECTED VALUE=$hour>$hour\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD>
   <SELECT NAME=mtime_min>
-<%
+<?php
   for($minute=0;$minute < 60;$minute++) {
     if (($minute != $cur_date['minutes']) && ($mtime_min != $minute)){
       print "    <OPTION VALUE=$minute>$minute\n";
@@ -221,11 +221,11 @@
       print "    <OPTION SELECTED VALUE=$minute>$minute\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD>
   <SELECT NAME=mtime_sec>
-<%
+<?php
   for($second=0;$second < 60;$second++) {
     if (($second != $cur_date['seconds']) && ($mtime_sec != $second)){
       print "    <OPTION VALUE=$second>$second\n";
@@ -233,7 +233,7 @@
       print "    <OPTION SELECTED VALUE=$second>$second\n";
     }
   }
-%>
+?>
   </SELECT>
 </TABLE></TD></TR>
 
@@ -245,12 +245,12 @@
 <TH CLASS=heading-body2>Protocol</TH></TR>
 <TR CLASS=list-color2><TD><SELECT NAME=direction>
   <OPTION VALUE="">Any
-  <OPTION VALUE="in" <%if ($direction == "in") {print selected;}%>>In
-  <OPTION VALUE="out"<%if ($direction == "out") {print selected;}%>>Out
-  <OPTION VALUE="fwd"<%if ($direction == "fwd") {print selected;}%>>Fwd
+  <OPTION VALUE="in" <?php if ($direction == "in") {print selected;}?>>In
+  <OPTION VALUE="out"<?php if ($direction == "out") {print selected;}?>>Out
+  <OPTION VALUE="fwd"<?php if ($direction == "fwd") {print selected;}?>>Fwd
 </SELECT></TD><TD><FONT SIZE=1><SELECT NAME=sproto>
   <OPTION VALUE="">Any
-<%
+<?php
   if ($sproto == "") {
     $sproto="";
   }
@@ -262,7 +262,7 @@
     }
     print ">$val\n";
   }
-%>  
+?>  
 </SELECT>
 </TD></TR>
 <TR CLASS=list-color1>
@@ -271,14 +271,14 @@
 <TR CLASS=list-color2>
 <TD><SELECT NAME="type">
   <OPTION VALUE="">Both
-  <OPTION VALUE="rep" <%if (($type == "rep") || (! isset($slog))){print selected;}%>>I.D.
-  <OPTION VALUE="ip"<%if ($type == "ip") {print selected;}%>>Log
+  <OPTION VALUE="rep" <?php if (($type == "rep") || (! isset($slog))){print selected;}?>>I.D.
+  <OPTION VALUE="ip"<?php if ($type == "ip") {print selected;}?>>Log
 </SELECT></TD>
 
 <TD><SELECT NAME="idtype">
   <OPTION VALUE="">Both
-  <OPTION VALUE="0" <%if ($idtype == "0")  {print selected;}%>>Source
-  <OPTION VALUE="1"<%if ($idtype == "1") {print selected;}%>>Dest.
+  <OPTION VALUE="0" <?php if ($idtype == "0")  {print selected;}?>>Source
+  <OPTION VALUE="1"<?php if ($idtype == "1") {print selected;}?>>Dest.
 </SELECT></TD>
 
 </TR>
@@ -298,7 +298,7 @@
 <TH><FONT SIZE=1>Year</TH></TR>
 <TR CLASS=list-color2><TD><FONT SIZE=1>
   <SELECT NAME=dtime_day>
-<%
+<?php
   $cur_date=getdate();
   $dday=$cur_date['mday'];
   $dmon=$cur_date['mon']-1;
@@ -312,11 +312,11 @@
       print "    <OPTION SELECTED VALUE=$dom>$dom\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=dtime_month>
-<%
+<?php
   for($month=1;$month <= 12;$month++) {
     if ($month != $cur_date['mon'] -1) {
       print "    <OPTION VALUE=$month>$month\n";
@@ -324,11 +324,11 @@
       print "    <OPTION SELECTED VALUE=$month>$month\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=dtime_year>
-<%
+<?php
   for($year=2000;$year <= 2050;$year++) {
     if ($year != $cur_date['year']) {
       print "    <OPTION VALUE=$year>$year\n";
@@ -336,7 +336,7 @@
       print "    <OPTION SELECTED VALUE=$year>$year\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD></TR>
 <TR CLASS=list-color1 WIDTH=100%>
@@ -345,7 +345,7 @@
 <TH><FONT SIZE=1>Second</TH></TR>
 <TR CLASS=list-color2><TD><FONT SIZE=1>
   <SELECT NAME=dtime_hour>
-<%
+<?php
   for($hour=0;$hour < 24;$hour++) {
     if ($hour != $cur_date['hours']) {
       print "    <OPTION VALUE=$hour>$hour\n";
@@ -353,11 +353,11 @@
       print "    <OPTION SELECTED VALUE=$hour>$hour\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=dtime_min>
-<%
+<?php
   for($minute=0;$minute < 60;$minute++) {
     if ($minute != $cur_date['minutes']) {
       print "    <OPTION VALUE=$minute>$minute\n";
@@ -365,11 +365,11 @@
       print "    <OPTION SELECTED VALUE=$minute>$minute\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=dtime_sec>
-<%
+<?php
   for($second=0;$second < 60;$second++) {
     if ($second != $cur_date['seconds']) {
       print "    <OPTION VALUE=$second>$second\n";
@@ -377,7 +377,7 @@
       print "    <OPTION SELECTED VALUE=$second>$second\n";
     }
   }
-%>
+?>
   </SELECT>
 </TABLE></TD></TR>
 <SCRIPT>

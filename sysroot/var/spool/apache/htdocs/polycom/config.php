@@ -1,4 +1,4 @@
-<%
+<?php
 include "getphone.inc";
 
 /* transport
@@ -40,16 +40,16 @@ if ($encryption ==  "no") {
   $aes_32= ($encdat[1] == "32bit") ? 1 : 0;
 }
 
-%><<%print "?"%>xml version="1.0" encoding="UTF-8" standalone="yes"?>
+?><<?php print "?"?>xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <!-- Example Per-phone Configuration File -->
 <!-- $Revision: 2.1.2 $  $Date: 2007/07/28 17:05:46 $ -->
 <phone1>
   <reg
-    reg.1.displayName="<%print $dname;%>"
-    reg.1.address="<%print $exten;%>"
-    reg.1.auth.userId="<%print $exten;%>"
-    reg.1.auth.password="<%print $passwd;%>" 
-    reg.1.server.1.address="<%print $proxy;%>"
+    reg.1.displayName="<?php print $dname;?>"
+    reg.1.address="<?php print $exten;?>"
+    reg.1.auth.userId="<?php print $exten;?>"
+    reg.1.auth.password="<?php print $passwd;?>" 
+    reg.1.server.1.address="<?php print $proxy;?>"
     reg.1.server.1.port="5060"
     reg.1.server.1.transport="UDPonly"
     reg.1.server.1.expires="300"
@@ -57,7 +57,7 @@ if ($encryption ==  "no") {
     reg.1.server.1.retryTimeOut="30"
     reg.1.server.1.retryMaxCount="0"
     reg.1.ringType="2"
-    reg.1.lineKeys="<%print $linecnt%>"
+    reg.1.lineKeys="<?php print $linecnt?>"
   />
   <divert>
     <fwd
@@ -85,12 +85,12 @@ if ($encryption ==  "no") {
     nat.mediaPortStart=""
   />
   <attendant
-    attendant.uri="<%print $exten;%>"
+    attendant.uri="<?php print $exten;?>"
   />
   <sip>
-<%
+<?php
   if ($lnsort == "1") {
-%>
+?>
     <directory
         dir.local.volatile.2meg="1"
         dir.local.volatile.4meg="1"
@@ -98,18 +98,18 @@ if ($encryption ==  "no") {
         dir.search.field="0"
 	dir.local.readonly="1"
     />
-<%
+<?php
   } else {
-%>
+?>
     <directory
         dir.local.volatile.2meg="1"
         dir.local.volatile.4meg="1"
         dir.local.volatile.8meg="1"
 	dir.local.readonly="1"
     />
-<%
+<?php
   }
-%>
+?>
     <dialplan dialplan.impossibleMatchHandling=2>
       <digitmap
         dialplan.digitmap="xxxxT|0T|00[1-9]xxxxxxx.T|[1-9]xxxxxx|[01][1-9]xxxxxxxx|1021x|102x|xxxT|5xxT|9xxT|5xx*|*x.T"
@@ -117,7 +117,7 @@ if ($encryption ==  "no") {
       />
       <routing>
         <server
-          dialplan.1.routing.server.1.address="<%print $proxy;%>"
+          dialplan.1.routing.server.1.address="<?php print $proxy;?>"
           dialplan.1.routing.server.1.port="5060"
         />
       </routing>
@@ -155,13 +155,13 @@ if ($encryption ==  "no") {
       feature.1.enabled="1"
     />
     <microbrowser mb.proxy="">
-       <main mb.main.home="http://<%print $SERVER_NAME;%>/polyxml"/>
+       <main mb.main.home="http://<?php print $SERVER_NAME;?>/polyxml"/>
     </microbrowser>
     <voIpProt>
       <SIP
         voIpProt.SIP.useRFC2543hold="1">
           <outboundProxy
-            voIpProt.SIP.outboundProxy.address="<%print $proxy;%>"
+            voIpProt.SIP.outboundProxy.address="<?php print $proxy;?>"
             voIpProt.SIP.outboundProxy.port="5060"
             voIpProt.SIP.outboundProxy.transport="UDPonly"
          />
@@ -170,7 +170,7 @@ if ($encryption ==  "no") {
          />
       </SIP>
       <server
-        voIpProt.server.1.address="<%print $proxy;%>"
+        voIpProt.server.1.address="<?php print $proxy;?>"
         voIpProt.server.1.port="5060"
         voIpProt.server.1.transport="UDPonly"
         voIpProt.server.1.expires="300"
@@ -184,13 +184,13 @@ if ($encryption ==  "no") {
     </TCP_IP>
     <security sec.tagSerialNo="0">
       <SRTP
-        sec.srtp.enable="<%print $srtp;%>"
-        sec.srtp.leg.enable="<%print $srtp;%>"
-        sec.srtp.offer="<%print $encoffer;%>"
-        sec.srtp.require="<%print $encforce;%>"
+        sec.srtp.enable="<?php print $srtp;?>"
+        sec.srtp.leg.enable="<?php print $srtp;?>"
+        sec.srtp.offer="<?php print $encoffer;?>"
+        sec.srtp.require="<?php print $encforce;?>"
         sec.srtp.leg.allowLocalConf="0"
-        sec.srtp.offer.HMAC_SHA1_32="<%print ($aes_32 == "1") ? 1 : 0;%>"
-        sec.srtp.offer.HMAC_SHA1_80="<%print ($aes_32 == "1") ? 0 : 1;%>"
+        sec.srtp.offer.HMAC_SHA1_32="<?php print ($aes_32 == "1") ? 1 : 0;?>"
+        sec.srtp.offer.HMAC_SHA1_80="<?php print ($aes_32 == "1") ? 0 : 1;?>"
       />
     </security>
   </sip>

@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -24,7 +24,7 @@ $tariff=pg_query($db,"SELECT tariffcode,tariffname
                      FROM tariff WHERE tariffcode LIKE '" . $_SESSION['resellerid'] . "-%' ORDER BY tariffname");
 $num=pg_num_rows($tariff); 
 $_SESSION['disppage']="cshop/getcountry.php";
-%>
+?>
 <CENTER>
 <FORM NAME=rateform METHOD=POST onsubmit="ajaxsubmit(this.name);return false">
 <TABLE WIDTH=90% CELLSPACING=0 CELLPADDING=0>
@@ -35,7 +35,7 @@ $_SESSION['disppage']="cshop/getcountry.php";
 <TD ALIGN=LEFT WIDTH=50%>Select Tariff Plan To Alter/Delete</TD>
 <TH ALIGN=LEFT VALIGN=MIDDLE>
 <SELECT NAME=tariffcode>
-<%
+<?php
 if ($_SESSION['resellerid'] == "0") {
   print "<OPTION VALUE=A>Buy Rate</OPTION>";
 }
@@ -48,7 +48,7 @@ for ($i=0; $i < $num; $i++) {
   }
   print ">" . $r[1] . "</OPTION>\n";
 }
-%>
+?>
 </SELECT></TH></TR>
 <TR CLASS=list-color2>
   <TH COLSPAN=2 CLASS=heading-body2>Or Create New Plan Bellow ...</TH>
@@ -66,7 +66,7 @@ for ($i=0; $i < $num; $i++) {
   <TD><INPUT TYPE=TEXT NAME=murate></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD ALIGN=LEFT>Minimum Billed Rate<BR>(R/m EX. VAT At Current Ex. Rate <%print $_SESSION['rexrate'];%>)</TD>
+  <TD ALIGN=LEFT>Minimum Billed Rate<BR>(R/m EX. VAT At Current Ex. Rate <?php print $_SESSION['rexrate'];?>)</TD>
   <TD><INPUT TYPE=TEXT NAME=minrate></TD>
 </TR>
 <TR CLASS=list-color1>

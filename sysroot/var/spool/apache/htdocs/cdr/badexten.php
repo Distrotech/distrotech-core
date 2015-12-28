@@ -2,7 +2,7 @@
 <FORM NAME=delunexten METHOD=POST onsubmit="ajaxsubmit(this.name);return false;">
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <INPUT TYPE=HIDDEN NAME=ajax value=1>
-<%
+<?php
 include_once "auth.inc";
 $extensq="SELECT name,fullname,ipaddr,snommac,useragent from users 
  left outer join features on (name = exten)
@@ -78,13 +78,13 @@ if ($_POST['print'] != "1") {
   print "<TR CLASS=list-color" . (($rcol % 2)+1) . "><TD COLSPAN=" . $colspan . " ALIGN=LEFT>" . ($rcol - 1) . " Extensions Affected</TH></TR>\n";
   $rcol++;
   print "<TR CLASS=list-color" . (($rcol % 2)+1) . "><TH COLSPAN=" . $colspan . " CLASS=heading-body>";
-  if ($SUPER_USER == 1) {%>
-    <INPUT TYPE=SUBMIT VALUE="Delete"><%
+  if ($SUPER_USER == 1) {?>
+    <INPUT TYPE=SUBMIT VALUE="Delete"><?php
   }
   print "<INPUT TYPE=BUTTON NAME=pbutton VALUE=\"" . _("Print") . "\" ONCLICK=\"printpage(document.ppage)\">";
   print "</TH></TR>";
 }
-%>
+?>
 <FORM NAME=ppage METHOD=POST><INPUT TYPE=HIDDEN NAME=print></FORM>
 </TABLE>
 </FORM>

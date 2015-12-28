@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -108,26 +108,26 @@ $rcnt=1;
 //print "<PRE>";
 //print_r($quarr);
 //print "</PRE>";
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=queuestat onsubmit="ajaxsubmit(this.name);return false">
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
-<TR CLASS=list-color<%print ($rcnt % 2) + 1;$rcnt++;%>>
-<TH CLASS=heading-body2 ALIGN=LEFT><%print _("Queue");%></TH>
-<TH CLASS=heading-body2 ALIGN=RIGHT><%print _("Avail");%></TH>
-<TH CLASS=heading-body2 ALIGN=RIGHT><%print _("Unavail.");%></TH>
-<TH CLASS=heading-body2 ALIGN=RIGHT><%print _("Unknown.");%></TH>
-<TH CLASS=heading-body2 ALIGN=RIGHT><%print _("Logged Out.");%></TH>
-<TH CLASS=heading-body2 ALIGN=RIGHT><%print _("Paused.");%></TH>
-<TH CLASS=heading-body2 ALIGN=RIGHT><%print _("Holdtime");%></TH>
-<TH CLASS=heading-body2 ALIGN=RIGHT><%print _("Waiting");%></TH>
+<TR CLASS=list-color<?php print ($rcnt % 2) + 1;$rcnt++;?>>
+<TH CLASS=heading-body2 ALIGN=LEFT><?php print _("Queue");?></TH>
+<TH CLASS=heading-body2 ALIGN=RIGHT><?php print _("Avail");?></TH>
+<TH CLASS=heading-body2 ALIGN=RIGHT><?php print _("Unavail.");?></TH>
+<TH CLASS=heading-body2 ALIGN=RIGHT><?php print _("Unknown.");?></TH>
+<TH CLASS=heading-body2 ALIGN=RIGHT><?php print _("Logged Out.");?></TH>
+<TH CLASS=heading-body2 ALIGN=RIGHT><?php print _("Paused.");?></TH>
+<TH CLASS=heading-body2 ALIGN=RIGHT><?php print _("Holdtime");?></TH>
+<TH CLASS=heading-body2 ALIGN=RIGHT><?php print _("Waiting");?></TH>
 </TR>
-<%
+<?php
 /*
-<TH CLASS=heading-body2 ALIGN=RIGHT><%print _("Completed");%></TH>
-<TH CLASS=heading-body2 ALIGN=RIGHT><%print _("Abandoned");%></TH>
-<TH CLASS=heading-body2 ALIGN=RIGHT><%print _("Service Lev.");%></TH>
-<TH CLASS=heading-body2 ALIGN=RIGHT><%print _("Service Time");%></TH>
+<TH CLASS=heading-body2 ALIGN=RIGHT><?php print _("Completed");?></TH>
+<TH CLASS=heading-body2 ALIGN=RIGHT><?php print _("Abandoned");?></TH>
+<TH CLASS=heading-body2 ALIGN=RIGHT><?php print _("Service Lev.");?></TH>
+<TH CLASS=heading-body2 ALIGN=RIGHT><?php print _("Service Time");?></TH>
 */
 
 while(list($qnum,$qdisc)=each($qnme)) {
@@ -192,7 +192,7 @@ print "<PRE>";
 print_r($total);
 print "</PRE>";
 */
-%>
+?>
 </TABLE>
 </FORM>
 <SCRIPT>

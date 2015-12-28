@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -52,4 +52,4 @@ if ($pkey != "") {
   system("/usr/bin/openssl " . $certtype . " -in " . $certfile . " -inform der  -outform pem");
 }
 unlink($certfile);
-%>
+?>

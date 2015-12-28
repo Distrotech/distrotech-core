@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -187,4 +187,4 @@ function dump_phone_x509($euser) {
 
   return $cert . $key;
 }
-%>
+?>

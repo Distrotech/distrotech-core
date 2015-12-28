@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -131,11 +131,11 @@ if (isset($_POST['pbxupdate'])) {
   if (($pass1 == $pass2) && ($pass1 != "")){
     pg_query($db,"UPDATE voicemail SET password='$pass1' WHERE mailbox='" . $exten  . "'");
   } else if ($pass1 != "") {
-%>
+?>
     <SCRIPT>
       alert("Password Mismach/Unset.Password Unchanged");
     </SCRIPT>
-<%
+<?php
   }
 }
 
@@ -212,9 +212,9 @@ if ($origdata["TOUT"] == "") {
   pg_query("INSERT INTO astdb (family,key,value) VALUES ('" . $exten . "','TOUT','40')");
 }
 
-%>
+?>
 
-<link rel="stylesheet" type="text/css" href="/style.php?style=<%print $style;%>">
+<link rel="stylesheet" type="text/css" href="/style.php?style=<?php print $style;?>">
 <script language="JavaScript" src="/java_popups.php" type="text/javascript"></script>
 <script language="JavaScript" src="/hints.js" type="text/javascript"></script>
 <script language="JavaScript" src="/hints_cfg.php?disppage=reception%2Fmkuser.php" type="text/javascript"></script>
@@ -222,36 +222,36 @@ if ($origdata["TOUT"] == "") {
 <CENTER>
 <FORM METHOD=POST ACTION=/reception/vladmin.php>
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
-<%
+<?php
   if (strlen($exten) > 4) {
-%>
+?>
 <TR CLASS=list-color2>
-  <TH COLSPAN=2 CLASS=heading-body><%print _("Configuration For Account") . " " . $exten%></TH>
+  <TH COLSPAN=2 CLASS=heading-body><?php print _("Configuration For Account") . " " . $exten?></TH>
 </TR>
 <TR CLASS=list-color1>
-  <TD><%print _("NAT Handling");%></TD>
+  <TD><?php print _("NAT Handling");?></TD>
   <TD>
     <SELECT NAME=nat>
-      <OPTION VALUE=no <%if ($nat == "no") {print " SELECTED";}%>><%print _("Use NAT If Required");%></OPTION>
-      <OPTION VALUE=yes <%if ($nat == "yes") {print " SELECTED";}%>><%print _("Always Use Nat");%></OPTION>
-      <OPTION VALUE=never <%if ($nat == "never") {print " SELECTED";}%>><%print _("Never Use NAT");%></OPTION>
-      <OPTION VALUE=route <%if ($nat == "route") {print " SELECTED";}%>><%print _("Assume NAT Dont Send Port");%></OPTION>
+      <OPTION VALUE=no <?php if ($nat == "no") {print " SELECTED";}?>><?php print _("Use NAT If Required");?></OPTION>
+      <OPTION VALUE=yes <?php if ($nat == "yes") {print " SELECTED";}?>><?php print _("Always Use Nat");?></OPTION>
+      <OPTION VALUE=never <?php if ($nat == "never") {print " SELECTED";}?>><?php print _("Never Use NAT");?></OPTION>
+      <OPTION VALUE=route <?php if ($nat == "route") {print " SELECTED";}?>><?php print _("Assume NAT Dont Send Port");?></OPTION>
     </SELECT>
 </TR>
 <TR CLASS=list-color2>
-  <TD><%print _("DTMF Handling");%></TD>
+  <TD><?php print _("DTMF Handling");?></TD>
   <TD>
     <SELECT NAME=dtmfmode>
-      <OPTION VALUE=rfc2833 <%if ($dtmfmode == "rfc2833") {print " SELECTED";}%>><%print _("Use Standard DTMF");%></OPTION>
-      <OPTION VALUE=info <%if ($dtmfmode == "info") {print " SELECTED";}%>><%print _("Send DTMF In SIP INFO");%></OPTION>
-      <OPTION VALUE=inband <%if ($dtmfmode == "inband") {print " SELECTED";}%>>print _("Send DTMF Inband");%></OPTION>
+      <OPTION VALUE=rfc2833 <?php if ($dtmfmode == "rfc2833") {print " SELECTED";}?>><?php print _("Use Standard DTMF");?></OPTION>
+      <OPTION VALUE=info <?php if ($dtmfmode == "info") {print " SELECTED";}?>><?php print _("Send DTMF In SIP INFO");?></OPTION>
+      <OPTION VALUE=inband <?php if ($dtmfmode == "inband") {print " SELECTED";}?>>print _("Send DTMF Inband");?></OPTION>
     </SELECT>
 </TR>
 <TR CLASS=list-color1>
-  <TD><%print _("First Audio Codec Choice");%></TD>
+  <TD><?php print _("First Audio Codec Choice");?></TD>
   <TD>
     <SELECT NAME=acodec1>
-      <%if (is_file("$astmodpath/codec_g723.so")) {
+      <?php if (is_file("$astmodpath/codec_g723.so")) {
           print "<OPTION VALUE=0";
           if ($acodec[0] == $codec[0]) {
             print " SELECTED";
@@ -271,16 +271,16 @@ if ($origdata["TOUT"] == "") {
             print " SELECTED";
           }
           print ">" . $codecd[$i] . "</OPTION>\n";          
-        }%>
+        }?>
     </SELECT>
   </TD>
 </TR>
 
 <TR CLASS=list-color2>
-  <TD><%print _("Second Audio Codec Choice");%></TD>
+  <TD><?php print _("Second Audio Codec Choice");?></TD>
   <TD>
     <SELECT NAME=acodec2>
-      <%if (is_file("$astmodpath/codec_g723.so")) {
+      <?php if (is_file("$astmodpath/codec_g723.so")) {
           print "<OPTION VALUE=0";
           if ($acodec[1] == $codec[0]) {
             print " SELECTED";
@@ -300,16 +300,16 @@ if ($origdata["TOUT"] == "") {
             print " SELECTED";
           }
           print ">" . $codecd[$i] . "</OPTION>\n";          
-        }%>
+        }?>
     </SELECT>
   </TD>
 </TR>
 
 <TR CLASS=list-color1>
-  <TD><%print _("Third Audio Codec Choice");%></TD>
+  <TD><?php print _("Third Audio Codec Choice");?></TD>
   <TD>
     <SELECT NAME=acodec3>
-      <%if (is_file("$astmodpath/codec_g723.so")) {
+      <?php if (is_file("$astmodpath/codec_g723.so")) {
           print "<OPTION VALUE=0";
           if ($acodec[2] == $codec[0]) {
             print " SELECTED";
@@ -329,174 +329,174 @@ if ($origdata["TOUT"] == "") {
             print " SELECTED";
           }
           print ">" . $codecd[$i] . "</OPTION>\n";          
-        }%>
+        }?>
     </SELECT>
   </TD>
 </TR>
 
 <TR CLASS=list-color2>
-  <TD><%print _("First Video Codec Choice");%></TD>
+  <TD><?php print _("First Video Codec Choice");?></TD>
   <TD>
-    <SELECT NAME=vcodec1><%
+    <SELECT NAME=vcodec1><?php
         for ($i=8;$i<=10;$i++) {
           print "<OPTION VALUE=" . $i;
           if ($vcodec[0] == $codec[$i]) {
             print " SELECTED";
           }
           print ">" . $codecd[$i] . "</OPTION>\n";          
-        }%>
+        }?>
     </SELECT>
   </TD>
 </TR>
 
 <TR CLASS=list-color1>
-  <TD><%print _("Second Video Codec Choice");%></TD>
+  <TD><?php print _("Second Video Codec Choice");?></TD>
   <TD>
-    <SELECT NAME=vcodec2><%
+    <SELECT NAME=vcodec2><?php
         for ($i=8;$i<=10;$i++) {
           print "<OPTION VALUE=" . $i;
           if ($vcodec[1] == $codec[$i]) {
             print " SELECTED";
           }
           print ">" . $codecd[$i] . "</OPTION>\n";          
-        }%>
+        }?>
     </SELECT>
   </TD>
 </TR>
 
 <TR CLASS=list-color2>
-  <TD><%print _("Third Video Codec Choice");%></TD>
+  <TD><?php print _("Third Video Codec Choice");?></TD>
   <TD>
-    <SELECT NAME=vcodec3><%
+    <SELECT NAME=vcodec3><?php
         for ($i=8;$i<=10;$i++) {
           print "<OPTION VALUE=" . $i;
           if ($vcodec[2] == $codec[$i]) {
             print " SELECTED";
           }
           print ">" . $codecd[$i] . "</OPTION>\n";          
-        }%>
+        }?>
     </SELECT>
   </TD>
 </TR>
-<%
+<?php
 } else {
-%>
+?>
 <TR CLASS=list-color2>
-  <TH COLSPAN=2 CLASS=heading-body><%print _("Configuration For Account") . " " . $exten%></TH>
+  <TH COLSPAN=2 CLASS=heading-body><?php print _("Configuration For Account") . " " . $exten?></TH>
 </TR>
-<%
+<?php
 }
-%>
+?>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('ES1')" onmouseout="myHint.hide()"><%print _("Fullname");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=fullname VALUE="<%print $fullname;%>"></TD>
+  <TD onmouseover="myHint.show('ES1')" onmouseout="myHint.hide()"><?php print _("Fullname");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=fullname VALUE="<?php print $fullname;?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('ES2')" onmouseout="myHint.hide()"><%print _("Email Address");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=email VALUE="<%print $email;%>"></TD>
+  <TD onmouseover="myHint.show('ES2')" onmouseout="myHint.hide()"><?php print _("Email Address");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=email VALUE="<?php print $email;?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('ES3')" onmouseout="myHint.hide()"><%print _("Call Forward Immeadiate");%></TD>
+  <TD onmouseover="myHint.show('ES3')" onmouseout="myHint.hide()"><?php print _("Call Forward Immeadiate");?></TD>
   <TD>
-     <INPUT TYPE=TEXT NAME=CFIM VALUE="<%if ($origdata["CFIM"] != "0") {print $origdata["CFIM"];}%>">
+     <INPUT TYPE=TEXT NAME=CFIM VALUE="<?php if ($origdata["CFIM"] != "0") {print $origdata["CFIM"];}?>">
   </TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('ES4')" onmouseout="myHint.hide()"><%print _("Call Forward On Busy");%></TD>
+  <TD onmouseover="myHint.show('ES4')" onmouseout="myHint.hide()"><?php print _("Call Forward On Busy");?></TD>
   <TD>
-     <INPUT TYPE=TEXT NAME=CFBU VALUE="<%if ($origdata["CFBU"] != "0") {print $origdata["CFBU"];}%>">
+     <INPUT TYPE=TEXT NAME=CFBU VALUE="<?php if ($origdata["CFBU"] != "0") {print $origdata["CFBU"];}?>">
   </TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('ES5')" onmouseout="myHint.hide()"><%print _("Call Forward On No Answer");%></TD>
+  <TD onmouseover="myHint.show('ES5')" onmouseout="myHint.hide()"><?php print _("Call Forward On No Answer");?></TD>
   <TD>
-     <INPUT TYPE=TEXT NAME=CFNA VALUE="<%if ($origdata["CFNA"] != "0") {print $origdata["CFNA"];}%>">
+     <INPUT TYPE=TEXT NAME=CFNA VALUE="<?php if ($origdata["CFNA"] != "0") {print $origdata["CFNA"];}?>">
   </TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('ES7')" onmouseout="myHint.hide()"><%print _("Ring Timeout");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=TOUT VALUE="<%print $origdata["TOUT"];%>"></TD>
+  <TD onmouseover="myHint.show('ES7')" onmouseout="myHint.hide()"><?php print _("Ring Timeout");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=TOUT VALUE="<?php print $origdata["TOUT"];?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('ES14')" onmouseout="myHint.hide()"><%print _("Password");%></TD>
-  <TD><INPUT TYPE=PASSWORD NAME=pass1 VALUE="<%print $password;%>"></TD>
+  <TD onmouseover="myHint.show('ES14')" onmouseout="myHint.hide()"><?php print _("Password");?></TD>
+  <TD><INPUT TYPE=PASSWORD NAME=pass1 VALUE="<?php print $password;?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD  onmouseover="myHint.show('ES15')" onmouseout="myHint.hide()"><%print _("Confirm Password");%></TD>
-  <TD><INPUT TYPE=PASSWORD NAME=pass2 VALUE="<%print $password;%>"></TD>
+  <TD  onmouseover="myHint.show('ES15')" onmouseout="myHint.hide()"><?php print _("Confirm Password");?></TD>
+  <TD><INPUT TYPE=PASSWORD NAME=pass2 VALUE="<?php print $password;?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('ES8')" onmouseout="myHint.hide()"><%print _("Call Waiting");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=WAIT <%if ($origdata["WAIT"] == "1") {print "CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('ES8')" onmouseout="myHint.hide()"><?php print _("Call Waiting");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=WAIT <?php if ($origdata["WAIT"] == "1") {print "CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('ES9')" onmouseout="myHint.hide()"><%print _("Do Not Disturb");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=CDND <%if ($origdata["CDND"] == "1") {print "CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('ES9')" onmouseout="myHint.hide()"><?php print _("Do Not Disturb");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=CDND <?php if ($origdata["CDND"] == "1") {print "CHECKED";}?>></TD>
 </TR>
-<%
+<?php
   if (strlen($exten) > 4) {
-%>
+?>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('ES37')" onmouseout="myHint.hide()"><%print _("Allow Peer To Peer Connections (Reinvite)");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=canreinvite <%if ($canreinvite == "yes") {print "CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('ES37')" onmouseout="myHint.hide()"><?php print _("Allow Peer To Peer Connections (Reinvite)");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=canreinvite <?php if ($canreinvite == "yes") {print "CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('ES39')" onmouseout="myHint.hide()"><%print _("Send Nat Keep Alive Packets");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=qualify <%if ($qualify == "yes") {print "CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('ES39')" onmouseout="myHint.hide()"><?php print _("Send Nat Keep Alive Packets");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=qualify <?php if ($qualify == "yes") {print "CHECKED";}?>></TD>
 </TR>
-<%
+<?php
 }
-%>
+?>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('ES20')" onmouseout="myHint.hide()"><%print _("Disable Voice Mail");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=NOVMAIL <%if ($origdata["NOVMAIL"] == "1") {print "CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('ES20')" onmouseout="myHint.hide()"><?php print _("Disable Voice Mail");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=NOVMAIL <?php if ($origdata["NOVMAIL"] == "1") {print "CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('ES21')" onmouseout="myHint.hide()"><%print _("Lock Extension");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=Locked <%if ($origdata["Locked"] == "1") {print "CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('ES21')" onmouseout="myHint.hide()"><?php print _("Lock Extension");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=Locked <?php if ($origdata["Locked"] == "1") {print "CHECKED";}?>></TD>
 </TR>
-<%
+<?php
   if (strlen($exten) > 4) {
-%>
+?>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('ES33')" onmouseout="myHint.hide()"><%print _("Use IAX As VOIP Protocol");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=IAXLine <%if ($origdata["IAXLine"] == "1") {print "CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('ES33')" onmouseout="myHint.hide()"><?php print _("Use IAX As VOIP Protocol");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=IAXLine <?php if ($origdata["IAXLine"] == "1") {print "CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color2>
-<%
+<?php
 } else {
-%>
+?>
 <TR CLASS=list-color1>
-  <TD COLSPAN=2 ALIGN=CENTER><A HREF=javascript:snomkeyview('<%print $exten;%>','kp') onmouseover="myHint.show('ES27')" onmouseout="myHint.hide()"><%print _("Snom320 Keypad Template Keys 1-12");%></A></TD>
+  <TD COLSPAN=2 ALIGN=CENTER><A HREF=javascript:snomkeyview('<?php print $exten;?>','kp') onmouseover="myHint.show('ES27')" onmouseout="myHint.hide()"><?php print _("Snom320 Keypad Template Keys 1-12");?></A></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD COLSPAN=2 ALIGN=CENTER><A HREF=javascript:snomkeyview('<%print $exten;%>','xp') onmouseover="myHint.show('ES27')" onmouseout="myHint.hide()"><%print _("Snom320 Keypad Template Keys 13-54");%></A></TD>
+  <TD COLSPAN=2 ALIGN=CENTER><A HREF=javascript:snomkeyview('<?php print $exten;?>','xp') onmouseover="myHint.show('ES27')" onmouseout="myHint.hide()"><?php print _("Snom320 Keypad Template Keys 13-54");?></A></TD>
 </TR>
 <TR CLASS=list-color1>
   <TD COLSPAN=2 ALIGN=CENTER>
-<A HREF=/reception/pbook.php?style=<%print $style;%>><%print _("Snom Phone Book");%></A>
-<A HREF=/reception/sdial.php?style=<%print $style;%>><%print _("Snom Speed Dials");%></A>
+<A HREF=/reception/pbook.php?style=<?php print $style;?>><?php print _("Snom Phone Book");?></A>
+<A HREF=/reception/sdial.php?style=<?php print $style;?>><?php print _("Snom Speed Dials");?></A>
 </TD>
 </TR>
 <TR CLASS=list-color2>
-<%
+<?php
 }
-%>
+?>
   <TD ALIGN=MIDDLE COLSPAN=2>
     <INPUT TYPE=RESET>
-    <INPUT TYPE=SUBMIT NAME=pbxupdate VALUE="<%print _("Save Changes");%>">
+    <INPUT TYPE=SUBMIT NAME=pbxupdate VALUE="<?php print _("Save Changes");?>">
   </TD>
 </TR>
-<%
+<?php
   if (strlen($exten) > 4) {
-%>
+?>
 <TR CLASS=list-color1>
   <TD ALIGN=MIDDLE COLSPAN=2>
-  <A HREF=/reception/callerid.php><%print _("Call Back Caller ID");%></A>
+  <A HREF=/reception/callerid.php><?php print _("Call Back Caller ID");?></A>
   </TD>
 </TR>
-<%
+<?php
 }
-%>
+?>
 </TABLE>
 </FORM>

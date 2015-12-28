@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -54,12 +54,12 @@
    
     print $result["Response"] . "\n";
     print $result["Message"];
-    %>
+    ?>
     </PRE>
     <SCRIPT>
       window.close();
-    </SCRIPT><%
-  } else {%>
+    </SCRIPT><?php
+  } else {?>
     <link rel="stylesheet" type="text/css" href="/style.php">
     <CENTER>
     <FORM METHOD=POST>
@@ -77,6 +77,6 @@
       </TR>
     </TABLE>
     </FORM>
-    <%
+    <?php
   }
-%>
+?>

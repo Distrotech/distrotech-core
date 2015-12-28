@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -52,7 +52,7 @@ $bcolor[0]="list-color1";
 $bcolor[1]="list-color2";
 
 if ($csvout == "") {
-%>
+?>
 <link rel=stylesheet type=text/css href=/style.php>
 <DIV CLASS=popup>
 <CENTER>
@@ -63,7 +63,7 @@ if ($csvout == "") {
 <TH ALIGN=LEFT><FONT SIZE=1>Total Time</TH>
 <TH ALIGN=LEFT><FONT SIZE=1>Bill. Time</TH><TH ALIGN=LEFT><FONT SIZE=1>Rate</TH>
 <TH ALIGN=LEFT><FONT SIZE=1>Cost</TH></TR>
-<%
+<?php
 } else {
   header("Content-type: application/ms-excel");
   $stdout=fopen("php://output","w");
@@ -100,15 +100,15 @@ for ($i=0; $i < $num; $i++) {
 if ($csvout == "") {
   $rem=$i % 2; 
   print "<TR CLASS=" . $bcolor[$rem] . ">";
-%>
+?>
 <TD COLSPAN=4><FONT SIZE=1>&nbsp;</TD>
-<TD ALIGN=LEFT><FONT SIZE=1><%$totmin=gtime($totmin);print $totmin;%></TD>
+<TD ALIGN=LEFT><FONT SIZE=1><?php $totmin=gtime($totmin);print $totmin;?></TD>
 <TD><FONT SIZE=1>&nbsp;</TD>
-<TD ALIGN=LEFT><FONT SIZE=1><%printf("R%0.2f",$total);%></TD></TR>
+<TD ALIGN=LEFT><FONT SIZE=1><?php printf("R%0.2f",$total);?></TD></TR>
 </TABLE>
 </DIV>
-<%
+<?php
 } else {
   fclose($stdout);
 }
-%>
+?>

@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -25,12 +25,12 @@ if ((isset($_POST['mmap'])) && (!isset($_POST['pbxupdate']))) {
   $_POST['pbxupdate']=true;
 }
 
-%>
+?>
 <FORM METHOD=POST NAME=extenform onsubmit="ajaxsubmit(this.name);return false">
 <INPUT TYPE=HIDDEN NAME=delext>
-<INPUT TYPE=HIDDEN NAME=disppage VALUE="<%print $showpage;%>">
-<INPUT TYPE=HIDDEN NAME=nomenu VALUE="<%if ($_POST['nomnenu'] < 2) {print $_POST['nomenu'];}%>">
-<%
+<INPUT TYPE=HIDDEN NAME=disppage VALUE="<?php print $showpage;?>">
+<INPUT TYPE=HIDDEN NAME=nomenu VALUE="<?php if ($_POST['nomnenu'] < 2) {print $_POST['nomenu'];}?>">
+<?php
 
 /* Add New Extension */
 
@@ -90,21 +90,21 @@ if ((isset($_POST['pbxupdate'])) && ($_POST['exten'] == "") && (($_POST['prefix'
       }
     }
   }
-%>
+?>
 <CENTER>
 <table border="0" width="90%" cellspacing="0" cellpadding="0">
 <TR CLASS=list-color2>
-  <TH COLSPAN=2 CLASS=heading-body><%print _("Select Extension");%></TH>
+  <TH COLSPAN=2 CLASS=heading-body><?php print _("Select Extension");?></TH>
 </TR>
 <TR CLASS=list-color1>
-  <TD ALIGN=LEFT WIDTH=50% onmouseover="myHint.show('ESS0')" onmouseout="myHint.hide()"><%print _("Extension To Configure");%></TH>
+  <TD ALIGN=LEFT WIDTH=50% onmouseover="myHint.show('ESS0')" onmouseout="myHint.hide()"><?php print _("Extension To Configure");?></TH>
   <TD WIDTH=50% ALIGN=LEFT>
   <SELECT NAME=exten>
-<%
+<?php
   if ($SUPER_USER == 1) {
-%>
-    <OPTION VALUE=""><%print _("Select From List Or Enter Bellow");%></OPTION>
-<%
+?>
+    <OPTION VALUE=""><?php print _("Select From List Or Enter Bellow");?></OPTION>
+<?php
   }
   $curextq="SELECT name,fullname||'('||name||')' AS fname from users
                       left outer join astdb on (substr(name,0,3)=key)";
@@ -123,16 +123,16 @@ if ((isset($_POST['pbxupdate'])) && ($_POST['exten'] == "") && (($_POST['prefix'
     $r = pg_fetch_array($curext,$i,PGSQL_NUM);
     print "    <OPTION VALUE=\"" .  $r[0] . "\">" . $r[1] . "</OPTION>\n";
   }
-%>
+?>
   </SELECT>
   </TD></TR>
-<%
+<?php
   if ($SUPER_USER == 1) {
-%>
+?>
   <TR CLASS=list-color2>
   <TD ALIGN=LEFT WIDTH=50% onmouseover="myHint.show('ESS1')" onmouseout="myHint.hide()">Extension Prefix/Number</TH>
   <TD WIDTH=50% ALIGN=LEFT>
-<%
+<?php
     if (! isset($_POST['prefix'])) {
       $defpre=pg_query($db,"SELECT value FROM astdb WHERE family='Setup' AND key='DefaultPrefix'");
       $def = pg_fetch_array($defpre,0,PGSQL_NUM);
@@ -161,31 +161,31 @@ if ((isset($_POST['pbxupdate'])) && ($_POST['exten'] == "") && (($_POST['prefix'
    } else {
      print "  <INPUT TYPE=TEXT NAME=npre MAXLENGTH=2 SIZE=2>";
    }
-%>
-    <INPUT TYPE=TEXT NAME=cno MAXLENGTH=2 SIZE=2 VALUE="<%print $_POST['cno'];%>"></TD></TR>
+?>
+    <INPUT TYPE=TEXT NAME=cno MAXLENGTH=2 SIZE=2 VALUE="<?php print $_POST['cno'];?>"></TD></TR>
   <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
   <TR CLASS=list-color1>
-<%
+<?php
   } else {
-%>
+?>
     <TR CLASS=list-color2>
-<%
+<?php
   }
-%>
+?>
   <TH COLSPAN=2>
-<%
+<?php
   if ($SUPER_USER == 1) {
-%>
-    <INPUT TYPE=SUBMIT onclick=this.name='pbxupdate' VALUE="<%print _("Add/Edit");%>">
-    <INPUT TYPE=BUTTON VALUE="<%print _("Delete");%>" onclick=deleteexten()>
-<%
+?>
+    <INPUT TYPE=SUBMIT onclick=this.name='pbxupdate' VALUE="<?php print _("Add/Edit");?>">
+    <INPUT TYPE=BUTTON VALUE="<?php print _("Delete");?>" onclick=deleteexten()>
+<?php
   } else {
-%>
-    <INPUT TYPE=SUBMIT onclick=this.name='pbxupdate' VALUE="<%print _("Edit");%>">
-<%
+?>
+    <INPUT TYPE=SUBMIT onclick=this.name='pbxupdate' VALUE="<?php print _("Edit");?>">
+<?php
   }
 }
-%>
+?>
 </TABLE>
 </FORM>
 

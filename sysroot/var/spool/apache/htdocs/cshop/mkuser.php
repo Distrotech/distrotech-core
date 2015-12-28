@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -28,11 +28,11 @@ if (isset($_POST['adduser'])) {
     $_POST['bulk']=1;
   } else {
     $_POST['email']="";
-%>
+?>
 <SCRIPT>
   alert("Caller ID And Voicemail To Email Disabled On Bulk Add");
 </SCRIPT>
-<%
+<?php
   }
 
   if ($_POST['active'] == "on") {
@@ -53,7 +53,7 @@ if (isset($_POST['adduser'])) {
     $_POST['canreinvite']="no";
   }
   
-%>
+?>
 <CENTER>
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <TR CLASS=list-color2>
@@ -65,7 +65,7 @@ if (isset($_POST['adduser'])) {
 <TH CLASS=heading-body2 ALIGN=LEFT>VM Pin</TH>
 <TH CLASS=heading-body2 ALIGN=RIGHT>Credit</TH>
 <TH CLASS=heading-body2 ALIGN=RIGHT>Refund</TH>
-</TR><%
+</TR><?php
 
 
   for($acnum=1;$acnum <= $_POST['bulk'];$acnum++) {
@@ -119,19 +119,19 @@ if (isset($_POST['adduser'])) {
     if ($_POST['DDIPASS'] == "on") {
       pg_query($db,"UPDATE features SET ddipass='1' WHERE exten='" . $cno . "'");
     }
-    $rowcol=$acnum%2;%>
-      <TR CLASS=list-color<%print $rowcol+1;%>>
-        <TD ALIGN=LEFT><%print $cno;%></TD>
-        <TD ALIGN=LEFT><%print $lpass;%></TD>
-        <TD ALIGN=LEFT><%print $vmpass;%></TD>
-        <TD ALIGN=RIGHT><%printf("R%0.2f",$credout);%></TH>
-        <TD ALIGN=RIGHT><%printf("R%0.2f",$credin);%></TD>
-      </TR><%
+    $rowcol=$acnum%2;?>
+      <TR CLASS=list-color<?php print $rowcol+1;?>>
+        <TD ALIGN=LEFT><?php print $cno;?></TD>
+        <TD ALIGN=LEFT><?php print $lpass;?></TD>
+        <TD ALIGN=LEFT><?php print $vmpass;?></TD>
+        <TD ALIGN=RIGHT><?php printf("R%0.2f",$credout);?></TH>
+        <TD ALIGN=RIGHT><?php printf("R%0.2f",$credin);?></TD>
+      </TR><?php
   }
   print "</TABLE>";
 } else {
   $tplan=pg_query($db,"SELECT tariffname,tariffcode FROM tariff WHERE tariffcode LIKE '" . $_SESSION['resellerid'] . "-%' ORDER BY tariffname");
-%>
+?>
 <FORM METHOD=POST NAME=adduf onsubmit="ajaxsubmit(this.name);return false">
 <CENTER>
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
@@ -140,12 +140,12 @@ if (isset($_POST['adduser'])) {
 </TR>
 <TR CLASS=list-color1>
   <TD WIDTH=50%>Tariff Plan</TD>
-  <TD WIDTH=50% ALIGN=LEFT><SELECT NAME=tariff><%
+  <TD WIDTH=50% ALIGN=LEFT><SELECT NAME=tariff><?php
   $num=pg_num_rows($tplan);
   for ($i=0; $i < $num; $i++) {
     $r = pg_fetch_array($tplan,$i,PGSQL_NUM);
     print "<OPTION VALUE=\"" . $r[1] . "\">" . $r[0] . "</OPTION>\n";
-  }%>
+  }?>
 </SELECT></TD></TR>
 <TR CLASS=list-color2>
   <TD>Acount Holders Name</TD>
@@ -183,5 +183,5 @@ if (isset($_POST['adduser'])) {
 <TR CLASS=list-color1>
 <TD COLSPAN=2 ALIGN=MIDDLE><INPUT TYPE=SUBMIT NAME=adduser VALUE="Add User"></TD></TR>
 </TABLE>
-</FORM><%
-}%>
+</FORM><?php
+}?>

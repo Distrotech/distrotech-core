@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -29,7 +29,7 @@ if ($ADMIN_USER != "admin") {
     $qlistq.=" LEFT OUTER JOIN astdb AS bgrp ON ('Q'||name=bgrp.family AND bgrp.key='BGRP') WHERE " . $clogacl;
   }
  $qlistq.=" ORDER by description";
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=acdrep onsubmit="ajaxsubmit(this.name);return false">
 <INPUT TYPE=HIDDEN NAME=disppage VALUE="cdr/acdstat.php">
@@ -47,7 +47,7 @@ if ($ADMIN_USER != "admin") {
 <TH><FONT SIZE=1>Year</TH></TR>
 <TR CLASS=list-color1><TD><FONT SIZE=1>
   <SELECT NAME=time_day>
-<%
+<?php
   if (! isset($slog)) {
     $cur_date=getdate();
 
@@ -62,11 +62,11 @@ if ($ADMIN_USER != "admin") {
       print "    <OPTION SELECTED VALUE=$dom>$dom\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=time_month>
-<%
+<?php
   for($month=1;$month <= 12;$month++) {
     if (($month != $cur_date['mon']) && ($time_month != $month)){
       print "    <OPTION VALUE=$month>$month\n";
@@ -74,11 +74,11 @@ if ($ADMIN_USER != "admin") {
       print "    <OPTION SELECTED VALUE=$month>$month\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=time_year>
-<%
+<?php
   for($year=2000;$year <= 2050;$year++) {
     if (($year != $cur_date['year']) && ($year != $time_year)){
       print "    <OPTION VALUE=$year>$year\n";
@@ -86,7 +86,7 @@ if ($ADMIN_USER != "admin") {
       print "    <OPTION SELECTED VALUE=$year>$year\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD></TR>
 <TR CLASS=list-color2 WIDTH=100%>
@@ -95,7 +95,7 @@ if ($ADMIN_USER != "admin") {
 <TH><FONT SIZE=1>Second</TH></TR>
 <TR CLASS=list-color1><TD><FONT SIZE=1>
   <SELECT NAME=time_hour>
-<%
+<?php
   for($hour=0;$hour < 24;$hour++) {
     print "    <OPTION VALUE=$hour";
     if ($hour == $time_hour) {
@@ -103,11 +103,11 @@ if ($ADMIN_USER != "admin") {
     }
     print ">$hour\n";
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=time_min>
-<%
+<?php
   for($minute=0;$minute < 60;$minute++) {
     print "    <OPTION VALUE=$minute";
     if ($minute == $time_min) {
@@ -115,11 +115,11 @@ if ($ADMIN_USER != "admin") {
     }
     print ">$minute\n";
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=time_sec>
-<%
+<?php
   for($second=0;$second < 60;$second++) {
     print "    <OPTION VALUE=$second";
     if ($second == $time_sec) {
@@ -127,7 +127,7 @@ if ($ADMIN_USER != "admin") {
     }
     print ">$second\n";
   }
-%>
+?>
   </SELECT>
 </TABLE></TD></TR>
 <TR><TD><FONT SIZE=1>
@@ -140,7 +140,7 @@ if ($ADMIN_USER != "admin") {
 <TH><FONT SIZE=1>Year</TH></TR>
 <TR CLASS=list-color2><TD><FONT SIZE=1>
   <SELECT NAME=mtime_day>
-<%
+<?php
   if (! isset($slog)) {
     $cur_date=getdate();
   }
@@ -151,11 +151,11 @@ if ($ADMIN_USER != "admin") {
       print "    <OPTION SELECTED VALUE=$dom>$dom\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=mtime_month>
-<%
+<?php
   for($month=1;$month <= 12;$month++) {
     if (($month != $cur_date['mon']) && ($mtime_month != $month)){
       print "    <OPTION VALUE=$month>$month\n";
@@ -163,11 +163,11 @@ if ($ADMIN_USER != "admin") {
       print "    <OPTION SELECTED VALUE=$month>$month\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=mtime_year>
-<%
+<?php
   for($year=2000;$year <= 2050;$year++) {
     if (($year != $cur_date['year']) && ($year != $mtime_year)){
       print "    <OPTION VALUE=$year>$year\n";
@@ -175,7 +175,7 @@ if ($ADMIN_USER != "admin") {
       print "    <OPTION SELECTED VALUE=$year>$year\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD></TR>
 <TR CLASS=list-color1 WIDTH=100%>
@@ -184,7 +184,7 @@ if ($ADMIN_USER != "admin") {
 <TH><FONT SIZE=1>Second</TH></TR>
 <TR CLASS=list-color2><TD><FONT SIZE=1>
   <SELECT NAME=mtime_hour>
-<%
+<?php
   for($hour=0;$hour < 24;$hour++) {
     if (($hour != $cur_date['hours']) && ($mtime_hour != $hour)){
       print "    <OPTION VALUE=$hour>$hour\n";
@@ -192,11 +192,11 @@ if ($ADMIN_USER != "admin") {
       print "    <OPTION SELECTED VALUE=$hour>$hour\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=mtime_min>
-<%
+<?php
   for($minute=0;$minute < 60;$minute++) {
     if (($minute != $cur_date['minutes']) && ($mtime_min != $minute)) {
       print "    <OPTION VALUE=$minute>$minute\n";
@@ -204,11 +204,11 @@ if ($ADMIN_USER != "admin") {
       print "    <OPTION SELECTED VALUE=$minute>$minute\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=mtime_sec>
-<%
+<?php
   for($second=0;$second < 60;$second++) {
     if (($second != $cur_date['seconds']) && ($mtime_sec != $second)){
       print "    <OPTION VALUE=$second>$second\n";
@@ -216,7 +216,7 @@ if ($ADMIN_USER != "admin") {
       print "    <OPTION SELECTED VALUE=$second>$second\n";
     }
   }
-%>
+?>
   </SELECT>
 </TABLE></TD></TR>
 
@@ -229,7 +229,7 @@ if ($ADMIN_USER != "admin") {
 <TD>ACD To Check</TD>
 <TD><SELECT NAME=fqueue>
 <OPTION VALUE="">Any</OPTION>
-<%
+<?php
   if ($SUPER_USER == 1) {
     print "<OPTION VALUE=799>Default Ring All Queue</OPTION>\n";
   }
@@ -239,7 +239,7 @@ if ($ADMIN_USER != "admin") {
     $r=pg_fetch_row($qlist, $i);
     print "<OPTION VALUE=\"" . $r[0] . "\">" . $r[1] . "</OPTION>\n";
   }
-%>
+?>
 </SELECT>
 </TD></TR>
 

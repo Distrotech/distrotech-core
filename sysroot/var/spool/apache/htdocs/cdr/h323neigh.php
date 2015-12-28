@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -29,43 +29,43 @@ if (isset($pbxupdate)) {
 }
 $qgetdata=pg_query($db,"SELECT name,h323gkid,ipaddr FROM users WHERE h323neighbor='t'");
 
-%>
+?>
 
 <CENTER>
 <FORM METHOD=POST NAME=h323neigh onsubmit="ajaxsubmit(this.name);return false;">
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
 <TR CLASS=list-color2>
-  <TH CLASS=heading-body COLSPAN=2><%print _("Asterisk PBX H323 Neighbor Configuration");%></TH>
+  <TH CLASS=heading-body COLSPAN=2><?php print _("Asterisk PBX H323 Neighbor Configuration");?></TH>
 </TR>
 <TR CLASS=list-color1>
-<TD onmouseover="myHint.show('DA0')" onmouseout="myHint.hide()"><%print _("Select Neighbor To Delete");%></TD>
+<TD onmouseover="myHint.show('DA0')" onmouseout="myHint.hide()"><?php print _("Select Neighbor To Delete");?></TD>
 <TD><SELECT NAME=key>
-<OPTION VALUE=""><%print _("Add New Neighbor Below");%></OPTION>
-<%
+<OPTION VALUE=""><?php print _("Add New Neighbor Below");?></OPTION>
+<?php
 $dnum=pg_num_rows($qgetdata);
 for($i=0;$i<$dnum;$i++){
   $getdata=pg_fetch_array($qgetdata,$i);
   print "<OPTION VALUE=" . $getdata[0] . ">" . $getdata[0] . " (" . $getdata[1] . " [" . $getdata[2] . "])</OPTION>"; 
 }
-%>
+?>
 </SELECT>
 </TR>
 <TR CLASS=list-color2>
-<TD onmouseover="myHint.show('DA1')" onmouseout="myHint.hide()"><%print _("H323 Gateway ID");%></TD>
+<TD onmouseover="myHint.show('DA1')" onmouseout="myHint.hide()"><?php print _("H323 Gateway ID");?></TD>
 <TD><INPUT TYPE=TEXT NAME=h323gwid></TD>
 </TR>
 <TR CLASS=list-color1>
-<TD onmouseover="myHint.show('DA2')" onmouseout="myHint.hide()"><%print _("H323 Gatekeeper ID");%></TD>
+<TD onmouseover="myHint.show('DA2')" onmouseout="myHint.hide()"><?php print _("H323 Gatekeeper ID");?></TD>
 <TD><INPUT TYPE=TEXT NAME=h323gkid></TD>
 </TR>
 <TR CLASS=list-color2>
-<TD onmouseover="myHint.show('DA2')" onmouseout="myHint.hide()"><%print _("H323 Gatekeeper IP Addr");%></TD>
+<TD onmouseover="myHint.show('DA2')" onmouseout="myHint.hide()"><?php print _("H323 Gatekeeper IP Addr");?></TD>
 <TD><INPUT TYPE=TEXT NAME=h323permip></TD>
 </TR>
 <TR CLASS=list-color1>
   <TD ALIGN=MIDDLE COLSPAN=2>
     <INPUT TYPE=RESET>
-    <INPUT TYPE=SUBMIT NAME=pbxupdate VALUE="<%print _("Save Changes");%>">
+    <INPUT TYPE=SUBMIT NAME=pbxupdate VALUE="<?php print _("Save Changes");?>">
   </TD>
 </TR>
 </TABLE>

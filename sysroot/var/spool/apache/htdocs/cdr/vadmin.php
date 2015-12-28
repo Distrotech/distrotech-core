@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -110,11 +110,11 @@ if (isset($pbxupdate)) {
   if (($AdminPass1 == $AdminPass2) && ($AdminPass1 != "")){
     pg_query($db,"UPDATE astdb SET value='" . $AdminPass1 . "' WHERE family='Setup' AND key='AdminPass'");
   } else {
-%>
+?>
     <SCRIPT>
       alert("Password Mismach/Unset.Password Unchanged");
     </SCRIPT>
-<%
+<?php
   }
   system("/usr/sbin/genconf > /dev/null 2>/dev/null");
 }
@@ -155,98 +155,98 @@ if ($origdata['FAXBOX'] == "") {
   }
 }
 
-%>
+?>
 <FORM METHOD=POST NAME=pbxform onsubmit="alert('Test');ajaxsubmit(this.name);return false">
 <INPUT TYPE=HIDDEN NAME=curdiv VALUE=routing>
 <INPUT TYPE=HIDDEN NAME=pbxupdate value=1>
 
 <DIV CLASS=content>
-<DIV CLASS=list-color2 ID=headcol><DIV CLASS=heading-body><%print _("Asterisk PBX Configuration");%></DIV></DIV>
+<DIV CLASS=list-color2 ID=headcol><DIV CLASS=heading-body><?php print _("Asterisk PBX Configuration");?></DIV></DIV>
 
 <DIV CLASS=list-color1><DIV CLASS=formrow>
-<DIV CLASS=formselect ID=routing_but onclick=showdiv('routing',document.pbxform) onmouseover=showdiv('routing',document.pbxform)><%print _("Routing");%></DIV>
-<DIV CLASS=formselect ID=misdn_but onclick=showdiv('misdn',document.pbxform) onmouseover=showdiv('misdn',document.pbxform)><%print _("mISDN");%></DIV>
-<DIV CLASS=formselect ID=e1sig_but onclick=showdiv('e1sig',document.pbxform) onmouseover=showdiv('e1sig',document.pbxform)><%print _("E1");%></DIV>
-<DIV CLASS=formselect ID=default_but onclick=showdiv('default',document.pbxform) onmouseover=showdiv('default',document.pbxform)><%print _("Defaults");%></DIV>
-<DIV CLASS=formselect ID=ivr_but onclick=showdiv('ivr',document.pbxform) onmouseover=showdiv('ivr',document.pbxform)><%print _("IVR Password");%></DIV>
-<DIV CLASS=formselect ID=local_but onclick=showdiv('local',document.pbxform) onmouseover=showdiv('local',document.pbxform)><%print _("Location");%></DIV>
-<DIV CLASS=formselect ID=inbound_but onclick=showdiv('inbound',document.pbxform) onmouseover=showdiv('inbound',document.pbxform)><%print _("Inbound");%></DIV>
-<DIV CLASS=formselect ID=numplan_but onclick=showdiv('numplan',document.pbxform) onmouseover=showdiv('numplan',document.pbxform)><%print _("Num. Plan");%></DIV>
-<DIV CLASS=formselect ID=autoadd_but onclick=showdiv('autoadd',document.pbxform) onmouseover=showdiv('autoadd',document.pbxform)><%print _("Auto Add");%></DIV>
+<DIV CLASS=formselect ID=routing_but onclick=showdiv('routing',document.pbxform) onmouseover=showdiv('routing',document.pbxform)><?php print _("Routing");?></DIV>
+<DIV CLASS=formselect ID=misdn_but onclick=showdiv('misdn',document.pbxform) onmouseover=showdiv('misdn',document.pbxform)><?php print _("mISDN");?></DIV>
+<DIV CLASS=formselect ID=e1sig_but onclick=showdiv('e1sig',document.pbxform) onmouseover=showdiv('e1sig',document.pbxform)><?php print _("E1");?></DIV>
+<DIV CLASS=formselect ID=default_but onclick=showdiv('default',document.pbxform) onmouseover=showdiv('default',document.pbxform)><?php print _("Defaults");?></DIV>
+<DIV CLASS=formselect ID=ivr_but onclick=showdiv('ivr',document.pbxform) onmouseover=showdiv('ivr',document.pbxform)><?php print _("IVR Password");?></DIV>
+<DIV CLASS=formselect ID=local_but onclick=showdiv('local',document.pbxform) onmouseover=showdiv('local',document.pbxform)><?php print _("Location");?></DIV>
+<DIV CLASS=formselect ID=inbound_but onclick=showdiv('inbound',document.pbxform) onmouseover=showdiv('inbound',document.pbxform)><?php print _("Inbound");?></DIV>
+<DIV CLASS=formselect ID=numplan_but onclick=showdiv('numplan',document.pbxform) onmouseover=showdiv('numplan',document.pbxform)><?php print _("Num. Plan");?></DIV>
+<DIV CLASS=formselect ID=autoadd_but onclick=showdiv('autoadd',document.pbxform) onmouseover=showdiv('autoadd',document.pbxform)><?php print _("Auto Add");?></DIV>
 <DIV CLASS=formselect ID=save_but onclick=ajaxsubmit('pbxform') onmouseover=showdiv('save',document.pbxform)>Save</DIV>
 </DIV></DIV>
 <DIV id=local CLASS=formpart>
 <TABLE CLASS=formtable>
 <TR CLASS=list-color2>
-  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><%print _("Local Country Code");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=CountryCode VALUE="<%print $origdata["CountryCode"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><?php print _("Local Country Code");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=CountryCode VALUE="<?php print $origdata["CountryCode"];?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><%print _("Local Area Code");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=AreaCode VALUE="<%print $origdata["AreaCode"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><?php print _("Local Area Code");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=AreaCode VALUE="<?php print $origdata["AreaCode"];?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS1')" onmouseout="myHint.hide()"><%print _("Local Exchange Prefix");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=ExCode VALUE="<%print $origdata["ExCode"];%>"></TD>
+  <TD onmouseover="myHint.show('PS1')" onmouseout="myHint.hide()"><?php print _("Local Exchange Prefix");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=ExCode VALUE="<?php print $origdata["ExCode"];?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS1')" onmouseout="myHint.hide()"><%print _("Local Call Distance (Or Blank To Base Calls On Area Code)");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=LDDist VALUE="<%if ($origdata["LDDist"] > 0) {print $origdata["LDDist"];}%>"></TD>
+  <TD onmouseover="myHint.show('PS1')" onmouseout="myHint.hide()"><?php print _("Local Call Distance (Or Blank To Base Calls On Area Code)");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=LDDist VALUE="<?php if ($origdata["LDDist"] > 0) {print $origdata["LDDist"];}?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><%print _("Local Number Length (0 To Disable)");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=LocalLength VALUE="<%print $origdata["LocalLength"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><?php print _("Local Number Length (0 To Disable)");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=LocalLength VALUE="<?php print $origdata["LocalLength"];?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><%print _("National Number Length (0 To Disable)");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=NatLength VALUE="<%print $origdata["NatLength"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><?php print _("National Number Length (0 To Disable)");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=NatLength VALUE="<?php print $origdata["NatLength"];?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS1')" onmouseout="myHint.hide()"><%print _("National Access Code");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=LocalAccess VALUE="<%print $origdata["LocalAccess"];%>"></TD>
+  <TD onmouseover="myHint.show('PS1')" onmouseout="myHint.hide()"><?php print _("National Access Code");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=LocalAccess VALUE="<?php print $origdata["LocalAccess"];?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS1')" onmouseout="myHint.hide()"><%print _("International Access Code");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=IntAccess VALUE="<%print $origdata["IntAccess"];%>"></TD>
+  <TD onmouseover="myHint.show('PS1')" onmouseout="myHint.hide()"><?php print _("International Access Code");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=IntAccess VALUE="<?php print $origdata["IntAccess"];?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Area Code Includes National Access Code");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=NatAreaCode<%if ($origdata["NatAreaCode"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><?php print _("Area Code Includes National Access Code");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=NatAreaCode<?php if ($origdata["NatAreaCode"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Local Calls Require National Dialing");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=DialAreaCode<%if ($origdata["DialAreaCode"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><?php print _("Local Calls Require National Dialing");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=DialAreaCode<?php if ($origdata["DialAreaCode"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Allow Automatic Setting Of CLI");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=AutoCLI<%if ($origdata["AutoCLI"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><?php print _("Allow Automatic Setting Of CLI");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=AutoCLI<?php if ($origdata["AutoCLI"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Add Exchange Prefix To Outbound CLI On Extension");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=AddExCLI<%if ($origdata["AddExCLI"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><?php print _("Add Exchange Prefix To Outbound CLI On Extension");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=AddExCLI<?php if ($origdata["AddExCLI"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 </TABLE>
 </DIV>
 <DIV id=routing CLASS=formpart>
 <TABLE CLASS=formtable>
 <TR CLASS=list-color2>
-  <TD WIDTH=50% onmouseover="myHint.show('PS2')" onmouseout="myHint.hide()"><%print _("PSTN Trunk");%></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS2')" onmouseout="myHint.hide()"><?php print _("PSTN Trunk");?></TD>
   <TD>
     <SELECT NAME=Trunk>
-      <OPTION VALUE="NONE"><%print _("Do Not Use 1 Trunk");%></OPTION>
-      <OPTION VALUE="mISDN/g:out/"<%if ($origdata["Trunk"] == "mISDN/g:out/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 1");%></OPTION>
-      <OPTION VALUE="mISDN/g:out2/"<%if ($origdata["Trunk"] == "mISDN/g:out2/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 2");%></OPTION>
-      <OPTION VALUE="mISDN/g:out3/"<%if ($origdata["Trunk"] == "mISDN/g:out3/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 3");%></OPTION>
-      <OPTION VALUE="mISDN/g:out4/"<%if ($origdata["Trunk"] == "mISDN/g:out4/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 4");%></OPTION>
-      <OPTION VALUE="DAHDI/r1/"<%if (($origdata["Trunk"] == "Zap/r1/") || ($origdata["Trunk"] == "DAHDI/r1/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 1");%></OPTION>
-      <OPTION VALUE="DAHDI/r2/"<%if (($origdata["Trunk"] == "Zap/r2/") || ($origdata["Trunk"] == "DAHDI/r2/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 2");%></OPTION>
-      <OPTION VALUE="DAHDI/r3/"<%if (($origdata["Trunk"] == "Zap/r3/") || ($origdata["Trunk"] == "DAHDI/r3/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 3");%></OPTION>
-      <OPTION VALUE="DAHDI/r4/"<%if (($origdata["Trunk"] == "Zap/r4/") || ($origdata["Trunk"] == "DAHDI/r4/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 4");%></OPTION>
-      <OPTION VALUE="WOOMERA/g1/"<%if ($origdata["Trunk"] == "WOOMERA/g1/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 1");%></OPTION>
-      <OPTION VALUE="WOOMERA/g2/"<%if ($origdata["Trunk"] == "WOOMERA/g2/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 2");%></OPTION>
-      <OPTION VALUE="WOOMERA/g3/"<%if ($origdata["Trunk"] == "WOOMERA/g3/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 3");%></OPTION>
-      <OPTION VALUE="WOOMERA/g4/"<%if ($origdata["Trunk"] == "WOOMERA/g4/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 4");%></OPTION>
-<%
+      <OPTION VALUE="NONE"><?php print _("Do Not Use 1 Trunk");?></OPTION>
+      <OPTION VALUE="mISDN/g:out/"<?php if ($origdata["Trunk"] == "mISDN/g:out/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Group 1");?></OPTION>
+      <OPTION VALUE="mISDN/g:out2/"<?php if ($origdata["Trunk"] == "mISDN/g:out2/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Group 2");?></OPTION>
+      <OPTION VALUE="mISDN/g:out3/"<?php if ($origdata["Trunk"] == "mISDN/g:out3/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Group 3");?></OPTION>
+      <OPTION VALUE="mISDN/g:out4/"<?php if ($origdata["Trunk"] == "mISDN/g:out4/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Group 4");?></OPTION>
+      <OPTION VALUE="DAHDI/r1/"<?php if (($origdata["Trunk"] == "Zap/r1/") || ($origdata["Trunk"] == "DAHDI/r1/")) { print " SELECTED";}?>><?php print _("Digium Trunk Group 1");?></OPTION>
+      <OPTION VALUE="DAHDI/r2/"<?php if (($origdata["Trunk"] == "Zap/r2/") || ($origdata["Trunk"] == "DAHDI/r2/")) { print " SELECTED";}?>><?php print _("Digium Trunk Group 2");?></OPTION>
+      <OPTION VALUE="DAHDI/r3/"<?php if (($origdata["Trunk"] == "Zap/r3/") || ($origdata["Trunk"] == "DAHDI/r3/")) { print " SELECTED";}?>><?php print _("Digium Trunk Group 3");?></OPTION>
+      <OPTION VALUE="DAHDI/r4/"<?php if (($origdata["Trunk"] == "Zap/r4/") || ($origdata["Trunk"] == "DAHDI/r4/")) { print " SELECTED";}?>><?php print _("Digium Trunk Group 4");?></OPTION>
+      <OPTION VALUE="WOOMERA/g1/"<?php if ($origdata["Trunk"] == "WOOMERA/g1/") { print " SELECTED";}?>><?php print _("Woomera Trunk Group 1");?></OPTION>
+      <OPTION VALUE="WOOMERA/g2/"<?php if ($origdata["Trunk"] == "WOOMERA/g2/") { print " SELECTED";}?>><?php print _("Woomera Trunk Group 2");?></OPTION>
+      <OPTION VALUE="WOOMERA/g3/"<?php if ($origdata["Trunk"] == "WOOMERA/g3/") { print " SELECTED";}?>><?php print _("Woomera Trunk Group 3");?></OPTION>
+      <OPTION VALUE="WOOMERA/g4/"<?php if ($origdata["Trunk"] == "WOOMERA/g4/") { print " SELECTED";}?>><?php print _("Woomera Trunk Group 4");?></OPTION>
+<?php
       for($ipcnt=0;$ipcnt < count($ipgw);$ipcnt++) {
         print "<OPTION VALUE=\"" . $ipgw[$ipcnt]['gw'] . "\"";
         if ($origdata['Trunk'] == $ipgw[$ipcnt]['gw']) {
@@ -254,28 +254,28 @@ if ($origdata['FAXBOX'] == "") {
         }
         print ">" . $ipgw[$ipcnt]['name'] . "</OPTION>\n";
       }
-%>
+?>
     </SELECT>
   </TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS2')" onmouseout="myHint.hide()"><%print _("PSTN Second Trunk");%></TD>
+  <TD onmouseover="myHint.show('PS2')" onmouseout="myHint.hide()"><?php print _("PSTN Second Trunk");?></TD>
   <TD>
     <SELECT NAME=Trunk2>
-      <OPTION VALUE="NONE"><%print _("Do Not Use 2 Trunk");%></OPTION>
-      <OPTION VALUE="mISDN/g:out/"<%if ($origdata["Trunk2"] == "mISDN/g:out/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 1");%></OPTION>
-      <OPTION VALUE="mISDN/g:out2/"<%if ($origdata["Trunk2"] == "mISDN/g:out2/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 2");%></OPTION>
-      <OPTION VALUE="mISDN/g:out3/"<%if ($origdata["Trunk2"] == "mISDN/g:out3/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 3");%></OPTION>
-      <OPTION VALUE="mISDN/g:out4/"<%if ($origdata["Trunk2"] == "mISDN/g:out4/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 4");%></OPTION>
-      <OPTION VALUE="DAHDI/r1/"<%if (($origdata["Trunk2"] == "Zap/r1/") || ($origdata["Trunk2"] == "DAHDI/r1/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 1");%></OPTION>
-      <OPTION VALUE="DAHDI/r2/"<%if (($origdata["Trunk2"] == "Zap/r2/") || ($origdata["Trunk2"] == "DAHDI/r2/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 2");%></OPTION>
-      <OPTION VALUE="DAHDI/r3/"<%if (($origdata["Trunk2"] == "Zap/r3/") || ($origdata["Trunk2"] == "DAHDI/r3/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 3");%></OPTION>
-      <OPTION VALUE="DAHDI/r4/"<%if (($origdata["Trunk2"] == "Zap/r4/") || ($origdata["Trunk2"] == "DAHDI/r4/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 4");%></OPTION>
-      <OPTION VALUE="WOOMERA/g1/"<%if ($origdata["Trunk2"] == "WOOMERA/g1/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 1");%></OPTION>
-      <OPTION VALUE="WOOMERA/g2/"<%if ($origdata["Trunk2"] == "WOOMERA/g2/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 2");%></OPTION>
-      <OPTION VALUE="WOOMERA/g3/"<%if ($origdata["Trunk2"] == "WOOMERA/g3/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 3");%></OPTION>
-      <OPTION VALUE="WOOMERA/g4/"<%if ($origdata["Trunk2"] == "WOOMERA/g4/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 4");%></OPTION>
-<%
+      <OPTION VALUE="NONE"><?php print _("Do Not Use 2 Trunk");?></OPTION>
+      <OPTION VALUE="mISDN/g:out/"<?php if ($origdata["Trunk2"] == "mISDN/g:out/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Group 1");?></OPTION>
+      <OPTION VALUE="mISDN/g:out2/"<?php if ($origdata["Trunk2"] == "mISDN/g:out2/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Group 2");?></OPTION>
+      <OPTION VALUE="mISDN/g:out3/"<?php if ($origdata["Trunk2"] == "mISDN/g:out3/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Group 3");?></OPTION>
+      <OPTION VALUE="mISDN/g:out4/"<?php if ($origdata["Trunk2"] == "mISDN/g:out4/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Group 4");?></OPTION>
+      <OPTION VALUE="DAHDI/r1/"<?php if (($origdata["Trunk2"] == "Zap/r1/") || ($origdata["Trunk2"] == "DAHDI/r1/")) { print " SELECTED";}?>><?php print _("Digium Trunk Group 1");?></OPTION>
+      <OPTION VALUE="DAHDI/r2/"<?php if (($origdata["Trunk2"] == "Zap/r2/") || ($origdata["Trunk2"] == "DAHDI/r2/")) { print " SELECTED";}?>><?php print _("Digium Trunk Group 2");?></OPTION>
+      <OPTION VALUE="DAHDI/r3/"<?php if (($origdata["Trunk2"] == "Zap/r3/") || ($origdata["Trunk2"] == "DAHDI/r3/")) { print " SELECTED";}?>><?php print _("Digium Trunk Group 3");?></OPTION>
+      <OPTION VALUE="DAHDI/r4/"<?php if (($origdata["Trunk2"] == "Zap/r4/") || ($origdata["Trunk2"] == "DAHDI/r4/")) { print " SELECTED";}?>><?php print _("Digium Trunk Group 4");?></OPTION>
+      <OPTION VALUE="WOOMERA/g1/"<?php if ($origdata["Trunk2"] == "WOOMERA/g1/") { print " SELECTED";}?>><?php print _("Woomera Trunk Group 1");?></OPTION>
+      <OPTION VALUE="WOOMERA/g2/"<?php if ($origdata["Trunk2"] == "WOOMERA/g2/") { print " SELECTED";}?>><?php print _("Woomera Trunk Group 2");?></OPTION>
+      <OPTION VALUE="WOOMERA/g3/"<?php if ($origdata["Trunk2"] == "WOOMERA/g3/") { print " SELECTED";}?>><?php print _("Woomera Trunk Group 3");?></OPTION>
+      <OPTION VALUE="WOOMERA/g4/"<?php if ($origdata["Trunk2"] == "WOOMERA/g4/") { print " SELECTED";}?>><?php print _("Woomera Trunk Group 4");?></OPTION>
+<?php
       for($ipcnt=0;$ipcnt < count($ipgw);$ipcnt++) {
         print "<OPTION VALUE=\"" . $ipgw[$ipcnt]['gw'] . "\"";
         if ($origdata['Trunk2'] == $ipgw[$ipcnt]['gw']) {
@@ -283,28 +283,28 @@ if ($origdata['FAXBOX'] == "") {
         }
         print ">" . $ipgw[$ipcnt]['name'] . "</OPTION>\n";
       }
-%>
+?>
     </SELECT>
   </TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS2')" onmouseout="myHint.hide()"><%print _("PSTN Third Trunk");%></TD>
+  <TD onmouseover="myHint.show('PS2')" onmouseout="myHint.hide()"><?php print _("PSTN Third Trunk");?></TD>
   <TD>
     <SELECT NAME=Trunk3>
-      <OPTION VALUE="NONE"><%print _("Do Not Use 3 Trunk");%></OPTION>
-      <OPTION VALUE="mISDN/g:out/"<%if ($origdata["Trunk3"] == "mISDN/g:out/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 1");%></OPTION>
-      <OPTION VALUE="mISDN/g:out2/"<%if ($origdata["Trunk3"] == "mISDN/g:out2/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 2");%></OPTION>
-      <OPTION VALUE="mISDN/g:out3/"<%if ($origdata["Trunk3"] == "mISDN/g:out3/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 3");%></OPTION>
-      <OPTION VALUE="mISDN/g:out4/"<%if ($origdata["Trunk3"] == "mISDN/g:out4/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 4");%></OPTION>
-      <OPTION VALUE="DAHDI/r1/"<%if (($origdata["Trunk3"] == "Zap/r1/") || ($origdata["Trunk3"] == "DAHDI/r1/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 1");%></OPTION>
-      <OPTION VALUE="DAHDI/r2/"<%if (($origdata["Trunk3"] == "Zap/r2/") || ($origdata["Trunk3"] == "DAHDI/r2/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 2");%></OPTION>
-      <OPTION VALUE="DAHDI/r3/"<%if (($origdata["Trunk3"] == "Zap/r3/") || ($origdata["Trunk3"] == "DAHDI/r3/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 3");%></OPTION>
-      <OPTION VALUE="DAHDI/r4/"<%if (($origdata["Trunk3"] == "Zap/r4/") || ($origdata["Trunk3"] == "DAHDI/r4/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 4");%></OPTION>
-      <OPTION VALUE="WOOMERA/g1/"<%if ($origdata["Trunk3"] == "WOOMERA/g1/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 1");%></OPTION>
-      <OPTION VALUE="WOOMERA/g2/"<%if ($origdata["Trunk3"] == "WOOMERA/g2/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 2");%></OPTION>
-      <OPTION VALUE="WOOMERA/g3/"<%if ($origdata["Trunk3"] == "WOOMERA/g3/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 3");%></OPTION>
-      <OPTION VALUE="WOOMERA/g4/"<%if ($origdata["Trunk3"] == "WOOMERA/g4/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 4");%></OPTION>
-<%
+      <OPTION VALUE="NONE"><?php print _("Do Not Use 3 Trunk");?></OPTION>
+      <OPTION VALUE="mISDN/g:out/"<?php if ($origdata["Trunk3"] == "mISDN/g:out/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Group 1");?></OPTION>
+      <OPTION VALUE="mISDN/g:out2/"<?php if ($origdata["Trunk3"] == "mISDN/g:out2/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Group 2");?></OPTION>
+      <OPTION VALUE="mISDN/g:out3/"<?php if ($origdata["Trunk3"] == "mISDN/g:out3/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Group 3");?></OPTION>
+      <OPTION VALUE="mISDN/g:out4/"<?php if ($origdata["Trunk3"] == "mISDN/g:out4/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Group 4");?></OPTION>
+      <OPTION VALUE="DAHDI/r1/"<?php if (($origdata["Trunk3"] == "Zap/r1/") || ($origdata["Trunk3"] == "DAHDI/r1/")) { print " SELECTED";}?>><?php print _("Digium Trunk Group 1");?></OPTION>
+      <OPTION VALUE="DAHDI/r2/"<?php if (($origdata["Trunk3"] == "Zap/r2/") || ($origdata["Trunk3"] == "DAHDI/r2/")) { print " SELECTED";}?>><?php print _("Digium Trunk Group 2");?></OPTION>
+      <OPTION VALUE="DAHDI/r3/"<?php if (($origdata["Trunk3"] == "Zap/r3/") || ($origdata["Trunk3"] == "DAHDI/r3/")) { print " SELECTED";}?>><?php print _("Digium Trunk Group 3");?></OPTION>
+      <OPTION VALUE="DAHDI/r4/"<?php if (($origdata["Trunk3"] == "Zap/r4/") || ($origdata["Trunk3"] == "DAHDI/r4/")) { print " SELECTED";}?>><?php print _("Digium Trunk Group 4");?></OPTION>
+      <OPTION VALUE="WOOMERA/g1/"<?php if ($origdata["Trunk3"] == "WOOMERA/g1/") { print " SELECTED";}?>><?php print _("Woomera Trunk Group 1");?></OPTION>
+      <OPTION VALUE="WOOMERA/g2/"<?php if ($origdata["Trunk3"] == "WOOMERA/g2/") { print " SELECTED";}?>><?php print _("Woomera Trunk Group 2");?></OPTION>
+      <OPTION VALUE="WOOMERA/g3/"<?php if ($origdata["Trunk3"] == "WOOMERA/g3/") { print " SELECTED";}?>><?php print _("Woomera Trunk Group 3");?></OPTION>
+      <OPTION VALUE="WOOMERA/g4/"<?php if ($origdata["Trunk3"] == "WOOMERA/g4/") { print " SELECTED";}?>><?php print _("Woomera Trunk Group 4");?></OPTION>
+<?php
       for($ipcnt=0;$ipcnt < count($ipgw);$ipcnt++) {
         print "<OPTION VALUE=\"" . $ipgw[$ipcnt]['gw'] . "\"";
         if ($origdata['Trunk3'] == $ipgw[$ipcnt]['gw']) {
@@ -312,28 +312,28 @@ if ($origdata['FAXBOX'] == "") {
         }
         print ">" . $ipgw[$ipcnt]['name'] . "</OPTION>\n";
       }
-%>
+?>
     </SELECT>
   </TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS2')" onmouseout="myHint.hide()"><%print _("PSTN Fourth Trunk");%></TD>
+  <TD onmouseover="myHint.show('PS2')" onmouseout="myHint.hide()"><?php print _("PSTN Fourth Trunk");?></TD>
   <TD>
     <SELECT NAME=Trunk4>
-      <OPTION VALUE="NONE"><%print _("Do Not Use 4 Trunk");%></OPTION>
-      <OPTION VALUE="mISDN/g:out/"<%if ($origdata["Trunk4"] == "mISDN/g:out/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 1");%></OPTION>
-      <OPTION VALUE="mISDN/g:out2/"<%if ($origdata["Trunk4"] == "mISDN/g:out2/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 2");%></OPTION>
-      <OPTION VALUE="mISDN/g:out3/"<%if ($origdata["Trunk4"] == "mISDN/g:out3/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 3");%></OPTION>
-      <OPTION VALUE="mISDN/g:out4/"<%if ($origdata["Trunk4"] == "mISDN/g:out4/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 4");%></OPTION>
-      <OPTION VALUE="DAHDI/r1/"<%if (($origdata["Trunk5"] == "Zap/r1/") || ($origdata["Trunk5"] == "DAHDI/r1/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 1");%></OPTION>
-      <OPTION VALUE="DAHDI/r2/"<%if (($origdata["Trunk5"] == "Zap/r2/") || ($origdata["Trunk5"] == "DAHDI/r2/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 2");%></OPTION>
-      <OPTION VALUE="DAHDI/r3/"<%if (($origdata["Trunk5"] == "Zap/r3/") || ($origdata["Trunk5"] == "DAHDI/r3/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 3");%></OPTION>
-      <OPTION VALUE="DAHDI/r4/"<%if (($origdata["Trunk5"] == "Zap/r4/") || ($origdata["Trunk5"] == "DAHDI/r4/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 4");%></OPTION>
-      <OPTION VALUE="WOOMERA/g1/"<%if ($origdata["Trunk4"] == "WOOMERA/g1/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 1");%></OPTION>
-      <OPTION VALUE="WOOMERA/g2/"<%if ($origdata["Trunk4"] == "WOOMERA/g2/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 2");%></OPTION>
-      <OPTION VALUE="WOOMERA/g3/"<%if ($origdata["Trunk4"] == "WOOMERA/g3/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 3");%></OPTION>
-      <OPTION VALUE="WOOMERA/g4/"<%if ($origdata["Trunk4"] == "WOOMERA/g4/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 4");%></OPTION>
-<%
+      <OPTION VALUE="NONE"><?php print _("Do Not Use 4 Trunk");?></OPTION>
+      <OPTION VALUE="mISDN/g:out/"<?php if ($origdata["Trunk4"] == "mISDN/g:out/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Group 1");?></OPTION>
+      <OPTION VALUE="mISDN/g:out2/"<?php if ($origdata["Trunk4"] == "mISDN/g:out2/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Group 2");?></OPTION>
+      <OPTION VALUE="mISDN/g:out3/"<?php if ($origdata["Trunk4"] == "mISDN/g:out3/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Group 3");?></OPTION>
+      <OPTION VALUE="mISDN/g:out4/"<?php if ($origdata["Trunk4"] == "mISDN/g:out4/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Group 4");?></OPTION>
+      <OPTION VALUE="DAHDI/r1/"<?php if (($origdata["Trunk5"] == "Zap/r1/") || ($origdata["Trunk5"] == "DAHDI/r1/")) { print " SELECTED";}?>><?php print _("Digium Trunk Group 1");?></OPTION>
+      <OPTION VALUE="DAHDI/r2/"<?php if (($origdata["Trunk5"] == "Zap/r2/") || ($origdata["Trunk5"] == "DAHDI/r2/")) { print " SELECTED";}?>><?php print _("Digium Trunk Group 2");?></OPTION>
+      <OPTION VALUE="DAHDI/r3/"<?php if (($origdata["Trunk5"] == "Zap/r3/") || ($origdata["Trunk5"] == "DAHDI/r3/")) { print " SELECTED";}?>><?php print _("Digium Trunk Group 3");?></OPTION>
+      <OPTION VALUE="DAHDI/r4/"<?php if (($origdata["Trunk5"] == "Zap/r4/") || ($origdata["Trunk5"] == "DAHDI/r4/")) { print " SELECTED";}?>><?php print _("Digium Trunk Group 4");?></OPTION>
+      <OPTION VALUE="WOOMERA/g1/"<?php if ($origdata["Trunk4"] == "WOOMERA/g1/") { print " SELECTED";}?>><?php print _("Woomera Trunk Group 1");?></OPTION>
+      <OPTION VALUE="WOOMERA/g2/"<?php if ($origdata["Trunk4"] == "WOOMERA/g2/") { print " SELECTED";}?>><?php print _("Woomera Trunk Group 2");?></OPTION>
+      <OPTION VALUE="WOOMERA/g3/"<?php if ($origdata["Trunk4"] == "WOOMERA/g3/") { print " SELECTED";}?>><?php print _("Woomera Trunk Group 3");?></OPTION>
+      <OPTION VALUE="WOOMERA/g4/"<?php if ($origdata["Trunk4"] == "WOOMERA/g4/") { print " SELECTED";}?>><?php print _("Woomera Trunk Group 4");?></OPTION>
+<?php
       for($ipcnt=0;$ipcnt < count($ipgw);$ipcnt++) {
         print "<OPTION VALUE=\"" . $ipgw[$ipcnt]['gw'] . "\"";
         if ($origdata['Trunk4'] == $ipgw[$ipcnt]['gw']) {
@@ -341,29 +341,29 @@ if ($origdata['FAXBOX'] == "") {
         }
         print ">" . $ipgw[$ipcnt]['name'] . "</OPTION>\n";
       }
-%>
+?>
     </SELECT>
   </TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS2')" onmouseout="myHint.hide()"><%print _("DDI Forward Trunk");%></TD>
+  <TD onmouseover="myHint.show('PS2')" onmouseout="myHint.hide()"><?php print _("DDI Forward Trunk");?></TD>
   <TD>
     <SELECT NAME=FTrunk>
-      <OPTION VALUE="NONE"><%print _("Do Not Use Forward Trunk");%></OPTION>
-      <OPTION VALUE="mISDN/g:fwd/"<%if ($origdata["FTrunk"] == "mISDN/g:fwd/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Forward Group");%></OPTION>
-      <OPTION VALUE="mISDN/g:out/"<%if ($origdata["FTrunk"] == "mISDN/g:out/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 1");%></OPTION>
-      <OPTION VALUE="mISDN/g:out2/"<%if ($origdata["FTrunk"] == "mISDN/g:out2/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 2");%></OPTION>
-      <OPTION VALUE="mISDN/g:out3/"<%if ($origdata["FTrunk"] == "mISDN/g:out3/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 3");%></OPTION>
-      <OPTION VALUE="mISDN/g:out4/"<%if ($origdata["FTrunk"] == "mISDN/g:out4/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 4");%></OPTION>
-      <OPTION VALUE="DAHDI/r1/"<%if (($origdata["FTrunk"] == "Zap/r1/") || ($origdata["FTrunk"] == "DAHDI/r1/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 1");%></OPTION>
-      <OPTION VALUE="DAHDI/r2/"<%if (($origdata["FTrunk"] == "Zap/r2/") || ($origdata["FTrunk"] == "DAHDI/r2/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 2");%></OPTION>
-      <OPTION VALUE="DAHDI/r3/"<%if (($origdata["FTrunk"] == "Zap/r3/") || ($origdata["FTrunk"] == "DAHDI/r3/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 3");%></OPTION>
-      <OPTION VALUE="DAHDI/r4/"<%if (($origdata["FTrunk"] == "Zap/r4/") || ($origdata["FTrunk"] == "DAHDI/r4/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 4");%></OPTION>
-      <OPTION VALUE="WOOMERA/g1/"<%if ($origdata["FTrunk"] == "WOOMERA/g1/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 1");%></OPTION>
-      <OPTION VALUE="WOOMERA/g2/"<%if ($origdata["FTrunk"] == "WOOMERA/g2/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 2");%></OPTION>
-      <OPTION VALUE="WOOMERA/g3/"<%if ($origdata["FTrunk"] == "WOOMERA/g3/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 3");%></OPTION>
-      <OPTION VALUE="WOOMERA/g4/"<%if ($origdata["FTrunk"] == "WOOMERA/g4/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 4");%></OPTION>
-<%
+      <OPTION VALUE="NONE"><?php print _("Do Not Use Forward Trunk");?></OPTION>
+      <OPTION VALUE="mISDN/g:fwd/"<?php if ($origdata["FTrunk"] == "mISDN/g:fwd/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Forward Group");?></OPTION>
+      <OPTION VALUE="mISDN/g:out/"<?php if ($origdata["FTrunk"] == "mISDN/g:out/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Group 1");?></OPTION>
+      <OPTION VALUE="mISDN/g:out2/"<?php if ($origdata["FTrunk"] == "mISDN/g:out2/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Group 2");?></OPTION>
+      <OPTION VALUE="mISDN/g:out3/"<?php if ($origdata["FTrunk"] == "mISDN/g:out3/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Group 3");?></OPTION>
+      <OPTION VALUE="mISDN/g:out4/"<?php if ($origdata["FTrunk"] == "mISDN/g:out4/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Group 4");?></OPTION>
+      <OPTION VALUE="DAHDI/r1/"<?php if (($origdata["FTrunk"] == "Zap/r1/") || ($origdata["FTrunk"] == "DAHDI/r1/")) { print " SELECTED";}?>><?php print _("Digium Trunk Group 1");?></OPTION>
+      <OPTION VALUE="DAHDI/r2/"<?php if (($origdata["FTrunk"] == "Zap/r2/") || ($origdata["FTrunk"] == "DAHDI/r2/")) { print " SELECTED";}?>><?php print _("Digium Trunk Group 2");?></OPTION>
+      <OPTION VALUE="DAHDI/r3/"<?php if (($origdata["FTrunk"] == "Zap/r3/") || ($origdata["FTrunk"] == "DAHDI/r3/")) { print " SELECTED";}?>><?php print _("Digium Trunk Group 3");?></OPTION>
+      <OPTION VALUE="DAHDI/r4/"<?php if (($origdata["FTrunk"] == "Zap/r4/") || ($origdata["FTrunk"] == "DAHDI/r4/")) { print " SELECTED";}?>><?php print _("Digium Trunk Group 4");?></OPTION>
+      <OPTION VALUE="WOOMERA/g1/"<?php if ($origdata["FTrunk"] == "WOOMERA/g1/") { print " SELECTED";}?>><?php print _("Woomera Trunk Group 1");?></OPTION>
+      <OPTION VALUE="WOOMERA/g2/"<?php if ($origdata["FTrunk"] == "WOOMERA/g2/") { print " SELECTED";}?>><?php print _("Woomera Trunk Group 2");?></OPTION>
+      <OPTION VALUE="WOOMERA/g3/"<?php if ($origdata["FTrunk"] == "WOOMERA/g3/") { print " SELECTED";}?>><?php print _("Woomera Trunk Group 3");?></OPTION>
+      <OPTION VALUE="WOOMERA/g4/"<?php if ($origdata["FTrunk"] == "WOOMERA/g4/") { print " SELECTED";}?>><?php print _("Woomera Trunk Group 4");?></OPTION>
+<?php
       for($ipcnt=0;$ipcnt < count($ipgw);$ipcnt++) {
         print "<OPTION VALUE=\"" . $ipgw[$ipcnt]['gw'] . "\"";
         if ($origdata['FTrunk'] == $ipgw[$ipcnt]['gw']) {
@@ -371,29 +371,29 @@ if ($origdata['FAXBOX'] == "") {
         }
         print ">" . $ipgw[$ipcnt]['name'] . "</OPTION>\n";
       }
-%>
+?>
     </SELECT>
   </TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS2')" onmouseout="myHint.hide()"><%print _("GSM Trunk");%></TD>
+  <TD onmouseover="myHint.show('PS2')" onmouseout="myHint.hide()"><?php print _("GSM Trunk");?></TD>
   <TD>
     <SELECT NAME=CellGateway>
-      <OPTION VALUE=""><%print _("Do Not Use GSM Trunk");%></OPTION>
-      <OPTION VALUE="mISDN/g:fwd/"<%if ($origdata["CellGateway"] == "mISDN/g:fwd/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Forward Group");%></OPTION>
-      <OPTION VALUE="mISDN/g:out/"<%if ($origdata["CellGateway"] == "mISDN/g:out/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 1");%></OPTION>
-      <OPTION VALUE="mISDN/g:out2/"<%if ($origdata["CellGateway"] == "mISDN/g:out2/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 2");%></OPTION>
-      <OPTION VALUE="mISDN/g:out3/"<%if ($origdata["CellGateway"] == "mISDN/g:out3/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 3");%></OPTION>
-      <OPTION VALUE="mISDN/g:out4/"<%if ($origdata["CellGateway"] == "mISDN/g:out4/") { print " SELECTED";}%>><%print _("Linux Modular ISDN Group 4");%></OPTION>
-      <OPTION VALUE="DAHDI/r1/"<%if (($origdata["CellGateway"] == "Zap/r1/") || ($origdata["CellGateway"] == "DAHDI/r1/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 1");%></OPTION>
-      <OPTION VALUE="DAHDI/r2/"<%if (($origdata["CellGateway"] == "Zap/r2/") || ($origdata["CellGateway"] == "DAHDI/r2/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 2");%></OPTION>
-      <OPTION VALUE="DAHDI/r3/"<%if (($origdata["CellGateway"] == "Zap/r3/") || ($origdata["CellGateway"] == "DAHDI/r3/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 3");%></OPTION>
-      <OPTION VALUE="DAHDI/r4/"<%if (($origdata["CellGateway"] == "Zap/r4/") || ($origdata["CellGateway"] == "DAHDI/r4/")) { print " SELECTED";}%>><%print _("Digium Trunk Group 4");%></OPTION>
-      <OPTION VALUE="WOOMERA/g1/"<%if ($origdata["CellGateway"] == "WOOMERA/g1/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 1");%></OPTION>
-      <OPTION VALUE="WOOMERA/g2/"<%if ($origdata["CellGateway"] == "WOOMERA/g2/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 2");%></OPTION>
-      <OPTION VALUE="WOOMERA/g3/"<%if ($origdata["CellGateway"] == "WOOMERA/g3/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 3");%></OPTION>
-      <OPTION VALUE="WOOMERA/g4/"<%if ($origdata["CellGateway"] == "WOOMERA/g4/") { print " SELECTED";}%>><%print _("Woomera Trunk Group 4");%></OPTION>
-<%
+      <OPTION VALUE=""><?php print _("Do Not Use GSM Trunk");?></OPTION>
+      <OPTION VALUE="mISDN/g:fwd/"<?php if ($origdata["CellGateway"] == "mISDN/g:fwd/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Forward Group");?></OPTION>
+      <OPTION VALUE="mISDN/g:out/"<?php if ($origdata["CellGateway"] == "mISDN/g:out/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Group 1");?></OPTION>
+      <OPTION VALUE="mISDN/g:out2/"<?php if ($origdata["CellGateway"] == "mISDN/g:out2/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Group 2");?></OPTION>
+      <OPTION VALUE="mISDN/g:out3/"<?php if ($origdata["CellGateway"] == "mISDN/g:out3/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Group 3");?></OPTION>
+      <OPTION VALUE="mISDN/g:out4/"<?php if ($origdata["CellGateway"] == "mISDN/g:out4/") { print " SELECTED";}?>><?php print _("Linux Modular ISDN Group 4");?></OPTION>
+      <OPTION VALUE="DAHDI/r1/"<?php if (($origdata["CellGateway"] == "Zap/r1/") || ($origdata["CellGateway"] == "DAHDI/r1/")) { print " SELECTED";}?>><?php print _("Digium Trunk Group 1");?></OPTION>
+      <OPTION VALUE="DAHDI/r2/"<?php if (($origdata["CellGateway"] == "Zap/r2/") || ($origdata["CellGateway"] == "DAHDI/r2/")) { print " SELECTED";}?>><?php print _("Digium Trunk Group 2");?></OPTION>
+      <OPTION VALUE="DAHDI/r3/"<?php if (($origdata["CellGateway"] == "Zap/r3/") || ($origdata["CellGateway"] == "DAHDI/r3/")) { print " SELECTED";}?>><?php print _("Digium Trunk Group 3");?></OPTION>
+      <OPTION VALUE="DAHDI/r4/"<?php if (($origdata["CellGateway"] == "Zap/r4/") || ($origdata["CellGateway"] == "DAHDI/r4/")) { print " SELECTED";}?>><?php print _("Digium Trunk Group 4");?></OPTION>
+      <OPTION VALUE="WOOMERA/g1/"<?php if ($origdata["CellGateway"] == "WOOMERA/g1/") { print " SELECTED";}?>><?php print _("Woomera Trunk Group 1");?></OPTION>
+      <OPTION VALUE="WOOMERA/g2/"<?php if ($origdata["CellGateway"] == "WOOMERA/g2/") { print " SELECTED";}?>><?php print _("Woomera Trunk Group 2");?></OPTION>
+      <OPTION VALUE="WOOMERA/g3/"<?php if ($origdata["CellGateway"] == "WOOMERA/g3/") { print " SELECTED";}?>><?php print _("Woomera Trunk Group 3");?></OPTION>
+      <OPTION VALUE="WOOMERA/g4/"<?php if ($origdata["CellGateway"] == "WOOMERA/g4/") { print " SELECTED";}?>><?php print _("Woomera Trunk Group 4");?></OPTION>
+<?php
       for($ipcnt=0;$ipcnt < count($ipgw);$ipcnt++) {
         print "<OPTION VALUE=\"" . $ipgw[$ipcnt]['gw'] . "\"";
         if ($origdata['CellGateway'] == $ipgw[$ipcnt]['gw']) {
@@ -401,15 +401,15 @@ if ($origdata['FAXBOX'] == "") {
         }
         print ">" . $ipgw[$ipcnt]['name'] . "</OPTION>\n";
       }
-%>
+?>
     </SELECT>
   </TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS3')" onmouseout="myHint.hide()"><%print _("Level To Start Routing To Master Server");%></TD>
+  <TD onmouseover="myHint.show('PS3')" onmouseout="myHint.hide()"><?php print _("Level To Start Routing To Master Server");?></TD>
   <TD>
     <SELECT NAME=IPContext>
-<%
+<?php
       for($i=1;$i<=6;$i++) {
         print "      <OPTION VALUE=" . $i;
         if ($i == $origdata["IPContext"]) {
@@ -417,126 +417,126 @@ if ($origdata['FAXBOX'] == "") {
         }
         print ">" . $context[$i] . "</OPTION>\n";
       }
-%>
+?>
     </SELECT>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS3')" onmouseout="myHint.hide()"><%print _("Number Plan To Send To Master (Local Calls)");%></TD>
+  <TD onmouseover="myHint.show('PS3')" onmouseout="myHint.hide()"><?php print _("Number Plan To Send To Master (Local Calls)");?></TD>
   <TD>
     <SELECT NAME=IntLocal>
       <OPTION VALUE=0>As Recived
-      <OPTION VALUE=1<%if ($origdata["IntLocal"] == 1) {print " SELECTED";}%>>International
-      <OPTION VALUE=2<%if ($origdata["IntLocal"] == 2) {print " SELECTED";}%>>International With Access Code
-      <OPTION VALUE=3<%if ($origdata["IntLocal"] == 3) {print " SELECTED";}%>>International With + 
+      <OPTION VALUE=1<?php if ($origdata["IntLocal"] == 1) {print " SELECTED";}?>>International
+      <OPTION VALUE=2<?php if ($origdata["IntLocal"] == 2) {print " SELECTED";}?>>International With Access Code
+      <OPTION VALUE=3<?php if ($origdata["IntLocal"] == 3) {print " SELECTED";}?>>International With + 
     </SELECT>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS5')" onmouseout="myHint.hide()"><%print _("Maximum Concurency On VOIP Trunk");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=VLIMIT VALUE="<%print $origdata["VLIMIT"];%>"></TD>
+  <TD onmouseover="myHint.show('PS5')" onmouseout="myHint.hide()"><?php print _("Maximum Concurency On VOIP Trunk");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=VLIMIT VALUE="<?php print $origdata["VLIMIT"];?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS4')" onmouseout="myHint.hide()"><%print _("Prefix Trunk Calls With");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=TrunkPre VALUE="<%if ($origdata["TrunkPre"] != "-") {print $origdata["TrunkPre"];}%>"></TD>
+  <TD onmouseover="myHint.show('PS4')" onmouseout="myHint.hide()"><?php print _("Prefix Trunk Calls With");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=TrunkPre VALUE="<?php if ($origdata["TrunkPre"] != "-") {print $origdata["TrunkPre"];}?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS5')" onmouseout="myHint.hide()"><%print _("Number Of Digits To Strip On Trunk");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=TrunkStrip VALUE="<%print $origdata["TrunkStrip"];%>"></TD>
+  <TD onmouseover="myHint.show('PS5')" onmouseout="myHint.hide()"><?php print _("Number Of Digits To Strip On Trunk");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=TrunkStrip VALUE="<?php print $origdata["TrunkStrip"];?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS5')" onmouseout="myHint.hide()"><%print _("Maximum Call Length On Analogue Trunks (mins)");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=MaxAna VALUE="<%print $origdata["MaxAna"];%>"></TD>
+  <TD onmouseover="myHint.show('PS5')" onmouseout="myHint.hide()"><?php print _("Maximum Call Length On Analogue Trunks (mins)");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=MaxAna VALUE="<?php print $origdata["MaxAna"];?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Apply Call Limt To All Trunks");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=MaxAll<%if ($origdata["MaxAll"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><?php print _("Apply Call Limt To All Trunks");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=MaxAll<?php if ($origdata["MaxAll"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Allow VOIP Fallover When Trunk Is Unavailable");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=VoipFallover<%if ($origdata["VoipFallover"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><?php print _("Allow VOIP Fallover When Trunk Is Unavailable");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=VoipFallover<?php if ($origdata["VoipFallover"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS9')" onmouseout="myHint.hide()"><%print _("Allow International Trunk Failover When Voip Fails");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=GSMTrunk<%if ($origdata["IntFallover"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS9')" onmouseout="myHint.hide()"><?php print _("Allow International Trunk Failover When Voip Fails");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=GSMTrunk<?php if ($origdata["IntFallover"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS7')" onmouseout="myHint.hide()"><%print _("Use ENUM Lookups On Outgoing Calls");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=NoEnum<%if ($origdata["NoEnum"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS7')" onmouseout="myHint.hide()"><?php print _("Use ENUM Lookups On Outgoing Calls");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=NoEnum<?php if ($origdata["NoEnum"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS8')" onmouseout="myHint.hide()"><%print _("Use Configured GSM Routers");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=GSMRoute<%if ($origdata["GSMRoute"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS8')" onmouseout="myHint.hide()"><?php print _("Use Configured GSM Routers");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=GSMRoute<?php if ($origdata["GSMRoute"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS9')" onmouseout="myHint.hide()"><%print _("Allow Trunk Failover When Using Configured GSM Routers");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=GSMTrunk<%if ($origdata["GSMTrunk"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS9')" onmouseout="myHint.hide()"><?php print _("Allow Trunk Failover When Using Configured GSM Routers");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=GSMTrunk<?php if ($origdata["GSMTrunk"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS9')" onmouseout="myHint.hide()"><%print _("Calls To Internal Extensions Follow Forward Rules");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=LocalFwd<%if ($origdata["LocalFwd"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS9')" onmouseout="myHint.hide()"><?php print _("Calls To Internal Extensions Follow Forward Rules");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=LocalFwd<?php if ($origdata["LocalFwd"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS9')" onmouseout="myHint.hide()"><%print _("Inbound Calls Forwarded To Reception If No Voicemail");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=Default_9<%if ($origdata["Default_9"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS9')" onmouseout="myHint.hide()"><?php print _("Inbound Calls Forwarded To Reception If No Voicemail");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=Default_9<?php if ($origdata["Default_9"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS9')" onmouseout="myHint.hide()"><%print _("Disable Billing Engine");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=PPDIS<%if ($origdata["PPDIS"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS9')" onmouseout="myHint.hide()"><?php print _("Disable Billing Engine");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=PPDIS<?php if ($origdata["PPDIS"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS9')" onmouseout="myHint.hide()"><%print _("Allow DISA Passthrough On Trunks");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=DISADDI<%if ($origdata["DISADDI"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS9')" onmouseout="myHint.hide()"><?php print _("Allow DISA Passthrough On Trunks");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=DISADDI<?php if ($origdata["DISADDI"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS9')" onmouseout="myHint.hide()"><%print _("Disable Native Bridging On Outbound");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=NoBridge<%if ($origdata["NoBridge"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS9')" onmouseout="myHint.hide()"><?php print _("Disable Native Bridging On Outbound");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=NoBridge<?php if ($origdata["NoBridge"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS9')" onmouseout="myHint.hide()"><%print _("Disable access to invalid accounts");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=ValidAcc<%if ($origdata["ValidAcc"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS9')" onmouseout="myHint.hide()"><?php print _("Disable access to invalid accounts");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=ValidAcc<?php if ($origdata["ValidAcc"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 </TABLE>
 </DIV>
 <DIV id=misdn CLASS=formpart>
 <TABLE CLASS=formtable>
 <TR CLASS=list-color2>
-  <TD WIDTH=50% onmouseover="myHint.show('PS22')" onmouseout="myHint.hide()"><%print _("Isdn Ports To Use (Group 1)");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=mISDNports VALUE="<%print $origdata["mISDNports"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS22')" onmouseout="myHint.hide()"><?php print _("Isdn Ports To Use (Group 1)");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=mISDNports VALUE="<?php print $origdata["mISDNports"];?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD WIDTH=50% onmouseover="myHint.show('PS22')" onmouseout="myHint.hide()"><%print _("Isdn Ports To Use (Group 2)");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=mISDNports2 VALUE="<%print $origdata["mISDNports2"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS22')" onmouseout="myHint.hide()"><?php print _("Isdn Ports To Use (Group 2)");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=mISDNports2 VALUE="<?php print $origdata["mISDNports2"];?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD WIDTH=50% onmouseover="myHint.show('PS22')" onmouseout="myHint.hide()"><%print _("Isdn Ports To Use (Group 3)");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=mISDNports3 VALUE="<%print $origdata["mISDNports3"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS22')" onmouseout="myHint.hide()"><?php print _("Isdn Ports To Use (Group 3)");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=mISDNports3 VALUE="<?php print $origdata["mISDNports3"];?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD WIDTH=50% onmouseover="myHint.show('PS22')" onmouseout="myHint.hide()"><%print _("Isdn Ports To Use (Group 4)");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=mISDNports4 VALUE="<%print $origdata["mISDNports4"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS22')" onmouseout="myHint.hide()"><?php print _("Isdn Ports To Use (Group 4)");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=mISDNports4 VALUE="<?php print $origdata["mISDNports4"];?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD WIDTH=50% onmouseover="myHint.show('PS22')" onmouseout="myHint.hide()"><%print _("Isdn Ports To Use (In Only)");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=mISDNinports VALUE="<%print $origdata["mISDNinports"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS22')" onmouseout="myHint.hide()"><?php print _("Isdn Ports To Use (In Only)");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=mISDNinports VALUE="<?php print $origdata["mISDNinports"];?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD WIDTH=50% onmouseover="myHint.show('PS22')" onmouseout="myHint.hide()"><%print _("Isdn Ports To Use (Forwarding)");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=mISDNfwdports VALUE="<%print $origdata["mISDNfwdports"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS22')" onmouseout="myHint.hide()"><?php print _("Isdn Ports To Use (Forwarding)");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=mISDNfwdports VALUE="<?php print $origdata["mISDNfwdports"];?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS22')" onmouseout="myHint.hide()"><%print _("RX Gain");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=mISDNgainrx VALUE="<%print $origdata["mISDNgainrx"];%>"></TD>
+  <TD onmouseover="myHint.show('PS22')" onmouseout="myHint.hide()"><?php print _("RX Gain");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=mISDNgainrx VALUE="<?php print $origdata["mISDNgainrx"];?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS22')" onmouseout="myHint.hide()"><%print _("TX Gain");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=mISDNgaintx VALUE="<%print $origdata["mISDNgaintx"];%>"></TD>
+  <TD onmouseover="myHint.show('PS22')" onmouseout="myHint.hide()"><?php print _("TX Gain");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=mISDNgaintx VALUE="<?php print $origdata["mISDNgaintx"];?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS23')" onmouseout="myHint.hide()"><%print _("Immeadiate Routing (No MSN/DDI)");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=mISDNimm<%if ($origdata["mISDNimm"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS23')" onmouseout="myHint.hide()"><?php print _("Immeadiate Routing (No MSN/DDI)");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=mISDNimm<?php if ($origdata["mISDNimm"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS24')" onmouseout="myHint.hide()"><%print _("Use Round Robin Routing");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=mISDNrr<%if ($origdata["mISDNrr"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS24')" onmouseout="myHint.hide()"><?php print _("Use Round Robin Routing");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=mISDNrr<?php if ($origdata["mISDNrr"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 </TABLE>
 </DIV>
@@ -547,10 +547,10 @@ if ($origdata['FAXBOX'] == "") {
 </TR>
 
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS24')" onmouseout="myHint.hide()" WIDTH=50%><%print _("Line Build Out");%></TD>
+  <TD onmouseover="myHint.show('PS24')" onmouseout="myHint.hide()" WIDTH=50%><?php print _("Line Build Out");?></TD>
   <TD>
      <SELECT NAME=PRIlbo>
-<%
+<?php
   $lbo['0']="0 db (CSU) / 0-133 feet (DSX-1)";
   $lbo['1']="133-266 feet (DSX-1)";
   $lbo['2']="266-399 feet (DSX-1)";
@@ -566,16 +566,16 @@ if ($origdata['FAXBOX'] == "") {
     }
     print ">" . $r2opt . "</OPTION>\n";
   }
-%>
+?>
      
      </SELECT>
   </TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS24')" onmouseout="myHint.hide()" WIDTH=50%><%print _("PRI Framing");%> (E1 - T1)</TD>
+  <TD onmouseover="myHint.show('PS24')" onmouseout="myHint.hide()" WIDTH=50%><?php print _("PRI Framing");?> (E1 - T1)</TD>
   <TD>
      <SELECT NAME=PRIframing>
-<%
+<?php
   $framing['cas']="cas - d4/sf/superframe";   
   $framing['ccs']="ccs - esf";
   while(list($r2key,$r2opt) = each($framing)) {
@@ -585,15 +585,15 @@ if ($origdata['FAXBOX'] == "") {
     }
     print ">" . $r2opt . "</OPTION>\n";
   }
-%>
+?>
      </SELECT>
   </TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS24')" onmouseout="myHint.hide()" WIDTH=50%><%print _("PRI Coding");%> (E1 - T1)</TD>
+  <TD onmouseover="myHint.show('PS24')" onmouseout="myHint.hide()" WIDTH=50%><?php print _("PRI Coding");?> (E1 - T1)</TD>
   <TD>
      <SELECT NAME=PRIcoding>
-<%
+<?php
   $coding['ami']="ami";
   $coding['hdb3']="hdb3 - b8zs";
   while(list($r2key,$r2opt) = each($coding)) {
@@ -603,14 +603,14 @@ if ($origdata['FAXBOX'] == "") {
     }
     print ">" . $r2opt . "</OPTION>\n";
   }
-%>
+?>
      
      </SELECT>
   </TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS22')" onmouseout="myHint.hide()"><%print _("CRC4 Checking (E1 Only)");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=PRIcrc4<%if ($origdata["PRIcrc4"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS22')" onmouseout="myHint.hide()"><?php print _("CRC4 Checking (E1 Only)");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=PRIcrc4<?php if ($origdata["PRIcrc4"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 
 
@@ -618,10 +618,10 @@ if ($origdata['FAXBOX'] == "") {
   <TH COLSPAN=2 CLASS=heading-body2>MFC/R2</TH>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS24')" onmouseout="myHint.hide()" WIDTH=50%><%print _("Variant");%></TD>
+  <TD onmouseover="myHint.show('PS24')" onmouseout="myHint.hide()" WIDTH=50%><?php print _("Variant");?></TD>
   <TD>
      <SELECT NAME=E1mfcr2_variant>
-<%
+<?php
   $mfcr2_variant["itu"]="ITU Standard";
   $mfcr2_variant["ar"]="Argentina";
   $mfcr2_variant["br"]="Brazil";
@@ -639,16 +639,16 @@ if ($origdata['FAXBOX'] == "") {
     }
     print ">" . $r2opt . "</OPTION>\n";
   }
-%>
+?>
      
      </SELECT>
   </TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS24')" onmouseout="myHint.hide()" WIDTH=50%><%print _("Caller Category");%></TD>
+  <TD onmouseover="myHint.show('PS24')" onmouseout="myHint.hide()" WIDTH=50%><?php print _("Caller Category");?></TD>
   <TD>
      <SELECT NAME=E1mfcr2_category>
-<%
+<?php
   $mfcr2_category["national_subscriber"]="National Subscriber";
   $mfcr2_category["national_priority_subscriber"]="National Priority Subscriber";
   $mfcr2_category["international_subscriber"]="International Subscriber";
@@ -661,53 +661,53 @@ if ($origdata['FAXBOX'] == "") {
     }
     print ">" . $r2opt . "</OPTION>\n";
   }
-%>
+?>
      
      </SELECT>
   </TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS22')" onmouseout="myHint.hide()"><%print _("Max ANI Digits");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=E1mfcr2_max_ani VALUE="<%print $origdata["E1mfcr2_max_ani"];%>"></TD>
+  <TD onmouseover="myHint.show('PS22')" onmouseout="myHint.hide()"><?php print _("Max ANI Digits");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=E1mfcr2_max_ani VALUE="<?php print $origdata["E1mfcr2_max_ani"];?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS22')" onmouseout="myHint.hide()"><%print _("Max DNIS Digits");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=E1mfcr2_max_dnis VALUE="<%print $origdata["E1mfcr2_max_dnis"];%>"></TD>
+  <TD onmouseover="myHint.show('PS22')" onmouseout="myHint.hide()"><?php print _("Max DNIS Digits");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=E1mfcr2_max_dnis VALUE="<?php print $origdata["E1mfcr2_max_dnis"];?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS23')" onmouseout="myHint.hide()"><%print _("ANI Before DNIS");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=E1mfcr2_get_ani_first<%if ($origdata["E1mfcr2_get_ani_first"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS23')" onmouseout="myHint.hide()"><?php print _("ANI Before DNIS");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=E1mfcr2_get_ani_first<?php if ($origdata["E1mfcr2_get_ani_first"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS23')" onmouseout="myHint.hide()"><%print _("Allow Collect Calls (BR:llamadas por cobrar)");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=E1mfcr2_allow_collect_calls<%if ($origdata["E1mfcr2_allow_collect_calls"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS23')" onmouseout="myHint.hide()"><?php print _("Allow Collect Calls (BR:llamadas por cobrar)");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=E1mfcr2_allow_collect_calls<?php if ($origdata["E1mfcr2_allow_collect_calls"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS23')" onmouseout="myHint.hide()"><%print _("Block Collect Calls With Double Answer");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=E1mfcr2_double_answer<%if ($origdata["E1mfcr2_double_answer"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS23')" onmouseout="myHint.hide()"><?php print _("Block Collect Calls With Double Answer");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=E1mfcr2_double_answer<?php if ($origdata["E1mfcr2_double_answer"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS23')" onmouseout="myHint.hide()"><%print _("Immeadiate Answer");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=E1mfcr2_immediate_accept<%if ($origdata["E1mfcr2_immediate_accept"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS23')" onmouseout="myHint.hide()"><?php print _("Immeadiate Answer");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=E1mfcr2_immediate_accept<?php if ($origdata["E1mfcr2_immediate_accept"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS23')" onmouseout="myHint.hide()"><%print _("Forced Release (BR)");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=E1mfcr2_forced_release<%if ($origdata["E1mfcr2_forced_release"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS23')" onmouseout="myHint.hide()"><?php print _("Forced Release (BR)");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=E1mfcr2_forced_release<?php if ($origdata["E1mfcr2_forced_release"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS23')" onmouseout="myHint.hide()"><%print _("Accept Call With Charge");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=E1mfcr2_charge_calls<%if ($origdata["E1mfcr2_charge_calls"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS23')" onmouseout="myHint.hide()"><?php print _("Accept Call With Charge");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=E1mfcr2_charge_calls<?php if ($origdata["E1mfcr2_charge_calls"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 </TABLE>
 </DIV>
 <DIV id=inbound CLASS=formpart>
 <TABLE CLASS=formtable>
 <TR CLASS=list-color2>
-  <TD WIDTH=50% onmouseover="myHint.show('PS10')" onmouseout="myHint.hide()"><%print _("Default Attendant");%></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS10')" onmouseout="myHint.hide()"><?php print _("Default Attendant");?></TD>
   <TD>
       <SELECT NAME=Attendant>
-        <OPTION VALUE=0><%print _("Auto Attendant");%></OPTION>
-<%
+        <OPTION VALUE=0><?php print _("Auto Attendant");?></OPTION>
+<?php
 	$exusers=pg_query($db,"SELECT fullname,name FROM users LEFT OUTER JOIN astdb AS epre ON (epre.family='LocalPrefix' AND epre.key=substring(name,1,2)) WHERE length(name) = 4 AND epre.value='1' ORDER BY fullname");
         $unum=pg_num_rows($exusers);
         for($i=0;$i<$unum;$i++){
@@ -718,17 +718,17 @@ if ($origdata['FAXBOX'] == "") {
           }
           print ">" . $adata[0] . "(" . $adata[1] . ")</OPTION>\n";
         }
-%>
+?>
       </SELECT>
   </TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD WIDTH=50% onmouseover="myHint.show('PS10')" onmouseout="myHint.hide()"><%print _("Auto Attendant Queue");%></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS10')" onmouseout="myHint.hide()"><?php print _("Auto Attendant Queue");?></TD>
   <TD>
       <SELECT NAME=AttendantQ>
-        <OPTION VALUE=799><%print _("Default Auto Attendant (Simple Ring All)");%></OPTION>
-        <OPTION VALUE=-1<%if ($origdata["AttendantQ"] == "-1") {print " SELECTED";}%>><%print _("No Default Attendant");%></OPTION>
-<%
+        <OPTION VALUE=799><?php print _("Default Auto Attendant (Simple Ring All)");?></OPTION>
+        <OPTION VALUE=-1<?php if ($origdata["AttendantQ"] == "-1") {print " SELECTED";}?>><?php print _("No Default Attendant");?></OPTION>
+<?php
 	$exusers=pg_query($db,"SELECT description,name FROM queue_table ORDER BY description");
         $unum=pg_num_rows($exusers);
         for($i=0;$i<$unum;$i++){
@@ -739,16 +739,16 @@ if ($origdata['FAXBOX'] == "") {
           }
           print ">" . $adata[0] . "(" . $adata[1] . ")</OPTION>\n";
         }
-%>
+?>
       </SELECT>
   </TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS11')" onmouseout="myHint.hide()"><%print _("Default Fax Terminal");%></TD>
+  <TD onmouseover="myHint.show('PS11')" onmouseout="myHint.hide()"><?php print _("Default Fax Terminal");?></TD>
   <TD>
       <SELECT NAME=FAXT>
-        <OPTION VALUE=><%print _("Auto Fax Detect & Receive");%></OPTION>
-<%
+        <OPTION VALUE=><?php print _("Auto Fax Detect & Receive");?></OPTION>
+<?php
 	$exusers=pg_query($db,"SELECT fullname,name FROM users LEFT OUTER JOIN features ON (name=exten) LEFT OUTER JOIN astdb AS epre ON (epre.family='LocalPrefix' AND epre.key=substring(name,1,2)) WHERE length(name) = 4 AND (allow ~ '(ulaw)|(alaw)' OR zapline > 0) AND epre.value = '1' ORDER BY fullname");
         $unum=pg_num_rows($exusers);
         for($i=0;$i<$unum;$i++){
@@ -759,13 +759,13 @@ if ($origdata['FAXBOX'] == "") {
           }
           print ">" . $adata[0] . "(" . $adata[1] . ")</OPTION>\n";
         }
-%>
+?>
       </SELECT>
   </TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS23')" onmouseout="myHint.hide()"><%print _("Enable Inbound FAX Detect");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=IFAXD<%if ($origdata["IFAXD"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS23')" onmouseout="myHint.hide()"><?php print _("Enable Inbound FAX Detect");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=IFAXD<?php if ($origdata["IFAXD"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 </TABLE>
 </DIV>
@@ -773,10 +773,10 @@ if ($origdata['FAXBOX'] == "") {
 <TABLE CLASS=formtable>
 
 <TR CLASS=list-color2>
-  <TD WIDTH=50% onmouseover="myHint.show('PS12')" onmouseout="myHint.hide()"><%print _("Default Extension Permision");%></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS12')" onmouseout="myHint.hide()"><?php print _("Default Extension Permision");?></TD>
   <TD>
     <SELECT NAME=Context>
-<%
+<?php
       for($i=0;$i<6;$i++) {
         print "      <OPTION VALUE=" . $i;
         if ($i == $origdata["Context"]) {
@@ -784,14 +784,14 @@ if ($origdata['FAXBOX'] == "") {
         }
         print ">" . $context[$i] . "</OPTION>\n";
       }
-%>
+?>
     </SELECT>
 </TR>
 <TR CLASS=list-color1>
-  <TD WIDTH=50% onmouseover="myHint.show('PS12')" onmouseout="myHint.hide()"><%print _("Default Auth. Extension Permision");%></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS12')" onmouseout="myHint.hide()"><?php print _("Default Auth. Extension Permision");?></TD>
   <TD>
     <SELECT NAME=AuthContext>
-<%
+<?php
       for($i=0;$i<6;$i++) {
         print "      <OPTION VALUE=" . $i;
         if ($i == $origdata["AuthContext"]) {
@@ -799,14 +799,14 @@ if ($origdata['FAXBOX'] == "") {
         }
         print ">" . $context[$i] . "</OPTION>\n";
       }
-%>
+?>
     </SELECT>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("After Hours Extension Permision");%></TD>
+  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><?php print _("After Hours Extension Permision");?></TD>
   <TD>
     <SELECT NAME=DEFALOCK>
-<%
+<?php
       for($i=0;$i<6;$i++) {
         print "      <OPTION VALUE=" . $i;
         if ($i == $origdata["DEFALOCK"]) {
@@ -814,14 +814,14 @@ if ($origdata['FAXBOX'] == "") {
         }
         print ">" . $context[$i] . "</OPTION>\n";
       }
-%>
+?>
     </SELECT>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Valid Line Authentication");%></TD>
+  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><?php print _("Valid Line Authentication");?></TD>
   <TD>
     <SELECT NAME=LINEAUTH>
-<%
+<?php
       for($i=1;$i<=3;$i++) {
         print "      <OPTION VALUE=" . $i;
         if ($i == $origdata["LINEAUTH"]) {
@@ -829,14 +829,14 @@ if ($origdata['FAXBOX'] == "") {
         }
         print ">" . $authlev[$i] . "</OPTION>\n";
       }
-%>
+?>
     </SELECT>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Snom Network Port Speed/Duplex");%></TD>
+  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><?php print _("Snom Network Port Speed/Duplex");?></TD>
   <TD>
     <SELECT NAME=SnomNet>
-<%
+<?php
       while(list($netkey,$netval) = each($snet)) {
         print "      <OPTION VALUE=" . $netkey;
         if ($netkey == $origdata["SnomNet"]) {
@@ -844,168 +844,168 @@ if ($origdata['FAXBOX'] == "") {
         }
         print ">" . $netval . "</OPTION>\n";
       }
-%>
+?>
     </SELECT>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS13')" onmouseout="myHint.hide()"><%print _("Default FAX Handler");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=FAXBOX VALUE="<%print $origdata["FAXBOX"];%>"></TD>
+  <TD onmouseover="myHint.show('PS13')" onmouseout="myHint.hide()"><?php print _("Default FAX Handler");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=FAXBOX VALUE="<?php print $origdata["FAXBOX"];?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS14')" onmouseout="myHint.hide()"><%print _("Default Ring Timeout");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=Timeout VALUE="<%print $origdata["Timeout"];%>"></TD>
+  <TD onmouseover="myHint.show('PS14')" onmouseout="myHint.hide()"><?php print _("Default Ring Timeout");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=Timeout VALUE="<?php print $origdata["Timeout"];?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS15')" onmouseout="myHint.hide()"><%print _("Default Extension Prefix (2 Digit Dialing)");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=DefaultPrefix VALUE="<%print $origdata["DefaultPrefix"];%>"></TD>
+  <TD onmouseover="myHint.show('PS15')" onmouseout="myHint.hide()"><?php print _("Default Extension Prefix (2 Digit Dialing)");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=DefaultPrefix VALUE="<?php print $origdata["DefaultPrefix"];?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS16')" onmouseout="myHint.hide()"><%print _("Default CLI (Number Displayed To Called Party)");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=DefCLI VALUE="<%if ($origdata["DefCLI"] != 0) {print $origdata["DefCLI"];}%>"></TD>
+  <TD onmouseover="myHint.show('PS16')" onmouseout="myHint.hide()"><?php print _("Default CLI (Number Displayed To Called Party)");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=DefCLI VALUE="<?php if ($origdata["DefCLI"] != 0) {print $origdata["DefCLI"];}?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS17')" onmouseout="myHint.hide()"><%print _("Default ACD Queue Timeout");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=QTimeout VALUE="<%print $origdata["QTimeout"];%>"></TD>
+  <TD onmouseover="myHint.show('PS17')" onmouseout="myHint.hide()"><?php print _("Default ACD Queue Timeout");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=QTimeout VALUE="<?php print $origdata["QTimeout"];?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS18')" onmouseout="myHint.hide()"><%print _("Default ACD Queue Agent Timeout");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=QATimeout VALUE="<%print $origdata["QATimeout"];%>"></TD>
+  <TD onmouseover="myHint.show('PS18')" onmouseout="myHint.hide()"><?php print _("Default ACD Queue Agent Timeout");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=QATimeout VALUE="<?php print $origdata["QATimeout"];?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS19')" onmouseout="myHint.hide()"><%print _("Default ACD Queue Agent Penalty Factor");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=QAPenalty VALUE="<%print $origdata["QAPenalty"];%>"></TD>
+  <TD onmouseover="myHint.show('PS19')" onmouseout="myHint.hide()"><?php print _("Default ACD Queue Agent Penalty Factor");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=QAPenalty VALUE="<?php print $origdata["QAPenalty"];?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS17')" onmouseout="myHint.hide()"><%print _("Recording Options");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=RecOpt VALUE="<%print $origdata["RecOpt"];%>"></TD>
+  <TD onmouseover="myHint.show('PS17')" onmouseout="myHint.hide()"><?php print _("Recording Options");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=RecOpt VALUE="<?php print $origdata["RecOpt"];?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS17')" onmouseout="myHint.hide()"><%print _("Default SIP IP Subnet");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=DEFIPNET VALUE="<%print $origdata["DEFIPNET"];%>"></TD>
+  <TD onmouseover="myHint.show('PS17')" onmouseout="myHint.hide()"><?php print _("Default SIP IP Subnet");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=DEFIPNET VALUE="<?php print $origdata["DEFIPNET"];?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Record Calls By Default");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=DEFRECORD<%if ($origdata["DEFRECORD"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><?php print _("Record Calls By Default");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=DEFRECORD<?php if ($origdata["DEFRECORD"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Enable Voice Mail By Default");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=DEFNOVMAIL<%if ($origdata["DEFNOVMAIL"] == "0") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><?php print _("Enable Voice Mail By Default");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=DEFNOVMAIL<?php if ($origdata["DEFNOVMAIL"] == "0") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Hangup Calls To Unknown Numbers/DDI");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=UNKDEF<%if ($origdata["UNKDEF"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><?php print _("Hangup Calls To Unknown Numbers/DDI");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=UNKDEF<?php if ($origdata["UNKDEF"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Extensions Are Remote By Default");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=REMDEF<%if ($origdata["REMDEF"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><?php print _("Extensions Are Remote By Default");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=REMDEF<?php if ($origdata["REMDEF"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Disable Routing Of Voice Mail To Reception");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=NoOper<%if ($origdata["NoOper"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><?php print _("Disable Routing Of Voice Mail To Reception");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=NoOper<?php if ($origdata["NoOper"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Require Extension Number With PIN");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=ADVPIN<%if ($origdata["ADVPIN"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><?php print _("Require Extension Number With PIN");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=ADVPIN<?php if ($origdata["ADVPIN"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Add Billing Group To CLI (Inbound)");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=AddGroup<%if ($origdata["AddGroup"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><?php print _("Add Billing Group To CLI (Inbound)");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=AddGroup<?php if ($origdata["AddGroup"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Follow DDI If Exten (Inbound)");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=FollowDDI<%if ($origdata["FollowDDI"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><?php print _("Follow DDI If Exten (Inbound)");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=FollowDDI<?php if ($origdata["FollowDDI"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Authorise Only When Registered By Default (SIP)");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=DEFAUTHREG<%if ($origdata["DEFAUTHREG"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><?php print _("Authorise Only When Registered By Default (SIP)");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=DEFAUTHREG<?php if ($origdata["DEFAUTHREG"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 </TABLE>
 </DIV>
 <DIV id=ivr CLASS=formpart>
 <TABLE CLASS=formtable>
 <TR CLASS=list-color1>
-  <TD WIDTH=50% onmouseover="myHint.show('PS20')" onmouseout="myHint.hide()"><%print _("Admin Password");%></TD>
-  <TD><INPUT TYPE=PASSWORD NAME=AdminPass1 VALUE="<%print $origdata["AdminPass"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS20')" onmouseout="myHint.hide()"><?php print _("Admin Password");?></TD>
+  <TD><INPUT TYPE=PASSWORD NAME=AdminPass1 VALUE="<?php print $origdata["AdminPass"];?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('PS21')" onmouseout="myHint.hide()"><%print _("Confirm Admin Password");%></TD>
-  <TD><INPUT TYPE=PASSWORD NAME=AdminPass2 VALUE="<%print $origdata["AdminPass"];%>"></TD>
+  <TD onmouseover="myHint.show('PS21')" onmouseout="myHint.hide()"><?php print _("Confirm Admin Password");?></TD>
+  <TD><INPUT TYPE=PASSWORD NAME=AdminPass2 VALUE="<?php print $origdata["AdminPass"];?>"></TD>
 </TR>
 </TABLE>
 </DIV>
 <DIV id=numplan CLASS=formpart>
 <TABLE CLASS=formtable>
 <TR CLASS=list-color2>
-  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><%print _("4 Digit Telco Number Pattern");%></TD>
-  <TD><INPUT TYPE=TEXT NAME="InternalPat" VALUE="<%print $origdata["InternalPat"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><?php print _("4 Digit Telco Number Pattern");?></TD>
+  <TD><INPUT TYPE=TEXT NAME="InternalPat" VALUE="<?php print $origdata["InternalPat"];?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><%print _("Telco Number Pattern (Premium)");%></TD>
-  <TD><INPUT TYPE=TEXT NAME="TPremiumPat" VALUE="<%print $origdata["TPremiumPat"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><?php print _("Telco Number Pattern (Premium)");?></TD>
+  <TD><INPUT TYPE=TEXT NAME="TPremiumPat" VALUE="<?php print $origdata["TPremiumPat"];?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><%print _("Genral Premium Numbers Pattern");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=PremiumPat VALUE="<%print $origdata["PremiumPat"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><?php print _("Genral Premium Numbers Pattern");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=PremiumPat VALUE="<?php print $origdata["PremiumPat"];?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><%print _("Cellular Numbers Pattern");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=GSMPat VALUE="<%print $origdata["GSMPat"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><?php print _("Cellular Numbers Pattern");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=GSMPat VALUE="<?php print $origdata["GSMPat"];?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><%print _("Explicit Long Distance  Numbers Pattern");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=NationalPat VALUE="<%print $origdata["NationalPat"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><?php print _("Explicit Long Distance  Numbers Pattern");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=NationalPat VALUE="<?php print $origdata["NationalPat"];?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><%print _("Explicit Local Numbers Pattern");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=LocalPat VALUE="<%print $origdata["LocalPat"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><?php print _("Explicit Local Numbers Pattern");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=LocalPat VALUE="<?php print $origdata["LocalPat"];?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><%print _("Toll Free Numbers Pattern");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=FreePat VALUE="<%print $origdata["FreePat"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><?php print _("Toll Free Numbers Pattern");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=FreePat VALUE="<?php print $origdata["FreePat"];?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><%print _("Voip Numbers Pattern");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=VoipPat VALUE="<%print $origdata["VoipPat"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><?php print _("Voip Numbers Pattern");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=VoipPat VALUE="<?php print $origdata["VoipPat"];?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><%print _("GSM Router Trunk Failover Allow Pattern");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=GSMFOPat VALUE="<%print $origdata["GSMFOPat"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><?php print _("GSM Router Trunk Failover Allow Pattern");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=GSMFOPat VALUE="<?php print $origdata["GSMFOPat"];?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><%print _("Inbound Local Call Pattern (Trunk Forward)");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=TRUNKDDIPat VALUE="<%print $origdata["TRUNKDDIPat"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><?php print _("Inbound Local Call Pattern (Trunk Forward)");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=TRUNKDDIPat VALUE="<?php print $origdata["TRUNKDDIPat"];?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><%print _("DDI Limit Pattern (Accepted DDI More Than 4 Digits)");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=DDIPAT VALUE="<%print $origdata["DDIPAT"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><?php print _("DDI Limit Pattern (Accepted DDI More Than 4 Digits)");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=DDIPAT VALUE="<?php print $origdata["DDIPAT"];?>"></TD>
 </TR>
 </TABLE>
 </DIV>
 <DIV id=autoadd CLASS=formpart>
 <TABLE CLASS=formtable>
 <TR CLASS=list-color2>
-  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><%print _("Start Exten.");%></TD>
-  <TD><INPUT TYPE=TEXT NAME="AutoStart" VALUE="<%print $origdata["AutoStart"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><?php print _("Start Exten.");?></TD>
+  <TD><INPUT TYPE=TEXT NAME="AutoStart" VALUE="<?php print $origdata["AutoStart"];?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><%print _("End Exten.");%></TD>
-  <TD><INPUT TYPE=TEXT NAME="AutoEnd" VALUE="<%print $origdata["AutoEnd"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><?php print _("End Exten.");?></TD>
+  <TD><INPUT TYPE=TEXT NAME="AutoEnd" VALUE="<?php print $origdata["AutoEnd"];?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><%print _("VLAN");%></TD>
-  <TD><INPUT TYPE=TEXT NAME="AutoVLAN" VALUE="<%print $origdata["AutoVLAN"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><?php print _("VLAN");?></TD>
+  <TD><INPUT TYPE=TEXT NAME="AutoVLAN" VALUE="<?php print $origdata["AutoVLAN"];?>"></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><%print _("STUN Server (Linksys)");%></TD>
-  <TD><INPUT TYPE=TEXT NAME="AutoSTUN" VALUE="<%print $origdata["AutoSTUN"];%>"></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><?php print _("STUN Server (Linksys)");?></TD>
+  <TD><INPUT TYPE=TEXT NAME="AutoSTUN" VALUE="<?php print $origdata["AutoSTUN"];?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><%print _("Lock Settings (Snom)");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=AutoLock<%if ($origdata["AutoLock"] == "1") {print " CHECKED";}%>></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('PS0')" onmouseout="myHint.hide()"><?php print _("Lock Settings (Snom)");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=AutoLock<?php if ($origdata["AutoLock"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><%print _("Require Authorisation");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=AutoAuth<%if ($origdata["AutoAuth"] == "1") {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('PS6')" onmouseout="myHint.hide()"><?php print _("Require Authorisation");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=AutoAuth<?php if ($origdata["AutoAuth"] == "1") {print " CHECKED";}?>></TD>
 </TR>
 </TABLE>
 </DIV>
@@ -1015,6 +1015,6 @@ if ($origdata['FAXBOX'] == "") {
 
 <SCRIPT>
 document.getElementById(document.pbxform.curdiv.value).style.visibility='visible';
-document.getElementById(document.pbxform.curdiv.value+'_but').style.backgroundColor='<%print $menubg2;%>';
-document.getElementById(document.pbxform.curdiv.value+'_but').style.color='<%print $menufg2;%>';
+document.getElementById(document.pbxform.curdiv.value+'_but').style.backgroundColor='<?php print $menubg2;?>';
+document.getElementById(document.pbxform.curdiv.value+'_but').style.color='<?php print $menufg2;?>';
 </SCRIPT>

@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -27,16 +27,16 @@ if (! isset($agi)) {
 }
 
 $chans=$agi->command("core show translation");
-%>
+?>
 
 <CENTER>
 
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
   <TR CLASS=list-color2>
-    <TH CLASS=heading-body><%print _("Codec Translation Table");%></TH>
+    <TH CLASS=heading-body><?php print _("Codec Translation Table");?></TH>
   </TR>
 
-<%
+<?php
 
 $cnt=0;
 print "<TR CLASS=list-color" . (($cnt % 2) + 1). "><TD ALIGN=MIDDLE><PRE>";
@@ -48,5 +48,5 @@ foreach(explode("\n",$chans['data']) as $line) {
 }
 print "</PRE></TD></TR>\n";
 $agi->disconnect();
-%>
+?>
 </TABLE>

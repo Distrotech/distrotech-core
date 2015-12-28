@@ -1,4 +1,4 @@
-<%
+<?php
 if (! $db) {
   include "/var/spool/apache/htdocs/cshop/auth.inc";
 }
@@ -25,16 +25,16 @@ $boothq=pg_query($db,"SELECT fullname,tariff
                      WHERE usertype=2 AND name='" . $_SESSION['number'] . "'
                            AND agentid = " . $_SESSION['resellerid'] . " LIMIT 1");
 $booth=pg_fetch_row($boothq,0);
-%>
+?>
 <CENTER>
 <FORM NAME=edituser METHOD=POST onsubmit="ajaxsubmit(this.name);return false">
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%> 
 <TR CLASS=list-color2>
-<TH COLSPAN=2 CLASS=heading-body>Editing <%print $_SESSION['number'];%></TH></TR>
+<TH COLSPAN=2 CLASS=heading-body>Editing <?php print $_SESSION['number'];?></TH></TR>
 <TR CLASS=list-color1>
-<TD ALIGN=LEFT>Booth Name</TD><TD><INPUT TYPE=TEXT NAME=firstname VALUE="<%print $booth[0];%>"></TD></TR>
+<TD ALIGN=LEFT>Booth Name</TD><TD><INPUT TYPE=TEXT NAME=firstname VALUE="<?php print $booth[0];?>"></TD></TR>
 <TR CLASS=list-color2>
-<TD ALIGN=LEFT>Rate Plan</TD><TD><SELECT NAME=tariff><%
+<TD ALIGN=LEFT>Rate Plan</TD><TD><SELECT NAME=tariff><?php
   $tplan=pg_query($db,"SELECT tariffname,tariffcode FROM tariff WHERE tariffcode LIKE '" .
                        $_SESSION['resellerid'] . "-%' ORDER BY tariffname");
   $num=pg_num_rows($tplan);
@@ -45,9 +45,9 @@ $booth=pg_fetch_row($boothq,0);
       print " SELECTED";
     }
     print ">" . $r[0] . "</OPTION>\n";
-  }%>
-<%
-%>
+  }?>
+<?php
+?>
 </SELECT>
 </TD></TR>
 <TR CLASS=list-color1>

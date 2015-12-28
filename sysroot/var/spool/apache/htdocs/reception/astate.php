@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -19,15 +19,15 @@
 */
 
 include "auth.inc";
-%>
-<link rel="stylesheet" href="/style.php?style=<%print $style;%>">
+?>
+<link rel="stylesheet" href="/style.php?style=<?php print $style;?>">
 <meta http-equiv="refresh" content="15">
 <CENTER>
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
 <TR CLASS=list-color2>
-  <TH COLSPAN=4 CLASS=heading-body><%print _("User Available State")%></TH>
+  <TH COLSPAN=4 CLASS=heading-body><?php print _("User Available State")?></TH>
 </TR><TR CLASS=list-color1>
-<%
+<?php
 $ustateq="SELECT '    <TD CLASS=option-'||CASE WHEN (cdnd = '1') THEN 'red' ELSE 'green' END ||'>'||name||' ('||fullname||')</TD>\n' from 
 users 
   LEFT OUTER JOIN astdb AS lpre ON (substr(name,1,2) = lpre.key AND lpre.family='LocalPrefix')  
@@ -50,6 +50,6 @@ if (($qcnt % 4) > 0) {
     print "    <TD>&nbsp;</TD>\n";
   }
 }
-%>
+?>
 </TR>
 </TABLE>

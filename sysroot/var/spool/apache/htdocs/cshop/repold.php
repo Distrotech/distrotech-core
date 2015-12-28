@@ -1,6 +1,6 @@
 <CENTER>
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -33,7 +33,7 @@ if (($year != "" ) && ($month == "")) {
                          GROUP BY month,saletype ORDER BY month,credit DESC");
   $num=pg_num_rows($report); 
   $bcolor[0]="list-color1";
-  $bcolor[1]="list-color2";%>
+  $bcolor[1]="list-color2";?>
 
 <TR CLASS=list-color2>
 <TH ALIGN=LEFT>Month</TH>
@@ -41,7 +41,7 @@ if (($year != "" ) && ($month == "")) {
 <TH ALIGN=LEFT>Credit</TH>
 <TH ALIGN=LEFT>Average</TH>
 <TH ALIGN=LEFT>Number</TH>
-</TR><%
+</TR><?php
 
   for ($i=0; $i < $num; $i++) {
     $r = pg_fetch_row($report,$i);
@@ -75,7 +75,7 @@ if (($year != "" ) && ($month == "")) {
                          GROUP BY day,saletype ORDER BY day,credit DESC");
   $num=pg_num_rows($report); 
   $bcolor[0]="list-color1";
-  $bcolor[1]="list-color2";%>
+  $bcolor[1]="list-color2";?>
 
 <TR CLASS=list-color2>
 <TH ALIGN=LEFT>Day</TH>
@@ -83,7 +83,7 @@ if (($year != "" ) && ($month == "")) {
 <TH ALIGN=LEFT>Credit</TH>
 <TH ALIGN=LEFT>Average</TH>
 <TH ALIGN=LEFT>Number</TH>
-</TR><%
+</TR><?php
 
   for ($i=0; $i < $num; $i++) {
     $r = pg_fetch_row($report,$i);
@@ -118,7 +118,7 @@ if (($year != "" ) && ($month == "")) {
                          GROUP BY hour,saletype ORDER BY hour,credit DESC");
   $num=pg_num_rows($report); 
   $bcolor[0]="list-color1";
-  $bcolor[1]="list-color2";%>
+  $bcolor[1]="list-color2";?>
 
 <TR CLASS=list-color2>
 <TH ALIGN=LEFT>Hour</TH>
@@ -126,7 +126,7 @@ if (($year != "" ) && ($month == "")) {
 <TH ALIGN=LEFT>Credit</TH>
 <TH ALIGN=LEFT>Average</TH>
 <TH ALIGN=LEFT>Number</TH>
-</TR><%
+</TR><?php
 
   for ($i=0; $i < $num; $i++) {
     $r = pg_fetch_row($report,$i);
@@ -160,7 +160,7 @@ if (($year != "" ) && ($month == "")) {
                          GROUP BY year,saletype ORDER BY year,credit DESC");
   $num=pg_num_rows($report); 
   $bcolor[0]="list-color1";
-  $bcolor[1]="list-color2";%>
+  $bcolor[1]="list-color2";?>
 
 <TR CLASS=list-color2>
 <TH ALIGN=LEFT>Year</TH>
@@ -168,7 +168,7 @@ if (($year != "" ) && ($month == "")) {
 <TH ALIGN=LEFT>Credit</TH>
 <TH ALIGN=LEFT>Average</TH>
 <TH ALIGN=LEFT>Number</TH>
-</TR><%
+</TR><?php
 
   for ($i=0; $i < $num; $i++) {
     $r = pg_fetch_row($report,$i);
@@ -192,5 +192,5 @@ if (($year != "" ) && ($month == "")) {
     print "</TR>\n";
   }
 }
-%>
+?>
 </TABLE>

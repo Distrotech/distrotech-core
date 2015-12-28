@@ -1,4 +1,4 @@
-<%
+<?php
   if ($time == "") {
     $time="86400";
   }
@@ -35,4 +35,4 @@
 
   $imin=imagecreatefrompng("bw-".$gname.".png");
   imagepng($imin);
-%>
+?>

@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -20,11 +20,11 @@
   if (! $rdn) {
     include "auth.inc";
   }
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=vzone onsubmit="ajaxsubmit(this.name);return false">
 <table border="0" width="90%" cellspacing="0" cellpadding="0">
-<%
+<?php
 
 $grpprop=array("quotaHomeDir"=>_("Home Directory Size Limit"),
                "quotaMailSpool"=>_("Mailbox Size Limit"),
@@ -179,9 +179,9 @@ if (($group != "") && ($groupedit == _("Modify"))){
 
     ldap_modify($ds,"cn=$group,ou=Vadmin",$addent);
   } else if ($groupmod == _("Delete")) {
-%>
+?>
     <SCRIPT>alert("You May Not Delete Yourself !!!");</SCRIPT>
-<%
+<?php
   }
 
   $sobj="(&(objectClass=virtZoneSettings)(cn=$group))";
@@ -318,7 +318,7 @@ if (($group != "") && ($groupedit == _("Modify"))){
   print "<INPUT TYPE=SUBMIT onclick=this.name='groupedit' VALUE=\"" . _("Modify") . "\">\n";
   print "<INPUT TYPE=SUBMIT onclick=this.name='groupedit' VALUE=\"" . _("Delete") . "\"><P>\n";
 }
-%>
+?>
 </TD></TR>
 </FORM>
 </table>

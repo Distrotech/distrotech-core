@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -30,7 +30,7 @@ $cdrusr=pg_query($db,$cdrqusr);
 $bcolor[0]="list-color1";
 $bcolor[1]="list-color2";
 
-%>
+?>
 <link rel=stylesheet type=text/css href=/style.php>
 <DIV CLASS=popup>
 <CENTER>
@@ -42,7 +42,7 @@ $bcolor[1]="list-color2";
 <TH ALIGN=LEFT><FONT SIZE=1>Credit Left</TH>
 <TH ALIGN=LEFT><FONT SIZE=1>Credit assigned</TH>
 <TH ALIGN=LEFT><FONT SIZE=1></TH>
-<%
+<?php
 
 $num=pg_num_rows($cdr);
 for ($i=0; $i < $num; $i++) {
@@ -67,13 +67,13 @@ for ($i=0; $i < $num; $i++) {
 }
   $rem=$i % 2; 
   print "<TR CLASS=" . $bcolor[$rem] . ">";
-%>
+?>
 <TH ALIGN=LEFT><FONT SIZE=1>Users Name</TH>
 <TH ALIGN=LEFT><FONT SIZE=1>Users ID</TH>
 <TH ALIGN=LEFT><FONT SIZE=1>Credit Left</TH>
 <TH ALIGN=LEFT><FONT SIZE=1>Credit assigned</TH>
 <TH ALIGN=LEFT><FONT SIZE=1></TH>
-<%
+<?php
 
 $num=pg_num_rows($cdrusr);
 for ($i=0; $i < $num; $i++) {
@@ -105,8 +105,8 @@ if ($rem == 0)
   {
     $rem = 0;
   }
-%>
-<TR CLASS="<% print $bcolor[$rem] %>">
+?>
+<TR CLASS="<?php print $bcolor[$rem] ?>">
 	<TH COLSPAN=5 CLASS=heading-body>
 		<INPUT TYPE=SUBMIT NAME=Submit VALUE=Submit>
 	</th>

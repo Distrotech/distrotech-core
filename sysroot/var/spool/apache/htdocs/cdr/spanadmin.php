@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -70,12 +70,12 @@ $lbo['5']="-7.5db (CSU)";
 $lbo['6']="-15db (CSU)";
 $lbo['7']="-22.5db (CSU)";
 
-%>
-<INPUT TYPE=HIDDEN NAME=zapspan VALUE=<%print $zapspan;%>>
+?>
+<INPUT TYPE=HIDDEN NAME=zapspan VALUE=<?php print $zapspan;?>>
 <INPUT TYPE=HIDDEN NAME=update VALUE=seen>
-  <TH CLASS=heading-body COLSPAN=2><%print _("Configuration For Span") . " " . $zapspan%></TH>
+  <TH CLASS=heading-body COLSPAN=2><?php print _("Configuration For Span") . " " . $zapspan?></TH>
 </TR>
-<%
+<?php
 $col=0;
 while(list($zapopt,$zapval)=each($zdata)) {
   if ($label[$zapopt] != "") {
@@ -111,12 +111,12 @@ while(list($zapopt,$zapval)=each($zdata)) {
   print "\n  </TD>\n</TR>";
   $col++;
 }
-%>
-<TR CLASS=list-color<%print (($col % 2) +1);%>>
+?>
+<TR CLASS=list-color<?php print (($col % 2) +1);?>>
   <TD ALIGN=MIDDLE COLSPAN=2>
-    <INPUT TYPE=SUBMIT onclick=this.name='pbxupdate' VALUE="<%print _("Save");%>">
+    <INPUT TYPE=SUBMIT onclick=this.name='pbxupdate' VALUE="<?php print _("Save");?>">
     <INPUT TYPE=RESET>
-    <INPUT TYPE=SUBMIT onclick=this.name='pbxdelete' VALUE="<%print _("Delete");%>">
+    <INPUT TYPE=SUBMIT onclick=this.name='pbxdelete' VALUE="<?php print _("Delete");?>">
   </TD>
 </TR>
 </TABLE>

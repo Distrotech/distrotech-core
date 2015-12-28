@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -24,18 +24,18 @@ function writeconf($phone,$file) {
       $newver=explode("-",$file);
       $newverr=explode(".",$newver[1]);
       $fwareld=fopen("/var/spool/apache/htdocs/snom/snom" . $phone . "-fw.php","w");
-      fputs($fwareld,"<%
+      fputs($fwareld,"<?php
 \$phone=\"" . $phone . "\";
 \$newver=\"" . $newverr[0] . "\";
 \$firmware_file=\"" . $file . "\";
 include \"snom-fw.php\";
-%>\n");
+?>\n");
       fclose($fwareld);
 }
 
-if (isset($addreq)) {%>
+if (isset($addreq)) {?>
   <CENTER>
-  <TABLE WIDTH=90% cellspacing="0" cellpadding="0"><%
+  <TABLE WIDTH=90% cellspacing="0" cellpadding="0"><?php
   print "<TR CLASS=list-color2><TH CLASS=heading-body2>";
   if ($_FILES['snom300']['name'] != "") {
     if (move_uploaded_file($_FILES['snom300']['tmp_name'],"/var/spool/apache/htdocs/snom/" . $_FILES['snom300']['name'])) {
@@ -130,11 +130,11 @@ if (isset($addreq)) {%>
 
   print "</TABLE>";
 }else {
-%>
+?>
 <CENTER>
   <FORM enctype="multipart/form-data" METHOD=POST>
   <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
-    <TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body><%print _("Please Upload The Firmware Files For The Following Snom Phones");%></TH></TR>
+    <TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body><?php print _("Please Upload The Firmware Files For The Following Snom Phones");?></TH></TR>
     <TR CLASS=list-color1>
       <TD onmouseover="myHint.show('SL0')" onmouseout="myHint.hide()" WIDTH=50%>
         Snom 300
@@ -193,11 +193,11 @@ if (isset($addreq)) {%>
     </TR>
     <TR CLASS=list-color2>
       <TD COLSPAN=2 ALIGN=MIDDLE>
-        <INPUT TYPE=SUBMIT NAME=addreq VALUE="<%print _("Submit Request");%>">
+        <INPUT TYPE=SUBMIT NAME=addreq VALUE="<?php print _("Submit Request");?>">
       </TD>
     <TR>
   </TABLE>
   </FORM>
-<%
+<?php
 }
-%>
+?>

@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -26,11 +26,11 @@ if ($_POST['classi'] != "") {
   $groupedit="Modify";
 }
 
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=agrpfrm onsubmit="ajaxsubmit(this.name);return false">
 <table border="0" width="90%" cellspacing="0" cellpadding="0">
-<%
+<?php
 $abdn="ou=Admin";
 
 
@@ -92,9 +92,9 @@ if (($group != "") && ($groupedit == "Modify")){
       ldap_mod_add($ds,$group,$addent);
     }
   } else if ($groupmod == _("Delete")) {
-%>
-    <SCRIPT>alert("<%print _("You May Not Delete Yourself !!!");%>");</SCRIPT>
-<%
+?>
+    <SCRIPT>alert("<?php print _("You May Not Delete Yourself !!!");?>");</SCRIPT>
+<?php
   }
 
   $sobj="objectClass=groupofnames";
@@ -201,11 +201,11 @@ if (($group != "") && ($groupedit == "Modify")){
 } else {
 
   print "Select Access Group To Edit<P><SELECT NAME=group>\n";
-%>
+?>
     <OPTION VALUE="cn=Admin Access,ou=Admin">Admin Access
     <OPTION VALUE="cn=User Read Access,ou=Admin">Access To User Information
     <OPTION VALUE="cn=Call Shop Access,ou=Admin">Call Shop Users
-<%
+<?php
   if (! file_exists("/etc/.networksentry-lite")) {
     $sr=ldap_search($ds,"cn=Addressbooks","objectClass=groupofnames");
     $info = ldap_get_entries($ds, $sr);
@@ -223,7 +223,7 @@ if (($group != "") && ($groupedit == "Modify")){
   print "\n</SELECT><P>\n";
   print "<INPUT TYPE=SUBMIT onclick=this.name='groupedit' VALUE=\"Modify\">\n";
 }
-%>
+?>
   </TD></TR>
 </table>
 </FORM>

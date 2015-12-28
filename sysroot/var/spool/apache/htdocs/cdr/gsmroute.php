@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -20,7 +20,7 @@
 
 include_once "auth.inc";
 
-if ($modchan == "1") {%>
+if ($modchan == "1") {?>
 <html>
 <head>
 <link rel="stylesheet" href="/style.php?style=">
@@ -30,23 +30,23 @@ if ($modchan == "1") {%>
 <script language="JavaScript" src="/hints_cfg.php?disppage=cdr%2Fgsmroute.php" type="text/javascript"></script>
 
 </head>
-<%
+<?php
 }
 
-%>
+?>
 
 <CENTER>
 <FORM METHOD=POST NAME=gsmrform onsubmit="ajaxsubmit(this.name);return false;">
-<INPUT TYPE=HIDDEN NAME=nomenu VALUE=<%print $_POST['nomenu'];%>>
-<INPUT TYPE=HIDDEN NAME=router VALUE="<%print $router;%>">
+<INPUT TYPE=HIDDEN NAME=nomenu VALUE=<?php print $_POST['nomenu'];?>>
+<INPUT TYPE=HIDDEN NAME=router VALUE="<?php print $router;?>">
 
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
   <TR CLASS=list-color2>
-    <TH CLASS=heading-body COLSPAN=2><%print _("Asterisk GSM Channel Configuration");%></TH>
+    <TH CLASS=heading-body COLSPAN=2><?php print _("Asterisk GSM Channel Configuration");?></TH>
   </TR>
   <TR CLASS=list-color1>
 
-<%
+<?php
 if ((isset($delchan)) && ($channel != "")) {
   pg_query($db,"DELETE FROM gsmchannels where channel = " . $channel);
 } elseif (isset($upchan)) {
@@ -88,31 +88,31 @@ if (isset($modchan)) {
   if ($secs < 10) {
     $secs="0" . $secs;
   }
-%>
+?>
   <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('GR3')" onmouseout="myHint.hide()"><%print _("Calltime (Minutes:Seconds)");%></TD>
-  <TD><INPUT TYPE=TEXT SIZE=8 NAME=nminutes VALUE="<%print $mins;%>">:
-      <INPUT TYPE=TEXT SIZE=8 NAME=nseconds VALUE="<%print $secs;%>"></TD>
+  <TD onmouseover="myHint.show('GR3')" onmouseout="myHint.hide()"><?php print _("Calltime (Minutes:Seconds)");?></TD>
+  <TD><INPUT TYPE=TEXT SIZE=8 NAME=nminutes VALUE="<?php print $mins;?>">:
+      <INPUT TYPE=TEXT SIZE=8 NAME=nseconds VALUE="<?php print $secs;?>"></TD>
 
   </TR>
 
   <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('GR4')" onmouseout="myHint.hide()"><%print _("Start Time [hh:mm:ss]");%></TD>
-  <TD><INPUT TYPE=TEXT SIZE=12 NAME=nstarttime VALUE="<%print $getdata[4];%>">
+  <TD onmouseover="myHint.show('GR4')" onmouseout="myHint.hide()"><?php print _("Start Time [hh:mm:ss]");?></TD>
+  <TD><INPUT TYPE=TEXT SIZE=12 NAME=nstarttime VALUE="<?php print $getdata[4];?>">
   </TR>
   <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('GR5')" onmouseout="myHint.hide()"><%print _("End Time [hh:mm:ss]");%></TD>
-  <TD><INPUT TYPE=TEXT SIZE=12 NAME=nendtime VALUE="<%print $getdata[5];%>">
+  <TD onmouseover="myHint.show('GR5')" onmouseout="myHint.hide()"><?php print _("End Time [hh:mm:ss]");?></TD>
+  <TD><INPUT TYPE=TEXT SIZE=12 NAME=nendtime VALUE="<?php print $getdata[5];?>">
   </TR>
   <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('GR6')" onmouseout="myHint.hide()"><%print _("Number Match");%></TD>
-  <TD><INPUT TYPE=TEXT SIZE=12 NAME=nregex VALUE="<%print $getdata[6];%>">
+  <TD onmouseover="myHint.show('GR6')" onmouseout="myHint.hide()"><?php print _("Number Match");?></TD>
+  <TD><INPUT TYPE=TEXT SIZE=12 NAME=nregex VALUE="<?php print $getdata[6];?>">
   </TR>
 
   <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('GR7')" onmouseout="myHint.hide()"><%print _("Expires");%></TD>
+  <TD onmouseover="myHint.show('GR7')" onmouseout="myHint.hide()"><?php print _("Expires");?></TD>
   <TD><SELECT NAME=eyear>
-<%
+<?php
   list($year, $month, $day) = sscanf($getdata[1],"%d-%d-%d");
   for($ey=$year;$ey < $year+3;$ey++) {
     print "<OPTION VALUE=$ey";
@@ -121,9 +121,9 @@ if (isset($modchan)) {
     }
     print ">$ey</OPTION>\n";
   }
-%>
+?>
   </SELECT>-<SELECT NAME=emonth>
-<%
+<?php
   for($em=1;$em < 12;$em++) {
     print "<OPTION VALUE=$em";
     if ($em == $month) {
@@ -131,9 +131,9 @@ if (isset($modchan)) {
     }
     print ">$em</OPTION>\n";
   }
-%>
+?>
   </SELECT>-<SELECT NAME=eday>
-<%
+<?php
   for($ed=1;$ed < 31;$ed++) {
     print "<OPTION VALUE=$ed";
     if ($ed == $day) {
@@ -141,38 +141,38 @@ if (isset($modchan)) {
     }
     print ">$ed</OPTION>\n";
   }
-%>
+?>
   </SELECT>
   </TD>
   <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('GR8')" onmouseout="myHint.hide()"><%print _("Channel Inuse");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=inuse<%if ($getdata[2] == 't') {print " CHECKED";}%>></TD>
+  <TD onmouseover="myHint.show('GR8')" onmouseout="myHint.hide()"><?php print _("Channel Inuse");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=inuse<?php if ($getdata[2] == 't') {print " CHECKED";}?>></TD>
   </TR>
   <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('GR9')" onmouseout="myHint.hide()"><%print _("Channel Out Of Service");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=outofservice<%if ($getdata[3] == 't') {print " CHECKED";}%>>
-  <%if ($getdata[3] == 't') {print " Unavailable For ";} else {print " Available For ";}%>
-  <%print $getdata[8];%>
+  <TD onmouseover="myHint.show('GR9')" onmouseout="myHint.hide()"><?php print _("Channel Out Of Service");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=outofservice<?php if ($getdata[3] == 't') {print " CHECKED";}?>>
+  <?php if ($getdata[3] == 't') {print " Unavailable For ";} else {print " Available For ";}?>
+  <?php print $getdata[8];?>
   </TD>
   </TR>
   <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('GR10')" onmouseout="myHint.hide()"><%print _("Fault Count Penalty")%></TD>
-  <TD><%print $getdata[7] . " Penalty ";if ($getdata[7] > 0) {print $getdata[9];} else {print "0";}%></TD>
+  <TD onmouseover="myHint.show('GR10')" onmouseout="myHint.hide()"><?php print _("Fault Count Penalty")?></TD>
+  <TD><?php print $getdata[7] . " Penalty ";if ($getdata[7] > 0) {print $getdata[9];} else {print "0";}?></TD>
   </TR>
-  <INPUT TYPE=HIDDEN NAME=router VALUE="<%print $router;%>">
-  <INPUT TYPE=HIDDEN NAME=channel VALUE="<%print $channel;%>">
+  <INPUT TYPE=HIDDEN NAME=router VALUE="<?php print $router;?>">
+  <INPUT TYPE=HIDDEN NAME=channel VALUE="<?php print $channel;?>">
   <TR CLASS=list-color1>
     <TD ALIGN=MIDDLE COLSPAN=2>
       <INPUT TYPE=RESET>
-      <INPUT TYPE=SUBMIT onclick=this.name='upchan' VALUE="<%print _("Modify");%>">
-    </TD><%
+      <INPUT TYPE=SUBMIT onclick=this.name='upchan' VALUE="<?php print _("Modify");?>">
+    </TD><?php
 } else if ($router != "") {
   $qgetdata=pg_query($db,"SELECT channel,calltime,date(expires),inuse,outofservice from gsmchannels order by channel");
-%>
-  <TD onmouseover="myHint.show('GR1')" onmouseout="myHint.hide()"><%print _("Select Channel");%></TD>
+?>
+  <TD onmouseover="myHint.show('GR1')" onmouseout="myHint.hide()"><?php print _("Select Channel");?></TD>
   <TD><SELECT NAME=channel>
-    <OPTION VALUE=""><%print _("Add New Channel");%></OPTION>
-  <%
+    <OPTION VALUE=""><?php print _("Add New Channel");?></OPTION>
+  <?php
   $dnum=pg_num_rows($qgetdata);
   for($i=0;$i<$dnum;$i++){
     $getdata=pg_fetch_array($qgetdata,$i);
@@ -190,35 +190,35 @@ if (isset($modchan)) {
     }
     print ")</OPTION>"; 
   }
-  %>
+  ?>
   </SELECT> 
-  <INPUT TYPE=HIDDEN NAME=company VALUE="<%print $key;%>">
+  <INPUT TYPE=HIDDEN NAME=company VALUE="<?php print $key;?>">
   </TR>
 
   <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('GR2')" onmouseout="myHint.hide()"><%print _("New Channel");%></TD>
+  <TD onmouseover="myHint.show('GR2')" onmouseout="myHint.hide()"><?php print _("New Channel");?></TD>
   <TD><INPUT TYPE=TEXT SIZE=4 NAME=nchannel></TD>
   </TR>
   <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('GR3')" onmouseout="myHint.hide()"><%print _("Call Time (Minutes:Seconds)");%></TD>
+  <TD onmouseover="myHint.show('GR3')" onmouseout="myHint.hide()"><?php print _("Call Time (Minutes:Seconds)");?></TD>
   <TD><INPUT TYPE=TEXT SIZE=8 NAME=nminutes>:<INPUT TYPE=TEXT SIZE=8 NAME=nseconds></TD>
   </TR>
   <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('GR4')" onmouseout="myHint.hide()"><%print _("Start Time [hh:mm:ss]");%></TD>
+  <TD onmouseover="myHint.show('GR4')" onmouseout="myHint.hide()"><?php print _("Start Time [hh:mm:ss]");?></TD>
   <TD><INPUT TYPE=TEXT SIZE=8 NAME=nstarttime VALUE="00:00:00">
   </TR>
   <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('GR5')" onmouseout="myHint.hide()"><%print _("End Time [hh:mm:ss]");%></TD>
+  <TD onmouseover="myHint.show('GR5')" onmouseout="myHint.hide()"><?php print _("End Time [hh:mm:ss]");?></TD>
   <TD><INPUT TYPE=TEXT SIZE=8 NAME=nendtime VALUE="00:00:00">
   </TR>
   <TR CLASS=list-color2>
-  <TD onmouseover="myHint.show('GR6')" onmouseout="myHint.hide()"><%print _("Number Match");%></TD>
+  <TD onmouseover="myHint.show('GR6')" onmouseout="myHint.hide()"><?php print _("Number Match");?></TD>
   <TD><INPUT TYPE=TEXT SIZE=8 NAME=nregex>
   </TR>
   <TR CLASS=list-color1>
-  <TD onmouseover="myHint.show('GR7')" onmouseout="myHint.hide()"><%print _("Expires");%></TD>
+  <TD onmouseover="myHint.show('GR7')" onmouseout="myHint.hide()"><?php print _("Expires");?></TD>
   <TD><SELECT NAME=eyear>
-<%
+<?php
   $today=getdate();
   $year=$today['year'];
   $month=$today['mon'];
@@ -226,9 +226,9 @@ if (isset($modchan)) {
   for($ey=$year;$ey < $year+3;$ey++) {
     print "<OPTION VALUE=$ey>$ey</OPTION>\n";
   }
-%>
+?>
   </SELECT>-<SELECT NAME=emonth>
-<%
+<?php
   for($em=1;$em < 12;$em++) {
     print "<OPTION VALUE=$em";
     if ($em == $month+1) {
@@ -236,9 +236,9 @@ if (isset($modchan)) {
     }
     print ">$em</OPTION>\n";
   }
-%>
+?>
   </SELECT>-<SELECT NAME=eday>
-<%
+<?php
   for($ed=1;$ed < 31;$ed++) {
     print "<OPTION VALUE=$ed";
     if ($ed == $day) {
@@ -246,37 +246,37 @@ if (isset($modchan)) {
     }
     print ">$ed</OPTION>\n";
   }
-%>
+?>
   </SELECT>
-  <INPUT TYPE=HIDDEN NAME=router VALUE="<%print $router;%>">
+  <INPUT TYPE=HIDDEN NAME=router VALUE="<?php print $router;?>">
   </TD>
   <TR CLASS=list-color2>
     <TD ALIGN=MIDDLE COLSPAN=2>
       <INPUT TYPE=RESET>
-      <INPUT TYPE=SUBMIT onclick=this.name='modchan' VALUE="<%print _("Modify");%>">
-      <INPUT TYPE=SUBMIT onclick=this.name='delchan' VALUE="<%print _("Delete");%>">
+      <INPUT TYPE=SUBMIT onclick=this.name='modchan' VALUE="<?php print _("Modify");?>">
+      <INPUT TYPE=SUBMIT onclick=this.name='delchan' VALUE="<?php print _("Delete");?>">
     </TD>
-<%
+<?php
   } else {
   $rtrdata=pg_query($db," SELECT trunk.h323gkid,description from trunk LEFT OUTER JOIN users ON (trunk.h323gkid=name) where trunk.h323prefix='*' or users.h323neighbor='t' order by description");
-%>
+?>
   <TR CLASS=list-color1>
-  <TD WIDTH=50% onmouseover="myHint.show('GR0')" onmouseout="myHint.hide()"><%print _("Select Router");%></TD>
+  <TD WIDTH=50% onmouseover="myHint.show('GR0')" onmouseout="myHint.hide()"><?php print _("Select Router");?></TD>
   <TD><SELECT NAME=router>
-  <%
+  <?php
   $dnum=pg_num_rows($rtrdata);
   for($i=0;$i<$dnum;$i++){
     $getdata=pg_fetch_array($rtrdata,$i);
     print "<OPTION VALUE=" . $getdata[0] . ">" . $getdata[1] . "</OPTION>"; 
   }
-  %>
+  ?>
   </SELECT> 
   <TR CLASS=list-color2>
-  <TD COLSPAN=2 ALIGN=MIDDLE><INPUT TYPE=SUBMIT VALUE="<%print _("Edit Router");%>"></TD>
+  <TD COLSPAN=2 ALIGN=MIDDLE><INPUT TYPE=SUBMIT VALUE="<?php print _("Edit Router");?>"></TD>
   </TR>
-<%
+<?php
   }
-%>
+?>
 </TR>
 </TABLE>
 </FORM>

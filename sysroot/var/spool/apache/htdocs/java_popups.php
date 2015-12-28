@@ -1,4 +1,4 @@
-<%
+<?php
 
 if (isset($_GET['sesname'])) {
   ob_start('ob_gzhandler');
@@ -13,7 +13,7 @@ if (is_file($_SESSION['style'] . "/style.css")) {
 } else {
   include "style.css";
 }
-%>
+?>
 var ajaxcaller=new XMLHttpRequest();
 
 function openexten(classi) {
@@ -36,7 +36,7 @@ function openupage(pageo,menuo) {
   document.loadpage.disppage.value=pageo;
   document.loadpage.utype.value='';
   document.loadpage.print.value='';
-  document.loadpage.classi.value='<%print $_SESSION['userid'];%>';
+  document.loadpage.classi.value='<?php print $_SESSION['userid'];?>';
   ajaxloadpage(menuo);
 }
 function openpage(pageo,menuo) {
@@ -69,7 +69,7 @@ function ticketwin(ticketnum) {
 
 function popupwin(url,fname) {
 //leave
-  window.open('<%print $_SESSION['server'];%>'+url,fname,'menubar=no,toolbar=no,scrolling=yes,scrollbars=yes,resizable=yes,top=0,left=0,width='+screen.width+',height='+screen.height);
+  window.open('<?php print $_SESSION['server'];?>'+url,fname,'menubar=no,toolbar=no,scrolling=yes,scrollbars=yes,resizable=yes,top=0,left=0,width='+screen.width+',height='+screen.height);
 }
 function opencubit() {
   popupwin('cubitpro/doc-index.php?','theframe');
@@ -84,10 +84,10 @@ function opensogo() {
   popupwin('SOGo','mailframe');
 }
 function opencshop() {
-  popupwin('cshop?style=<%print $_SESSION['style'];%>','cshopframe');
+  popupwin('cshop?style=<?php print $_SESSION['style'];?>','cshopframe');
 }
 function openccadmin() {
-  popupwin('ccadmin?style=<%print $_SESSION['style'];%>','cshopframe');
+  popupwin('ccadmin?style=<?php print $_SESSION['style'];?>','cshopframe');
 }
 function openbb() {
   popupwin('phpBB2','bbframe');
@@ -100,11 +100,11 @@ function openualbum(euser) {
 }
 function openvoipconf() {
   exten=prompt("Enter Extension To Manage","");
-  popup('<%print $_SESSION['server'];%>reception/vladmin.php?style=<%print $_SESSION['style'];%>&exten='+exten,370,700);
+  popup('<?php print $_SESSION['server'];?>reception/vladmin.php?style=<?php print $_SESSION['style'];?>&exten='+exten,370,700);
 }
 function openlsysconf() {
   exten=prompt("Enter Extension To Register","");
-  popup('<%print $_SESSION['server'];%>reception/lsysreg.php?style=<%print $_SESSION['style'];%>&exten='+exten,350,700);
+  popup('<?php print $_SESSION['server'];?>reception/lsysreg.php?style=<?php print $_SESSION['style'];?>&exten='+exten,350,700);
 }
 
 function opengsm(grouter,gchannel) {
@@ -143,19 +143,19 @@ function secpop(winname,winprop,disppage,popdata) {
 }
 function openvoip() {
 //leave
-  window.open('<%print $_SESSION['server'];%>reception','_blank','menubar=no,toolbar=no,scrolling=yes,resizable=no,top=0,left=0,width=900,height=660');
+  window.open('<?php print $_SESSION['server'];?>reception','_blank','menubar=no,toolbar=no,scrolling=yes,resizable=no,top=0,left=0,width=900,height=660');
 }
 function openc2c() {
-  popup('<%print $_SESSION['server'];%>reception/c2c.php?style=<%print $_SESSION['style'];%>',130,600);
+  popup('<?php print $_SESSION['server'];?>reception/c2c.php?style=<?php print $_SESSION['style'];?>',130,600);
 }
 function openagentapp() {
-  popup('<%print $_SESSION['server'];%>reception/agentapp.php?style=<%print $_SESSION['style'];%>',150,300);
+  popup('<?php print $_SESSION['server'];?>reception/agentapp.php?style=<?php print $_SESSION['style'];?>',150,300);
 }
 function opengtalk() {
-  popup('<%print $_SESSION['server'];%>reception/gcall.php?style=<%print $_SESSION['style'];%>',130,600);
+  popup('<?php print $_SESSION['server'];?>reception/gcall.php?style=<?php print $_SESSION['style'];?>',130,600);
 }
 function openpsfax() {
-  popup('<%print $_SESSION['server'];%>reception/psfax.php?style=<%print $_SESSION['style'];%>',130,600);
+  popup('<?php print $_SESSION['server'];?>reception/psfax.php?style=<?php print $_SESSION['style'];?>',130,600);
 }
 function openman(page) {
 //leave
@@ -167,10 +167,10 @@ function openphone(page) {
 }
 function openstatus(page) {
 //leave
-  window.open('<%print $_SESSION['server'];%>'+page,'StatusPage');
+  window.open('<?php print $_SESSION['server'];?>'+page,'StatusPage');
 }
 function openns() {
-  popup('<%print $_SESSION['server'];%>ns.html',650,950);
+  popup('<?php print $_SESSION['server'];?>ns.html',650,950);
 }
 function openmclass(menu,classi) {
   document.loadpage.classi.value=classi;
@@ -235,7 +235,7 @@ function openidata(mmap) {
   } else {
     document.loadpage.mmap.value='hostedSite';
   }
-  document.loadpage.classi.value='<%print $_SESSION['userid'];%>';
+  document.loadpage.classi.value='<?php print $_SESSION['userid'];?>';
   openpage('auth/idata.php','setup');
 }
 function openaidata(mmap,classi) {
@@ -379,7 +379,7 @@ function snomkeywin(exten,type) {
     xwid=481;
   }
 //leave
-  window.open('<%print $_SESSION['server'];%>cdr/tempedit.php?exten='+exten+'&type='+type,'snomkeywin'+type,'menubar=yes,toolbar=yes,scrolling=no,resizable=no,scrollbars=no,top=0,left=0,width='+xwid+',height='+yhei);
+  window.open('<?php print $_SESSION['server'];?>cdr/tempedit.php?exten='+exten+'&type='+type,'snomkeywin'+type,'menubar=yes,toolbar=yes,scrolling=no,resizable=no,scrollbars=no,top=0,left=0,width='+xwid+',height='+yhei);
 }
 function snomkeyview(exten,type) {
   if (type == "kp") {
@@ -390,7 +390,7 @@ function snomkeyview(exten,type) {
     xwid=481;
   }
 //leave
-  window.open('<%print $_SESSION['server'];%>images/snom-'+exten+'-'+type+'.png','snomkeyview'+type,'menubar=yes,toolbar=yes,scrolling=no,resizable=yes,scrollbars=no,top=0,left=0,width='+xwid+',height='+yhei);
+  window.open('<?php print $_SESSION['server'];?>images/snom-'+exten+'-'+type+'.png','snomkeyview'+type,'menubar=yes,toolbar=yes,scrolling=no,resizable=yes,scrollbars=no,top=0,left=0,width='+xwid+',height='+yhei);
 }
 function opencdrrep(disp,exten) {
   document.getrepform.disp.value=disp;
@@ -435,7 +435,7 @@ function openvradconf() {
 }
 function openccagent() {
   tmpact=document.loadpage.action;
-  document.loadpage.action='/?style=<%print $_SESSION['style']%>';
+  document.loadpage.action='/?style=<?php print $_SESSION['style']?>';
   secpop('ccagent','menubar=no,toolbar=no,scrolling=yes,resizable=no,top=0,left=0,width=800,height=700','ccagent/agent.php','');
   document.loadpage.action=tmpact;
 }
@@ -524,7 +524,7 @@ function gsmchanup(router,channel,dbtype,dbrow) {
 }
 function openpbxstate() {
 //leave
-  window.open('<%print $_SESSION['server'];%>reception/astate.php?style=<%print $_SESSION['style']%>','dndstate','menubar=no,toolbar=no,scrolling=yes,resizable=no,top=0,left=0,width=750,height=500');
+  window.open('<?php print $_SESSION['server'];?>reception/astate.php?style=<?php print $_SESSION['style']?>','dndstate','menubar=no,toolbar=no,scrolling=yes,resizable=no,top=0,left=0,width=750,height=500');
 }
 function printpage(pform) {
 //leave
@@ -558,16 +558,16 @@ function mbresize(){
 
   windowheight=windowheight-document.getElementById('menu-bar').offsetHeight-document.getElementById('logo').offsetHeight-50;
   document.getElementById('main-body').style.height = windowheight + "px";
-  setactivemenu('<%print $_SESSION['showmenu'];%>');
+  setactivemenu('<?php print $_SESSION['showmenu'];?>');
 }
 function showdiv(divid,divform) {
   document.getElementById(divform.curdiv.value).style.visibility='hidden';
-  document.getElementById(divform.curdiv.value+'_but').style.backgroundColor='<%print $menubg1;%>';
-  document.getElementById(divform.curdiv.value+'_but').style.color='<%print $menufg1;%>';
+  document.getElementById(divform.curdiv.value+'_but').style.backgroundColor='<?php print $menubg1;?>';
+  document.getElementById(divform.curdiv.value+'_but').style.color='<?php print $menufg1;?>';
   divform.curdiv.value=divid;
   document.getElementById(divid).style.visibility='visible';
-  document.getElementById(divid+'_but').style.backgroundColor='<%print $menubg2;%>';;
-  document.getElementById(divid+'_but').style.color='<%print $menufg2;%>';;
+  document.getElementById(divid+'_but').style.backgroundColor='<?php print $menubg2;?>';;
+  document.getElementById(divid+'_but').style.color='<?php print $menufg2;?>';;
 }
 function editivrtime(ivrindex,currange) {
   timerange=prompt("Enter New Open Time Range (HH:MM-HH:MM).\nFor Public Holidays 00:00-24:00 Is Closed.\nFor Normal Days 00:00-24:00 Is Open.",currange);
@@ -580,7 +580,7 @@ function editivrtime(ivrindex,currange) {
 }
 function atapopupwin(ipaddr,pserver) {
 //leave
-  window.open('http://' + ipaddr + '/admin/resync?http://'+pserver+'/init-<%print urlencode("\$");%>MA.cfg','linksys','menubar=no,toolbar=no,scrolling=yes,scrollbars=yes,resizable=yes,top=0,left=0,width='+screen.width+',height='+screen.height);
+  window.open('http://' + ipaddr + '/admin/resync?http://'+pserver+'/init-<?php print urlencode("\$");?>MA.cfg','linksys','menubar=no,toolbar=no,scrolling=yes,scrollbars=yes,resizable=yes,top=0,left=0,width='+screen.width+',height='+screen.height);
 }
 function pushconf(ipaddrin) {
   ipaddr=prompt("Enter The Devices IP Address.\nThe Address Selected Is The Last Known Address.",ipaddrin);

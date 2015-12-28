@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -17,30 +17,30 @@
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-%>
+?>
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
 </head>
 <SCRIPT>
   function opencrm(url,type) {
-    window.open("<%print$SERVER_URL;%>/crm/index.php?action=DetailView&module="+type+"&record="+url,"crmframe","menubar=no,toolbar=no,scrolling=yes,scrollbars=yes,resizable=yes,top=0,left=0,width="+screen.width+",height="+screen.height);
+    window.open("<?php print$SERVER_URL;?>/crm/index.php?action=DetailView&module="+type+"&record="+url,"crmframe","menubar=no,toolbar=no,scrolling=yes,scrollbars=yes,resizable=yes,top=0,left=0,width="+screen.width+",height="+screen.height);
     window.close();
   }
 </SCRIPT>
 <body>
-<%
+<?php
 
 $db=mysql_connect("localhost","SugarCRM","SugarCRM");
 mysql_select_db("SugarCRM");
 
 if(!isset($_GET['clid'])) {
-%>
+?>
   <SCRIPT>
     alert("No caller ID provided);
     window.close();
   </SCRIPT>
-<%
+<?php
 } else {
   $clida=explode("@",$clid);
   $clid=$clida[0];
@@ -58,15 +58,15 @@ if(!isset($_GET['clid'])) {
 
   if (mysql_num_rows($curset) == "1") {
     $msqldat=mysql_fetch_array($curset,MYSQL_NUM);
-%>
+?>
     <SCRIPT>
-      if (confirm("Open CRM Page For <%print $clid;%>")) {
-        opencrm("<%print $msqldat[0];%>","<%print $rectype;%>");
+      if (confirm("Open CRM Page For <?php print $clid;?>")) {
+        opencrm("<?php print $msqldat[0];?>","<?php print $rectype;?>");
       } else {
         window.close();
       }
     </SCRIPT>
-<%
+<?php
   } else {
     while($msqldat=mysql_fetch_array($curset,MYSQL_NUM)) {
       print "<a href=javascript:opencrm(\"" . $msqldat[0] . "\",\"" . $rectype . "\")>" . $msqldat[1];
@@ -75,16 +75,16 @@ if(!isset($_GET['clid'])) {
       }
       print "</A><BR>";
     }
-%>
+?>
     <SCRIPT>
       if (confirm("Open CRM Accounts Page")) {
-        window.open("<%print$SERVER_URL;%>/crm/index.php?module=Accounts&action=index","crmframe","menubar=no,toolbar=no,scrolling=yes,scrollbars=yes,resizable=yes,top=0,left=0,width="+screen.width+",height="+screen.height);
+        window.open("<?php print$SERVER_URL;?>/crm/index.php?module=Accounts&action=index","crmframe","menubar=no,toolbar=no,scrolling=yes,scrollbars=yes,resizable=yes,top=0,left=0,width="+screen.width+",height="+screen.height);
       }
       window.close();
     </SCRIPT>
-<%
+<?php
   }
 }
-%>
+?>
 </body>
 </html>

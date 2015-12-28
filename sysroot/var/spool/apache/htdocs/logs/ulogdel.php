@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -19,12 +19,12 @@
 */
   include "ulogauth.php";
   include "uloginc.php";
-%>
+?>
 <link rel=stylesheet type=text/css href=/style.php>
-<%  
+<?php  
   $mintime=mktime($dtime_hour,$dtime_min,$dtime_sec,$dtime_month,$dtime_day,$dtime_year);
   $query="DELETE FROM packet_filter WHERE local_time < $mintime";
   $dresult=mysql_query($query);
   $pcnt=mysql_affected_rows();
   print "Deleted $pcnt Entries";
-%>
+?>

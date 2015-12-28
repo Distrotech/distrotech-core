@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -19,11 +19,11 @@
 */
 
 if ($relaunch == "1") {
-%>
+?>
   <SCRIPT>
-    window.open("/end.php?cno=<%print $_POST['cno'];%>&endses=1&resellerownid=<%print $_SESSION['resellerownid'];%>","sessiondeath","menubar=no,toolbar=yes,scrolling=yes,scrollbars=yes,resizable=yes,top=0,left=0,width="+screen.width+",height="+screen.height);
+    window.open("/end.php?cno=<?php print $_POST['cno'];?>&endses=1&resellerownid=<?php print $_SESSION['resellerownid'];?>","sessiondeath","menubar=no,toolbar=yes,scrolling=yes,scrollbars=yes,resizable=yes,top=0,left=0,width="+screen.width+",height="+screen.height);
   </SCRIPT>
-<%
+<?php
   return;
 }
 
@@ -125,7 +125,7 @@ if ($_POST['cno'] != "") {
   print $getsesq . "<BR>\n";
 */
   $cdr=pg_query($db,$getsesq);
-%>
+?>
 <CENTER>
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <TR CLASS=list-color2>
@@ -133,28 +133,28 @@ if ($_POST['cno'] != "") {
 </TR>
 <TR CLASS=list-color1>
 <TH COLSPAN=5 ALIGN=LEFT CLASS=heading-body2>Session Name</TH>
-<TD COLSPAN=3 ALIGN=LEFT><%print $sesinfo[0];%></TD>
+<TD COLSPAN=3 ALIGN=LEFT><?php print $sesinfo[0];?></TD>
 <TR CLASS=list-color2>
 <TH COLSPAN=5 ALIGN=LEFT CLASS=heading-body2>Number</TH>
-<TD COLSPAN=3 ALIGN=LEFT><%print $_POST['cno'];%></TD>
+<TD COLSPAN=3 ALIGN=LEFT><?php print $_POST['cno'];?></TD>
 <TR CLASS=list-color1>
 <TH COLSPAN=5 ALIGN=LEFT CLASS=heading-body2>Payment Recived</TH>
-<TD COLSPAN=3 ALIGN=LEFT><%printf("R%0.2f",$sesinfo[2]/100);%></TD>
+<TD COLSPAN=3 ALIGN=LEFT><?php printf("R%0.2f",$sesinfo[2]/100);?></TD>
 <TR CLASS=list-color2>
 <TH COLSPAN=5 ALIGN=LEFT CLASS=heading-body2>Calls Made</TH>
-<TD COLSPAN=3 ALIGN=LEFT><%printf("R%0.2f",($sesinfo[2]+$sestime[2])/100);%></TD>
+<TD COLSPAN=3 ALIGN=LEFT><?php printf("R%0.2f",($sesinfo[2]+$sestime[2])/100);?></TD>
 <TR CLASS=list-color1>
 <TH COLSPAN=5 ALIGN=LEFT CLASS=heading-body2>Refund</TH>
-<TD COLSPAN=3 ALIGN=LEFT><%printf("R%0.2f",0-$sestime[2]/100);%></TD>
+<TD COLSPAN=3 ALIGN=LEFT><?php printf("R%0.2f",0-$sestime[2]/100);?></TD>
 <TR CLASS=list-color2>
 <TH COLSPAN=5 ALIGN=LEFT CLASS=heading-body2>Session Time</TH>
-<TD COLSPAN=3 ALIGN=LEFT><%print $sestime[0];%></TD>
+<TD COLSPAN=3 ALIGN=LEFT><?php print $sestime[0];?></TD>
 </TR>
 <TR CLASS=list-color1><TD COLSPAN=8>&nbsp;</TD></TR>
-<%
+<?php
 $bcolor[0]="list-color1";
 $bcolor[1]="list-color2";
-%>
+?>
 <TR CLASS=list-color2>
 <TH ALIGN=LEFT><FONT SIZE=1>Start Time</TH>
 <TH ALIGN=LEFT><FONT SIZE=1>Country</TD><TH ALIGN=LEFT><FONT SIZE=1>Number</TH>
@@ -162,7 +162,7 @@ $bcolor[1]="list-color2";
 <TH ALIGN=LEFT><FONT SIZE=1>Ring Time</TH>
 <TH ALIGN=LEFT><FONT SIZE=1>Bill. Time</TH><TH ALIGN=LEFT><FONT SIZE=1>Rate</TH>
 <TH ALIGN=LEFT><FONT SIZE=1>Cost</TH></TR>
-<%
+<?php
 $num=pg_num_rows($cdr);
 $total="0";
 for ($i=0; $i < $num; $i++) {
@@ -184,12 +184,12 @@ for ($i=0; $i < $num; $i++) {
 }
 $rem=$i % 2; 
 print "<TR CLASS=" . $bcolor[$rem] . ">";
-%>
-<TD COLSPAN=7><FONT SIZE=1>&nbsp;</TD><TD ALIGN=LEFT><FONT SIZE=1><%printf("R%0.2f",$total);%></TD></TR>
+?>
+<TD COLSPAN=7><FONT SIZE=1>&nbsp;</TD><TD ALIGN=LEFT><FONT SIZE=1><?php printf("R%0.2f",$total);?></TD></TR>
 </TABLE>
-<%
+<?php
 } else {
-%>
+?>
 <SCRIPT>
   alert("Ensure The Handset Is Down Before Closing A Session!");
 </SCRIPT>
@@ -203,7 +203,7 @@ print "<TR CLASS=" . $bcolor[$rem] . ">";
 <TR CLASS=list-color1>
   <TD ALIGN=LEFT WIDTH=50%>Active Booth</TD>
   <TD WIDTH=50% ALIGN=LEFT>
-<%
+<?php
 /*  print "SELECT users.name,fullname,users.credit
                           FROM users
                           LEFT OUTER JOIN reseller ON (reseller.id = " . $_SESSION['resellerid'] . " OR owner = " . $_SESSION['resellerid'] . ")
@@ -212,8 +212,8 @@ print "<TR CLASS=" . $bcolor[$rem] . ">";
                                  AND activated='t' AND usertype=2 AND inuse <= 0
                             ORDER BY fullname";
 */
-%>
-  <SELECT NAME=cno><%
+?>
+  <SELECT NAME=cno><?php
   $sesbq="SELECT users.name,fullname,users.credit
                           FROM users
                           LEFT OUTER JOIN reseller ON (reseller.id = " . $_SESSION['resellerid'] . " OR owner = " . $_SESSION['resellerid'] . ")
@@ -229,11 +229,11 @@ print "<TR CLASS=" . $bcolor[$rem] . ">";
     $r = pg_fetch_array($sesbooth,$i,PGSQL_NUM);
     $r[2]=sprintf("%0.2f",($r[2]*$_SESSION['rexrate'])/10000);
     print "<OPTION VALUE=\"" . $r[0] . "\">Booth " . $r[1] . " (" . $r[0] . " Credit:" . $r[2]. ")</OPTION>\n";
-  }%>
+  }?>
 </SELECT></TD></TR>
 <TR CLASS=list-color2>
 <TD ALIGN=MIDDLE COLSPAN=2>
 <INPUT TYPE=SUBMIT NAME=endses VALUE="End Session">
 </TABLE>
 </FORM>
-<%}%>
+<?php }?>

@@ -1,4 +1,4 @@
-<%
+<?php
   if ($time == "") {
     $time="86400";
   }
@@ -25,4 +25,4 @@
 
   $imin=imagecreatefrompng("vgsm.png");
   imagepng($imin);
-%>
+?>

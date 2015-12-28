@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -18,7 +18,7 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
   include "/var/spool/apache/htdocs/ldap/ldapcon.inc";
-%>
+?>
 <CENTER>
 <TABLE WIDTH=90%>
 <TR><TD WIDTH=40%>
@@ -36,9 +36,9 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.If not, see <A HREF=http://www.gnu.org/licenses target=_blank>&lt;http://www.gnu.org/licenses/&gt;</A></PRE></TD></TR>
-<%
+<?php
   if (@ldap_bind($ds,"uid=admin,ou=users","admin")) {
-%>
+?>
     <TR><TD>
     <P><BLOCKQUOTE><STRONG>ATTENTION !!!</STRONG><BR><PRE>
     This server is insecure as the default password admin for user admin has not ben changed
@@ -49,9 +49,9 @@
     need to be followed.
     <A HREF=javascript:openpage('auth/passwd.php','inet')>Click Here To Change</A>
     </BLOCKQUOTE></PRE><P></TD></TR>
-<%
+<?php
   }
-%>
+?>
 </TABLE>
 </CENTER>
 

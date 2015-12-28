@@ -1,4 +1,4 @@
-<%
+<?php
 function booltostr($strin) {
   $quin=strtolower($strin);
   if (($strin == "yes") || ($quin == "1") || ($quin == "y") || ($quin == "t") || ($quin == "true")) {
@@ -55,4 +55,4 @@ function telformat($number) {
   }
   return $number;
 }
-%>
+?>

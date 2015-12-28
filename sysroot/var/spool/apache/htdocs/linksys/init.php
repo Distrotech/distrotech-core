@@ -1,4 +1,4 @@
-<%
+<?php
 include "/var/spool/apache/htdocs/cdr/auth.inc";
 include "/var/spool/apache/htdocs/cdr/autoadd.inc";
 
@@ -146,14 +146,14 @@ if ($nat == "NAT") {
 
 
 print "<flat-profile>\n";
-%>
-<FXS_Port_Input_Gain><%print $rxgain . "\n";%>
+?>
+<FXS_Port_Input_Gain><?php print $rxgain . "\n";?>
 	</FXS_Port_Input_Gain>
-<FXS_Port_Output_Gain><%print $txgain . "\n";%>
+<FXS_Port_Output_Gain><?php print $txgain . "\n";?>
 	</FXS_Port_Output_Gain>
-<Networking_Service><%print $nat . "\n";%>
+<Networking_Service><?php print $nat . "\n";?>
 	</Networking_Service>
-<Profile_Rule>http://<%print $pserver;%>/init-$MA.cfg
+<Profile_Rule>http://<?php print $pserver;?>/init-$MA.cfg
 	</Profile_Rule>
 <Resync_Periodic>3600
 	</Resync_Periodic>
@@ -213,9 +213,9 @@ print "<flat-profile>\n";
 	</Caller_ID_Method>
 <Caller_ID_FSK_Standard>v.23
 	</Caller_ID_FSK_Standard>
-<Enable_DHCP_Server><%print $dhcps . "\n";%>
+<Enable_DHCP_Server><?php print $dhcps . "\n";?>
 	</Enable_DHCP_Server>
-<Connection_Type><%print $cmode . "\n";%>
+<Connection_Type><?php print $cmode . "\n";?>
 	</Connection_Type>
 <Short_Name_1_>L 1
 	</Short_Name_1_>
@@ -225,61 +225,61 @@ print "<flat-profile>\n";
 	</Short_Name_3_>
 <Short_Name_4_>L 4
 	</Short_Name_4_>
-<%
+<?php
 for ($lcnt=1;$lcnt <= $maxline;$lcnt++) {
 //extremely high
-%>
-<Use_Auth_ID_<%print $lcnt;%>_>No
-	</Use_Auth_ID_<%print $lcnt;%>_>
-<Restrict_Source_IP_<%print $lcnt;%>_>Yes
-	</Restrict_Source_IP_<%print $lcnt;%>_>
-<Auth_Resync-Reboot_<%print $lcnt;%>_>No
-	</Auth_Resync-Reboot_<%print $lcnt;%>_>No
-<Network_Jitter_Level_<%print $lcnt;%>_>low
-	</Network_Jitter_Level_<%print $lcnt;%>_>
-<Jitter_Buffer_Adjustment_<%print $lcnt;%>_>disable
-	</Jitter_Buffer_Adjustment_<%print $lcnt;%>_>
-<DNS_SRV_Auto_Prefix_<%print $lcnt;%>_>no
-	</DNS_SRV_Auto_Prefix_<%print $lcnt;%>_>
-<Proxy_Redundancy_Method_<%print $lcnt;%>_>Normal
-	</Proxy_Redundancy_Method_<%print $lcnt;%>_>
-<Blind_Attn-Xfer_Enable_<%print $lcnt;%>_>yes
-	</Blind_Attn-Xfer_Enable_<%print $lcnt;%>_>
-<Message_Waiting_<%print $lcnt;%>_>yes
-	</Message_Waiting_<%print $lcnt;%>_>
-<Sticky_183_<%print $lcnt;%>_>no
-	</Sticky_183_<%print $lcnt;%>_>
-<Make_Call_Without_Reg_<%print $lcnt;%>_>yes
-	</Make_Call_Without_Reg_<%print $lcnt;%>_>
-<Ans_Call_Without_Reg_<%print $lcnt;%>_>yes
-	</Ans_Call_Without_Reg_<%print $lcnt;%>_>
-<Register_Expires_<%print $lcnt;%>_>600
-	</Register_Expires_<%print $lcnt;%>_>
-<DTMF_Tx_Method_<%print $lcnt;%>_>INFO
-	</DTMF_Tx_Method_<%print $lcnt;%>_>
-<G723_Enable_<%print $lcnt;%>_>no
-	</G723_Enable_<%print $lcnt;%>_>
-<G726-16_Enable_<%print $lcnt;%>_>no
-	</G726-16_Enable_<%print $lcnt;%>_>
-<G726-24_Enable_<%print $lcnt;%>_>no
-	</G726-24_Enable_<%print $lcnt;%>_>
-<G726-40_Enable_<%print $lcnt;%>_>no
-	</G726-40_Enable_<%print $lcnt;%>_>
-<FAX_Disable_ECAN_<%print $lcnt;%>_>yes
-	</FAX_Disable_ECAN_<%print $lcnt;%>_>
-<FAX_Passthru_Codec_<%print $lcnt;%>_>G711a
-	</FAX_Passthru_Codec_<%print $lcnt;%>_>
-<FAX_Passthru_Method_<%print $lcnt;%>_>ReINVITE
-	</FAX_Passthru_Method_<%print $lcnt;%>_>
-<FAX_T38_Redundancy_<%print $lcnt;%>_>3
-	</FAX_T38_Redundancy_<%print $lcnt;%>_>
-<FAX_Process_NSE_<%print $lcnt;%>_>no
-	</FAX_Process_NSE_<%print $lcnt;%>_>
-<FAX_CNG_Detect_Enable_<%print $lcnt;%>_>yes
-	</FAX_CNG_Detect_Enable_<%print $lcnt;%>_>
-<FAX_CED_Detect_Enable_<%print $lcnt;%>_>yes
-	</FAX_CED_Detect_Enable_<%print $lcnt;%>_>
-<%
+?>
+<Use_Auth_ID_<?php print $lcnt;?>_>No
+	</Use_Auth_ID_<?php print $lcnt;?>_>
+<Restrict_Source_IP_<?php print $lcnt;?>_>Yes
+	</Restrict_Source_IP_<?php print $lcnt;?>_>
+<Auth_Resync-Reboot_<?php print $lcnt;?>_>No
+	</Auth_Resync-Reboot_<?php print $lcnt;?>_>No
+<Network_Jitter_Level_<?php print $lcnt;?>_>low
+	</Network_Jitter_Level_<?php print $lcnt;?>_>
+<Jitter_Buffer_Adjustment_<?php print $lcnt;?>_>disable
+	</Jitter_Buffer_Adjustment_<?php print $lcnt;?>_>
+<DNS_SRV_Auto_Prefix_<?php print $lcnt;?>_>no
+	</DNS_SRV_Auto_Prefix_<?php print $lcnt;?>_>
+<Proxy_Redundancy_Method_<?php print $lcnt;?>_>Normal
+	</Proxy_Redundancy_Method_<?php print $lcnt;?>_>
+<Blind_Attn-Xfer_Enable_<?php print $lcnt;?>_>yes
+	</Blind_Attn-Xfer_Enable_<?php print $lcnt;?>_>
+<Message_Waiting_<?php print $lcnt;?>_>yes
+	</Message_Waiting_<?php print $lcnt;?>_>
+<Sticky_183_<?php print $lcnt;?>_>no
+	</Sticky_183_<?php print $lcnt;?>_>
+<Make_Call_Without_Reg_<?php print $lcnt;?>_>yes
+	</Make_Call_Without_Reg_<?php print $lcnt;?>_>
+<Ans_Call_Without_Reg_<?php print $lcnt;?>_>yes
+	</Ans_Call_Without_Reg_<?php print $lcnt;?>_>
+<Register_Expires_<?php print $lcnt;?>_>600
+	</Register_Expires_<?php print $lcnt;?>_>
+<DTMF_Tx_Method_<?php print $lcnt;?>_>INFO
+	</DTMF_Tx_Method_<?php print $lcnt;?>_>
+<G723_Enable_<?php print $lcnt;?>_>no
+	</G723_Enable_<?php print $lcnt;?>_>
+<G726-16_Enable_<?php print $lcnt;?>_>no
+	</G726-16_Enable_<?php print $lcnt;?>_>
+<G726-24_Enable_<?php print $lcnt;?>_>no
+	</G726-24_Enable_<?php print $lcnt;?>_>
+<G726-40_Enable_<?php print $lcnt;?>_>no
+	</G726-40_Enable_<?php print $lcnt;?>_>
+<FAX_Disable_ECAN_<?php print $lcnt;?>_>yes
+	</FAX_Disable_ECAN_<?php print $lcnt;?>_>
+<FAX_Passthru_Codec_<?php print $lcnt;?>_>G711a
+	</FAX_Passthru_Codec_<?php print $lcnt;?>_>
+<FAX_Passthru_Method_<?php print $lcnt;?>_>ReINVITE
+	</FAX_Passthru_Method_<?php print $lcnt;?>_>
+<FAX_T38_Redundancy_<?php print $lcnt;?>_>3
+	</FAX_T38_Redundancy_<?php print $lcnt;?>_>
+<FAX_Process_NSE_<?php print $lcnt;?>_>no
+	</FAX_Process_NSE_<?php print $lcnt;?>_>
+<FAX_CNG_Detect_Enable_<?php print $lcnt;?>_>yes
+	</FAX_CNG_Detect_Enable_<?php print $lcnt;?>_>
+<FAX_CED_Detect_Enable_<?php print $lcnt;?>_>yes
+	</FAX_CED_Detect_Enable_<?php print $lcnt;?>_>
+<?php
 }
 $numreg=pg_num_rows($uports);
 $defproxy=$SERVER_NAME;
@@ -320,111 +320,111 @@ for($port=$pstart;$port < $pstart+$pmax;$port++) {
     }
     $apasswd="0000";
 //   $apasswd=$passwd;
-%>
-<HostName><%print $hostname . "\n";%>
+?>
+<HostName><?php print $hostname . "\n";?>
 	</HostName>
-<User_Password><%print $apasswd . "\n";%>
+<User_Password><?php print $apasswd . "\n";?>
 	</User_Password>
-<Admin_Passwd><%print $apasswd . "\n";%>
+<Admin_Passwd><?php print $apasswd . "\n";?>
 	</Admin_Passwd>
-<%}%>
-<Display_Name_<%print $port+1%>_><%print $dname . "\n";%>
-	</Display_Name_<%print $port+1%>_>
-<Proxy_<%print $port+1%>_><%print $proxy . "\n";%>
-	</Proxy_<%print $port+1%>_>
-<User_ID_<%print $port+1%>_><%print $exten . "\n";%>
-	</User_ID_<%print $port+1%>_>
-<Password_<%print $port+1%>_><%print $passwd . "\n";%>
-	</Password_<%print $port+1%>_>
-<%
+<?php }?>
+<Display_Name_<?php print $port+1?>_><?php print $dname . "\n";?>
+	</Display_Name_<?php print $port+1?>_>
+<Proxy_<?php print $port+1?>_><?php print $proxy . "\n";?>
+	</Proxy_<?php print $port+1?>_>
+<User_ID_<?php print $port+1?>_><?php print $exten . "\n";?>
+	</User_ID_<?php print $port+1?>_>
+<Password_<?php print $port+1?>_><?php print $passwd . "\n";?>
+	</Password_<?php print $port+1?>_>
+<?php
   $pdone[$port+1]=1;
-  if ($trunkline == 0) {%>
-<Trunk_Group_<%print $lcnt%>_>none
-	</Trunk_Group_<%print $lcnt%>_>
-<Preferred_Codec_<%print $port+1%>_><%print $codec[$pcodec] . "\n";%>
-	</Preferred_Codec_<%print $port+1%>_>
-<%
+  if ($trunkline == 0) {?>
+<Trunk_Group_<?php print $lcnt?>_>none
+	</Trunk_Group_<?php print $lcnt?>_>
+<Preferred_Codec_<?php print $port+1?>_><?php print $codec[$pcodec] . "\n";?>
+	</Preferred_Codec_<?php print $port+1?>_>
+<?php
   }
 
-  if (($spaver == "3102") && ($port > 0)) {%>
-<VoIP_User_1_Auth_ID_2_><%print $exten . "\n";%>
+  if (($spaver == "3102") && ($port > 0)) {?>
+<VoIP_User_1_Auth_ID_2_><?php print $exten . "\n";?>
 	</VoIP_User_1_Auth_ID_2_>
-<VoIP_User_1_Password_2_><%print $passwd . "\n";%>
+<VoIP_User_1_Password_2_><?php print $passwd . "\n";?>
 	</VoIP_User_1_Password_2_>
 <VoIP_User_1_DP_2_>2
 	</VoIP_User_1_DP_2_>
-<Dial_Plan_1_<%print $port+1%>_>(S0&lt;:<%print $exten%>&gt;)
-	</Dial_Plan_1_<%print $port+1%>_>
+<Dial_Plan_1_<?php print $port+1?>_>(S0&lt;:<?php print $exten?>&gt;)
+	</Dial_Plan_1_<?php print $port+1?>_>
 <PSTN_PIN_Digit_Timeout_2_>0
 	</PSTN_PIN_Digit_Timeout_2_>
 <VoIP_PIN_Digit_Timeout_2_>0
 	</VoIP_PIN_Digit_Timeout_2_>
-<VoIP_Caller_Auth_Method_<%print $port+1%>_>HTTP Digest
-	</VoIP_Caller_Auth_Method_<%print $port+1%>_>
-<One_Stage_Dialing_<%print $port+1%>_>Yes
-	</One_Stage_Dialing_<%print $port+1%>_>
-<VoIP_Caller_Default_DP_<%print $port+1%>_>2
-	</VoIP_Caller_Default_DP_<%print $port+1%>_>
-<Line_1_VoIP_Caller_DP_<%print $port+1%>_>2
-	</Line_1_VoIP_Caller_DP_<%print $port+1%>_>
-<Line_1_Fallback_DP_<%print $port+1%>_>2
-	</Line_1_Fallback_DP_<%print $port+1%>_>
-<VoIP-To-PSTN_Gateway_Enable_<%print $port+1%>_>Yes
-	</VoIP-To-PSTN_Gateway_Enable_<%print $port+1%>_>
-<PSTN-To-VoIP_Gateway_Enable_<%print $port+1%>_>yes
-	</PSTN-To-VoIP_Gateway_Enable_<%print $port+1%>_>
-<PSTN_Caller_Auth_Method_<%print $port+1%>_>None
-	</PSTN_Caller_Auth_Method_<%print $port+1%>_>
-<PSTN_Ring_Thru_Line_1_<%print $port+1%>_>No
-	</PSTN_Ring_Thru_Line_1_<%print $port+1%>_>
-<PSTN_Caller_Default_DP_<%print $port+1%>_>1
-	</PSTN_Caller_Default_DP_<%print $port+1%>_>
-<PSTN_Answer_Delay_<%print $port+1%>_>0
-	</PSTN_Answer_Delay_<%print $port+1%>_>
-<VoIP_Answer_Delay_<%print $port+1%>_>0
-	</VoIP_Answer_Delay_<%print $port+1%>_>
-<PSTN_Ring_Thru_Delay_<%print $port+1%>_>1
-	</PSTN_Ring_Thru_Delay_<%print $port+1%>_>
-<Ringer_Impedance_<%print $port+1%>_>Synthesized (Poland,S.Africa,Slovenia)
-	</Ringer_Impedance_<%print $port+1%>_>
-<Off_Hook_While_Calling_VoIP_<%print $port+1%>_>Yes
-	</Off_Hook_While_Calling_VoIP_<%print $port+1%>_>
-<FXO_Port_Impedance_<%print $port+1%>_>220+820||120nF
-	</FXO_Port_Impedance_<%print $port+1%>_><%
+<VoIP_Caller_Auth_Method_<?php print $port+1?>_>HTTP Digest
+	</VoIP_Caller_Auth_Method_<?php print $port+1?>_>
+<One_Stage_Dialing_<?php print $port+1?>_>Yes
+	</One_Stage_Dialing_<?php print $port+1?>_>
+<VoIP_Caller_Default_DP_<?php print $port+1?>_>2
+	</VoIP_Caller_Default_DP_<?php print $port+1?>_>
+<Line_1_VoIP_Caller_DP_<?php print $port+1?>_>2
+	</Line_1_VoIP_Caller_DP_<?php print $port+1?>_>
+<Line_1_Fallback_DP_<?php print $port+1?>_>2
+	</Line_1_Fallback_DP_<?php print $port+1?>_>
+<VoIP-To-PSTN_Gateway_Enable_<?php print $port+1?>_>Yes
+	</VoIP-To-PSTN_Gateway_Enable_<?php print $port+1?>_>
+<PSTN-To-VoIP_Gateway_Enable_<?php print $port+1?>_>yes
+	</PSTN-To-VoIP_Gateway_Enable_<?php print $port+1?>_>
+<PSTN_Caller_Auth_Method_<?php print $port+1?>_>None
+	</PSTN_Caller_Auth_Method_<?php print $port+1?>_>
+<PSTN_Ring_Thru_Line_1_<?php print $port+1?>_>No
+	</PSTN_Ring_Thru_Line_1_<?php print $port+1?>_>
+<PSTN_Caller_Default_DP_<?php print $port+1?>_>1
+	</PSTN_Caller_Default_DP_<?php print $port+1?>_>
+<PSTN_Answer_Delay_<?php print $port+1?>_>0
+	</PSTN_Answer_Delay_<?php print $port+1?>_>
+<VoIP_Answer_Delay_<?php print $port+1?>_>0
+	</VoIP_Answer_Delay_<?php print $port+1?>_>
+<PSTN_Ring_Thru_Delay_<?php print $port+1?>_>1
+	</PSTN_Ring_Thru_Delay_<?php print $port+1?>_>
+<Ringer_Impedance_<?php print $port+1?>_>Synthesized (Poland,S.Africa,Slovenia)
+	</Ringer_Impedance_<?php print $port+1?>_>
+<Off_Hook_While_Calling_VoIP_<?php print $port+1?>_>Yes
+	</Off_Hook_While_Calling_VoIP_<?php print $port+1?>_>
+<FXO_Port_Impedance_<?php print $port+1?>_>220+820||120nF
+	</FXO_Port_Impedance_<?php print $port+1?>_><?php
   }
 }
 
-for($lcnt=1;$lcnt <= $maxline + $trunkline;$lcnt++) {%>
-<%
-  if ($pdone[$lcnt] != "1") {%>
-<Preferred_Codec_<%print $lcnt%>_>G729a
-	</Preferred_Codec_<%print $lcnt%>_>
-<%if ($lcnt <= $maxline) {%>
-<Display_Name_<%print $lcnt%>_><%print "Line " . $lcnt . "\n";%>
-	</Display_Name_<%print $lcnt%>_>
-<%} else {%>
-<Display_Name_<%print $lcnt%>_><%print "Trunk " . ($lcnt - $maxline) . "\n";%>
-	</Display_Name_<%print $lcnt%>_>
-<%
+for($lcnt=1;$lcnt <= $maxline + $trunkline;$lcnt++) {?>
+<?php
+  if ($pdone[$lcnt] != "1") {?>
+<Preferred_Codec_<?php print $lcnt?>_>G729a
+	</Preferred_Codec_<?php print $lcnt?>_>
+<?php if ($lcnt <= $maxline) {?>
+<Display_Name_<?php print $lcnt?>_><?php print "Line " . $lcnt . "\n";?>
+	</Display_Name_<?php print $lcnt?>_>
+<?php } else {?>
+<Display_Name_<?php print $lcnt?>_><?php print "Trunk " . ($lcnt - $maxline) . "\n";?>
+	</Display_Name_<?php print $lcnt?>_>
+<?php
 }
 /*
-<Trunk_Group_<%print $lcnt%>_>1
-	</Trunk_Group_<%print $lcnt%>_>
+<Trunk_Group_<?php print $lcnt?>_>1
+	</Trunk_Group_<?php print $lcnt?>_>
 */
 }
 
-if ($lcnt >= $maxline) {%>
-<DNS_SRV_Auto_Prefix_<%print $lcnt;%>_>no
-	</DNS_SRV_Auto_Prefix_<%print $lcnt;%>_>
-<Proxy_Redundancy_Method_<%print $lcnt;%>_>Normal
-	</Proxy_Redundancy_Method_<%print $lcnt;%>_>
-<Register_Expires_<%print $lcnt;%>_>600
-	</Register_Expires_<%print $lcnt;%>_>
-<Make_Call_Without_Reg_<%print $lcnt;%>_>yes
-	</Make_Call_Without_Reg_<%print $lcnt;%>_>
-<Ans_Call_Without_Reg_<%print $lcnt;%>_>yes
-	</Ans_Call_Without_Reg_<%print $lcnt;%>_>
-<%}
+if ($lcnt >= $maxline) {?>
+<DNS_SRV_Auto_Prefix_<?php print $lcnt;?>_>no
+	</DNS_SRV_Auto_Prefix_<?php print $lcnt;?>_>
+<Proxy_Redundancy_Method_<?php print $lcnt;?>_>Normal
+	</Proxy_Redundancy_Method_<?php print $lcnt;?>_>
+<Register_Expires_<?php print $lcnt;?>_>600
+	</Register_Expires_<?php print $lcnt;?>_>
+<Make_Call_Without_Reg_<?php print $lcnt;?>_>yes
+	</Make_Call_Without_Reg_<?php print $lcnt;?>_>
+<Ans_Call_Without_Reg_<?php print $lcnt;?>_>yes
+	</Ans_Call_Without_Reg_<?php print $lcnt;?>_>
+<?php }
 }
 
 if (($confnum <= 0) && ($mac != "") && ($autoadd[$spaver] == "1")) {
@@ -438,26 +438,26 @@ if (($confnum <= 0) && ($mac != "") && ($autoadd[$spaver] == "1")) {
                   VALUES ('" . $mac . "','" . $pserver . "','" . $rxgain . "','" . $txgain . "',
                           '" . $nat . "','" . $hostname . "','" . $stunsrv . "','" . $vlanid . "')");
 }
-if ($stunsrv != "") {%>
+if ($stunsrv != "") {?>
 <STUN_Enable>yes
 	</STUN_Enable>
-<STUN_Server><%print $stunsrv . "\n";%>
+<STUN_Server><?php print $stunsrv . "\n";?>
 	</STUN_Server>
-<%} else {%>
+<?php } else {?>
 <STUN_Enable>no
 	</STUN_Enable>
-<%}
-if ($vlanid > 1) {%>
+<?php }
+if ($vlanid > 1) {?>
 <Enable_VLAN>yes
 	</Enable_VLAN>
-<VLAN_ID><%print $vlanid . "\n";%>
+<VLAN_ID><?php print $vlanid . "\n";?>
 	</VLAN_ID>
-<%} else {%>
+<?php } else {?>
 <Enable_VLAN>no
 	</Enable_VLAN>
 <VLAN_ID>1
 	</VLAN_ID>
-<%}
+<?php }
 /*
 <Dial_Plan_8_2_>(S0<:@gw1>)
 	</Dial_Plan_8_2_>
@@ -470,5 +470,5 @@ if ($vlanid > 1) {%>
 <FX0_Port_Impedance>220+820||120nF
 	</FX0_Port_Impedance>
 */
-%>
+?>
 </flat-profile>

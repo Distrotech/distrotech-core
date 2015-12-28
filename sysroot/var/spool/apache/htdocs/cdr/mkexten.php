@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -21,11 +21,11 @@
 if (! $db) {
   include "auth.inc";
 }
-%>
+?>
 <FORM METHOD=POST NAME=extenbatch onsubmit="ajaxsubmit(this.name);return false">
 <CENTER>
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
-<%
+<?php
 if ((isset($pbxupdate)) && ($addcnt > 0)) {
   include "autoadd.inc";
   $bcolor[0]="list-color1";
@@ -61,49 +61,49 @@ if ((isset($pbxupdate)) && ($addcnt > 0)) {
   }
   print "<TR CLASS=" . $bcolor[$ncnt %2] . "><TH COLSPAN=4 CLASS=heading-body><INPUT TYPE=SUBMIT onclick=this.name='authexten' VALUE=\"Authorise\"></TH></TR>\n";
 } else {
-%>
+?>
 <TR CLASS=list-color2>
-  <TH CLASS=heading-body COLSPAN=2><%print _("Batch Create Extensions");%></TH>
+  <TH CLASS=heading-body COLSPAN=2><?php print _("Batch Create Extensions");?></TH>
 </TR>
 <TR CLASS=list-color1>
-  <TD ALIGN=LEFT WIDTH=50% onmouseover="myHint.show('QS1')" onmouseout="myHint.hide()"><%print _("No. Of Extensions To Create");%></TH>
+  <TD ALIGN=LEFT WIDTH=50% onmouseover="myHint.show('QS1')" onmouseout="myHint.hide()"><?php print _("No. Of Extensions To Create");?></TH>
   <TD WIDTH=50% ALIGN=LEFT>
     <INPUT TYPE=TEXT NAME=addcnt MAXLENGTH=2 SIZE=2>
   </TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD ALIGN=LEFT WIDTH=50% onmouseover="myHint.show('QS1')" onmouseout="myHint.hide()"><%print _("Starting Extension Create");%></TH>
+  <TD ALIGN=LEFT WIDTH=50% onmouseover="myHint.show('QS1')" onmouseout="myHint.hide()"><?php print _("Starting Extension Create");?></TH>
   <TD WIDTH=50% ALIGN=LEFT>
     <INPUT TYPE=TEXT NAME=start MAXLENGTH=2 SIZE=2>
   </TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD ALIGN=LEFT WIDTH=50% onmouseover="myHint.show('QS1')" onmouseout="myHint.hide()"><%print _("Starting TDM Port To Assign");%></TH>
+  <TD ALIGN=LEFT WIDTH=50% onmouseover="myHint.show('QS1')" onmouseout="myHint.hide()"><?php print _("Starting TDM Port To Assign");?></TH>
   <TD WIDTH=50% ALIGN=LEFT>
     <INPUT TYPE=TEXT NAME=tdmport MAXLENGTH=2 SIZE=2>
   </TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD ALIGN=LEFT WIDTH=50% onmouseover="myHint.show('QS1')" onmouseout="myHint.hide()"><%print _("Prefix To Create Extensions In");%></TD>
+  <TD ALIGN=LEFT WIDTH=50% onmouseover="myHint.show('QS1')" onmouseout="myHint.hide()"><?php print _("Prefix To Create Extensions In");?></TD>
   <TD><SELECT NAME=prefix>
-<%
+<?php
   $qgetdata=pg_query($db,"SELECT key FROM astdb WHERE family='LocalPrefix' AND value='1' ORDER BY key;");
   $dnum=pg_num_rows($qgetdata);
   for($i=0;$i<$dnum;$i++){
     $getdata=pg_fetch_array($qgetdata,$i);
     print "<OPTION VALUE=" . $getdata[0] . ">" . $getdata[0] . "</OPTION>";
   }
-%>
+?>
     </SELECT>
   </TD>
 </TR>
 <TR CLASS=list-color1>
   <TH COLSPAN=2>
-    <INPUT TYPE=SUBMIT onclick=this.name='pbxupdate' VALUE="<%print _("Add/Edit");%>">
-    <INPUT TYPE=SUBMIT onclick=this.name='delext' VALUE="<%print _("Delete");%>"></TH>
+    <INPUT TYPE=SUBMIT onclick=this.name='pbxupdate' VALUE="<?php print _("Add/Edit");?>">
+    <INPUT TYPE=SUBMIT onclick=this.name='delext' VALUE="<?php print _("Delete");?>"></TH>
   </TR>
-<%
+<?php
 }
-%>
+?>
   </TABLE>
   </FORM>

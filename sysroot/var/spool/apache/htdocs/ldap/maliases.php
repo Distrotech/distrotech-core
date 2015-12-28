@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -20,11 +20,11 @@
   if (! $rdn) {
     include "auth.inc";
   }
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=aliasesform onsubmit="ajaxsubmit(this.name);return false">
 <table border="0" width="90%" cellspacing="0" cellpadding="0">
-<%
+<?php
 $abdn="ou=Email";
 
 if (($acount == "1") && ($aliasedit == "Modify") && ($aliasmod == _("Delete")) && ($alias != "root")) {
@@ -119,11 +119,11 @@ if (($aliasedit == _("Delete")) && ($alias != "")){
     $addent["sendmailmtaaliasvalue"][0]=$firstentry;
     ldap_add($ds,"sendmailMTAKey=$newalias-admin,ou=Email",$addent);
 
-%>
+?>
     <SCRIPT>
-      alert("This Mailing List Needs To Be Configured\nSend A Message To majordomo with\nconfig <%print $newalias . "-list " . $newalias . "-list.admin";%>\nIn The Message Body\nReturn The New Config In A Email Starting With\nnewconfig <%print $newalias . "-list " . $newalias . "-list.admin";%>\nEnd The Config File With EOF On A Line By Itself");
+      alert("This Mailing List Needs To Be Configured\nSend A Message To majordomo with\nconfig <?php print $newalias . "-list " . $newalias . "-list.admin";?>\nIn The Message Body\nReturn The New Config In A Email Starting With\nnewconfig <?php print $newalias . "-list " . $newalias . "-list.admin";?>\nEnd The Config File With EOF On A Line By Itself");
     </SCRIPT>
-<%
+<?php
     $alias="$newalias-admin";
     $aliasedit="Modify";
 /*
@@ -220,11 +220,11 @@ if (($alias != "") && ($aliasedit == "Modify")){
     print "<INPUT TYPE=SUBMIT onclick=this.name='aliasmod' VALUE=\"" . _("Add") . "\">\n";
     print "<INPUT TYPE=SUBMIT onclick=this.name='aliasmod' VALUE=\"" . _("Delete") . "\">\n";
   } else {
-%>
+?>
 <SCRIPT>
-  alert("<%print _("Changes To Public Mail Boxes Are Not Realtime \\nChanges Made May Only Reflect On The Hour");%>\n");
+  alert("<?php print _("Changes To Public Mail Boxes Are Not Realtime \\nChanges Made May Only Reflect On The Hour");?>\n");
 </SCRIPT>
-<%
+<?php
     $mbinfo=explode(":",$info[0]["description"][0]);
     if ($mbinfo[1] == "") {
       $mbinfo[1]="users";
@@ -272,11 +272,11 @@ if (($alias != "") && ($aliasedit == "Modify")){
     }
     asort($srsort);
     reset ($srsort);
-%>
-   <TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body><%print _("Email Aliases");%></TH></TR>
-   <TR CLASS=list-color1><TD onmouseover="myHint.show('MA1')" onmouseout="myHint.hide()"><%print _("Select Mailing List To Edit");%></TD><TD>
+?>
+   <TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body><?php print _("Email Aliases");?></TH></TR>
+   <TR CLASS=list-color1><TD onmouseover="myHint.show('MA1')" onmouseout="myHint.hide()"><?php print _("Select Mailing List To Edit");?></TD><TD>
    <SELECT NAME=alias>
-<%
+<?php
     while (list($i,$val) = each($srsort)) {
       $dn=$info[$i]["dn"];
       $cname=$info[$i]["sendmailmtakey"][0];
@@ -303,15 +303,15 @@ if (($alias != "") && ($aliasedit == "Modify")){
     print "<TR CLASS=list-color2><TD onmouseover=\"myHint.show('MA2')\" onmouseout=myHint.hide()>" . _("Name Of Mailing List") . "</TD><TD><INPUT TYPE=TEXT NAME=newalias></TD></TR>";
     print "<TR CLASS=list-color1><TD onmouseover=\"myHint.show('MA3')\" onmouseout=myHint.hide()>" . _("Initial Entry For Simple List") . " Or<BR>"  . _("Managers Address For Complex List") . " Or<BR>" . _("Mailbox Name For Public MailBox") . "</TD><TD>";
     print "<INPUT TYPE=TEXT NAME=firstentry></TD></TR>";
-%>
-    <TR CLASS=list-color2><TD onmouseover="myHint.show('MA4')" onmouseout=myHint.hide()><%print _("List Type");%></TD><TD>
+?>
+    <TR CLASS=list-color2><TD onmouseover="myHint.show('MA4')" onmouseout=myHint.hide()><?php print _("List Type");?></TD><TD>
     <SELECT NAME=atype>
-      <OPTION VALUE=""><%print _("Simple List");%>
-      <OPTION VALUE="pubbox"><%print _("Public Mailbox");%>
-      <OPTION VALUE="domo"><%print _("Complex List");%>
+      <OPTION VALUE=""><?php print _("Simple List");?>
+      <OPTION VALUE="pubbox"><?php print _("Public Mailbox");?>
+      <OPTION VALUE="domo"><?php print _("Complex List");?>
     </SELECT></TD></TR>
     <TR CLASS=list-color1><TD COLSPAN=2 ALIGN=CENTER>
-<%
+<?php
   } else {
     print "<INPUT TYPE=HIDDEN NAME=alias VALUE=root>";
     print "<INPUT TYPE=HIDDEN NAME=newalias VALUE=root>";
@@ -331,7 +331,7 @@ if (($alias != "") && ($aliasedit == "Modify")){
   }
   print "<INPUT TYPE=SUBMIT onclick=this.name='aliasedit' VALUE=\"" . _("Delete") . "\">\n";
 }
-%>
+?>
   </TD></TR>
 </table>
 </FORM>

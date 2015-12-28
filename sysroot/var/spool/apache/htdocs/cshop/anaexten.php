@@ -5,7 +5,7 @@
 <INPUT TYPE=HIDDEN NAME=dbfam>
 
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
-<%
+<?php
 include_once "/var/spool/apache/htdocs/cdr/uauth.inc";
 include_once "/var/spool/apache/htdocs/cdr/apifunc.inc";
 include_once "/var/spool/apache/htdocs/cdr/autoadd.inc";
@@ -102,11 +102,11 @@ for ($pkt=0;$pkt < count($apiinf);$pkt++) {
       if ($$toadd == "on") {
         $nexten=createexten("","","","",$port);
         if ($nexten == "") {
-%>
+?>
 <SCRIPT>
 alert('Error: Cannot Create A Extension Please Add Manualy.');
 </SCRIPT>
-<%
+<?php
         }
       }
     }
@@ -261,7 +261,7 @@ if ($_POST['print'] != "1") {
   }
   print "<INPUT TYPE=BUTTON NAME=pbutton VALUE=\"" . _("Print") . "\" ONCLICK=\"printpage(document.ppage)\"></TH></TR>";
 }
-%>
+?>
 </FORM>
 </TABLE>
 <FORM NAME=ppage METHOD=POST>

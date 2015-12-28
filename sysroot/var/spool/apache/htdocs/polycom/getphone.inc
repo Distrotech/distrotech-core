@@ -1,4 +1,4 @@
-<%
+<?php
 include "../cdr/auth.inc";
 include "../cdr/autoadd.inc";
 
@@ -47,4 +47,4 @@ if ($pwchange == "t") {
   pg_query($db,"UPDATE users SET secret='" . $passwd . "' WHERE name='" . $exten . "'");
   $agi->disconnect();
 }
-%>
+?>

@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -105,9 +105,9 @@ if (isset($_POST['showrep'])) {
   $num=pg_num_rows($crep);
   print "<CENTER><TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>";
 if ($_SESSION['repshow'] == "money") {
-%>
+?>
 <TR CLASS=list-color2>
-<TH CLASS=heading-body2><%print $title;%></TH>
+<TH CLASS=heading-body2><?php print $title;?></TH>
 <TH CLASS=heading-body2 ALIGN=RIGHT>&nbsp;TA</TH>
 <TH CLASS=heading-body2 ALIGN=RIGHT>&nbsp;BR</TH>
 <TH CLASS=heading-body2 ALIGN=RIGHT>&nbsp;SR</TH>
@@ -118,11 +118,11 @@ if ($_SESSION['repshow'] == "money") {
 <TH CLASS=heading-body2 ALIGN=RIGHT>&nbsp;NT</TH>
 <TH CLASS=heading-body2 ALIGN=RIGHT>&nbsp;GP</TH>
 </TR>
-<%
+<?php
 } else {
-%>
+?>
 <TR CLASS=list-color2>
-<TH CLASS=heading-body2><%print $title;%></TH>
+<TH CLASS=heading-body2><?php print $title;?></TH>
 <TH CLASS=heading-body2 ALIGN=RIGHT>&nbsp;T</TH>
 <TH CLASS=heading-body2 ALIGN=RIGHT>&nbsp;A</TH>
 <TH CLASS=heading-body2 ALIGN=RIGHT>&nbsp;N</TH>
@@ -133,7 +133,7 @@ if ($_SESSION['repshow'] == "money") {
 <TH CLASS=heading-body2 ALIGN=RIGHT>&nbsp;B</TH>
 <TH CLASS=heading-body2 ALIGN=RIGHT>&nbsp;S</TH>
 </TR>
-<%
+<?php
 }
   for ($i=0; $i < $num; $i++) {
     $r = pg_fetch_row($crep,$i);
@@ -213,21 +213,21 @@ if ($_SESSION['repshow'] == "money") {
     $omargin=sprintf("%0.2f",(1-$total[7]/$total[8])*100);
     $omarkup=sprintf("%0.2f",($total[8]/$total[7]-1)*100);
     $pgp=sprintf("%0.2f",($total[10]/$total[8])*100);
-    %><TR CLASS=<%print $bcolor[$bcol[0]];%>>
+    ?><TR CLASS=<?php print $bcolor[$bcol[0]];?>>
       <TD ALIGN=LEFT>Overall Margin</TD>
-      <TD COLSPAN=9 ALIGN=RIGHT><%print $omargin;%>%</TD></TR><%
+      <TD COLSPAN=9 ALIGN=RIGHT><?php print $omargin;?>%</TD></TR><?php
     $i++;
     $bcol[0]=$i % 2;
     $bcol[1]=($i+1) % 2;
-    %><TR CLASS=<%print $bcolor[$bcol[0]];%>>
+    ?><TR CLASS=<?php print $bcolor[$bcol[0]];?>>
       <TD ALIGN=LEFT>Overall Markup</TD>
-      <TD COLSPAN=9 ALIGN=RIGHT><%print $omarkup;%>%</TD></TR><%
+      <TD COLSPAN=9 ALIGN=RIGHT><?php print $omarkup;?>%</TD></TR><?php
     $i++;
     $bcol[0]=$i % 2;
     $bcol[1]=($i+1) % 2;
-    %><TR CLASS=<%print $bcolor[$bcol[0]];%>>
+    ?><TR CLASS=<?php print $bcolor[$bcol[0]];?>>
       <TD ALIGN=LEFT>GP % Of Sales</TD>
-      <TD COLSPAN=9 ALIGN=RIGHT><%print $pgp;%>%</TD></TR><%
+      <TD COLSPAN=9 ALIGN=RIGHT><?php print $pgp;?>%</TD></TR><?php
     $i++;
     $bcol[0]=$i % 2;
     $bcol[1]=($i+1) % 2;
@@ -235,85 +235,85 @@ if ($_SESSION['repshow'] == "money") {
 
 
 if ($_SESSION['repshow'] == "time") {
-%>	
-<TR  CLASS=<%print $bcolor[$bcol[0]];%>><TH COLSPAN=10 CLASS=heading-body2>Legend</TH></TR>
-<TR  CLASS=<%print $bcolor[$bcol[1]];%>>
+?>	
+<TR  CLASS=<?php print $bcolor[$bcol[0]];?>><TH COLSPAN=10 CLASS=heading-body2>Legend</TH></TR>
+<TR  CLASS=<?php print $bcolor[$bcol[1]];?>>
   <TH CLASS=heading-body2 COLSPAN=1 ALIGN=LEFT>T</TH>
   <TD COLSPAN=9>Total Calls</TD>
 </TR>
-<TR  CLASS=<%print $bcolor[$bcol[0]];%>>
+<TR  CLASS=<?php print $bcolor[$bcol[0]];?>>
   <TH CLASS=heading-body2 COLSPAN=1 ALIGN=LEFT>A</TH>
   <TD COLSPAN=9>Answered Calls</TD>
 </TR>
-<TR  CLASS=<%print $bcolor[$bcol[1]];%>>
+<TR  CLASS=<?php print $bcolor[$bcol[1]];?>>
   <TH CLASS=heading-body2 COLSPAN=1 ALIGN=LEFT>N</TH>
   <TD COLSPAN=9>Unanswered Calls</TD>
 </TR>
-<TR  CLASS=<%print $bcolor[$bcol[0]];%>>
+<TR  CLASS=<?php print $bcolor[$bcol[0]];?>>
   <TH CLASS=heading-body2 COLSPAN=1 ALIGN=LEFT>C</TH>
   <TD COLSPAN=9>Canceled Calls</TD>
 </TR>
-<TR  CLASS=<%print $bcolor[$bcol[1]];%>>
+<TR  CLASS=<?php print $bcolor[$bcol[1]];?>>
   <TH CLASS=heading-body2 COLSPAN=1 ALIGN=LEFT>U</TH>
   <TD COLSPAN=9>Unavailable Route</TD>
 </TR>
-<TR  CLASS=<%print $bcolor[$bcol[0]];%>>
+<TR  CLASS=<?php print $bcolor[$bcol[0]];?>>
   <TH CLASS=heading-body2 COLSPAN=1 ALIGN=LEFT>ASR</TH>
   <TD COLSPAN=9>Average Strike Rate (Provider Quality)</TD>
 </TR>
-<TR  CLASS=<%print $bcolor[$bcol[1]];%>>
+<TR  CLASS=<?php print $bcolor[$bcol[1]];?>>
   <TH CLASS=heading-body2 COLSPAN=1 ALIGN=LEFT>MHT</TH>
   <TD COLSPAN=9>Average Call Time</TD>
 </TR>
-<TR  CLASS=<%print $bcolor[$bcol[0]];%>>
+<TR  CLASS=<?php print $bcolor[$bcol[0]];?>>
   <TH CLASS=heading-body2 COLSPAN=1 ALIGN=LEFT>B</TH>
   <TD COLSPAN=9>Bought (m)</TD>
 </TR>
-<TR  CLASS=<%print $bcolor[$bcol[1]];%>>
+<TR  CLASS=<?php print $bcolor[$bcol[1]];?>>
   <TH CLASS=heading-body2 COLSPAN=1 ALIGN=LEFT>S</TH>
   <TD COLSPAN=9>Sold (m)</TD>
 </TR>
-<%
+<?php
 } else {
-%>	
-<TR  CLASS=<%print $bcolor[$bcol[0]];%>><TH CLASS=heading-body2 COLSPAN=10>Legend</TH></TR>
-<TR  CLASS=<%print $bcolor[$bcol[1]];%>>
+?>	
+<TR  CLASS=<?php print $bcolor[$bcol[0]];?>><TH CLASS=heading-body2 COLSPAN=10>Legend</TH></TR>
+<TR  CLASS=<?php print $bcolor[$bcol[1]];?>>
   <TH CLASS=heading-body2 COLSPAN=1 ALIGN=LEFT>TA</TH>
   <TD COLSPAN=9>Total Answered Calls</TD>
 </TR>
-<TR  CLASS=<%print $bcolor[$bcol[0]];%>>
+<TR  CLASS=<?php print $bcolor[$bcol[0]];?>>
   <TH CLASS=heading-body2 COLSPAN=1 ALIGN=LEFT>BR</TH>
   <TD COLSPAN=9>Average Buy Rate</TD>
 </TR>
-<TR  CLASS=<%print $bcolor[$bcol[1]];%>>
+<TR  CLASS=<?php print $bcolor[$bcol[1]];?>>
   <TH CLASS=heading-body2 COLSPAN=1 ALIGN=LEFT>SR</TH>
   <TD COLSPAN=9>Average Sell Rate</TD>
 </TR>
-<TR  CLASS=<%print $bcolor[$bcol[0]];%>>
+<TR  CLASS=<?php print $bcolor[$bcol[0]];?>>
   <TH CLASS=heading-body2 COLSPAN=1 ALIGN=LEFT>AB</TH>
   <TD COLSPAN=9>Average Session Cost</TD>
 </TR>
-<TR  CLASS=<%print $bcolor[$bcol[1]];%>>
+<TR  CLASS=<?php print $bcolor[$bcol[1]];?>>
   <TH COLSPAN=1 ALIGN=LEFT>AS</TH>
   <TD COLSPAN=9>Average Session Bill</TD>
 </TR>
-<TR  CLASS=<%print $bcolor[$bcol[0]];%>>
+<TR  CLASS=<?php print $bcolor[$bcol[0]];?>>
   <TH CLASS=heading-body2 COLSPAN=1 ALIGN=LEFT>B</TH>
   <TD COLSPAN=9>Total Cost (TAX Incl.)</TD>
 </TR>
-<TR  CLASS=<%print $bcolor[$bcol[1]];%>>
+<TR  CLASS=<?php print $bcolor[$bcol[1]];?>>
   <TH CLASS=heading-body2 COLSPAN=1 ALIGN=LEFT>S</TH>
   <TD COLSPAN=9>Total Sales (TAX Incl.)</TD>
 </TR>
-<TR  CLASS=<%print $bcolor[$bcol[0]];%>>
+<TR  CLASS=<?php print $bcolor[$bcol[0]];?>>
   <TH CLASS=heading-body2 COLSPAN=1 ALIGN=LEFT>NT</TH>
   <TD COLSPAN=9>Net Tax (TAX Owing)</TD>
 </TR>
-<TR  CLASS=<%print $bcolor[$bcol[1]];%>>
+<TR  CLASS=<?php print $bcolor[$bcol[1]];?>>
   <TH CLASS=heading-body2 COLSPAN=1 ALIGN=LEFT>GP</TH>
   <TD COLSPAN=9>Gross Profit (After Net Tax)</TD>
 </TR>
-<%
+<?php
 }
 } else if (isset($_POST['type'])) {
   function getper($ptype) {
@@ -386,7 +386,7 @@ if ($_SESSION['repshow'] == "time") {
       print "<OPTION VALUE=\"date_part('year',starttime) = " . $_POST['year'] ."\">Full Year</OPTION>\n";
     }
   }
-%>
+?>
 <FORM METHOD=POST NAME=repfrm2 onsubmit="ajaxsubmit(this.name);return false">
 <CENTER><TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <TR CLASS=list-color2>
@@ -395,24 +395,24 @@ if ($_SESSION['repshow'] == "time") {
 <TD WIDTH=50%>Select Period To Begin Report For</TH>
 <TD>
 <SELECT NAME=periods>
-<%
+<?php
 getper(" >= ");
-%>
+?>
 </SELECT></TH></TR>
 <TR CLASS=list-color2>
 <TD>Select Period To End Report For</TD>
 <TD>
 <SELECT NAME=periode>
-<%
+<?php
 getper(" <= ");
-%>
+?>
 </SELECT></TH></TR>
 <TR CLASS=list-color1><TD>
 Show Report By</TD><TD>
 <SELECT NAME=orderby>
   <OPTION VALUE=dest>Called Destination</OPTION>
   <OPTION VALUE=username>Username</OPTION>
-<%
+<?php
   if ($_POST['type'] <= "0" ) {
     print "<OPTION VALUE=half>Half Year</OPTION>\n";
   }
@@ -428,15 +428,15 @@ Show Report By</TD><TD>
     print "<OPTION VALUE=month>Month</OPTION>\n";
     print "<OPTION VALUE=week>Week</OPTION>\n";
     print "<OPTION VALUE=day>Day</OPTION>\n";
-%>
+?>
 </SELECT></TH><TR>
 <TR CLASS=list-color2><TD ALIGN=MIDDLE COLSPAN=2>
 <INPUT TYPE=SUBMIT NAME=showrep VALUE="Show Report">
 </TH></TR>
 </FORM>
-<%
+<?php
 } else {
-%>
+?>
 <FORM METHOD=POST NAME=repfrm1 onsubmit="ajaxsubmit(this.name);return false">
 <CENTER><TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body>
@@ -455,7 +455,7 @@ Report For All Calls
 <TR CLASS=list-color2>
 <TD>Year To Report</TD>
 <TD>
-<%
+<?php
 
 $getyear=pg_query("SELECT DISTINCT date_part('year',starttime) as year
            FROM call LEFT OUTER JOIN resellercall ON (calluid=call.uniqueid)
@@ -474,7 +474,7 @@ for($i=0;$i<pg_num_rows($getyear);$i++) {
   }
   print ">" . $year[0] . "</OPTION>\n";
 }
-%>
+?>
 </SELECT>
 </TD></TR>
 <TR CLASS=list-color1><TD>
@@ -487,7 +487,7 @@ Display</TD><TD>
 <INPUT TYPE=SUBMIT NAME=setrep VALUE="Show Report">
 </TD></TR>
 </FORM>
-<%
+<?php
 }
-%>
+?>
 </TABLE>

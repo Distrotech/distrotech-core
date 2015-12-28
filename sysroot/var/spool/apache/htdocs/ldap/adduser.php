@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -143,11 +143,11 @@ if ($ds) {
       }
       if (!ldap_add($ds,$dn,$info)) {
         $err=ldap_error($ds);
-%>
+?>
 
 <CENTER>
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
-<%
+<?php
         print "<TR><TD COLSPAN=2><FONT COLOR=RED>Not Added<P>$err $ldn $dn</TD></TR>";
       } else {
         if (isset($exuser)) {
@@ -170,10 +170,10 @@ if ($ds) {
         return;
       }
     } else {
-%>
+?>
 <CENTER>
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
-<%
+<?php
         print "<TR><TD COLSPAN=2 ALIGN=CENTER><FONT COLOR=RED>Not Added Password Mismatch</TD></TR>";
     }
   } else {
@@ -183,25 +183,25 @@ if ($ds) {
     $quotaHomeDir=10;
     $quotaFileServer=20;
     $quotaMailSpool=5;
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=useradd onsubmit="ajaxsubmit(this.name);return false">
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
-<TR CLASS=list-color2><TH CLASS=heading-body COLSPAN=2><%print _("Adding New System User");%></TH></TR>
-<%
+<TR CLASS=list-color2><TH CLASS=heading-body COLSPAN=2><?php print _("Adding New System User");?></TH></TR>
+<?php
   }
 }
 
 /*  document.loadpage.submit();
 */
-%>
+?>
 
 
 <INPUT TYPE=HIDDEN NAME=adduser>
 <INPUT TYPE=HIDDEN NAME=showmenu>
 <INPUT TYPE=HIDDEN NAME=classi>
 <INPUT TYPE=HIDDEN NAME=disppage VALUE="ldap/adduser.php">
-<%
+<?php
 while(list($attr,$aname)=each($adescrip)) {
   $rem=$cnt % 2;
   if ($rem == 1) {
@@ -212,26 +212,26 @@ while(list($attr,$aname)=each($adescrip)) {
     $bcolor2=" CLASS=list-color2";
   }
 
-%>
-  <TR<% print $bcolor%>><TD WIDTH=50% onmouseover="myHint.show('<%print strtolower($attr);%>')" onmouseout="myHint.hide()">
-<%
+?>
+  <TR<?php print $bcolor?>><TD WIDTH=50% onmouseover="myHint.show('<?php print strtolower($attr);?>')" onmouseout="myHint.hide()">
+<?php
       print $adescrip[$attr];
   if ($attr != "clearPassword") {
-%>
+?>
     </TD><TD WIDTH=50%>
-      <INPUT TYPE=TEXT SIZE=40 NAME=<%print $attr;%> VALUE="<%print $$attr;%>">
+      <INPUT TYPE=TEXT SIZE=40 NAME=<?php print $attr;?> VALUE="<?php print $$attr;?>">
     </TD></TR>
-<%
+<?php
   } else {
-%>
+?>
     </TD><TD WIDTH=50%>
       <INPUT TYPE=PASSWORD SIZE=40 NAME=pass1 VALUE="">
     </TD></TR>
-  <TR<% print $bcolor2%>><TD WIDTH=50% onmouseover="myHint.show('PW2')" onmouseout=myHint.hide()><%print _("Confirm Password");%>
+  <TR<?php print $bcolor2?>><TD WIDTH=50% onmouseover="myHint.show('PW2')" onmouseout=myHint.hide()><?php print _("Confirm Password");?>
     </TD><TD WIDTH=50%>
       <INPUT TYPE=PASSWORD SIZE=40 NAME=pass2 VALUE="">
     </TD></TR>  
-<%
+<?php
     $cnt ++;
   }
   $cnt ++;
@@ -258,12 +258,12 @@ while(list($attr,$aname)=each($adescrip)) {
     $svz=ldap_search($ds,"cn=" . $_SESSION['utype'] . ",ou=Vadmin","(&(member=$ldn)(objectclass=virtZoneSettings))");
     $vzinfo = ldap_get_entries($ds, $svz);
     if (($ADMIN_USER == "admin") && ($_SESSION['utype'] == "system")){
-%>
-      <TR<% print $bgcolor["0"]%>><TD WIDTH=50%>
-      <%print _("Add To Virtual Zone");%></TD>
+?>
+      <TR<?php print $bgcolor["0"]?>><TD WIDTH=50%>
+      <?php print _("Add To Virtual Zone");?></TD>
       <TD WIDTH=50%><SELECT NAME=virtzone>
-      <OPTION VALUE=""><%print _("None");%>
-<% 
+      <OPTION VALUE=""><?php print _("None");?>
+<?php 
       for ($i=0; $i<$vzinfo["count"]; $i++) {
         $vzsort[$i]=$vzinfo[$i]["cn"][0];
       }
@@ -297,7 +297,7 @@ while(list($attr,$aname)=each($adescrip)) {
   } else {
     print "<INPUT TYPE=BUTTON VALUE=\"" . _("Add") . "\" NAME=submited ONCLICK=javascript:addnewuser()>";
   }
-%>
+?>
     </TD></TR>
 </TABLE>
 </FORM>

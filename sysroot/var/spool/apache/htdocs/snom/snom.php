@@ -1,4 +1,4 @@
-<%
+<?php
 include "../cdr/auth.inc";
 include "../cdr/autoadd.inc";
 include "../ldap/ldapbind.inc";

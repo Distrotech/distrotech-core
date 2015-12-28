@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -27,13 +27,13 @@ if (! isset($agi)) {
 }
 
 $chans=$agi->command("module show");
-%>
+?>
 
 <CENTER>
 
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
   <TR CLASS=list-color2>
-    <TH COLSPAN=3 CLASS=heading-body><%print _("Loaded Modules");%></TH>
+    <TH COLSPAN=3 CLASS=heading-body><?php print _("Loaded Modules");?></TH>
   </TR>
   <TR CLASS=list-color1>
     <TH>Module</TH>
@@ -41,7 +41,7 @@ $chans=$agi->command("module show");
     <TH>Usage Count</TH>
   </TR>
 
-<%
+<?php
 
 $cnt=1;
 foreach(explode("\n",$chans['data']) as $line) {
@@ -53,5 +53,5 @@ foreach(explode("\n",$chans['data']) as $line) {
 }
 print "</TD></TR>\n";
 $agi->disconnect();
-%>
+?>
 </TABLE>

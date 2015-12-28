@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -39,16 +39,16 @@ if (isset($hangup)) {
 }
 
 $chans=$agi->command("core show channels concise");
-%>
+?>
 
 <CENTER>
 <FORM METHOD=POST NAME=hangupchan onsubmit="ajaxsubmit(this.name);return false">
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
   <TR CLASS=list-color2>
-    <TH CLASS=heading-body COLSPAN=6><%print _("Active Channels");%></TH>
+    <TH CLASS=heading-body COLSPAN=6><?php print _("Active Channels");?></TH>
   </TR>
 
-<%
+<?php
 
 print "<TR CLASS=list-color1><TH>" . _("Hangup") . "</TH><TH>" . _("Caller ID") . "</TH><TH>"  . _("Account") . "</TH><TH>" . _("Status") . "</TH><TH>" . _("Duration") . "</TH><TH>" . _("Channel(s)") . "</TH></TR>\n";
 
@@ -82,6 +82,6 @@ foreach(explode("\n",$chans['data']) as $line) {
 print "\n<INPUT TYPE=HIDDEN NAME=callcnt VALUE=" . ($cnt - 1) . ">\n";
 print "\n<TR CLASS=list-color" . (($cnt % 2) + 1). "><TH COLSPAN=6><INPUT TYPE=SUBMIT VALUE=\"" . _("Hangup Selected Calls") . "\" NAME=hangup></TD></TR>\n";
 $agi->disconnect();
-%>
+?>
 </TABLE>
 </FORM>

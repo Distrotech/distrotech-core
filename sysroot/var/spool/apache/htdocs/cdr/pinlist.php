@@ -6,7 +6,7 @@
 <FORM METHOD=POST NAME=deletexten onsubmit="ajaxsubmit(this.name);return false">
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <INPUT TYPE=HIDDEN NAME=print>
-<%
+<?php
 include_once "auth.inc";
 $extensq="SELECT name,users.fullname,secret,voicemail.password,roampass from users
  left outer join features on (name = exten)
@@ -94,6 +94,6 @@ if ($_POST['print'] != "1") {
   $rcol++;
   print "<TR CLASS=list-color" . (($rcol % 2)+1) . "><TH COLSPAN=" . $colspan . " CLASS=heading-body><INPUT TYPE=SUBMIT NAME=delexten VALUE=\"" . _("Update") . "\"><INPUT TYPE=BUTTON NAME=pbutton VALUE=\"" . _("Print") . "\" ONCLICK=\"printpage(document.ppage)\"></TH></TR>";
 }
-%>
+?>
 </FORM>
 </TABLE>

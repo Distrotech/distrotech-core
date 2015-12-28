@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -63,13 +63,13 @@ if ((isset($_POST['tariffcode']) || ((isset($_POST['print'])) && $_POST['print']
     $num=pg_num_rows($rateq);
   }
 if ($_POST['print'] < 2) {
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=csvform>
-<INPUT TYPE=HIDDEN NAME=tariffcode VALUE="<%print $_POST['tariffcode'];%>">
-<INPUT TYPE=HIDDEN NAME=country VALUE="<%print $_POST['country'];%>">
-<INPUT TYPE=HIDDEN NAME=sdollar VALUE="<%print $_POST['sdollar'];%>">
-<INPUT TYPE=HIDDEN NAME=disppage VALUE="<%print $_SESSION['disppage'];%>">
+<INPUT TYPE=HIDDEN NAME=tariffcode VALUE="<?php print $_POST['tariffcode'];?>">
+<INPUT TYPE=HIDDEN NAME=country VALUE="<?php print $_POST['country'];?>">
+<INPUT TYPE=HIDDEN NAME=sdollar VALUE="<?php print $_POST['sdollar'];?>">
+<INPUT TYPE=HIDDEN NAME=disppage VALUE="<?php print $_SESSION['disppage'];?>">
 <INPUT TYPE=HIDDEN NAME=print>
 </FORM>
 <FORM METHOD=POST NAME=ltariff onsubmit="ajaxsubmit(this.name);return false">
@@ -77,9 +77,9 @@ if ($_POST['print'] < 2) {
 
 <TR CLASS=list-color2>
 <TH ALIGN=LEFT CLASS=heading-body2>Country</TH><TH ALIGN=LEFT CLASS=heading-body2>Break Out</TH>
-<TH ALIGN=LEFT CLASS=heading-body2><%if ($_POST['sdollar'] == "on") {print "\$c/m";} else {print "Rate R/m";}%></TH>
+<TH ALIGN=LEFT CLASS=heading-body2><?php if ($_POST['sdollar'] == "on") {print "\$c/m";} else {print "Rate R/m";}?></TH>
 </TR>
-<%
+<?php
 }
   for ($i=0; $i < $num; $i++) {
     $r = pg_fetch_row($rateq,$i);
@@ -138,7 +138,7 @@ if ($_POST['print'] < 2) {
   $num=pg_num_rows($tariff);
   unset($_SESSION['tariffcode']);
   unset($_SESSION['country']);
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=ltariff onsubmit="ajaxsubmit(this.name);return false">
 <TABLE WIDTH=90% CELLSPACING=0 CELLPADDING=0>
@@ -149,7 +149,7 @@ if ($_POST['print'] < 2) {
 <TH ALIGN=LEFT VALIGN=MIDDLE>
 
 <SELECT NAME=tariffcode>
-<%
+<?php
   if ($_SESSION['auser'] == "1") {
     print "<OPTION VALUE=\"" . $_SESSION['rbuyrate'] . "\">Buy Rate</OPTION>\n";
   }
@@ -158,9 +158,9 @@ if ($_POST['print'] < 2) {
     $r[0]=substr($r[0],strpos($r[0],"-")+1);
     print  "<OPTION VALUE=" . $r[0] . ">" . $r[1] . "</OPTION>\n";
   }
-%>
+?>
 </SELECT></TH></TR>
-<%
+<?php
 $country=pg_query($db,"SELECT country.countrycode,countryname
                      FROM country WHERE countrycode != '' AND countryname != ''
                      ORDER BY countryname");
@@ -174,20 +174,20 @@ if ($newplan != "") {
   pg_query("INSERT INTO tariff (tariffname,tariffcode) VALUES ('" . $newplan . "','" . $newcode . "')");
 }
 */
-%>
+?>
 <TR CLASS=list-color2>
 <TD>Select Country To View</TD>
 <TH ALIGN=LEFT VALIGN=MIDDLE>
 <SELECT NAME=country>
 <OPTION VALUE="">All
-<%
+<?php
 
 for ($i=0; $i < $num; $i++) {
   $r = pg_fetch_row($country,$i);
   print  "<OPTION VALUE=" . $r[0] . ">" . $r[1] . "</OPTION>\n";
 }
 
-%>
+?>
 </SELECT></TH></TR>
 <TR CLASS=list-color1>
 <TD>Show Price In Dollar</TD>
@@ -197,6 +197,6 @@ for ($i=0; $i < $num; $i++) {
 <TR CLASS=list-color2><TD ALIGN=MIDDLE COLSPAN=2><INPUT TYPE=SUBMIT></TH></TR>
 </FORM>
 </TABLE>
-<%
+<?php
 }
-%>
+?>

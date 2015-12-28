@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -39,7 +39,7 @@ if (($iport == 0) && ($iblock == "reload")) {
 }
 
 $isdns=$agi->command("misdn show stacks");
-%>
+?>
 
 <CENTER>
 <FORM METHOD=POST NAME=isdninf>
@@ -48,15 +48,15 @@ $isdns=$agi->command("misdn show stacks");
 
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
   <TR CLASS=list-color2>
-    <TH CLASS=heading-body COLSPAN=5><%print _("Asterisk ISDN Channel Status");%></TH>
+    <TH CLASS=heading-body COLSPAN=5><?php print _("Asterisk ISDN Channel Status");?></TH>
   </TR>
 
 <TR CLASS=list-color1>
-<TH CLASS=heading-body2><%print _("Port");%></TH>
-<TH CLASS=heading-body2><%print _("Active");%></TH>
-<TH CLASS=heading-body2><%print _("Link Status");%></TH>
-<TH CLASS=heading-body2><%print _("Blocked");%></TH><TH CLASS=heading-body2><%print _("Reset Port");%></TH></TR>
-<%
+<TH CLASS=heading-body2><?php print _("Port");?></TH>
+<TH CLASS=heading-body2><?php print _("Active");?></TH>
+<TH CLASS=heading-body2><?php print _("Link Status");?></TH>
+<TH CLASS=heading-body2><?php print _("Blocked");?></TH><TH CLASS=heading-body2><?php print _("Reset Port");?></TH></TR>
+<?php
 $cnt=1;
 foreach(explode("\n",$isdns['data']) as $line) {
   if (! ereg("(^Privilege: Command)|(^BEGIN STACK_LIST)|(^No such command)|(^$)",$line)) {
@@ -79,11 +79,11 @@ foreach(explode("\n",$isdns['data']) as $line) {
   }
 }
 $agi->disconnect();
-%>
-<TR CLASS=list-color<%print (($cnt % 2) +1 );%>><TD ALIGN=MIDDLE COLSPAN=5>
-<%if ($cnt > 1) {%>
-  <INPUT TYPE=BUTTON VALUE="<%print _("Reload ISDN");%>" onclick="javascript:blockisdn('0','reload')">
-<%}%>
+?>
+<TR CLASS=list-color<?php print (($cnt % 2) +1 );?>><TD ALIGN=MIDDLE COLSPAN=5>
+<?php if ($cnt > 1) {?>
+  <INPUT TYPE=BUTTON VALUE="<?php print _("Reload ISDN");?>" onclick="javascript:blockisdn('0','reload')">
+<?php }?>
 </TD></TR>
 </TABLE>
 </FORM>

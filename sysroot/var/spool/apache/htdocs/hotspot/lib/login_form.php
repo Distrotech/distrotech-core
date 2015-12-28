@@ -17,7 +17,7 @@
 <? if (ENABLE_LOGIN_COOKIE): ?>
 <tr>
 	<td>&nbsp;</td>
-	<td><input class="form_check" type="checkbox" name="save_login"<% if ($_SESSION['save_login']) { print " CHECKED";};%>><?=_t('rememberlogin')?></td>
+	<td><input class="form_check" type="checkbox" name="save_login"<?php if ($_SESSION['save_login']) { print " CHECKED";};?>><?=_t('rememberlogin')?></td>
 </tr>
 <? endif; ?>
 <tr>

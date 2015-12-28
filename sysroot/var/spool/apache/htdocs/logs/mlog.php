@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -40,10 +40,10 @@
     $search="$search AND mail_to.message_id LIKE '$msgid'";
   }
 
-%>
+?>
 
 <CENTER>
-<%
+<?php
   print "<FORM NAME=msgdata METHOD=POST NAME=msgdata>\n";
   print "<INPUT TYPE=HIDDEN NAME=mintime VALUE=\"$mintime\">\n";
   print "<INPUT TYPE=HIDDEN NAME=maxtime VALUE=\"$maxtime\">\n";
@@ -104,10 +104,10 @@
     print "\n\t</tr>\n";
   }
 */
-%>
+?>
 
 
-<%
+<?php
   print "<TR  CLASS=list-color2><TH COLSPAN=4 CLASS=heading-body>List Of All Matching Mail</TH></TR>";
   print "<TR  CLASS=list-color1><TH CLASS=heading-body2>Time</TH><TH CLASS=heading-body2>Message ID</TH><TH CLASS=heading-body2>To</TH><TH CLASS=heading-body2>From</TH>";
   print "</TR>\n";
@@ -183,5 +183,5 @@
     print "\n\t</tr>\n";
   }
   print "</TABLE>";
-%>
+?>
 </FORM>

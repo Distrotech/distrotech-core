@@ -1,7 +1,7 @@
 <CENTER>
 <FORM NAME=getbreak METHOD=POST onsubmit="ajaxsubmit(this.name);return false">
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -60,7 +60,7 @@ $bcolor[1]="list-color1";
 
 $_SESSION['disppage']="cshop/editrate.php";
 
-%>
+?>
 <TR CLASS=list-color2>
 <TH COLSPAN=2 CLASS=heading-body>Alter/Create A Break Out (Subcode)
 </TR>
@@ -68,7 +68,7 @@ $_SESSION['disppage']="cshop/editrate.php";
 <TD WIDTH=50%>Select Break Out To Alter</TH>
 <TH ALIGN=CENTER VALIGN=MIDDLE>
 <SELECT NAME=breakout>
-<%
+<?php
 
 for ($i=0; $i < $num; $i++) {
   $r = pg_fetch_row($cousub,$i);
@@ -79,27 +79,27 @@ for ($i=0; $i < $num; $i++) {
   }
   print ">" . $r[0] . " (" . $r[3] . ")</OPTION>\n";
 }
-%>
+?>
 </SELECT></TH></TR>
 <TR CLASS=list-color2>
 <TH COLSPAN=2>
   <INPUT TYPE=BUTTON ONCLICK=openpage('cshop/getcountry.php','tariffs') VALUE="<<">
   <INPUT TYPE=SUBMIT VALUE="Alter Breakout Rate">
-<%
-  if ($_SESSION['resellerid'] == 0) {%>
+<?php
+  if ($_SESSION['resellerid'] == 0) {?>
     <INPUT TYPE=BUTTON ONCLICK="deleteconf('This Breakout',document.getbreak,document.getbreak.delbreak)" VALUE="Delete Breakout">
     <INPUT TYPE=HIDDEN NAME=delbreak>
-<%
+<?php
   }
-  if (isset($_SESSION['subcode'])) {%>
+  if (isset($_SESSION['subcode'])) {?>
     <INPUT TYPE=BUTTON ONCLICK=openpage('cshop/editrate.php','tariffs') VALUE=">>">
-<%
+<?php
   }
-%>
+?>
 </TH></TR>
-<%
+<?php
 if ($_SESSION['resellerid'] == 0) {
-%>
+?>
   <TR CLASS=list-color1 CLASS=heading-body2><TH COLSPAN=2>Add Breakout</TH></TR>
   <TR CLASS=list-color2><TD>Breakout Name</TD><TD>
   <INPUT TYPE=TEXT NAME=newbreakout></TD></TR>
@@ -107,7 +107,7 @@ if ($_SESSION['resellerid'] == 0) {
   <INPUT TYPE=TEXT NAME=newrate></TD></TR>
   <TR CLASS=list-color2>
   <TD>Provider</TD><TD><SELECT NAME=trunkprefix>
-<%
+<?php
   $tplan=pg_query($db,"SELECT distinct trunkprefix,name from provider ORDER BY name");
   $num=pg_num_rows($tplan);
   for ($i=0; $i < $num; $i++) {
@@ -115,11 +115,11 @@ if ($_SESSION['resellerid'] == 0) {
     print "<OPTION VALUE=\"" . $r[0] . "\"";
     print ">" . $r[1] . "</OPTION>\n";
   }
-%>
+?>
 </SELECT>
 </TD></TR>
 <TR CLASS=list-color1><TD ALIGN=MIDDLE COLSPAN=2>
 <INPUT TYPE=SUBMIT onclick=this.name='addbreak' VALUE="Add Breakout"></TD></TR>
-<%}%>
+<?php }?>
 </FORM>
 </TABLE>

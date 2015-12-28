@@ -1,4 +1,4 @@
-<%
+<?php
 
 function randpwgen($len) {
   do {
@@ -145,4 +145,4 @@ function createexten($mac,$phonetype,$prefix,$start,$tdmport) {
   }
   return $ret;
 }
-%>
+?>

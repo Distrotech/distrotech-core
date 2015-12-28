@@ -1,4 +1,4 @@
-<%
+<?php
   if ($type != "") {
     $type="-" . $type;
   }
@@ -27,4 +27,4 @@
 
   $imin=imagecreatefrompng("voip" . $type . ".png");
   imagepng($imin);
-%>
+?>

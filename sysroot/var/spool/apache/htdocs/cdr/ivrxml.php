@@ -1,4 +1,4 @@
-<%
+<?php
 header('Content-type: text/xml');
 include_once "/var/spool/apache/htdocs/cdr/auth.inc";
 
@@ -38,4 +38,4 @@ for($rcnt=0;$rcnt<pg_num_rows($contacts);$rcnt++) {
 }
 print "</options>\n";
 pg_close($db);
-%>
+?>

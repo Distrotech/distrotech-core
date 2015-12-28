@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -36,4 +36,4 @@ join( "\n",array_map(create_function(
     
 print "</style>\n";
 print $matches[2] . "\n</div>\n";
-%>
+?>

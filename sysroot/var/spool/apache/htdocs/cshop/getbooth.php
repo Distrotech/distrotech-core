@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -45,7 +45,7 @@ if ($_SESSION['classi'] == 1) {
 if ($_SESSION['classi'] != "") {
   unset($_SESSION['classi']);
 }
-%>
+?>
 <CENTER>
 <FORM NAME=editac METHOD=POST onsubmit="ajaxsubmit(this.name);return false">
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
@@ -59,7 +59,7 @@ if ($_SESSION['classi'] != "") {
 <TH ALIGN=LEFT CLASS=heading-body2>Credit</TH>
 <TH ALIGN=LEFT CLASS=heading-body2>Name</TH>
 <TH ALIGN=LEFT CLASS=heading-body2>Rate Plan</TH></TR>
-<%
+<?php
 for ($i=0; $i < $num; $i++) {
   $r = pg_fetch_row($users,$i);
   $rem=$i % 2; 
@@ -77,6 +77,6 @@ for ($i=0; $i < $num; $i++) {
   }
   print "</TR>\n";
 }
-%>
+?>
 </FORM>
 </TABLE>

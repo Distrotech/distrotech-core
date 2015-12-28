@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -29,7 +29,7 @@ if (isset($_POST['addbooth'])) {
                                    activated,usertype,fullname,agentid) VALUES (
                                    '" . $_POST['cno'] . "','" . $_POST['cno'] . "','" . $_POST['cno'] . "','','$pass','0','$tariff','f',
                                    '2','" . $_POST['bname'] . "'," . $_SESSION['resellerid'] . ")");
-%>
+?>
 <CENTER>
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <TR CLASS=list-color2>
@@ -37,16 +37,16 @@ if (isset($_POST['addbooth'])) {
 </TR>
 <TR CLASS=list-color1>
 <TD WIDTH=50%>Number</TD>
-<TD WIDTH=50% ALIGN=LEFT><%print $_POST['cno'];%></TD>
+<TD WIDTH=50% ALIGN=LEFT><?php print $_POST['cno'];?></TD>
 <TR CLASS=list-color2>
 <TD WIDTH=50%>Password</TD>
-<TD WIDTH=50% ALIGN=LEFT><%print $pass;%></TD>
+<TD WIDTH=50% ALIGN=LEFT><?php print $pass;?></TD>
 </TR>
 </TABLE>
-<%
+<?php
 } else {
   $tplan=pg_query($db,"SELECT tariffname,tariffcode FROM tariff WHERE tariffcode LIKE '" . $_SESSION['resellerid'] . "-%' ORDER BY tariffname");
-%>
+?>
 <FORM METHOD=POST NAME=mkbooth onsubmit="ajaxsubmit(this.name);return false">
 <CENTER>
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
@@ -55,12 +55,12 @@ if (isset($_POST['addbooth'])) {
 </TR>
 <TR CLASS=list-color1>
   <TD WIDTH=50%>Tariff Plan</TD>
-  <TD WIDTH=50% ALIGN=LEFT><SELECT NAME=tariff><%
+  <TD WIDTH=50% ALIGN=LEFT><SELECT NAME=tariff><?php
   $num=pg_num_rows($tplan);
   for ($i=0; $i < $num; $i++) {
     $r = pg_fetch_array($tplan,$i,PGSQL_NUM);
     print "<OPTION VALUE=\"" . $r[1] . "\">" . $r[0] . "</OPTION>\n";
-  }%>
+  }?>
 </SELECT></TD></TR>
 <TR CLASS=list-color2>
   <TD>Booth Name/Number</TD>
@@ -68,5 +68,5 @@ if (isset($_POST['addbooth'])) {
 <TR CLASS=list-color1>
 <TD ALIGN=MIDDLE COLSPAN=2><INPUT TYPE=SUBMIT NAME=addbooth VALUE="Add Booth"></TD>
 </TABLE>
-</FORM><%
-}%>
+</FORM><?php
+}?>

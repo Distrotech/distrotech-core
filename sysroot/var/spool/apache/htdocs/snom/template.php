@@ -1,4 +1,4 @@
-<%
+<?php
 include "../cdr/auth.inc";
 $path="/var/spool/apache/htdocs/";
 $font=$path . "cdr/butfont.ttf";
@@ -224,4 +224,4 @@ if ($type == "kp") {
 }
 ImagePNG($im);
 ImageDestroy($im);
-%>
+?>

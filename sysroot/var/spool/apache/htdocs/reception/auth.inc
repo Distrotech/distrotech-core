@@ -1,4 +1,4 @@
-<%
+<?php
 
 include_once "/var/spool/apache/htdocs/cdr/auth.inc";
 
@@ -28,4 +28,4 @@ if ((!isset($_SERVER['PHP_AUTH_USER'])) || (pg_num_rows($curset) == "0") || (!is
   $msqldat=pg_fetch_array($profile,0,PGSQL_NUM);
   $exten=$_SERVER['PHP_AUTH_USER'];
 }
-%>
+?>

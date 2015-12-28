@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -22,31 +22,31 @@ if (! $db) {
   include "/var/spool/apache/htdocs/cshop/auth.inc";
 }
 
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=editvsite onsubmit="ajaxsubmit(this.name);return false">
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <INPUT TYPE=HIDDEN NAME=account VALUE="">
 
-<%
+<?php
 if (!isset($_POST['companyid'])) {
   $vc=pg_query("SELECT companyid,description||' ('||contact||' '||email||')' FROM virtualcompany WHERE
                        resellerid = " . $_SESSION['resellerid'] . "ORDER BY description");
-%>
+?>
   <TR CLASS=list-color2>
   <TH COLSPAN=2 CLASS=heading-body>Edit Virtual PBX Nodes</TH>
   </TR>
   <TR CLASS=list-color1>
   <TD WIDTH=50%>Select Virtual Company To Edit</TD>
   <TD VALIGN=MIDDLE>
-  <SELECT NAME=companyid><%
+  <SELECT NAME=companyid><?php
   for ($i=0; $i < pg_num_rows($vc); $i++) {
     $r = pg_fetch_row($vc,$i);
     print  "<OPTION VALUE=" . $r[0] . ">" . $r[1] . "</OPTION>\n";
-  }%>
+  }?>
   </SELECT></TD></TR>
   <TR CLASS=list-color2><TD ALIGN=MIDDLE COLSPAN=2><INPUT TYPE=SUBMIT></TH></TR>
-<%
+<?php
 } elseif (isset($_POST['account']) && ($_POST['account'] != "")) {
   if ($_POST['destmatch'] != "") {
     if ($_POST['deststrip'] == "") {
@@ -73,9 +73,9 @@ if (!isset($_POST['companyid'])) {
   print "<INPUT TYPE=HIDDEN NAME=companyid VALUE=" . $_POST['companyid'] . ">";
   print "<INPUT TYPE=HIDDEN NAME=account VALUE=" . $_POST['account'] . ">";
 
-%>
+?>
   <TR CLASS=list-color2>
-  <TH COLSPAN=4 CLASS=heading-body>Editing Virtual Site For <%print $vcname;%></TH>
+  <TH COLSPAN=4 CLASS=heading-body>Editing Virtual Site For <?php print $vcname;?></TH>
   </TR>
   <TR CLASS=list-color1>
   <TH ALIGN=LEFT CLASS=heading-body2>Delete</TH>
@@ -87,7 +87,7 @@ if (!isset($_POST['companyid'])) {
     <TD><INPUT NAME=destmatch></TD>
     <TD><INPUT NAME=destpre></TD>
     <TD><INPUT NAME=deststrip></TD></TR>
-<%
+<?php
   $cnt=0;
   for ($i=0; $i < pg_num_rows($vsite); $i++) {
     $r = pg_fetch_row($vsite,$i);
@@ -127,12 +127,12 @@ if (!isset($_POST['companyid'])) {
   print "<INPUT TYPE=HIDDEN NAME=companyid VALUE=" . $_POST['companyid'] . ">";
 
   $poollist=pg_query($db,"SELECT poolid,description FROM creditpool WHERE companyid='" . $_POST['companyid'] . "'");
-%>
+?>
   <SCRIPT>
     var usersearch=new TextComplete(document.editvsite.source,ldapautodata,'vsitesxml.php',setautosearchurl,document.editvsite,usersearch);
   </SCRIPT>
   <TR CLASS=list-color2>
-  <TH COLSPAN=3 CLASS=heading-body>Editing Virtual Sites For <%print $vcname;%></TH>
+  <TH COLSPAN=3 CLASS=heading-body>Editing Virtual Sites For <?php print $vcname;?></TH>
   </TR>
   <TR CLASS=list-color1>
   <TH ALIGN=LEFT CLASS=heading-body2>Delete</TH>
@@ -141,7 +141,7 @@ if (!isset($_POST['companyid'])) {
   <TR CLASS=list-color2>
   <TD>(Add)</TD><TD><INPUT NAME=source autocomplete=off SIZE=50></TD><TD><SELECT NAME=poolid>
     <OPTION VALUE="">None</OPTION>
-<%
+<?php
   for($p=0;$p < pg_num_rows($poollist);$p++) {
     $r=pg_fetch_array($poollist,$p);
     print "<OPTION VALUE=" . $r[0] . ">" . $r[1] . "</OPTION>";
@@ -165,7 +165,7 @@ if (!isset($_POST['companyid'])) {
   $rem=$cnt % 2;
   print "<TR CLASS=" . $bcolor[$rem] . "><TD ALIGN=MIDDLE COLSPAN=3><INPUT TYPE=SUBMIT></TH></TR>";
 }
-%>
+?>
 
 </FORM>
 </TABLE>

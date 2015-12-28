@@ -1,4 +1,4 @@
-<%
+<?php
   include_once "/var/spool/apache/htdocs/auth/auth.inc";
   include_once "/var/spool/apache/htdocs/ldap/auth.inc";
   include_once "/var/spool/apache/htdocs/cdr/auth.inc";
@@ -78,4 +78,4 @@
   } else {
     $ADMIN_USER="pleb";
   }
-%>
+?>

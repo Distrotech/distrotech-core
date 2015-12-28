@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -100,20 +100,20 @@ if ($_SESSION['phend'] == "") {
     $_SESSION['phend']=$_SESSION['last']+1;
   }
 }
-%>
+?>
 <html>
 <script language="JavaScript" src="/hints.js" type="text/javascript"></script>
-<script language="JavaScript" src="/hints_cfg.php<%print $_SESSION['sname'];%>"></script>
+<script language="JavaScript" src="/hints_cfg.php<?php print $_SESSION['sname'];?>"></script>
 <head>
-<title><%print _("Photo Album Of User") . " " . $uinf[0];%></title>
+<title><?php print _("Photo Album Of User") . " " . $uinf[0];?></title>
 <base target="_self">
-<link rel=stylesheet type=text/css href="/style.php<%print $_SESSION['sname'];%>">
+<link rel=stylesheet type=text/css href="/style.php<?php print $_SESSION['sname'];?>">
 <TABLE cellspacing=0 cellpadding=10 WIDTH=100%>
   <TR class=list-color2>
-    <TH COLSPAN=<%print $_SESSION['rcnt'];%>><%print _("Photo Album Of User") . " " . $uinf[0] . " " . _("Images") . " " . ($_SESSION['pstart']+1) . " " . _("Through") . " " . $_SESSION['phend'] . " " . _("Of") . " " . $cinf["count"]%></TH>
+    <TH COLSPAN=<?php print $_SESSION['rcnt'];?>><?php print _("Photo Album Of User") . " " . $uinf[0] . " " . _("Images") . " " . ($_SESSION['pstart']+1) . " " . _("Through") . " " . $_SESSION['phend'] . " " . _("Of") . " " . $cinf["count"]?></TH>
   </TR>
   <TR class=list-color1>
-<%
+<?php
 
 $row=0;
 for ($pcnt=$_SESSION['pstart'];$pcnt < $_SESSION['phend'];$pcnt++){
@@ -137,36 +137,36 @@ if ((($pcnt - $_SESSION['pstart']) % $_SESSION['rcnt']) != 0) {
   }
 }
 $rem=$row % 2;
-%>
+?>
   </TR>
-  <TR<%print $bcolor[$rem];%> >
-<%
+  <TR<?php print $bcolor[$rem];?> >
+<?php
     if (($_SESSION['pstart']-$_SESSION['scount']) >= $_SESSION['first']) {
       $_SESSION['pstart']=$_SESSION['pstart']-$_SESSION['scount'];
-%>
+?>
       <TD ALIGN=CENTER VALIGN=MIDDLE>
-        <A HREF=/photo/<%print $_SESSION['euser'];%>_album.html>Prev</A>
+        <A HREF=/photo/<?php print $_SESSION['euser'];?>_album.html>Prev</A>
       </TD>
-<%
+<?php
     } else {
       print "    <TD>&nbsp;</TD>\n";
     }
     print "    <TD>&nbsp;</TD>\n";
     if ($_SESSION['phend'] <= $_SESSION['last']) {
       $_SESSION['pstart']=$_SESSION['phend'];
-%>
+?>
       <TD ALIGN=CENTER VALIGN=MIDDLE>
-        <A HREF=/photo/<%print $_SESSION['euser'];%>_album.html>Next</A>
+        <A HREF=/photo/<?php print $_SESSION['euser'];?>_album.html>Next</A>
       </TD>
-<%
+<?php
     } else {
       for ($colsp=0;$colsp < $_SESSION['rcnt'] - 2;$colsp++) {
         print "    <TD>&nbsp;</TD>\n";
       }
     }
-%>
+?>
   </TR>
 </TABLE>
-<%
+<?php
 ldap_unbind($ds);
-%>
+?>

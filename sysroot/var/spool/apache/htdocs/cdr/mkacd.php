@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -21,7 +21,7 @@
 if (! $db) {
   include "auth.inc";
 }
-%>
+?>
 <FORM METHOD=POST NAME=acdform onsubmit="ajaxsubmit(this.name);return false;">
 <CENTER>
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
@@ -39,7 +39,7 @@ function KeyPressHandler(event) {
   }
 }
 </SCRIPT>
-<%
+<?php
 if ((isset($pbxupdate)) && ($queue == "") && ($qno != "") && (strlen($qno) == 2)) {
   $deftimeout=pg_query($db,"SELECT value FROM astdb WHERE family='Setup' AND key='QATimeout'");
   if (pg_num_rows($deftimeout) > 0) {
@@ -66,14 +66,14 @@ if ((isset($pbxupdate)) && ($queue == "") && ($qno != "") && (strlen($qno) == 2)
     pg_query($db,"DELETE FROM astdb WHERE family='" . $queue . "' OR family='Q" . $queue . "'");
     pg_query($db,"DELETE FROM voicemail WHERE mailbox='" . $queue . "'");
   }
-%>
-  <TH CLASS=heading-body COLSPAN=2><%print _("Select Queue");%></TH>
+?>
+  <TH CLASS=heading-body COLSPAN=2><?php print _("Select Queue");?></TH>
 </TR>
 <TR CLASS=list-color1>
-  <TD ALIGN=LEFT WIDTH=50% onmouseover="myHint.show('QS0')" onmouseout="myHint.hide()"><%print _("Queue To Configure");%></TH>
+  <TD ALIGN=LEFT WIDTH=50% onmouseover="myHint.show('QS0')" onmouseout="myHint.hide()"><?php print _("Queue To Configure");?></TH>
   <TD WIDTH=50% ALIGN=LEFT>
   <SELECT NAME=queue onchange="document.acdform.subme.name='pbxupdate';ajaxsubmit('acdform')">
-<%
+<?php
   $actqueuesq="SELECT name,description FROM queue_table";
   if ($SUPER_USER != 1) {
     $actqueuesq.=" LEFT OUTER JOIN astdb AS bgrp ON (bgrp.family='Q'||name AND bgrp.key='BGRP') WHERE " . $clogacl;
@@ -88,14 +88,14 @@ if ((isset($pbxupdate)) && ($queue == "") && ($qno != "") && (strlen($qno) == 2)
     $r = pg_fetch_array($actqueues,$i,PGSQL_NUM);
     print "    <OPTION VALUE=\"" .  $r[0] . "\">" . $r[1] . " (" . $r[0] .")</OPTION>\n";
   }
-%>
+?>
   </SELECT>
   </TD></TR>
-<%
-  if ($SUPER_USER == 1) {%>
+<?php
+  if ($SUPER_USER == 1) {?>
   <TR CLASS=list-color2>
     <TD ALIGN=LEFT WIDTH=50% onmouseover="myHint.show('QS1')" onmouseout="myHint.hide()">
-<%
+<?php
     $qpre=pg_query($db,"SELECT key FROM astdb WHERE family='ACDPrefix' AND value='1'");  
     if (pg_num_rows($qpre) == 0) {
       print "<INPUT TYPE=HIDDEN NAME=qpre VALUE=\"5\">";
@@ -111,29 +111,29 @@ if ((isset($pbxupdate)) && ($queue == "") && ($qno != "") && (strlen($qno) == 2)
       }
       print "</SELECT>";
     }
-%>
+?>
       <INPUT TYPE=TEXT NAME=qno MAXLENGTH=2 SIZE=2>
 <TR CLASS=list-color1>
-<%
+<?php
   } else {
     print "<TR CLASS=list-color2>";
   }
-%>
+?>
   <TH COLSPAN=2>
-<%
+<?php
   if ($SUPER_USER == 1) {
-%>
-    <INPUT TYPE=SUBMIT name=subme onclick=this.name='pbxupdate' VALUE="<%print _("Add/Edit");%>">
-<%
+?>
+    <INPUT TYPE=SUBMIT name=subme onclick=this.name='pbxupdate' VALUE="<?php print _("Add/Edit");?>">
+<?php
   } else {
-%>
-    <INPUT TYPE=SUBMIT onclick=this.name='pbxupdate' VALUE="<%print _("Edit");%>">
-<%
+?>
+    <INPUT TYPE=SUBMIT onclick=this.name='pbxupdate' VALUE="<?php print _("Edit");?>">
+<?php
   }
-%>
+?>
 
   </TABLE>
   </FORM>
-<%
+<?php
 }
-%>
+?>

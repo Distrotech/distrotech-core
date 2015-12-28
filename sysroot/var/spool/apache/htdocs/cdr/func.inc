@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -250,4 +250,4 @@ SELECT starttime,uniqueid,sessiontime,case when (substr(calledstation,1,2)='27')
   $baseurl.="&mweight=" . $mweight . "&morder=" . urlencode($morder);
 }
 
-%>
+?>

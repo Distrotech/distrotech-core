@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -21,7 +21,7 @@ if (! $db) {
   include "/var/spool/apache/htdocs/cshop/auth.inc";
 }
 
-%>
+?>
 <FORM METHOD=POST NAME=adduf onsubmit="ajaxsubmit(this.name);return false">
 <INPUT TYPE=HIDDEN NAME=disppage VALUE=cshop/editvirt.php>
 <CENTER>
@@ -44,5 +44,5 @@ if (! $db) {
 <TR CLASS=list-color1>
 <TD COLSPAN=2 ALIGN=MIDDLE><INPUT TYPE=SUBMIT NAME=addcompany VALUE="Add Company"></TD></TR>
 </TABLE>
-</FORM><%
-%>
+</FORM><?php
+?>
