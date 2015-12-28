@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -29,54 +29,54 @@ if ((isset($_POST['id'])) && (!isset($_POST['listid']))) {
 //print "<PRE>" . print_r($_POST,TRUE) . "</PRE>";
 //print "<PRE>" . print_r($_SESSION,TRUE) . "</PRE>";
 
-%>
+?>
 <FORM NAME=ladmin METHOD=POST onsubmit="ajaxsubmit(this.name);return false">
 <CENTER>
 <TABLE border=0 width=90% cellspacing=0 cellpadding=0>
-<%
+<?php
 
 if ((!isset($_POST['id'])) && (!isset($_POST['listid'])) && (!isset($_POST['period']))) {
   unset($_SESSION['campid']);
   unset($_SESSION['listid']);
-  $getcamp=pg_query($db,"SELECT id,description||' ('||name||')' FROM campaign LEFT OUTER JOIN camp_admin ON (campaign.id=camp_admin.campaign AND camp_admin.userid='" . $_SERVER['PHP_AUTH_USER'] . "')" . $_SESSION['limitadmin'] . " ORDER by description,name");%>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  $getcamp=pg_query($db,"SELECT id,description||' ('||name||')' FROM campaign LEFT OUTER JOIN camp_admin ON (campaign.id=camp_admin.campaign AND camp_admin.userid='" . $_SERVER['PHP_AUTH_USER'] . "')" . $_SESSION['limitadmin'] . " ORDER by description,name");?>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TH COLSPAN=2 CLASS=heading-body>
-      <%print _("Select A Campaign To Report On");%>
+      <?php print _("Select A Campaign To Report On");?>
     </TH>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD WIDTH=50%>
-      <%print _("Select Campaign To Configure Lists");%>
+      <?php print _("Select Campaign To Configure Lists");?>
     </TD>
     <TD WIDTH=50%>
       <SELECT NAME=id onchange=ajaxsubmit(this.form.name)>
-        <OPTION VALUE=""></OPTION><%
+        <OPTION VALUE=""></OPTION><?php
         for($ccnt=0;$ccnt<pg_num_rows($getcamp);$ccnt++) {
-          list($cid,$cname)=pg_fetch_array($getcamp,$ccnt);%>
-          <OPTION VALUE="<%print $cid;%>"><%print $cname%></OPTION><%
-        }%>
+          list($cid,$cname)=pg_fetch_array($getcamp,$ccnt);?>
+          <OPTION VALUE="<?php print $cid;?>"><?php print $cname?></OPTION><?php
+        }?>
     </TD>
-  </TR><%
+  </TR><?php
 } else if ((isset($_SESSION['campid'])) && (!isset($_SESSION['listid']))) {
-  $getlist=pg_query($db,"SELECT id,description FROM list WHERE campaign=" . $_SESSION['campid'] . "ORDER by description");%>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  $getlist=pg_query($db,"SELECT id,description FROM list WHERE campaign=" . $_SESSION['campid'] . "ORDER by description");?>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TH COLSPAN=2 CLASS=heading-body>
-      <%print _("Select List To Report On From Campaign") . " " . $_SESSION['campname'];%>
+      <?php print _("Select List To Report On From Campaign") . " " . $_SESSION['campname'];?>
     </TH>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD WIDTH=50%>
-      <%print _("Select List");%>
+      <?php print _("Select List");?>
     </TD>
     <TD WIDTH=50%>
       <SELECT NAME=listid onchange=ajaxsubmit(this.form.name)>
-        <OPTION VALUE=""></OPTION><%
+        <OPTION VALUE=""></OPTION><?php
         for($ccnt=0;$ccnt<pg_num_rows($getlist);$ccnt++) {
-          list($cid,$cname)=pg_fetch_array($getlist,$ccnt);%>
-          <OPTION VALUE="<%print $cid;%>"><%print $cname%></OPTION><%
-        }%>
+          list($cid,$cname)=pg_fetch_array($getlist,$ccnt);?>
+          <OPTION VALUE="<?php print $cid;?>"><?php print $cname?></OPTION><?php
+        }?>
     </TD>
-  </TR><%
+  </TR><?php
 } else if ((isset($_SESSION['campid'])) && (isset($_SESSION['listid'])) && (isset($_POST['period']))) {
   include_once "/var/spool/apache/htdocs/cdr/func.inc";
 
@@ -159,11 +159,11 @@ if ((!isset($_POST['id'])) && (!isset($_POST['listid'])) && (!isset($_POST['peri
     }
     print "</TR>";
   }
-} else if ((isset($_SESSION['campid'])) && (isset($_SESSION['listid'])) && (!isset($_POST['period']))) {%>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+} else if ((isset($_SESSION['campid'])) && (isset($_SESSION['listid'])) && (!isset($_POST['period']))) {?>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TH COLSPAN=2 CLASS=heading-body>
-      <%print _("Select Period For Report");%>
-    </TH></TR><%
+      <?php print _("Select Period For Report");?>
+    </TH></TR><?php
 
   include_once "/var/spool/apache/htdocs/cdr/func.inc";
   $month=split("/",$date);
@@ -184,18 +184,18 @@ if ((!isset($_POST['id'])) && (!isset($_POST['listid'])) && (!isset($_POST['peri
   }
   $curdate=getdate();
   array_push($amon,array('year'=>$curdate['year'],'mon'=>$curdate['mon']+1));
-%>
+?>
 <TR CLASS=list-color1><TD WIDTH=50%>
   From Month
 </TD><TD WIDTH=50%>
 <SELECT NAME=dom>
-<%
+<?php
   for($dcnt=1;$dcnt <= 31;$dcnt++) {
     print "<OPTION VALUE=" . $dcnt . ">" . $dcnt . "\n";
   }
-%>
+?>
 </SELECT>
-<SELECT NAME=date><%
+<SELECT NAME=date><?php
   for($dcnt=0;$dcnt < count($amon);$dcnt++) {
     print "<OPTION VALUE=\"" . $amon[$dcnt]['mon'] . "/" . $amon[$dcnt]['year'] . "\"";
     if ((($dtime['year'] == $amon[$dcnt]['year']) && ($dtime['mon'] == $amon[$dcnt]['mon']) && (! isset($date))) ||
@@ -207,19 +207,19 @@ if ((!isset($_POST['id'])) && (!isset($_POST['listid'])) && (!isset($_POST['peri
     }
     print ">" . $amon[$dcnt]['mon'] . "/" . $amon[$dcnt]['year'] . "\n"; 
   }
-%>
+?>
 </SELECT></TD></TR>
 <TR CLASS=list-color2><TD WIDTH=50%>
   To Month
 </TD><TD WIDTH=50%>
 <SELECT NAME=dom2>
-<%
+<?php
   for($dcnt=31;$dcnt > 0;$dcnt--) {
     print "<OPTION VALUE=" . $dcnt . ">" . $dcnt . "\n";
   }
-%>
+?>
 </SELECT>
-<SELECT NAME=date2><%
+<SELECT NAME=date2><?php
   for($dcnt=0;$dcnt < count($amon);$dcnt++) {
     print "<OPTION VALUE=\"" . $amon[$dcnt]['mon'] . "/" . $amon[$dcnt]['year'] . "\"";
     if ((($dtime['year'] == $amon[$dcnt]['year']) && ($dtime['mon'] == $amon[$dcnt]['mon']) && (! isset($date))) ||
@@ -231,29 +231,29 @@ if ((!isset($_POST['id'])) && (!isset($_POST['listid'])) && (!isset($_POST['peri
     }
     print ">" . $amon[$dcnt]['mon'] . "/" . $amon[$dcnt]['year'] . "\n"; 
   }
-%>
-</SELECT></TD></TR><%
+?>
+</SELECT></TD></TR><?php
 
 
   $squery="SELECT option FROM status WHERE campid='" . $_SESSION['campid'] . "' AND listid='" . $_SESSION['listid'] . "'";
-  $querylst=pg_query($db,$squery);%>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>><TD>Match Status</TD><TD><SELECT NAME=status><OPTION VALUE="">Any</OPTION><%
+  $querylst=pg_query($db,$squery);?>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>><TD>Match Status</TD><TD><SELECT NAME=status><OPTION VALUE="">Any</OPTION><?php
 
   for ($scnt=0;$scnt < pg_num_rows($querylst);$scnt++) {
     $sdata=pg_fetch_array($querylst,$scnt,PGSQL_NUM);
     print "<OPTION NAME=\"" . $sdata[0] . "\">" . $sdata[0] . "</OPTION>"; 
-  }%>
+  }?>
   </SELECT>
   </TD></TR>
 
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>><TD>Follow Up Status To Show</TD><TD><SELECT NAME=followup>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>><TD>Follow Up Status To Show</TD><TD><SELECT NAME=followup>
     <OPTION VALUE="">Any</OPTION>
     <OPTION VALUE="t">Yes</OPTION>
     <OPTION VALUE="f">No</OPTION>
   </SELECT>
   </TD></TR>
 
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>><TD>Call Disposition</TD><TD><SELECT NAME=disposition>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>><TD>Call Disposition</TD><TD><SELECT NAME=disposition>
     <OPTION VALUE="">Any</OPTION>
     <OPTION VALUE="ANSWERED">Answered</OPTION>
     <OPTION VALUE="NO ANSWER">No Answer</OPTION>
@@ -262,10 +262,10 @@ if ((!isset($_POST['id'])) && (!isset($_POST['listid'])) && (!isset($_POST['peri
   </SELECT>
   </TD></TR>
 
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>><TD>Valid Calls Only</TD><TD>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>><TD>Valid Calls Only</TD><TD>
   <INPUT TYPE=CHECKBOX NAME=validcdr>
   </TD></TR>
-<%
+<?php
 
   $datain_tb=strtolower("inputdata_" . $_SESSION['campid'] . "_" . $_SESSION['listid']);
   $dataout_tb=strtolower("contactdata_" . $_SESSION['campid'] . "_" . $_SESSION['listid']);
@@ -273,21 +273,21 @@ if ((!isset($_POST['id'])) && (!isset($_POST['listid'])) && (!isset($_POST['peri
   $testdbtbl=pg_query($db,$getcolname);
   $tfcnt=pg_num_rows($testdbtbl);
 
-  if ($tfcnt > 0) {%>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>><TH COLSPAN=2 CLASS=heading-body2>Select Fields For Inclusion</TD></TR><%
+  if ($tfcnt > 0) {?>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>><TH COLSPAN=2 CLASS=heading-body2>Select Fields For Inclusion</TD></TR><?php
   }
   for($idtrcnt=0;$idtrcnt < $tfcnt;$idtrcnt++) {
-    list($trowt,$trowcn,$trowtn,$trdescrip)=pg_fetch_array($testdbtbl,$idtrcnt);%>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
-    <TD><INPUT TYPE=CHECKBOX NAME=show_<%print $trowcn;%>></TD><TD><%print $trdescrip;%></TD>
+    list($trowt,$trowcn,$trowtn,$trdescrip)=pg_fetch_array($testdbtbl,$idtrcnt);?>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
+    <TD><INPUT TYPE=CHECKBOX NAME=show_<?php print $trowcn;?>></TD><TD><?php print $trdescrip;?></TD>
     </TR>
-<%
+<?php
   }
-%>
-<TR<%print $bcolor[$rcnt % 2];$rcnt++;%>><TD COLSPAN=2 ALIGN=MIDDLE>
+?>
+<TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>><TD COLSPAN=2 ALIGN=MIDDLE>
 <INPUT TYPE=SUBMIT NAME=period ="See Report">
-</TD></TR><%
+</TD></TR><?php
 }
-%>
+?>
 </TABLE>
 </FORM>

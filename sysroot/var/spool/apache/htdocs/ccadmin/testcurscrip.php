@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -17,7 +17,7 @@
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-%>
+?>
 <CENTER>
 <FORM>
 <TABLE border=0 width=90% cellspacing=0 cellpadding=0>
@@ -28,10 +28,10 @@
   </TR>
   <TR CLASS=list-color1>
     <TD><DIV CLASS=ccscript>
-<%
+<?php
 include "scriptp.inc";
 print getscripthtml($_POST['mmap'],($_POST['utype'] == "true")?"t":"f");
-%>
+?>
     </DIV></TD>
   </TR>
   <TR CLASS=list-color2>

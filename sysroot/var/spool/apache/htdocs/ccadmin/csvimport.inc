@@ -1,4 +1,4 @@
-<%
+<?php
 
 include_once "/var/spool/apache/htdocs/cdr/auth.inc";
 
@@ -163,4 +163,4 @@ function valicsv($filename, $data_tb, $offset) {
     pg_query($db, $newcol);
   }
 }
-%>
+?>

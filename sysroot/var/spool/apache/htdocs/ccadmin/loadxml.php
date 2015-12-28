@@ -1,4 +1,4 @@
-<%
+<?php
 include "/var/spool/apache/htdocs/ccadmin/auth.inc";
 header("Content-type: text/xml");
 //$_POST['xmlscriptid']=1;
@@ -22,4 +22,4 @@ if ($xml) {
 } else {
   print "<?xml version=\"1.0\" encoding=\"UTF-8\"?><script></script>";
 }
-%>
+?>

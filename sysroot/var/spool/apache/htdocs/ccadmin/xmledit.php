@@ -8,7 +8,7 @@
     <div id=popUpDivTitle border=0 height=20 width=100% align=RIGHT>
       <a href=javascript:popdown()><IMG SRC=/images/exit.png HEIGHT=20></A>
     </div>
-    <div id=popUpDivContent width=100% height=100%></div>
+    <div id=popUpDivContent width=100% height=100?></div>
   </div>
 </div>
 <DIV ID=main-body CLASS=popup>
@@ -46,7 +46,7 @@
   <TR CLASS=list-color2>
     <TD COLSPAN=2 ALIGN=MIDDLE>
       <INPUT TYPE=BUTTON ONCLICK=addpara(xmlDoc) VALUE="Add Paragraph">
-      <INPUT TYPE=button ONCLICK=savescript(xmlDoc,'<%print $_POST['mmap'];%>') VALUE="Save XML">
+      <INPUT TYPE=button ONCLICK=savescript(xmlDoc,'<?php print $_POST['mmap'];?>') VALUE="Save XML">
     </TD>
   </TR>
   <TR>
@@ -55,6 +55,6 @@
 </div>
 
 <script>
-var xmlDoc = loadXMLDoc('<%print $_POST['mmap'];%>');
+var xmlDoc = loadXMLDoc('<?php print $_POST['mmap'];?>');
 loadhtml("script", xmlDoc, true);
 </script>

@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -209,16 +209,16 @@ if ($numdata[$_SESSION['nextnum']] != "") {
   unset($_SESSION['nextnum']);
 }
 
-%><CENTER>
+?><CENTER>
 <FORM NAME=ccagentf METHOD=POST onsubmit="ajaxsubmit(this.name);return false">
-<INPUT TYPE=HIDDEN NAME=disppage VALUE="<%print $showpage;%>">
-<INPUT TYPE=HIDDEN NAME=nomenu VALUE="<%print $_POST['nomenu'];%>">
-<TABLE border=0 width=90% cellspacing=0 cellpadding=0><%
-  if ($_SESSION['nextid'] != "") {%>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+<INPUT TYPE=HIDDEN NAME=disppage VALUE="<?php print $showpage;?>">
+<INPUT TYPE=HIDDEN NAME=nomenu VALUE="<?php print $_POST['nomenu'];?>">
+<TABLE border=0 width=90% cellspacing=0 cellpadding=0><?php
+  if ($_SESSION['nextid'] != "") {?>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TH COLSPAN=4 CLASS=heading-body>
-        <%print $leaddata[0] . " " . $leaddata[1] . "  " . $leaddata[2] . " [" . $leaddata[3] . "]";%>
-      </TH><%
+        <?php print $leaddata[0] . " " . $leaddata[1] . "  " . $leaddata[2] . " [" . $leaddata[3] . "]";?>
+      </TH><?php
     for ($cell=4;$cell < count($leaddata);$cell++) {
       if ((($cell-4) % 2) == 0) {
         print "</TR><TR" . $bcolor[$rcnt % 2] . ">";
@@ -230,55 +230,55 @@ if ($numdata[$_SESSION['nextnum']] != "") {
       print "<TD COLSPAN=2>&nbsp</TD></TR>";
     } else {
       print "</TR>";
-    }%>
-<%
+    }?>
+<?php
     if (is_file("/var/spool/apache/htdocs/ccagent/" . $c_plugin)) {
-      include "/var/spool/apache/htdocs/ccagent/" . $c_plugin;%>
-      <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+      include "/var/spool/apache/htdocs/ccagent/" . $c_plugin;?>
+      <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
         <TH CLASS=heading-body2 COLSPAN=4>
-          <%print $plug_t;%>
+          <?php print $plug_t;?>
         </TH>
       </TR>
-      <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+      <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
         <TD COLSPAN=4>
             <DIV ID=plugin>
-            <%plug_div();%>
+            <?phpplug_div();?>
             </DIV>
         </TD>
-      </TR><%
+      </TR><?php
     }
-%>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+?>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TH CLASS=heading-body2 COLSPAN=4>
         Contact Script
       </TH>
     </TR>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TD COLSPAN=4>
           <DIV ID=script></DIV>
       </TD>
     </TR>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TH CLASS=heading-body2 COLSPAN=4>
         Contact Information
       </TH>
     </TR>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TH CLASS=heading-body2 COLSPAN=2 ALIGN=LEFT>
         Status
       </TH>
       <TD COLSPAN=2>
-        <SELECT NAME=CONT_status><%
+        <SELECT NAME=CONT_status><?php
           $statusq=pg_query($db,"SELECT option,closed FROM status WHERE listid=" . $_SESSION['listid'] . " AND campid=" . $_SESSION['campid'] . " ORDER BY closed,option");
           for($statcnt=0;$statcnt < pg_num_rows($statusq);$statcnt++) {
             list($status,$statusid)=pg_fetch_array($statusq,$statcnt,PGSQL_NUM);
             print "<OPTION VALUE=\"" . $statusid . "|" . $status . "\">" . $status . "</OPTION>\n"; 
           }
-%>
+?>
         </SELECT>
       </TD>
     </TR>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TD CLASS=heading-body2 COLSPAN=2 ALIGN=LEFT>
         Further Followup Required
       </TH>
@@ -286,7 +286,7 @@ if ($numdata[$_SESSION['nextnum']] != "") {
         <INPUT TYPE=CHECKBOX NAME=CONT_followup>
       </TD>
     </TR>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TH CLASS=heading-body2 COLSPAN=2 ALIGN=LEFT>
         Date/Time Of Next Contact (Leave Blank For Default) [YYYY-MM-DD HH:MM:SS] 
       </TH>
@@ -294,7 +294,7 @@ if ($numdata[$_SESSION['nextnum']] != "") {
         <INPUT TYPE=INPUT NAME=CONT_nextcall>
       </TD>
     </TR>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TH CLASS=heading-body2 COLSPAN=2 ALIGN=LEFT>
         Feedback
       </TH>
@@ -302,42 +302,42 @@ if ($numdata[$_SESSION['nextnum']] != "") {
         <TEXTAREA NAME=CONT_feedback ROWS=8 COLS=60></TEXTAREA>
       </TD>
     </TR>
-<%} else {%>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+<?php } else {?>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TH COLSPAN=4 CLASS=heading-body>
         There Are Currently No Calls
       </TH>
     </TR>
-<%}%>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
-    <TD ALIGN=MIDDLE COLSPAN=4><%
+<?php }?>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
+    <TD ALIGN=MIDDLE COLSPAN=4><?php
       if ($_SESSION['nextid'] != "") {
         $jtrans=($allowtrans == "t")?"true":"false"; 
-        $jdial=($allowdial == "t")?"true":"false";%>
-        <INPUT TYPE=BUTTON NAME=dialbut onclick=ccdial(<%print $jtrans . "," . $jdial;%>) VALUE="Dial"><%
-      }%>
-      <INPUT TYPE=SUBMIT onclick=this.name='abortcall' VALUE="Hangup/Cancel"><%
-      if ($allowtrans == "t") {%>
-        <INPUT TYPE=BUTTON NAME=transbut onclick=transcall('<%print $_SESSION['lastcon'];%>') VALUE="Transfer"><%
+        $jdial=($allowdial == "t")?"true":"false";?>
+        <INPUT TYPE=BUTTON NAME=dialbut onclick=ccdial(<?php print $jtrans . "," . $jdial;?>) VALUE="Dial"><?php
+      }?>
+      <INPUT TYPE=SUBMIT onclick=this.name='abortcall' VALUE="Hangup/Cancel"><?php
+      if ($allowtrans == "t") {?>
+        <INPUT TYPE=BUTTON NAME=transbut onclick=transcall('<?php print $_SESSION['lastcon'];?>') VALUE="Transfer"><?php
       }
-      if ($allowdial == "t") {%>
-        <INPUT TYPE=BUTTON NAME=ddialbut onclick=directdial() VALUE="Direct Dial"><%
+      if ($allowdial == "t") {?>
+        <INPUT TYPE=BUTTON NAME=ddialbut onclick=directdial() VALUE="Direct Dial"><?php
       }
-      if ($_SESSION['nextid'] != "") {%>
-        <INPUT TYPE=SUBMIT NAME=subme onclick=this.name='senddata' VALUE="Complete"><%
+      if ($_SESSION['nextid'] != "") {?>
+        <INPUT TYPE=SUBMIT NAME=subme onclick=this.name='senddata' VALUE="Complete"><?php
       }
-      if ($_SESSION['nextnum'] != "") {%>
-        <INPUT TYPE=SUBMIT NAME=nextconbut onclick=this.name='nextcon' VALUE="Next Contact"><%
-      }%>
+      if ($_SESSION['nextnum'] != "") {?>
+        <INPUT TYPE=SUBMIT NAME=nextconbut onclick=this.name='nextcon' VALUE="Next Contact"><?php
+      }?>
 
     </TD>
-  </TR><%
-  if ($_SESSION['nextid'] != "") {%>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  </TR><?php
+  if ($_SESSION['nextid'] != "") {?>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TH CLASS=heading-body2 COLSPAN=4>
         Previous 20 Contacts
       </TH>
-    </TR><%
+    </TR><?php
 
     $testdb=pg_query($db,"SELECT * from information_schema.tables where table_catalog='asterisk' and table_name='" . $datain_tb . "'");
     $xtracol="";
@@ -360,55 +360,55 @@ if ($numdata[$_SESSION['nextnum']] != "") {
     $lastcontq=pg_query($db,$conthistq);
 
     for($pcont=0;$pcont < pg_num_rows($lastcontq);$pcont++) {
-      $contd=pg_fetch_array($lastcontq,$pcont,PGSQL_NUM);%>
-      <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+      $contd=pg_fetch_array($lastcontq,$pcont,PGSQL_NUM);?>
+      <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
         <TD COLSPAN=2>
           Date :
-          <%print $contd[3];%><BR>
+          <?php print $contd[3];?><BR>
           Status :
-          <%print $contd[0];%><BR>
+          <?php print $contd[0];?><BR>
           Followup :
-          <%print ($contd[1] == "t")?"Yes":"No";%><BR>
+          <?php print ($contd[1] == "t")?"Yes":"No";?><BR>
           Agent :
-          <%print $contd[4];%><BR><%
+          <?php print $contd[4];?><BR><?php
           for($xdat=5;$xdat<count($outrows)+5;$xdat++) {
             if ($xdatt[($xdat-5)] == "boolean") {
               $contd[$xdat]=($contd[$xdat] == "t")?"Yes":"No";
             }
             print $outrows[($xdat-5)] . " : " . $contd[$xdat] . "<BR>";
           }
-      %></TH>
+      ?></TH>
         <TD  COLSPAN=2 VALIGN=TOP ALIGN=LEFT>
-          <%print htmlspecialchars($contd[2]);%>
+          <?php print htmlspecialchars($contd[2]);?>
         </TH>
-      </TR><%
+      </TR><?php
     }
   }
-%>
+?>
 </TABLE>
 </FORM>
 <FORM NAME=caller METHOD=POST ACTION=/ccagent/caller.php>
-<INPUT TYPE=HIDDEN NAME=numtocall VALUE="<%print $_SESSION['lastcon'];%>">
-<INPUT TYPE=HIDDEN NAME=contactnum VALUE="<%print $leaddata[3];%>">
-<INPUT TYPE=HIDDEN NAME=disppage VALUE="<%print $showpage;%>">
-<INPUT TYPE=HIDDEN NAME=nomenu VALUE="<%print $_POST['nomenu'];%>">
+<INPUT TYPE=HIDDEN NAME=numtocall VALUE="<?php print $_SESSION['lastcon'];?>">
+<INPUT TYPE=HIDDEN NAME=contactnum VALUE="<?php print $leaddata[3];?>">
+<INPUT TYPE=HIDDEN NAME=disppage VALUE="<?php print $showpage;?>">
+<INPUT TYPE=HIDDEN NAME=nomenu VALUE="<?php print $_POST['nomenu'];?>">
 </FORM>
-<%
+<?php
 if (function_exists("plug_form")) {
   plug_form();
 }
-%>
+?>
 <script language="JavaScript" src="/xmlscript.js" type="text/javascript"></script>
 <SCRIPT>
-<%
+<?php
 if (function_exists("plug_js")) {
   plug_js();
 }
-%>
+?>
   parser=new DOMParser();
-  var xmlDoc = parser.parseFromString("<%print $script;%>",'text/xml');
+  var xmlDoc = parser.parseFromString("<?php print $script;?>",'text/xml');
   loadhtml("script", xmlDoc, false);
-<%
+<?php
 if ($incall) {
   print "document.ccagentf.dialbut.disabled=true;\n";
   print "document.ccagentf.subme.disabled=false;\n";
@@ -428,5 +428,5 @@ if ($incall) {
     print "document.ccagentf.transbut.disabled=true;\n";
   }
 }
-%>
+?>
 </SCRIPT>
