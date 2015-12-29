@@ -32,7 +32,7 @@ LoadModule mime_magic_module		modules/mod_mime_magic.so
 LoadModule mime_module			modules/mod_mime.so
 LoadModule negotiation_module		modules/mod_negotiation.so
 LoadModule perl_module			modules/mod_perl.so
-LoadModule php5_module			modules/libphp5.so
+LoadModule php7_module			modules/libphp7.so
 LoadModule proxy_module			modules/mod_proxy.so
 LoadModule proxy_ajp_module		modules/mod_proxy_ajp.so
 LoadModule proxy_balancer_module	modules/mod_proxy_balancer.so
@@ -663,7 +663,7 @@ RewriteRule ^/cert/renew(.*)$ /var/spool/apache/htdocs/ldap/cert2ldap.php$1 [L,T
 RewriteRule ^/cert/(.*).key$ /var/spool/apache/htdocs/auth/cert.php?euser=$1&info=userPKCS12&keyt=1 [L,T=application/x-httpd-php]
 RewriteRule ^/cert/(.*).p12$ /var/spool/apache/htdocs/auth/cert.php?euser=$1&info=userPKCS12&keyt=12 [L,T=application/x-httpd-php]
 RewriteRule ^/cert/(.*).crt$ /var/spool/apache/htdocs/ldap/cert.php?euser=$1&info=userCertificate [L,T=application/x-httpd-php]
-RewriteRule ^/cert/(.*).ssh$ /var/spool/apache/htdocs/ldap/cert.php?euser=$1&info=userCertificate&pkey=ssh [T=application/x-httpd-php]
+RewriteRule ^/cert/(.*).ssh$ /var/spool/apache/htdocs/ldap/cert.php?euser=$1&info=userCertificate&pkey=ssh [L,T=application/x-httpd-php]
 RewriteRule ^/cert/(.*).p7b$ /var/spool/apache/htdocs/ldap/cert.php?euser=$1&info=userSMIMECertificate  [L,T=application/x-httpd-php]
 RewriteRule ^/cert/(.*).pub$ /var/spool/apache/htdocs/ldap/cert.php?euser=$1&info=userCertificate&pkey=pub [L,T=application/x-httpd-php]
 RewriteRule ^/openvpn/(.*).zip$ /var/spool/apache/htdocs/auth/openvpn.php?euser=$1 [L,T=application/x-httpd-php]
