@@ -94,15 +94,18 @@ if ($authtype >= 0) {
   $main[_("Login")]="/auth";
 }
 
-mysql_connect('localhost', 'admin', 'admin');
-mysql_select_db('osticket');
-$tdepsq=mysql_query("select dept_name,dept_id from ost_department order by dept_name");
-if ($_SESSION['showmenu'] == "tickdep") {
-  $tickdep[_("User Applications ..")]=openpage("apps","");
+
+$osdb=@mysqli_connect('localhost', 'admin', 'admin', 'osticket');
+if (!mysqli_connect_error()) {
+  $tdepsq=mysqli_query($osdb, "select dept_name,dept_id from ost_department order by dept_name");
+  if ($_SESSION['showmenu'] == "tickdep") {
+    $tickdep[_("User Applications ..")]=openpage("apps","");
+  }
+  while($tdeps=mysqli_fetch_array($tdepsq,MYSQLI_NUM)) {
+    $tickdep[_($tdeps[0])]="javascript:openticket($tdeps[1],\'" . _($tdeps[0]) . "\')";
+  }
 }
-while($tdeps=mysql_fetch_array($tdepsq,MYSQL_NUM)) {
-  $tickdep[_($tdeps[0])]="javascript:openticket($tdeps[1],\'" . _($tdeps[0]) . "\')";
-}
+@mysqli_close($osdb);
 
 if ($authtype >= 0) {
   $apps[_("VOIP Console")]="javascript:openvoip()";
@@ -140,7 +143,7 @@ if ($authtype >= 0) {
   }
   if ((! isset($a_limit['GWARE'])) || ($a_limit['GWARE'])) {
     $apps[_("Groupware")]="javascript:opensogo()";
-  }	
+  }
   if ((! isset($a_limit['MBOARD'])) || ($a_limit['MBOARD'])) {
     $apps[_("Message Board")]="javascript:openbb()";
   }
@@ -149,7 +152,7 @@ if ($authtype >= 0) {
     $apps[_("Ticket Status")]="include:tickdep";
   }
 */
-  
+
   if ((! isset($a_limit['ACD'])) || ($a_limit['ACD'])) {
     $apps[_("CC. Agent Login")]="javascript:openccagent()";
     $apps[_("Agent Login/Out")]="javascript:openagentapp()";
