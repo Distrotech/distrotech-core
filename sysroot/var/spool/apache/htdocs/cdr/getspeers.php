@@ -76,8 +76,8 @@ $speer=$agi->command("sip show peers");
 $cnt=1;
 $allexten=array();
 foreach(explode("\n",$speer['data']) as $line) {
-  if (! ereg("(^[a-zA-Z])|(^$)|(^[0-9]+ sip peers \[)",$line)) {
-    if (ereg("^([0-9]{4})/[0-9]{4}[ ]+([0-9]*\.[0-9]*\.[0-9]*\.[0-9]*|\(Unspecified\))[ ]+(D|[ ])[ ]+(N|[ ])[ ]+([0-9]*)[ ]+(UNKNOWN|Unmonitored|OK \([0-9]+ ms\)|LAGGED \([0-9]+ ms\))",$line,$data)) {
+  if (! preg_match("/(^[a-zA-Z])|(^$)|(^[0-9]+ sip peers \[)/",$line)) {
+    if (preg_match("/^([0-9]{4})/[0-9]{4}[ ]+([0-9]*\.[0-9]*\.[0-9]*\.[0-9]*|\(Unspecified\))[ ]+(D|[ ])[ ]+(N|[ ])[ ]+([0-9]*)[ ]+(UNKNOWN|Unmonitored|OK \([0-9]+ ms\)|LAGGED \([0-9]+ ms\))/",$line,$data)) {
       $getastq="SELECT cdnd,cfim,cfbu,cfna,fullname,tout,novmail,wait FROM 
                   users 
                   LEFT OUTER JOIN features ON (exten=name)";

@@ -44,7 +44,7 @@ if (!isset($_SESSION['auth'])) {
     $chunk=8192;
     while (!feof($fp)) {
       $output=fgets($fp, $chunk);
-      ereg("^\[([A-Za-z]+ [ 0-9][0-9] [0-9:]+)\].*chan_[dahizp]+.c: (.*)",$output,$data);
+      preg_match("/^\[([A-Za-z]+ [ 0-9][0-9] [0-9:]+)\].*chan_[dahizp]+.c: (.*)/",$output,$data);
       if ($output != "") {
         array_push($outa,$data[1] . "</TD><TD>" . $data[2]);
       }

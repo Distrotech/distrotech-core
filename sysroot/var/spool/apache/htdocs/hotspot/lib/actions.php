@@ -113,7 +113,7 @@ EOT;
 
 	function success() {
 		global $js_args;
-		if ( ( ! empty($_GET['userurl']) ) && ( ereg($_SESSION['uam_url'], $_GET['userurl']) == 0 ) && ( ereg(BASE_URL, $_GET['userurl']) == 0 ) ) {
+		if ( ( ! empty($_GET['userurl']) ) && ( preg_match("/" . $_SESSION['uam_url'] . "/", $_GET['userurl']) == 0 ) && ( preg_match("/" . BASE_URL . "/", $_GET['userurl']) == 0 ) ) {
 			$userurl = $_GET['userurl'];
 		} else {
 			$userurl = '';

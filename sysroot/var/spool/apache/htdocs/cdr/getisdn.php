@@ -59,9 +59,9 @@ $isdns=$agi->command("misdn show stacks");
 <?php
 $cnt=1;
 foreach(explode("\n",$isdns['data']) as $line) {
-  if (! ereg("(^Privilege: Command)|(^BEGIN STACK_LIST)|(^No such command)|(^$)",$line)) {
+  if (! preg_match("/(^Privilege: Command)|(^BEGIN STACK_LIST)|(^No such command)|(^$)/",$line)) {
     print "<TR CLASS=list-color" . (($cnt % 2) + 1). ">\n";
-    ereg("^ +\* Port ([0-9]+) Type (TE|NT) Prot. (PMP) L2Link (UP|DOWN) L1Link:(UP|DOWN) Blocked:(0|1)",$line,$data);
+    preg_match("/^ +\* Port ([0-9]+) Type (TE|NT) Prot. (PMP) L2Link (UP|DOWN) L1Link:(UP|DOWN) Blocked:(0|1)/",$line,$data);
     if ($data[6] == "0") {
       $data[6]="<A HREF=\"javascript:blockisdn('" . $data[1] . "','1')\">" . _("No") . "</A>";
     } else {

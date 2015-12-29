@@ -45,8 +45,8 @@ $chans=$agi->command("module show");
 
 $cnt=1;
 foreach(explode("\n",$chans['data']) as $line) {
-  if (! ereg("(^Privilege: Command)|(^Module)|(^$)|(^[0-9]+ modules)",$line)) {
-    ereg("^([a-zA-Z0-9\._]+)[ ]+(.*)[ ]([0-9]+) ",$line,$data);
+  if (! preg_match("/(^Privilege: Command)|(^Module)|(^$)|(^[0-9]+ modules)/",$line)) {
+    preg_match("/^([a-zA-Z0-9\._]+)[ ]+(.*)[ ]([0-9]+) /",$line,$data);
     print "<TR CLASS=list-color" . (($cnt % 2) + 1). "><TD>" . $data[1] . "</TD><TD>" . $data[2] . "</TD><TD>" . $data[3] . "</TD></TR>\n";
     $cnt++;
   }

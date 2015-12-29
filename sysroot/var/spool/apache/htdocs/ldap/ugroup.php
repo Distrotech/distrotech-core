@@ -115,7 +115,7 @@ if (($group != "") && ($groupedit == _("Modify"))){
   $info = ldap_get_entries($ds, $sr);
 
   $dn=$info[0]["dn"];  
-  ereg("^(S-1-5-21-[0-9]+-[0-9]+-[0-9]+)-[0-9]+",$info[0]["sambasid"][0],$data);
+  preg_match("/^(S-1-5-21-[0-9]+-[0-9]+-[0-9]+)-[0-9]+/",$info[0]["sambasid"][0],$data);
   $localsid=$data[1];
 
   print "<TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body>" . _("Adding Entries To") . " " . $group . "</TH></TR>";

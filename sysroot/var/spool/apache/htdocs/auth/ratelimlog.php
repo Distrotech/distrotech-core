@@ -45,7 +45,7 @@ if (!isset($_SESSION['auth'])) {
     $chunk=8192;
     while (!feof($fp)) {
       $output=fgets($fp, $chunk);
-      ereg("^([A-Za-z]+ [ 0-9][0-9] [0-9:]+).*kernel: RATELIM (.*)",$output,$data);
+      preg_match("/^([A-Za-z]+ [ 0-9][0-9] [0-9:]+).*kernel: RATELIM (.*)/",$output,$data);
       if ($output != "") {
         $tmdat=split(" ",$data[2]);
         $outd=array();

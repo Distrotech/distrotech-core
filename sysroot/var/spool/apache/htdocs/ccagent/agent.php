@@ -72,19 +72,19 @@ if ((isset($_POST['senddata'])) || (isset($_POST['transcall']))) {
           unset($_POST[$pname]);
           $qfields.="," . $coldata[0];
         } else if ($coldata[1] == "timestamp with time zone") {
-          if (ereg ("^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}:[0-9]{2}:[0-9]{2})([-\+0-9]+)$", $_POST[$pname], $dateinf)) {
+          if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}:[0-9]{2}:[0-9]{2})([-\+0-9]+)$/", $_POST[$pname], $dateinf)) {
             if (checkdate($dateinf[2],$dateinf[3],$dateinf[1])) {
               $qfields.="," . $coldata[0];
               $qvals.=",'" . $_POST[$pname] . "'"; 
               unset($_POST[$pname]);
             }
-          } else if (ereg ("^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}:[0-9]{2}:[0-9]{2})$", $_POST[$pname], $dateinf)) {
+          } else if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}:[0-9]{2}:[0-9]{2})$/", $_POST[$pname], $dateinf)) {
             if (checkdate($dateinf[2],$dateinf[3],$dateinf[1])) {
               $qfields.="," . $coldata[0];
               $qvals.=",'" . $_POST[$pname] . "'";
               unset($_POST[$pname]);
             }
-          } else if (ereg ("^([0-9]{4})-([0-9]{2})-([0-9]{2})$", $_POST[$pname], $dateinf)) {
+          } else if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $_POST[$pname], $dateinf)) {
             if (checkdate($dateinf[2],$dateinf[3],$dateinf[1])) {
               $qfields.="," . $coldata[0];
               $qvals.=",'" . $_POST[$pname] . "'";

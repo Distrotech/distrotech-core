@@ -132,7 +132,7 @@ function do_report($repname, $username, $additional) {
       extract($superglobal, EXTR_SKIP);
     }
 
-    if (ereg("([a-zA-Z]+)\/",$report[$repname],$dispdata)) {
+    if (preg_match("/([a-zA-Z]+)\//",$report[$repname],$dispdata)) {
       if ($dispdata[1] == "cdr") {
         include "/var/spool/apache/htdocs/cdr/uauth.inc";
       } else {

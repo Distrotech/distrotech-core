@@ -2,7 +2,7 @@
 include "../cdr/auth.inc";
 include "../cdr/autoadd.inc";
 
-$mac=ereg_replace(":","",$mac);
+$mac=preg_replace("/:/","",$mac);
 $mac=strtoupper($mac);
 
 $pwlen=8;

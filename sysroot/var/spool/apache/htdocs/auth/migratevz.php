@@ -56,7 +56,7 @@ $disc=array("File Server Quota","Home Directory Quota","Mail Box Quota","Allow A
   $dnarr=array("dn");
   $sr=ldap_search($ds,"","(&(objectClass=officePerson)(uid=$euser))",$dnarr);
   $iinfo = ldap_get_entries($ds, $sr);
-  eregi("^(uid=.*,ou=Users),(dc=.*)",$iinfo[0]["dn"],$sdn);
+  preg_match("/^(uid=.*,ou=Users),(dc=.*)/i",$iinfo[0]["dn"],$sdn);
   $dn=$sdn[1];
   $dninf=ldap_explode_dn($dn,0);
 
@@ -87,7 +87,7 @@ $disc=array("File Server Quota","Home Directory Quota","Mail Box Quota","Allow A
       if (count($dinfo) > 0) {
         ldap_mod_del($ds,$dn,$dinfo);
       }
-    } else if (eregi("o=(.*)",$dninf[1],$czone)) {
+    } else if (preg_match("/o=(.*)/i",$dninf[1],$czone)) {
       $zarr=array("quotafileserver","quotamailspool","quotahomedir","smbserveraccess","squidproxyaccess","maxaliases","maxwebaliases","maxmailboxes","radiusporttype","radiusframedipaddress","radiusframedmtu","radiusframedcompression","radiussimultaneoususe","radiussessiontimeout","radiusidletimeout","radiusacctinteriminterval","radiusreplyitem","radiuscheckitem","radiusrealm");
       $zinfq=ldap_search($ds,"cn=" . $czone[1] . ",ou=vadmin","(&(objectClass=virtZoneSettings)(cn=" . $czone[1] . "))",$zarr);
       $zinf=ldap_get_entries($ds,$zinfq);
@@ -131,7 +131,7 @@ $disc=array("File Server Quota","Home Directory Quota","Mail Box Quota","Allow A
       $iinfo = ldap_get_entries($ds, $sr);
       $childdn=array();
       for($ccnt=0;$ccnt < $iinfo["count"];$ccnt++) {
-        eregi("^(uid=.*,ou=Users),(dc=.*)",$iinfo[$ccnt]["dn"],$sdn);
+        preg_match("/^(uid=.*,ou=Users),(dc=.*)/i",$iinfo[$ccnt]["dn"],$sdn);
         if ($dn != $sdn[1]) {
           $cdninf=ldap_explode_dn($sdn[1],0);
           if ($vzone != "") {
@@ -157,7 +157,7 @@ $disc=array("File Server Quota","Home Directory Quota","Mail Box Quota","Allow A
       }
       $sr=ldap_search($ds,"","(&(objectClass=officePerson)(uid=$euser))",$dnarr);
       $iinfo = ldap_get_entries($ds, $sr);
-      eregi("^(uid=.*,ou=Users),(dc=.*)",$iinfo[0]["dn"],$sdn);
+      preg_match("/^(uid=.*,ou=Users),(dc=.*)/i",$iinfo[0]["dn"],$sdn);
       $dn=$sdn[1];
       $dninf=ldap_explode_dn($dn,0);
     }

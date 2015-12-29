@@ -60,7 +60,7 @@ if (isset($subscribe)) {
     while (list($i,$val) = each($srsort)) {
       $dn=$info[$i]["dn"];
       $cname=$info[$i]["sendmailmtakey"][0];
-      if (! ereg("^owner",$cname)) {
+      if (! preg_match("/^owner/",$cname)) {
         print "<OPTION VALUE=\"" . $cname . "\">" . $cname . "\n";
       }
     }

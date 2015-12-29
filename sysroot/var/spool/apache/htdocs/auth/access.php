@@ -158,7 +158,7 @@ for($lacnt=0;$lacnt<count($iarr2);$lacnt++) {
     }
   } else {
     $dninf=ldap_explode_dn($dn,0);
-    if (eregi("^o=(.*)",$dninf[1],$vzinf)) {
+    if (preg_match("/^o=(.*)/i",$dninf[1],$vzinf)) {
       $sr=ldap_search($ds,"cn=" .  $vzinf[1] . ",ou=vadmin","(&(objectClass=virtZoneSettings)(cn=" .  $vzinf[1] . "))",$iarr);
       $iinfo = ldap_get_entries($ds, $sr);
       $sr2=ldap_search($ds,$dn,"(&(objectClass=officePerson)(uid=$euser))",$iarr2);

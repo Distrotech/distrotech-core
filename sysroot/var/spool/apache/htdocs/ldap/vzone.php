@@ -113,22 +113,22 @@ if (($groupedit == _("Delete")) && ($group != "")){
 
 if (($group != "") && ($groupedit == _("Modify"))){
   if (($groupmod == _("Delete")) && (strtolower($ldn) != strtolower(${$group}))) {
-    if (ereg("(sambasid=s-1-5-21-.*,ou=idmap)",strtolower(${$group}),$olddn)) {
+    if (preg_match("/(sambasid=s-1-5-21-.*,ou=idmap)/",strtolower(${$group}),$olddn)) {
       $addent["member"]=$olddn[0];
       $addent2["member"]=${$group};
     } else {
-      ereg("(uid=.*,ou=users)",strtolower(${$group}),$olddn);
+      preg_match("/(uid=.*,ou=users)/i",strtolower(${$group}),$olddn);
       $addent["member"]=$olddn[0];
       $addent2["member"]=${$group};
     }
     ldap_mod_del($ds,"cn=" . $group . ",ou=Vadmin",$addent);
     ldap_mod_del($ds,"cn=" . $group . ",ou=Vadmin",$addent2);
   } else if (($groupmod == _("Add")) && ($add != "")) {
-    if (ereg("(sambasid=s-1-5-21-.*,ou=idmap)",strtolower($add),$olddn)) {
+    if (preg_match("/(sambasid=s-1-5-21-.*,ou=idmap)/i",strtolower($add),$olddn)) {
       $addent["member"]=$olddn[0];
       $addent2["member"]=$add;
     } else {
-      ereg("(uid=.*,ou=users)",strtolower($add),$olddn);
+      preg_match("/(uid=.*,ou=users)/i",strtolower($add),$olddn);
       $addent["member"]=$olddn[0];
       $addent2["member"]=$add;
     }
@@ -153,8 +153,8 @@ if (($group != "") && ($groupedit == _("Modify"))){
     $rchk=ldap_search($ds,"cn=" . $group . ",ou=Vadmin","(&(objectClass=virtZoneSettings)(cn=" . $group . "))",array("radiuscheckitem"));
     $chkinf=ldap_get_entries($ds,$rchk);
     $addci=1;
-    for($ccnt=0;$ccnt<$chkinf[0]["radiuscheckitem"]["count"];$ccnt++) {
-      eregi("^(.*) = \"(.*)\"$",$chkinf[0]["radiuscheckitem"][$ccnt],$ciarr);
+    for($ccnt=0;$ccnt<$chkinf[0]["raduscheckitem"]["count"];$ccnt++) {
+      preg_match("/^(.*) = \"(.*)\"$/i",$chkinf[0]["radiuscheckitem"][$ccnt],$ciarr);
       if (($ciarr[1] == "Realm") && ($ciarr[2] != $radiusRealm)){
         $checkdel["radiuscheckitem"]=$chkinf[0]["radiuscheckitem"][$ccnt];
         ldap_mod_del($ds,"cn=" . $group . ",ou=Vadmin",$checkdel);

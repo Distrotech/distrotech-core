@@ -38,7 +38,7 @@ if ((isset($_POST['addreq'])) && ($_SESSION['auser'])) {
       
       $patterns=array("/^[\"]+([A-Z]{3})[\",]+.*[,\"]+([a-zA-Z0-9 \-\']+)[\",]+([0-9\.]+)/");
       while(list($lnum,$ldata)=each($ratefd)) {
-        $ldata=ereg_replace("'","\'", $ldata);
+        $ldata=preg_replace("/'/","\'", $ldata);
         $ldata="\"" . $ldata;
         if ($_POST['tarcode'] != "A") {
           $replace=array("INSERT INTO tariffrate (countrycode,subcode,rate,trunkprefix,tariffcode) SELECT 

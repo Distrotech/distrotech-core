@@ -41,7 +41,7 @@ $chans=$agi->command("core show translation");
 $cnt=0;
 print "<TR CLASS=list-color" . (($cnt % 2) + 1). "><TD ALIGN=MIDDLE><PRE>";
 foreach(explode("\n",$chans['data']) as $line) {
-  if (! ereg("(^Privilege: Command)|(^[0-9]*[ ]*active)|(^$)",$line)) {
+  if (! preg_match("/(^Privilege: Command)|(^[0-9]*[ ]*active)|(^$)/",$line)) {
     print $line . "\n";
     $cnt++;
   }

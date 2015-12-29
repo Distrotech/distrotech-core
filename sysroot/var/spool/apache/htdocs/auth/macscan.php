@@ -47,7 +47,7 @@ if (!isset($_SESSION['auth'])) {
     $chunk=8192;
     while (!feof($fp)) {
       $output=fgets($fp, $chunk);
-      ereg("^\? \(([0-9\.]+)\) at ([0-9a-fA-F\:]+) \[ether\] on (.*)$",$output,$data);
+      preg_match("/^\? \(([0-9\.]+)\) at ([0-9a-fA-F\:]+) \[ether\] on (.*)$/",$output,$data);
       if ($output != "") {
         $ints[$data[3]][$data[2]]=$data[1];
       }

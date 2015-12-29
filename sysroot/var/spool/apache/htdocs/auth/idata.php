@@ -115,11 +115,11 @@
   $iinfo = ldap_get_entries($ds, $sr);
   $dnarr2=ldap_explode_dn($dn,0);
 
-  if (eregi("^o=(.*)",$dnarr2[1],$vuser)) {
+  if (preg_match("/^o=(.*)/i",$dnarr2[1],$vuser)) {
     $_SESSION['utype']=$vuser[1];
-  } else if (eregi("^o=(.*)",$dnarr2[2],$vuser)) {
+  } else if (preg_match("/^o=(.*)/i",$dnarr2[2],$vuser)) {
     $_SESSION['utype']=$vuser[1];
-  } else if (eregi("^(uid|sambasid)=(.*)",$dnarr2[1],$mbowner)) {
+  } else if (preg_match("/^(uid|sambasid)=(.*)/i",$dnarr2[1],$mbowner)) {
     $_SESSION['utype']="system";
     $dnex=ldap_explode_dn($dn,0);
     $mbdn="";
@@ -192,7 +192,7 @@
         $dinfo=ldap_get_entries($ds,$doms);
         for($i=0;$i<$dinfo['count'];$i++) {
           for($j=0;$j<$dinfo[$i]['sendmailmtaclassvalue']['count'];$j++) {
-            if (! ereg("^[0-9]+\.[0-9]+\.[0-9]+",$dinfo[$i]['sendmailmtaclassvalue'][$j])) {
+            if (! preg_match("/^[0-9]+\.[0-9]+\.[0-9]+/i",$dinfo[$i]['sendmailmtaclassvalue'][$j])) {
               array_push($darr,$dinfo[$i]['sendmailmtaclassvalue'][$j]);
             }
           }

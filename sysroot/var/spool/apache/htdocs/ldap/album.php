@@ -27,7 +27,7 @@ if ($sessid == "") {
   session_start();
 }
 
-if (ereg("^/photo/([a-zA-Z0-9\.-]+)_album.html",$_SERVER['SCRIPT_URL'],$dispdata)) {
+if (preg_match("/^/photo/([a-zA-Z0-9\.-]+)_album.html/",$_SERVER['SCRIPT_URL'],$dispdata)) {
   $_SESSION['euser']=$dispdata[1];
   $algetvar=array('first','pstart','style','imlim','rcnt','phend','scount');
   for($gvcnt=0;$gvcnt<count($algetvar);$gvcnt++) {

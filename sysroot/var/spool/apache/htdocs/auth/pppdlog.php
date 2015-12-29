@@ -46,7 +46,7 @@ if (!isset($_SESSION['auth'])) {
         $chunk=8192;
         while (!feof($fp)) {
           $output=fgets($fp, $chunk);
-          if (!ereg("(^Couldn't increase M[TR]U to 1500)|(pppoe: Interface eth[0-9a-zA-Z] has MTU of 1450)",$output)) {
+          if (!preg_match("/(^Couldn't increase M[TR]U to 1500)|(pppoe: Interface eth[0-9a-zA-Z] has MTU of 1450)/",$output)) {
             print "</TH></TR><TR" . $bcol[$col % 2] . "><TD>" . $output . "</TD></TR>\n";
             $col++;
           }
@@ -65,7 +65,7 @@ if (!isset($_SESSION['auth'])) {
       $chunk=8192;
       while (!feof($fp)) {
         $output=fgets($fp, $chunk);
-        if (!ereg("(^Couldn't increase M[TR]U to 1500)|(pppoe: Interface eth[0-9a-zA-Z] has MTU of 1450)",$output)) {
+        if (!preg_match("/(^Couldn't increase M[TR]U to 1500)|(pppoe: Interface eth[0-9a-zA-Z] has MTU of 1450)/",$output)) {
           print "</TH></TR><TR" . $bcol[$col % 2] . "><TD>" . $output . "</TD></TR>\n";
           $col++;
         }

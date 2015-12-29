@@ -12,7 +12,7 @@ if ($mac == "") {
   exit;
 }
 
-$mac=ereg_replace(":","",$mac);
+$mac=preg_replace("/:/","",$mac);
 
 
 $mac=strtoupper($mac);

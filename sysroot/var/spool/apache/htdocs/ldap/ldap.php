@@ -100,7 +100,7 @@
       $dn=$info[$i]["dn"];
       if (($baseou == "pdc") && (strrpos($info[$i]["uid"][0],"\$") == strlen($info[$i]["uid"][0]) -1)) {
         continue;
-      } else if (($baseou == "system") && (eregi("uid=.*,o=.*,ou=users",$dn)) && ($_SESSION['utype'] == $baseou)) {
+      } else if (($baseou == "system") && (preg_match("/uid=.*,o=.*,ou=users/i",$dn)) && ($_SESSION['utype'] == $baseou)) {
         continue;
       }
       $edit=urlencode($dn);

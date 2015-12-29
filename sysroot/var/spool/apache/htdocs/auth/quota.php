@@ -82,7 +82,7 @@ $disc=array(_("File Server Quota"),_("Home Directory Quota"),_("Mail Box Quota")
     $sr=ldap_search($ds,"cn=" . $_SESSION['utype'] . ",ou=vadmin","(&(objectClass=virtZoneSettings)(cn=" . $_SESSION['utype'] . "))",$iarr);
   } else {
     $dninf=ldap_explode_dn($dn,0);
-    if (eregi("^o=(.*)",$dninf[1],$vzinf)) {
+    if (preg_match("/^o=(.*)/i",$dninf[1],$vzinf)) {
       $sr=ldap_search($ds,"cn=" . $vzinf[1] . ",ou=vadmin","(&(objectClass=virtZoneSettings)(cn=" . $vzinf[1] . "))",$iarr);
       $ADMIN_USER="pleb";
     } else {

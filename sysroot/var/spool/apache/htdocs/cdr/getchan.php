@@ -54,7 +54,7 @@ print "<TR CLASS=list-color1><TH>" . _("Hangup") . "</TH><TH>" . _("Caller ID") 
 
 $cnt=1;
 foreach(explode("\n",$chans['data']) as $line) {
-  if (! ereg("(^Privilege: Command)|(^[0-9]*[ ]*active)|(^$)",$line)) {
+  if (! preg_match("/(^Privilege: Command)|(^[0-9]*[ ]*active)|(^$)/",$line)) {
     print "<TR CLASS=list-color" . (($cnt % 2) + 1). ">\n";
     $chan=explode("!",$line);
     print "<TD><INPUT TYPE=CHECKBOX NAME=\"del" . $cnt . "\"><INPUT TYPE=HIDDEN NAME=chan" . $cnt . " VALUE=\"" . $chan[0] . "\"></TD>";

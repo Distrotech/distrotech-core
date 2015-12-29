@@ -975,7 +975,7 @@ issuerAltName          = $certsubname\n");
         $sambaSID=$domain;
         $data[1]=$domain;
       } else {
-        ereg("^(S-1-5-21-[0-9]+-[0-9]+-[0-9]+)-[0-9]+",$sambaSID,$data);
+        preg_match("/^(S-1-5-21-[0-9]+-[0-9]+-[0-9]+)-[0-9]+/",$sambaSID,$data);
       }
       print "<TR CLASS=list-color2><TD>SMB Domain (SID To Set On Repair)";
       $ssr=ldap_search($ds,"","(&(sambadomainname=*)(sambasid=*))",array("sambaSID","sambaDomainName"));

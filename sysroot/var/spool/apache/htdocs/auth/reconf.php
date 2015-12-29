@@ -345,9 +345,9 @@ function inprog() {
   if ($oldconf) {
     while(!feof($oldconf)) {
       $inconf=fgets($oldconf, 4096);
-      if (ereg("([A-Za-z0-9_]+)=\"(.*)\";",$inconf,$data)) {
+      if (preg_match("/([A-Za-z0-9_]+)=\"(.*)\";/",$inconf,$data)) {
         $conf[$data[1]]=$data[2];
-      } elseif (ereg("([A-Z0-9_]+)\[([0-9]+)\]=\"(.*)\";",$inconf,$data)) {
+      } elseif (preg_match("/([A-Z0-9_]+)\[([0-9]+)\]=\"(.*)\";/",$inconf,$data)) {
         $conf[$data[1]][$data[2]]=$data[3];
       }
     }

@@ -109,7 +109,7 @@ while ($line = mysql_fetch_array($result, MYSQL_NUM)) {
       $oset=$colspan-$arcnt-1;
       $tstat[$oset]++;
     } else if ($arcnt == ($colspan -3)) {
-      ereg("([0-9]+):([0-9]+):([0-9]+)",$line[$arcnt],$agep);
+      preg_match("/([0-9]+):([0-9]+):([0-9]+)/",$line[$arcnt],$agep);
       $tage2=$tage;
       while(list($key)=each($tage2)) {
         if ($agep[1] > $key) {

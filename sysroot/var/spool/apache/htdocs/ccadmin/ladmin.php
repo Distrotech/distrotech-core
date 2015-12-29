@@ -44,7 +44,7 @@ if ($_POST['transfer'] == "on") {
   $_POST['transfer']='f';
 }
 
-if (ereg("(2[01][0-9]{2})-([0-9]{2})-([0-9]{2})$",$_POST['callbefore'],$dateinf)) {
+if (preg_match("/(2[01][0-9]{2})-([0-9]{2})-([0-9]{2})$/",$_POST['callbefore'],$dateinf)) {
   $curdate=getdate();
   if ((!checkdate($dateinf[2],$dateinf[3],$dateinf[1])) || ($dateinf[1] < $curdate['year']) || 
       (($curdate['year'] == $dateinf[1]) && ($dateinf[2] < $curdate['mon'])) ||

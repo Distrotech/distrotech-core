@@ -214,34 +214,34 @@ if ((!isset($_POST['uplead'])) && (!isset($_POST['listid'])) && (!isset($_POST['
           $qvals.=",'" . pg_escape_bytea($db,$csvlead[$csva]) . "'";
           $qfields.="," . $arrname[$csva];
         } else if ($arrtype[$csva] == "timestamp with time zone") {
-          if (ereg ("^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}:[0-9]{2}:[0-9]{2})([-\+0-9]+)$", $csvlead[$csva], $dateinf)) {
+          if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}:[0-9]{2}:[0-9]{2})([-\+0-9]+)$/", $csvlead[$csva], $dateinf)) {
             if (checkdate($dateinf[2],$dateinf[3],$dateinf[1])) {
               $qfields.="," . $arrname[$csva];
               $qvals.=",'" . $csvlead[$csva] . "'";
             }
-          } else if (ereg ("^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}:[0-9]{2}:[0-9]{2})$", $csvlead[$csva], $dateinf)) {
+          } else if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}:[0-9]{2}:[0-9]{2})$/", $csvlead[$csva], $dateinf)) {
             if (checkdate($dateinf[2],$dateinf[3],$dateinf[1])) {
               $qfields.="," . $arrname[$csva];
               $qvals.=",'" . $csvlead[$csva] . "'";
             }
           }
         } else if ($arrtype[$csva] == "timestamp without time zone") {
-          if (ereg ("^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}:[0-9]{2}:[0-9]{2})$", $csvlead[$csva], $dateinf)) {
+          if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}:[0-9]{2}:[0-9]{2})$/", $csvlead[$csva], $dateinf)) {
             if (checkdate($dateinf[2],$dateinf[3],$dateinf[1])) {
               $qfields.="," . $arrname[$csva];
               $qvals.=",'" . $csvlead[$csva] . "'";
             }
           }
         } else if ($arrtype[$csva] == "time with time zone") {
-          if (ereg ("^([0-9]{2}:[0-9]{2}:[0-9]{2})([-\+0-9]+)$", $csvlead[$csva], $dateinf)) {
+          if (preg_match("/^([0-9]{2}:[0-9]{2}:[0-9]{2})([-\+0-9]+)$/", $csvlead[$csva], $dateinf)) {
             $qfields.="," . $arrname[$csva];
             $qvals.=",'" . $csvlead[$csva] . "'";
-          } else if (ereg ("^([0-9]{2}:[0-9]{2}:[0-9]{2})$", $csvlead[$csva], $dateinf)) {
+          } else if (preg_match("/^([0-9]{2}:[0-9]{2}:[0-9]{2})$/", $csvlead[$csva], $dateinf)) {
             $qfields.="," . $arrname[$csva];
             $qvals.=",'" . $csvlead[$csva] . "'";
           }
         } else if ($arrtype[$csva] == "time without time zone") {
-          if (ereg ("^([0-9]{2}:[0-9]{2}:[0-9]{2})$", $csvlead[$csva], $dateinf)) {
+          if (preg_match("/^([0-9]{2}:[0-9]{2}:[0-9]{2})$/", $csvlead[$csva], $dateinf)) {
             $qfields.="," . $arrname[$csva];
             $qvals.=",'" . $csvlead[$csva] . "'";
           }

@@ -281,9 +281,9 @@ if (($alias != "") && ($aliasedit == "Modify")){
       $dn=$info[$i]["dn"];
       $cname=$info[$i]["sendmailmtakey"][0];
       $dscrip=explode(":",$info[$i]["description"][0]);
-      if (!ereg("^owner-",$cname) && !ereg("^owner-",$cname) && 
-          !ereg("-members\$",$cname) && !ereg("-request\$",$cname) && 
-          !ereg("-list\$",$cname) && !ereg("-approval\$",$cname) &&
+      if (!preg_match("/^owner-/",$cname) && !preg_match("/^owner-/",$cname) && 
+          !preg_match("/-members\$/",$cname) && !preg_match("/-request\$/",$cname) && 
+          !preg_match("/-list\$/",$cname) && !preg_match("/-approval\$/",$cname) &&
           ($cname != "majordomo") && ($cname != "FETCHMAIL-DAEMON") &&
           ($cname != "MAILER-DAEMON") && ($cname != "bin") && 
           ($cname != "daemon") && ($cname != "faxmaster") && 

@@ -116,7 +116,7 @@ class browser{
 			$bd['browser'] = "MSIE";
 			$bd['version'] = "1.0";
 			$var = stristr($agent, "/");
-			if (ereg("308|425|426|474|0b1", $var)){
+			if (preg_match("/308|425|426|474|0b1/", $var)){
 				$bd['version'] = "1.5";
 			}
 
@@ -247,7 +247,7 @@ class browser{
 		if (preg_match("/AOL/i", $agent)){
 			$var = stristr($agent, "AOL");
 			$var = explode(" ", $var);
-			$bd['aol'] = ereg_replace("[^0-9,.,a-z,A-Z]", "", $var[1]);
+			$bd['aol'] = preg_replace("/[^0-9,.,a-z,A-Z]/", "", $var[1]);
 		}
 		
 		// finally assign our properties

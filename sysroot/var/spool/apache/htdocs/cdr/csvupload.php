@@ -93,16 +93,16 @@ $localt['LocalArea']=_("Local Area Code");
 $localt['LocalPrefix']=_("Local Prefix");
 
 function macload($macaddr) {
-  $macaddr=strtoupper(ereg_replace(":","",$macaddr));
+  $macaddr=strtoupper(preg_replace("/:/","",$macaddr));
   return $macaddr;
 }
 
 function telnumload($tnumber) {
-  $tnumber=ereg_replace("\(","",$tnumber);
-  $tnumber=ereg_replace(")","",$tnumber);
-  $tnumber=ereg_replace("-","",$tnumber);
-  $tnumber=ereg_replace(" ","",$tnumber);
-  $tnumber=ereg_replace("\+","09",$tnumber);
+  $tnumber=preg_replace("/\(/","",$tnumber);
+  $tnumber=preg_replace("/)/","",$tnumber);
+  $tnumber=preg_replace("/-/","",$tnumber);
+  $tnumber=preg_replace("/ /","",$tnumber);
+  $tnumber=preg_replace("/\+/","00",$tnumber);
   return $tnumber;
 }
 
@@ -195,14 +195,14 @@ if (isset($csvup)) {
             $item++;
           }
           $tmp.=substr($text[$item],0,-1);
-          $tmp=ereg_replace("\"\"","\"",$tmp);
+          $tmp=preg_replace("/\"\"/","\"",$tmp);
         } else if (($text[$item][0] == "\"") && (substr($text[$item],-1) == "\"")) {
           $tmp=substr($text[$item],1,-1);
         } else {
           $tmp=$text[$item];
         }
         if ($filetype != "setup") {
-          $tmp=ereg_replace("'","''",$tmp);
+          $tmp=preg_replace("/'/","''",$tmp);
         }
         array_push($out,$tmp);
       }
@@ -549,9 +549,9 @@ if (isset($csvup)) {
         } else {
           print "<TR" . $bcolor[$rcnt % 2] . "><TD>Updateing :";
         }
-        $out[0]=ereg_replace("'","",$out[0]);
-        $out[1]=ereg_replace("'","",$out[1]);
-        $out[2]=ereg_replace("'","",$out[2]);
+        $out[0]=preg_replace("/'/","",$out[0]);
+        $out[1]=preg_replace("/'/","",$out[1]);
+        $out[2]=preg_replace("/'/","",$out[2]);
 
         
         if (($out[0] == "Setup") && ($setup[$out[1]] != "")) {

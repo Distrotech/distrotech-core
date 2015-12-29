@@ -182,7 +182,7 @@ function getchanstatus($channel,$socket) {
       $chaninf=array();
       break;
     } else {
-      if (ereg("^([^/]+)/([0-9]{4})",$chaninf['Channel'],$datainf)) {
+      if (preg_match("/^([^/]+)/([0-9]{4})/",$chaninf['Channel'],$datainf)) {
         if (($datainf[2] == $channel) || ($chaninf['Channel'] == $channel)) {
           break;
         }

@@ -145,7 +145,7 @@ if (!isset($_SESSION['auth'])) {
     $uinf=ldap_get_attributes($ds,$fentry);
 
     $dnarr2=ldap_explode_dn($basedn,0);
-    if (eregi("^o=(.*)",$dnarr2[1],$mbowner)) {
+    if (preg_match("/^o=(.*)/i",$dnarr2[1],$mbowner)) {
       $mbdn="cn=" . $mbowner[1] . ",ou=Vadmin";
       $mbsr=ldap_search($ds,$mbdn,"(&(objectClass=virtZoneSettings)(cn=" . $mbowner[1] . "))",array("maxMailBoxes","maxAliases"));
       $mbiinfo = ldap_get_entries($ds, $mbsr);

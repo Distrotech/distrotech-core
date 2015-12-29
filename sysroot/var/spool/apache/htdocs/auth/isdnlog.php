@@ -50,7 +50,7 @@ if (!isset($_SESSION['auth'])) {
     $chunk=8192;
     while (!feof($fp)) {
       $output=fgets($fp, $chunk);
-      ereg("^[A-Za-z]+ ([A-Za-z]+ [ 0-9][0-9] [0-9:]+) [0-9]{4}: P\[([ 0-9]+)\](.*)",$output,$data);
+      preg_match("/^[A-Za-z]+ ([A-Za-z]+ [ 0-9][0-9] [0-9:]+) [0-9]{4}: P\[([ 0-9]+)\](.*)/",$output,$data);
       if ($output != "") {
         array_push($outa,$data[1] . "</TD><TD>" . $data[2] . "</TD><TD>" . $data[3]);
       }

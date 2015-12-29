@@ -80,7 +80,7 @@ if (!isset($_SESSION['auth'])) {
     $radrealm=$basedn;
   } else {
     $dninf=ldap_explode_dn($basedn,0);
-    if (eregi("^o=(.*)",$dninf[1],$vzinf)) {
+    if (preg_match("/^o=(.*)/i",$dninf[1],$vzinf)) {
       $fattrs=ldap_get_attributes($ds,$fentry);
       $radrealm=$fattrs['radiusProfileDn'][0];
       $lactive=$fattrs['dialupAccess'][0];

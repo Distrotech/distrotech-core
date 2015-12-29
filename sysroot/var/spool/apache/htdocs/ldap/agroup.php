@@ -38,14 +38,14 @@ if (($group != "") && ($groupedit == "Modify")){
   if (($groupmod == "Delete") && (strtolower($ldn) != strtolower($active))) {
     $addent=array();
     $dnarr=ldap_explode_dn($active,1);
-    if (ereg("(sambasid=s-1-5-21-.*,ou=idmap)",$active,$olddn)) {
+    if (preg_match("/(sambasid=s-1-5-21-.*,ou=idmap)/i",$active,$olddn)) {
       $oldent["member"][0]=$olddn[0];
       $addent["member"][0]=$active;
       $usr=ldap_search($ds,"ou=idmap","(&(objectClass=radiusprofile)(sambaSID=" . $dnarr[0] . "))",array("uid"));
       $uidinfo = ldap_get_entries($ds, $usr);
       $addent3["memberUid"]=$uidinfo[0]["uid"][0];
     } else {
-      ereg("(uid=.*,ou=users)",$active,$olddn);
+      preg_match("/(uid=.*,ou=users)/i",$active,$olddn);
       $oldent["member"][0]=$olddn[0];
       $addent["member"][0]=$active;
       $addent3["memberUid"]=$dnarr[0];
@@ -61,7 +61,7 @@ if (($group != "") && ($groupedit == "Modify")){
     $addent=array();
     $add=strtolower($add);
     $dnarr=ldap_explode_dn($add,1);
-    if (ereg("(sambasid=s-1-5-21-.*,ou=idmap),(.*)",$add,$olddn)) {
+    if (preg_match("/(sambasid=s-1-5-21-.*,ou=idmap),(.*)/i",$add,$olddn)) {
       $addent["member"][0]=$olddn[1];
       ldap_mod_del($ds,$group,$addent);
       $addent["member"][1]=$add;
@@ -69,7 +69,7 @@ if (($group != "") && ($groupedit == "Modify")){
       $uidinfo = ldap_get_entries($ds, $usr);
       $addent3["memberUid"]=$uidinfo[0]["uid"][0];
     } else {
-      ereg("(uid=.*,ou=users),(.*)",$add,$olddn);
+      preg_match("/(uid=.*,ou=users),(.*)/i",$add,$olddn);
       $addent["member"][0]=$olddn[1];
       ldap_mod_del($ds,$group,$addent);
       $addent["member"][1]=$add;
