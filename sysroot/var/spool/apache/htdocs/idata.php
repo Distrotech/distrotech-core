@@ -63,8 +63,8 @@
     for ($i=0; $i<$ecount; $i++) {
       $ent="del" . $i;
       $entv="delh" . $i;
-      if ($$ent) {
-        $dinfo[$info][$dcnt]=$$entv;
+      if (${$ent}) {
+        $dinfo[$info][$dcnt]=${$entv};
         $dcnt++;
       }
     }

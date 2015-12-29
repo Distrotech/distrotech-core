@@ -87,9 +87,9 @@
             $val=$adata[$acnt];
           }
         }
-        $$attr=$val;
+        ${$attr}=$val;
       } elseif ($descrip[$attr] != "") {
-        $$attr=$adata[0];
+        ${$attr}=$adata[0];
       }
     }
   }
@@ -98,7 +98,7 @@
   $rejar=array();
   $rok=true;
   while(list($idx,$attr)=each($reqat[$ldtype])) {
-    if ($$attr == "") {
+    if (${$attr} == "") {
       $rok=false;
       $rejar[$attr]=true;
     }
@@ -124,7 +124,7 @@
 
     $natrib=array("cn","uid");
     while(list($idx,$catt)=each($natrib)) {
-      $info[$catt]=$$catt;
+      $info[$catt]=${$catt};
     }
 
     $hideae=array();
@@ -183,11 +183,11 @@
 <?php
         if ($attr == "uid") {
 ?>
-          ><INPUT TYPE=HIDDEN NAME=<?php print $attr;?> VALUE="<?php print $$attr;?>"><?php print $$attr;?>
+          ><INPUT TYPE=HIDDEN NAME=<?php print $attr;?> VALUE="<?php print ${$attr};?>"><?php print ${$attr};?>
 <?php
         } else {
 ?>
-            ><INPUT TYPE=TEXT SIZE=40 NAME=<?php print $attr;?> VALUE="<?php print $$attr;?>">
+            ><INPUT TYPE=TEXT SIZE=40 NAME=<?php print $attr;?> VALUE="<?php print ${$attr};?>">
 <?php
         }
 ?>

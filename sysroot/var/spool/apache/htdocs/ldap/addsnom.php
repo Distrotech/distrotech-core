@@ -34,8 +34,8 @@ if ($ds) {
 
     $natrib=$atrib;
     while(list($idx,$catt)=each($natrib)) {
-      if ($$catt != "") {
-        $info[$catt]=$$catt;
+      if (${$catt} != "") {
+        $info[$catt]=${$catt};
       }
     }
 
@@ -82,7 +82,7 @@ while(list($attr,$aname)=each($adescrip)) {
       print $adescrip[$attr];
 ?>
     </TD><TD WIDTH=50%>
-    <INPUT TYPE=TEXT SIZE=40 NAME=<?php print $attr;?> VALUE="<?php print $$attr;?>">
+    <INPUT TYPE=TEXT SIZE=40 NAME=<?php print $attr;?> VALUE="<?php print ${$attr};?>">
     </TD></TR>
 <?php
   $cnt ++;

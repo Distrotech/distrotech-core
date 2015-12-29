@@ -39,7 +39,7 @@ for($tcnt=0;$tcnt<pg_num_rows($extens);$tcnt++) {
   $r=pg_fetch_array($extens,$tcnt);
   
   $todel="del" . $r[0];
-  if ($$todel == "on") {
+  if (${$todel} == "on") {
     pg_query($db,"DELETE FROM users WHERE name='" . $r[0] . "'");
     pg_query($db,"DELETE FROM features WHERE exten='" . $r[0] . "'");
     pg_query($db,"DELETE FROM astdb WHERE family='" . $r[0] . "'");

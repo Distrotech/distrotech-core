@@ -96,11 +96,11 @@ if (!isset($_SESSION['auth'])) {
     }
 
     for($i=0;$i<count($iarr);$i++) {
-      if ($$iarr[$i] != "") {
-        $minfo[$iarr[$i]]=$$iarr[$i];
+      if (${$iarr[$i]} != "") {
+        $minfo[$iarr[$i]]=${$iarr[$i]};
       } else {
-        if ($$oarr[$i] != "") {
-          $delinfo[$iarr[$i]]=$$oarr[$i];
+        if (${$oarr[$i]} != "") {
+          $delinfo[$iarr[$i]]=${$oarr[$i]};
           $delcnt ++; 
         }
       }

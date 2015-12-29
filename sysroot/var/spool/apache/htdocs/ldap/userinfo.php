@@ -254,11 +254,11 @@ array_push($atrib,"sambaSID");
 //       print "$attr " . $adata["count"] . " " . $adata[0] . "<BR>";
       if ($cert[$attr] ) {
         $adata=ldap_get_values_len($ds,$entry,strtolower($attr));
-        $$attr=$adata[0];
+        ${$attr}=$adata[0];
       } elseif ($bfile[$attr] ) {
         $adata=ldap_get_values_len($ds,$entry,strtolower($attr));
         $pcount=$adata["count"];
-        $$attr=$adata[0];        
+        ${$attr}=$adata[0];        
       } else {
         $adata=ldap_get_values($ds,$entry,$attr);
         if (($adata["count"] > 1) && ($descrip[$attr] != "")){
@@ -271,10 +271,10 @@ array_push($atrib,"sambaSID");
               $val=$adata[$acnt];
             }
           }
-          $$attr=$val;
+          ${$attr}=$val;
         } elseif ($descrip[$attr] != "") {
           $adata=ldap_get_values($ds,$entry,$attr);
-          $$attr=$adata[0];
+          ${$attr}=$adata[0];
         }
       }
     }
@@ -285,7 +285,7 @@ array_push($atrib,"sambaSID");
 
 
   while(list($idx,$attr)=each($reqat[$ldtype])) {
-    if ($$attr == "") {
+    if (${$attr} == "") {
       $rok=false;
       $rejar[$attr]=true;
     }
@@ -600,19 +600,19 @@ issuerAltName          = $certsubname\n");
            unset($userPassword);
          }
       } else if ($catt == "certificateGenerate") {
-        if ($$catt != "") {
-          $info[$catt]=$$catt;
+        if (${$catt} != "") {
+          $info[$catt]=${$catt};
         } else {
-          unset($$catt);
+          unset(${$catt});
         }
       } else if ($catt == "cn") {
         $info[$catt]=$cn;
         $info["displayName"]=$cn;
       } else if (($catt == "hostedSite") || ($catt == "hostedFPSite") || ($catt == "mailLocalAddress")) {
-        unset($$catt);
+        unset(${$catt});
         unset($catt);
       } else if ($b64[$catt]) {
-        $data=$$catt;
+        $data=${$catt};
         if ($data != "") {
           $info[$catt]=$data;
         }
@@ -681,22 +681,22 @@ issuerAltName          = $certsubname\n");
           $pcount--;
         }
       } elseif ($cbox[$catt]) {
-        if ($$catt == "on") {
+        if (${$catt} == "on") {
           $info[$catt]="yes";
-          $$catt="yes";
-        } else if ($$catt == "") {
+          ${$catt}="yes";
+        } else if (${$catt} == "") {
           if ($catt != "pkcs7update") {
             $info[$catt]="no";
-            $$catt="no";
+            ${$catt}="no";
           }
-        } else if ($$catt != "unset") {
-          $info[$catt]=$$catt;
+        } else if (${$catt} != "unset") {
+          $info[$catt]=${$catt};
         }
       } elseif ($cert[$catt] ) {
         $cinf = ldap_get_values_len($ds, $ei,strtolower($catt));
-        $$catt=$cinf[0];
+        ${$catt}=$cinf[0];
       } else {
-        $data=split("\r\n",$$catt);
+        $data=split("\r\n",${$catt});
         if (count($data) > 1) {
           $acnt=0;
           for ($cnt=0;$cnt < count($data);$cnt++) {
@@ -728,11 +728,11 @@ issuerAltName          = $certsubname\n");
               ($catt != "sambaSID")) {
             $dinfocnt++;
             $dinfo[$catt]=$iinfo[0][$aname][0];
-            $$catt="";
+            ${$catt}="";
           }
         } elseif ((!$cert[$catt]) || ($sline[$catt])) {
           $info[$catt]="Not Supplied";
-          $$catt=$info[$catt];
+          ${$catt}=$info[$catt];
         }
       }
     }
@@ -811,11 +811,11 @@ issuerAltName          = $certsubname\n");
       $bcolor2=" CLASS=list-color2";
     }
 
-    if (($$attr == "") && ($attr == "hostedFPSite")) {
+    if ((${$attr} == "") && ($attr == "hostedFPSite")) {
       $hidea[$attr]=true;
     }
     if (! $hidea[$attr]) {
-        if (($PHP_AUTH_USER == $euser) || ($$attr != "") || ($ADMIN_USER != "pleb")) {
+        if (($PHP_AUTH_USER == $euser) || (${$attr} != "") || ($ADMIN_USER != "pleb")) {
 ?>
           <TR <?php print "$bcolor"?>><TD WIDTH=50% onmouseover="myHint.show('<?php print $attr;?>')" onmouseout="myHint.hide()">
 <?php
@@ -831,7 +831,7 @@ issuerAltName          = $certsubname\n");
 <?php
         }
         if (($dnaa[$attr]) || (($PHP_AUTH_USER != $euser) && ($ADMIN_USER == "pleb"))) {
-          if (($bfile[$attr] ) && ($$attr != "")) {
+          if (($bfile[$attr] ) && (${$attr} != "")) {
 ?>
             VALIGN=MIDDLE>
 <?php
@@ -843,28 +843,28 @@ issuerAltName          = $certsubname\n");
 <?php
             }
           } else if ($cert[$attr]) {
-            if ($$attr != "") {
+            if (${$attr} != "") {
 ?>
               ><A HREF=<?php print "/cert/" . $euser . $certext[$attr] . ">/cert/" . $euser .$certext[$attr];?></A><BR>
 <?php
             }
-          } else if ($$attr != "") {
+          } else if (${$attr} != "") {
             print "$bcolor";
 ?>
-            ><INPUT TYPE=HIDDEN NAME=<?php print $attr;?> VALUE="<?php print $$attr;?>">
+            ><INPUT TYPE=HIDDEN NAME=<?php print $attr;?> VALUE="<?php print ${$attr};?>">
 <?php
             if ($attr == "mail") {
-              print "<A HREF=\"mailto:" . $$attr . "\">" . $$attr . "</A>";
+              print "<A HREF=\"mailto:" . ${$attr} . "\">" . ${$attr} . "</A>";
             } elseif (strtolower($attr) == "url") {
-              print "<A HREF=\"" . $$attr . "\" TARGET=_BLANK>" . $$attr . "</A>";
+              print "<A HREF=\"" . ${$attr} . "\" TARGET=_BLANK>" . ${$attr} . "</A>";
             } else {
-              print $$attr;
+              print ${$attr};
             }
           }
         } else {
           if (($mline[$attr]) || ($b64[$attr])){
 ?>
-            ><TEXTAREA NAME=<?php print $attr;?> COLS=40 ROWS=5><?php print $$attr;?></TEXTAREA>
+            ><TEXTAREA NAME=<?php print $attr;?> COLS=40 ROWS=5><?php print ${$attr};?></TEXTAREA>
 <?php
           } elseif ($bfile[$attr]) {
 ?>
@@ -908,7 +908,7 @@ issuerAltName          = $certsubname\n");
            print "At Least One Photo Must Be In The Data Base<BR>";
            print "<CENTER><A HREF=/ldap/album.php?euser=" . urlencode($euser) . " TARGET=_blank>My Album</A></CENTER>";
           } elseif ($cert[$attr]) {
-            if ($$attr != "") {
+            if (${$attr} != "") {
 ?>
               ><A HREF=<?php print "/cert/" . $euser . $certext[$attr] . ">/cert/" . $euser .$certext[$attr];?></A><BR>
 <?php
@@ -919,7 +919,7 @@ issuerAltName          = $certsubname\n");
             }
           } elseif ($cbox[$attr]) {
 ?>
-            ><INPUT TYPE=CHECKBOX  NAME=<?php print $attr;?> <?php if (($$attr != "no") && ($$attr != "") && ($$attr !="unsuspended") && ($$attr !="unset")) {print "CHECKED";};?>>
+            ><INPUT TYPE=CHECKBOX  NAME=<?php print $attr;?> <?php if ((${$attr} != "no") && (${$attr} != "") && (${$attr} !="unsuspended") && (${$attr} !="unset")) {print "CHECKED";};?>>
 <?php
           } else {
             if ($attr == "userPassword") {
@@ -954,7 +954,7 @@ issuerAltName          = $certsubname\n");
               $cnt ++;
 	            } else {
 ?>
-              ><INPUT TYPE=TEXT SIZE=40 NAME=<?php print $attr;?> VALUE="<?php print $$attr;?>">
+              ><INPUT TYPE=TEXT SIZE=40 NAME=<?php print $attr;?> VALUE="<?php print ${$attr};?>">
 <?php
             }
           }
@@ -963,7 +963,7 @@ issuerAltName          = $certsubname\n");
       </TD>
     </TR>
 <?php	
-      if (($PHP_AUTH_USER == $euser) || ($$attr != "") || ($ADMIN_USER != "pleb")) {
+      if (($PHP_AUTH_USER == $euser) || (${$attr} != "") || ($ADMIN_USER != "pleb")) {
         $cnt ++;
       }
     }

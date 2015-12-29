@@ -88,7 +88,7 @@ for ($pkt=0;$pkt < count($apiinf);$pkt++) {
       $zchan['DND']=($zchan['DND'] == "Disabled")?"0":"1";
       $chaninf[$port]=$zchan;
       $toadd="aadd" . $port;
-      if ($$toadd == "on") {
+      if (${$toadd} == "on") {
         $nexten=createexten("","","","",$port);
         if ($nexten == "") {
 ?>
@@ -143,8 +143,7 @@ for($tcnt=0;$tcnt<pg_num_rows($extens);$tcnt++) {
   } else {
     $todel="adel" . $r[0];
   }
-
-  if ($$todel == "on") {
+  if (${$todel} == "on") {
       pg_query($db,"DELETE FROM users WHERE name='" . $r[0] . "'");
       pg_query($db,"DELETE FROM astdb WHERE family='" . $r[0] . "'");
       pg_query($db,"DELETE FROM features WHERE exten='" . $r[0] . "'");

@@ -67,8 +67,8 @@ if (!isset($_SESSION['auth'])) {
   
     while(list($idx,$catt)=each($tarr)) {
      $var=strtolower($catt);
-     if ($$var != "") {
-       $minfo[$var]=$$var;
+     if (${$var} != "") {
+       $minfo[$var]=${$var};
      } else {
        $dinfo[$catt]=$iinfo[0][$var][0];
      }

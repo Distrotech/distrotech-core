@@ -371,23 +371,23 @@ if (isset($saved)) {
 */
   while(list($voipkey,$vdiscrip)=each($vtemp)) {
     if ($voipcb[$voipkey]) {
-      if ($$voipkey == "on") {
-        $$voipkey="1";
+      if (${$voipkey} == "on") {
+        ${$voipkey}="1";
       } else {
-        $$voipkey="0";
+        ${$voipkey}="0";
       }
     }
     if ($voiprcb[$voipkey]) {
-      if ($$voipkey == "on") {
-        $$voipkey="0";
+      if (${$voipkey} == "on") {
+        ${$voipkey}="0";
       } else {
-        $$voipkey="1";
+        ${$voipkey}="1";
       }
     }
-    if ($$voipkey != "") {
-      $ud=pg_query("UPDATE astdb SET value= '" . $$voipkey . "' WHERE family='Setup' AND key = '" . $voipkey . "'");
+    if (${$voipkey} != "") {
+      $ud=pg_query("UPDATE astdb SET value= '" . ${$voipkey} . "' WHERE family='Setup' AND key = '" . $voipkey . "'");
       if (pg_affected_rows($ud) <= 0) {
-        pg_query("INSERT INTO astdb (family,key,value) VALUES ('Setup','" . $voipkey . "','" . $$voipkey . "')");
+        pg_query("INSERT INTO astdb (family,key,value) VALUES ('Setup','" . $voipkey . "','" . ${$voipkey} . "')");
       }
     }
   }
@@ -462,8 +462,8 @@ if (isset($saved)) {
     $tmp=$intdata;
     while(list($key,$val) = each($tmp)) {
       $nval=$val . ":" . $sub;
-      if (isset($$nval)) {
-        $sval=$$nval;
+      if (isset(${$nval})) {
+        $sval=${$nval};
       } else {
         $sval=$conf[$val][$sub];
       }
@@ -475,8 +475,8 @@ if (isset($saved)) {
     $tmp=$vlandata;
     while(list($key,$val) = each($tmp)) {
       $nval=$val . ":" . $sub;
-      if (isset($$nval)) {
-        $sval=$$nval;
+      if (isset(${$nval})) {
+        $sval=${$nval};
       } else {
         $sval=$conf[$val][$sub];
       }
@@ -488,8 +488,8 @@ if (isset($saved)) {
     $tmp=$aliasdata;
     while(list($key,$val) = each($tmp)) {
       $nval=$val . ":" . $sub;
-      if (isset($$nval)) {
-        $sval=$$nval;
+      if (isset(${$nval})) {
+        $sval=${$nval};
       } else {
         $sval=$conf[$val][$sub];
       }

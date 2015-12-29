@@ -120,7 +120,7 @@ function do_report($repname, $username, $additional) {
     $_POST['disppage']=$report[$repname];
     $_SESSION['disppage']=$_POST['disppage'];
 
-    while(list($key,$value) = each($$repname)) {
+    while(list($key,$value) = each(${$repname})) {
       $_POST[$key]=$value;
     }
     if ($addinf[$repname] != "") {

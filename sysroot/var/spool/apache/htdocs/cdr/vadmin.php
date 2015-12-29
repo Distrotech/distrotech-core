@@ -83,17 +83,17 @@ if (isset($pbxupdate)) {
 
   for($cbcnt=0;$cbcnt < count($voipcbset);$cbcnt++) {
     $cbval=$voipcbset[$cbcnt];
-    if ($$cbval == "on") {
-      $$cbval="1";
+    if (${$cbval} == "on") {
+      ${$cbval}="1";
     } else {
-      $$cbval="0";
+      ${$cbval}="0";
     }
   }
 
   $vadmintemp=$vadmindef;
   while(list($defkey,$defval) = each($vadmintemp)) {
-    if (isset($$defkey)) {
-      pg_query("UPDATE astdb SET value='" . $$defkey . "' WHERE family='Setup' AND key='" . $defkey . "'");
+    if (isset(${$defkey})) {
+      pg_query("UPDATE astdb SET value='" . ${$defkey} . "' WHERE family='Setup' AND key='" . $defkey . "'");
     }
   }
 

@@ -49,7 +49,7 @@ for($tcnt=0;$tcnt<pg_num_rows($extens);$tcnt++) {
   $r=pg_fetch_array($extens,$tcnt);
   
   $uppin="newpin" . $r[0];
-  if ($$uppin == "on") {
+  if (${$uppin} == "on") {
     $r[2]=randpwgen(8);
     if ($r[3] != "") {
       $agi->command("sip notify reboot-" . $r[3]. " " . $r[0]);

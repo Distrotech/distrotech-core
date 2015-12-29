@@ -29,9 +29,9 @@ if (! isset($agi)) {
 if (isset($hangup)) {
   for($ccnt=1;$ccnt <= $callcnt;$ccnt++) {
     $call="del" . $ccnt;
-    if ($$call) {
+    if (${$call}) {
       $chan="chan" . $ccnt;
-      $chans=$agi->command("soft hangup " . $$chan);
+      $chans=$agi->command("soft hangup " . ${$chan});
     }
   }
   sleep(2);

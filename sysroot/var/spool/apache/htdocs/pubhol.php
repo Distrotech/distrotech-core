@@ -132,7 +132,7 @@ $tariffq1=pg_query($db,"SELECT starttime,stoptime,dayrange,index FROM officehour
 for($tcnt=0;$tcnt<pg_num_rows($tariffq1);$tcnt++) {
   $r=pg_fetch_array($tariffq1,$tcnt);
   $todel="del" . $r[3];
-  if ($$todel == "on") {
+  if (${$todel} == "on") {
     pg_query("DELETE FROM officehours WHERE index=" . $r[3]);
     continue;
   }
@@ -220,7 +220,7 @@ $tariffq1=pg_query($db,"SELECT starttime,stoptime,lpad(monthday,2,'0'),lpad(mont
 for($tcnt=0;$tcnt<pg_num_rows($tariffq1);$tcnt++) {
   $r=pg_fetch_array($tariffq1,$tcnt);
   $todel="del" . $r[6];
-  if ($$todel == "on") {
+  if (${$todel} == "on") {
     pg_query("DELETE FROM officehours WHERE index=" . $r[6]);
     continue;
   }

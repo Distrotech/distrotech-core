@@ -86,9 +86,9 @@
             $val=$adata[$acnt];
           }
         }
-        $$attr=$val;
+        ${$attr}=$val;
       } elseif ($descrip[$attr] != "") {
-        $$attr=$adata[0];
+        ${$attr}=$adata[0];
       }
     }
   }
@@ -96,7 +96,7 @@
   $rejar=array();
   $rok=true;
   while(list($idx,$attr)=each($reqat[$ldtype])) {
-    if ($$attr == "") {
+    if (${$attr} == "") {
       $rok=false;
       $rejar[$attr]=true;
     }
@@ -119,8 +119,8 @@
 
     $natrib=$atrib;
     while(list($idx,$catt)=each($natrib)) {
-      $info[$catt]=$$catt;
-//      print $catt . ": " . $$catt . "<BR>\n";
+      $info[$catt]=${$catt};
+//      print $catt . ": " . ${$catt} . "<BR>\n";
     }
 
     $hideae=array();
@@ -135,10 +135,10 @@
       if ((count($info[$catt]) == 0) && (count($iinfo[0][$aname]) > 0) && ($hideae[$catt] != "true")){
         if (! $mline[$catt]) {
           $dinfo[$catt]=$iinfo[0][$aname][0];
-          $$catt="";
+          ${$catt}="";
         } else {
           $info[$catt]="Not Supplied";
-          $$catt=$info[$catt];
+          ${$catt}=$info[$catt];
         }
       }
     }
@@ -189,12 +189,12 @@
 <?php
         if (($dnaa[$attr]) || ($PHP_AUTH_USER != $_SESSION['classi']) && ($PHP_AUTH_USER != "admin") && ($ADMIN_USER != "admin")) {
 ?>
-          ><INPUT TYPE=HIDDEN NAME=<?php print $attr;?> VALUE="<?php print $$attr;?>"><?php print $$attr;?>
+          ><INPUT TYPE=HIDDEN NAME=<?php print $attr;?> VALUE="<?php print ${$attr};?>"><?php print ${$attr};?>
 <?php
         } else {
           if (($mline[$attr]) || ($b64[$attr])){
 ?>
-            ><TEXTAREA NAME=<?php print $attr;?> COLS=40 ROWS=5><?php print $$attr;?></TEXTAREA>
+            ><TEXTAREA NAME=<?php print $attr;?> COLS=40 ROWS=5><?php print ${$attr};?></TEXTAREA>
 <?php
           } elseif ($bfile[$attr]) {
 ?>
@@ -203,7 +203,7 @@
           } else {
             if ($attr != "userPassword") {
 ?>
-              ><INPUT TYPE=TEXT SIZE=40 NAME=<?php print $attr;?> VALUE="<?php print $$attr;?>">
+              ><INPUT TYPE=TEXT SIZE=40 NAME=<?php print $attr;?> VALUE="<?php print ${$attr};?>">
 <?php
             }
           }

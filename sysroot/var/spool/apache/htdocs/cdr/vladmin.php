@@ -146,30 +146,30 @@ if ((isset($pbxupdate)) && ($pbxupdate == "Save Changes")) {
   for ($cbcnt=0;$cbcnt < count($poscb);$cbcnt++) {
     if ($_POST[$poscb[$cbcnt]] == "on") {
       $_POST[$poscb[$cbcnt]] = "1";
-      $$poscb[$cbcnt] = "1";
+      ${$poscb[$cbcnt]} = "1";
     } else {
       $_POST[$poscb[$cbcnt]] = "0";
-      $$poscb[$cbcnt] = "0";
+      ${$poscb[$cbcnt]} = "0";
     }
   }
 
   for ($cbcnt=0;$cbcnt < count($yesnocb);$cbcnt++) {
     if ($_POST[$yesnocb[$cbcnt]] == "on") {
       $_POST[$yesnocb[$cbcnt]] = "yes";
-      $$yesnocb[$cbcnt] = "yes";
+      ${$yesnocb[$cbcnt]} = "yes";
     } else {
       $_POST[$yesnocb[$cbcnt]] = "no";
-      $$yesnocb[$cbcnt] = "no";
+      ${$yesnocb[$cbcnt]} = "no";
     }
   }
 
   for ($cbcnt=0;$cbcnt < count($negcb);$cbcnt++) {
     if ($_POST[$negcb[$cbcnt]] == "on") {
       $_POST[$negcb[$cbcnt]] = "0";
-      $$negcb[$cbcnt] = "0";
+      ${$negcb[$cbcnt]} = "0";
     } else {
       $_POST[$negcb[$cbcnt]] = "1";
-      $$negcb[$cbcnt] = "1";
+      ${$negcb[$cbcnt]} = "1";
     }
   }
 

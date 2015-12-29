@@ -82,12 +82,12 @@ for($ccnt=0;$ccnt < pg_num_rows($qgetzdata);$ccnt++) {
   $zdata=pg_fetch_array($qgetzdata,$ccnt);
   $mtest="move" . $zdata[4];
   $dtest="del" . $zdata[4];
-  if ((isset($pbxupdate)) && ($$dtest == "on")) {
+  if ((isset($pbxupdate)) && (${$dtest} == "on")) {
     pg_query($db,"DELETE FROM zapchan WHERE id=" . $zdata[4]); 
     continue;
-  } else if ((isset($pbxupdate)) && ($$mtest != $zdata[3])) {
-    pg_query($db,"UPDATE zapchan SET zaptrunk=" . $$mtest . " WHERE id=" . $zdata[4]); 
-    $zdata[3]=$$mtest;
+  } else if ((isset($pbxupdate)) && (${$mtest} != $zdata[3])) {
+    pg_query($db,"UPDATE zapchan SET zaptrunk=" . ${$mtest} . " WHERE id=" . $zdata[4]); 
+    $zdata[3]=${$mtest};
   }
     
   print "<TR CLASS=list-color" . (($col % 2) +1) . ">\n  <TD ALIGN=MIDDLE>\n    ";

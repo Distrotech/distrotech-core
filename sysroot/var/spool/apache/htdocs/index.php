@@ -19,7 +19,7 @@
 */
 
 /*
- * Start the session if not started 
+ * Start the session if not started
  */
 include_once "session.inc";
 $sessid=session_id();
@@ -142,7 +142,7 @@ if (($_POST['nomenu'] == 1) && (isset($_SESSION['poppage']))) {
   $showpage=$_SESSION['disppage'];
 }
 
-if (ereg("(^[a-zA-Z]+)\/",$showpage,$dispdata)) {
+if (preg_match("/(^[a-zA-Z]+)\//",$showpage,$dispdata)) {
   if ((!isset($_SERVER['PHP_AUTH_USER'])) || (!isset($_SERVER['PHP_AUTH_PW']))) {
     exit;
   }
@@ -159,7 +159,7 @@ if (ereg("(^[a-zA-Z]+)\/",$showpage,$dispdata)) {
     }
     $laction=$_SESSION['server'] . "auth/";
   }
-} else if (!ereg("(^[a-zA-Z]+)",$showpage,$dispdata)) {
+} else if (!preg_match("/(^[a-zA-Z]+)/",$showpage,$dispdata)) {
   exit;
 }
 

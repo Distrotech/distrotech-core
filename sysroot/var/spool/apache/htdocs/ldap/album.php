@@ -32,7 +32,7 @@ if (ereg("^/photo/([a-zA-Z0-9\.-]+)_album.html",$_SERVER['SCRIPT_URL'],$dispdata
   $algetvar=array('first','pstart','style','imlim','rcnt','phend','scount');
   for($gvcnt=0;$gvcnt<count($algetvar);$gvcnt++) {
     if (isset($_GET[$algetvar[$gvcnt]])) {
-      $$algetvar[$gvcnt]=$_GET[$algetvar[$gvcnt]];
+      ${$algetvar[$gvcnt]}=$_GET[$algetvar[$gvcnt]];
       $_SESSION[$algetvar[$gvcnt]]=$_GET[$algetvar[$gvcnt]];
     }
   }
@@ -44,7 +44,7 @@ if (ereg("^/photo/([a-zA-Z0-9\.-]+)_album.html",$_SERVER['SCRIPT_URL'],$dispdata
   for($gvcnt=0;$gvcnt<count($algetvar);$gvcnt++) {
     if (isset($_GET[$algetvar[$gvcnt]])) {
       $_SESSION[$algetvar[$gvcnt]]=$_GET[$algetvar[$gvcnt]];
-      $$algetvar[$gvcnt]=$_GET[$algetvar[$gvcnt]];
+      ${$algetvar[$gvcnt]}=$_GET[$algetvar[$gvcnt]];
     }
   }  
   if (isset($_GET['style'])) {

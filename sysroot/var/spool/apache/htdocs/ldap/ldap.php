@@ -246,7 +246,7 @@
     $dn="";
     $natrib=$atrib;
     while(list($idx,$catt)=each($natrib)) {
-      $$catt="";
+      ${$catt}="";
     }
     $c="";
   }
@@ -271,9 +271,9 @@
             $val=$adata[$acnt];
           }
         }
-        $$attr=$val;
+        ${$attr}=$val;
       } elseif ($descrip[$attr] != "") {
-        $$attr=$adata[0];
+        ${$attr}=$adata[0];
       }
     }
  }
@@ -281,7 +281,7 @@
   $rejar=array();
   $rok=true;
   while(list($idx,$attr)=each($reqat[$ldtype])) {
-    if ($$attr == "") {
+    if (${$attr} == "") {
       $rok=false;
       $rejar[$attr]=true;
     }
@@ -309,12 +309,12 @@
     $natrib=$atrib;
     while(list($idx,$catt)=each($natrib)) {
       if ($b64[$catt]) {
-        $data=$$catt;
+        $data=${$catt};
         if ($data != "") {
           $info[$catt]=$data;
         }
       } elseif ($bfile[$catt]) {
-        $fname=$$catt;
+        $fname=${$catt};
         if ($fname != "") {
           $cfile=fopen($fname,r);
           $dataout=fread($cfile,filesize($fname));
@@ -322,7 +322,7 @@
           $info[$catt]=";binary $dataout";
         }
       } else {
-        $data=split("\r\n",$$catt);       
+        $data=split("\r\n",${$catt});       
         if (count($data) > 1) {
           $acnt=0;
           for ($cnt=0;$cnt < count($data);$cnt++) {
@@ -374,10 +374,10 @@
         if ((count($info[$catt]) == 0) && (count($iinfo[0][$aname]) > 0)){
           if (! $mline[$catt]) {
             $dinfo[$catt]=$iinfo[0][$aname][0];
-            $$catt="";
+            ${$catt}="";
           } else {
             $info[$catt]="Not Supplied";
-            $$catt=$info[$catt];
+            ${$catt}=$info[$catt];
           }
         }
       }
@@ -432,15 +432,15 @@
 <?php
         if (($modify) && ($dnaa[$attr])) {
 ?>
-          ><INPUT TYPE=HIDDEN NAME=<?php print $attr;?> VALUE="<?php print $$attr;?>"><?php print $$attr;?>
+          ><INPUT TYPE=HIDDEN NAME=<?php print $attr;?> VALUE="<?php print ${$attr};?>"><?php print ${$attr};?>
 <?php
         } else {
           if ($mline[$attr]) {
 ?>
-            ><TEXTAREA NAME=<?php print $attr;?> COLS=40 ROWS=5><?php print $$attr;?></TEXTAREA>
+            ><TEXTAREA NAME=<?php print $attr;?> COLS=40 ROWS=5><?php print ${$attr};?></TEXTAREA>
 <?php
           } elseif ($b64[$attr]) {
-            $tmpval=$$attr;
+            $tmpval=${$attr};
 ?>
             ><TEXTAREA NAME=<?php print $attr;?> COLS=40 ROWS=5><?php print $tmpval;?></TEXTAREA>
 <?php
@@ -454,7 +454,7 @@
 <?php
           } else {
 ?>
-            ><INPUT TYPE=TEXT SIZE=40 NAME=<?php print $attr;?> VALUE="<?php print $$attr;?>">
+            ><INPUT TYPE=TEXT SIZE=40 NAME=<?php print $attr;?> VALUE="<?php print ${$attr};?>">
 <?php
           }
         }

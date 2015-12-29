@@ -130,17 +130,17 @@ for($lacnt=0;$lacnt<count($iarr2);$lacnt++) {
 
     for ($i=0; $i < count($iarr); $i++) {
       if (($cbox[$iarr[$i]]) && ($iarr[$i] != "accountSuspended")) {
-        if ($$iarr[$i] == "on") {
-          $$iarr[$i]="yes";
+        if (${$iarr[$i]} == "on") {
+          ${$iarr[$i]}="yes";
         } else {
-          $$iarr[$i]="no";
+          ${$iarr[$i]}="no";
         }
-      } else if (($iarr[$i] != "accountSuspended") && ($$iarr[$i] == "")) {
-        $$iarr[$i]="0";
+      } else if (($iarr[$i] != "accountSuspended") && (${$iarr[$i]} == "")) {
+        ${$iarr[$i]}="0";
       }
-      if ($$iarr[$i] != "") {
+      if (${$iarr[$i]} != "") {
         if (($vadmin == "0") || ($vadminattr[strtolower($iarr[$i])])) {
-          $minfo[$iarr[$i]]=$$iarr[$i];
+          $minfo[$iarr[$i]]=${$iarr[$i]};
           
         }
       }
@@ -188,14 +188,14 @@ for($lacnt=0;$lacnt<count($iarr2);$lacnt++) {
       <TD>
 <?php
 	$attr=strtolower($iarr[$i]);
-        $$attr=$iinfo[0][$attr][0];
+        ${$attr}=$iinfo[0][$attr][0];
         if (($ADMIN_USER == "admin") && (($vadmin == "0") || ($vadminattr[$attr]))) {
           if ($cbox[$iarr[$i]]) {
             if ($attr == "accountsuspended") {
               print "<INPUT TYPE=HIDDEN NAME=susstatus VALUE=\"" . $iinfo[0][$attr][0] . "\">";
             }
 ?>
-            <INPUT TYPE=CHECKBOX NAME=<?php print $iarr[$i];?><?php if (($$attr != "no") && ($$attr != "") && ($$attr !="unsuspended") && ($$attr !="unset"))  {print " CHECKED";};?>>
+            <INPUT TYPE=CHECKBOX NAME=<?php print $iarr[$i];?><?php if ((${$attr} != "no") && (${$attr} != "") && (${$attr} !="unsuspended") && (${$attr} !="unset"))  {print " CHECKED";};?>>
 <?php
            } else {
 ?>
@@ -204,7 +204,7 @@ for($lacnt=0;$lacnt<count($iarr2);$lacnt++) {
            }
         } else {
           if ($cbox[$iarr[$i]]) {
-            if (($$attr != "no") && ($$attr != "") && ($$attr !="unsuspended") && ($$attr !="unset")) {
+            if ((${$attr} != "no") && (${$attr} != "") && (${$attr} !="unsuspended") && (${$attr} !="unset")) {
               print "Yes";
             } else {
               print "No";

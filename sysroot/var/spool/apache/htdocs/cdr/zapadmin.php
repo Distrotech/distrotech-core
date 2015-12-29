@@ -67,10 +67,10 @@ $descrip['restrictcid']=_("Do Not Send Any Caller ID");
 
 if ((isset($pbxupdate)) && ($update == "seen")) {
   while(list($boolopt,$validbo)=each($yesno)) {
-    if (($validbo) && ($$boolopt == "on")) {
-      $$boolopt="yes";
+    if (($validbo) && (${$boolopt} == "on")) {
+      ${$boolopt}="yes";
     } else if ($validbo) {
-      $$boolopt="no";
+      ${$boolopt}="no";
     }
   }
   if ($resetinterval == 0) {
@@ -172,9 +172,9 @@ while(list($zapopt,$zapval)=each($zdata)) {
       print " CHECKED";
     }
     print ">";
-  } else if (is_array($$zapopt)) {
+  } else if (is_array(${$zapopt})) {
     print "<SELECT NAME=\"" . $zapopt . "\">\n";
-    while(list($optval,$optname)=each($$zapopt)) {
+    while(list($optval,$optname)=each(${$zapopt})) {
       print "      <OPTION VALUE=\"" . $optval . "\"";
       if ($zapval == $optval) {
         print " SELECTED";

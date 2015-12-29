@@ -113,8 +113,8 @@ if (!isset($_SESSION['auth'])) {
 
     $todel=array();
     for($ucnt=0;$ucnt<count($uparr);$ucnt++) {
-      if ($$uparr[$ucnt] != "") {
-        $minfo[$uparr[$ucnt]]=$$uparr[$ucnt];
+      if (${$uparr[$ucnt]} != "") {
+        $minfo[$uparr[$ucnt]]=${$uparr[$ucnt]};
       } else {
         array_push($todel,$uparr[$ucnt]);
       }
@@ -137,8 +137,8 @@ if (!isset($_SESSION['auth'])) {
     for ($i=0; $i<$checkcount; $i++) {
       $ent="delradiuscheckitem" . $i;
       $entv="delhradiuscheckitem" . $i;
-      if ($$ent) {
-        $dcinfo['radiusCheckItem'][$dcnt]=stripslashes($$entv);
+      if (${$ent}) {
+        $dcinfo['radiusCheckItem'][$dcnt]=stripslashes(${$entv});
         $dcnt++;
       }
     }
@@ -150,8 +150,8 @@ if (!isset($_SESSION['auth'])) {
     for ($i=0; $i<$repcount; $i++) {
       $ent="delradiusreplyitem" . $i;
       $entv="delhradiusreplyitem" . $i;
-      if ($$ent) {
-        $drinfo['radiusReplyItem'][$dcnt]=stripslashes($$entv);
+      if (${$ent}) {
+        $drinfo['radiusReplyItem'][$dcnt]=stripslashes(${$entv});
         $dcnt++;
       }
     }

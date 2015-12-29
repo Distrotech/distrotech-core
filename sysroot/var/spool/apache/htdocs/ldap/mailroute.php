@@ -45,8 +45,8 @@ if (!$rdn) {
   
     while(list($idx,$catt)=each($tarr)) {
      $var=strtolower($catt);
-     if ($$var != "") {
-       $minfo[$var]=$$var;
+     if (${$var} != "") {
+       $minfo[$var]=${$var};
      } else if (isset($iinfo[0][$var][0])) {
        $dinfo[$catt]=$iinfo[0][$var][0];
      }

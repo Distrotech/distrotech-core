@@ -53,7 +53,7 @@ for($i=0;$i<$dnum;$i++){
   } else {
     $sdpos=$getdata[0][1];
   }
-  if ((isset($pbxupdate)) && ($$sdtodel == "on")) {
+  if ((isset($pbxupdate)) && (${$sdtodel} == "on")) {
     pg_query($db,"DELETE FROM astdb WHERE family='" . $PHP_AUTH_USER . "' AND key='speed-" . $sdpos . "'");
   } else {
     if ($rcnt % 2 == 0) {

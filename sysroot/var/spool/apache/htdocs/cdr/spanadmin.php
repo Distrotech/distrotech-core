@@ -33,10 +33,10 @@ $yesno['yalarm']=1;
 
 if ((isset($pbxupdate)) && ($update == "seen")) {
   while(list($boolopt,$validbo)=each($yesno)) {
-    if (($validbo) && ($$boolopt == "on")) {
-      $$boolopt="t";
+    if (($validbo) && (${$boolopt} == "on")) {
+      ${$boolopt}="t";
     } else if ($validbo) {
-      $$boolopt="f";
+      ${$boolopt}="f";
     }
   }
   if ($dchannel == "") {
@@ -95,9 +95,9 @@ while(list($zapopt,$zapval)=each($zdata)) {
       print " CHECKED";
     }
     print ">";
-  } else if (is_array($$zapopt)) {
+  } else if (is_array(${$zapopt})) {
     print "<SELECT NAME=\"" . $zapopt . "\">\n";
-    while(list($optval,$optname)=each($$zapopt)) {
+    while(list($optval,$optname)=each(${$zapopt})) {
       print "      <OPTION VALUE=\"" . $optval . "\"";
       if ($zapval == $optval) {
         print " SELECTED";

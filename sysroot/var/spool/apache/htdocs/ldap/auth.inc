@@ -20,7 +20,7 @@
   include_once "/var/spool/apache/htdocs/ldap/ldap.inc";
   include_once "/var/spool/apache/htdocs/ldap/ldapbind.inc";
 
-  if (ereg("ou=Idmap",$ldn)) {
+  if (preg_match("/ou=Idmap/",$ldn)) {
     $ainfo["userPassword"]="{CRYPT}" . crypt($_SERVER['PHP_AUTH_PW']);
     ldap_mod_replace($ds,$ldn,$ainfo);
   }

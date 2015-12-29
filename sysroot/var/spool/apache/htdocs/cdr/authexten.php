@@ -27,7 +27,7 @@ for($tcnt=0;$tcnt<pg_num_rows($extens);$tcnt++) {
   $r=pg_fetch_array($extens,$tcnt);
   
   $toauth="auth" . $r[0];
-  if ($$toauth == "on") {
+  if (${$toauth} == "on") {
     pg_query($db,"UPDATE features SET autoauth='0' WHERE exten='" . $r[0] . "'");
     continue;
   }

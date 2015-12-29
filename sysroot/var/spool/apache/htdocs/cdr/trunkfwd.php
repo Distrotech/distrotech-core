@@ -47,7 +47,7 @@ $tmap=pg_query($db,"SELECT prefix,strip,match,id FROM trunkmap ORDER by length(p
 for($tcnt=0;$tcnt<pg_num_rows($tmap);$tcnt++) {
   $r=pg_fetch_array($tmap,$tcnt);
   $todel="del" . $r[3];
-  if ($$todel == "on") {
+  if (${$todel} == "on") {
     pg_query("DELETE FROM trunkmap WHERE id=" . $r[3]);
     continue;
   }

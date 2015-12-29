@@ -58,7 +58,7 @@ $dnum=pg_num_rows($qgetdata);
 for($i=0;$i<$dnum;$i++){
   $getdata=pg_fetch_array($qgetdata,$i);
   $pbtodel="pbdel" . $getdata[1];
-  if ((isset($pbxupdate)) && ($$pbtodel == "on")) {
+  if ((isset($pbxupdate)) && (${$pbtodel} == "on")) {
     pg_query($db,"DELETE FROM snom_pbook WHERE exten='" . $PHP_AUTH_USER . "' AND number='" . $getdata[1] . "'");
   } else {
     if ($rcnt % 2 == 0) {

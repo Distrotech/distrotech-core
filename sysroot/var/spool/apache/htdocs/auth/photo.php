@@ -133,7 +133,7 @@ $disc=array(_("Photo Album"));
     $attr=$iarr[$i];
     $adata=ldap_get_values_len($ds,$entry,strtolower($attr));
     $pcount=$adata["count"];
-    $$attr=$adata[0];
+    ${$attr}=$adata[0];
 
     print "<TR CLASS=list-color2><TD COLSPAN=2 VALIGN=MIDDLE ALIGN=CENTER>";
     if ($pcount > 0) {

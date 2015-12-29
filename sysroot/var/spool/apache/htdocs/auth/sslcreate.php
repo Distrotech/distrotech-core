@@ -71,8 +71,8 @@ if (!isset($_SESSION['auth'])) {
     for ($i=0; $i < count($iarr); $i++) {
       $attr=$iarr[$i];
       $lattr=strtolower($attr);
-      if (($attr != "certificateGenerate") && ($$attr != "")) {
-        $minfo[$attr]=$$attr;
+      if (($attr != "certificateGenerate") && (${$attr} != "")) {
+        $minfo[$attr]=${$attr};
       } else if ($attr != "certificateGenerate") {
         $dinfo[$lattr]=$iinfo[0][$lattr][0];
       }

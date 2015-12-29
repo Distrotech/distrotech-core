@@ -74,7 +74,7 @@ if (($groupedit == _("Delete")) && ($group != "")){
 if (($group != "") && ($groupedit == _("Modify"))){
   if ($groupmod == _("Delete")) {
     $addent=array();
-    $addent["memberUid"]=$$group;
+    $addent["memberUid"]=${$group};
     ldap_mod_del($ds,"cn=$group,ou=Groups",$addent);
   } else if (($groupmod == _("Add")) && ($add != "")) {
     $addent=array();

@@ -170,7 +170,7 @@ if (($alias != "") && ($aliasedit == "Modify")){
 
   if ($aliasmod == _("Delete")) {
     $addent=array();
-    $addent["sendmailmtaaliasvalue"]=$$alias;
+    $addent["sendmailmtaaliasvalue"]=${$alias};
     ldap_mod_del($ds,"sendmailMTAKey=$alias,ou=Email",$addent);
   } else if (($aliasmod == _("Add")) && ($add != "")) {
     $addent=array();

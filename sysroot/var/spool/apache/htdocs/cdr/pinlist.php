@@ -62,7 +62,7 @@ for($tcnt=0;$tcnt<pg_num_rows($extens);$tcnt++) {
   $r=pg_fetch_array($extens,$tcnt);
   
   $uppin="newpin" . $r[0];
-  if (($$uppin == "on") || ($r[4] == "") || ($r[4] == $r[0])) {
+  if ((${$uppin} == "on") || ($r[4] == "") || ($r[4] == $r[0])) {
     $r[4]=newpin($r[0]);
   }
 
