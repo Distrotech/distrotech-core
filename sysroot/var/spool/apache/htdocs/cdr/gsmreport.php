@@ -27,7 +27,7 @@ if (($router != "") && ($channel != "") && ($dbrow != "")) {
     }
     pg_query($db,"UPDATE gsmchannels SET " . $dbrow . "=now() + interval '" . $dbval . "',faultcount=0 WHERE router='" . $router . "' AND channel='" . $channel . "'");
   } else if ($dbrow == "calltime") {
-    $ctdata=split(":",$dbval);
+    $ctdata=preg_split("/:/",$dbval);
     if (count($ctdata) == 2) {
       if ($ctdata > 0) {
         $dbval=$ctdata[0]*60+$ctdata[1];

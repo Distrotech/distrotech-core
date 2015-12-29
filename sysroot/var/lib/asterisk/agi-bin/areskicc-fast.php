@@ -93,7 +93,7 @@ if (substr($GLOBALS['channel'],0,4) == "SIP/") {
 } else if ((substr($GLOBALS['channel'],0,6) == "OH323/") && ($GLOBALS['username'] == "")) {
   $GLOBALS['noivr']=1;
   list($proto,$epid,$ipinf)=preg_split("/[\/@]/",$GLOBALS['channel']);
-  list($ipaddr)=split("-",$ipinf);
+  list($ipaddr)=preg_split("/-/",$ipinf);
   $vresult=$agi->get_variable("OH323_CALLID");
   if ($vresult['result'] == 1) {
     $GLOBALS['oh323callid']=$vresult['data'];
@@ -183,7 +183,7 @@ function CC_asterisk_authorize($tariffcode, $phonenumber){
         $LOCQUERY="SELECT CASE WHEN(to_char(now(), 'HH24:MI:SS') >= peakstart AND to_char(now(), 'HH24:MI:SS') <= peakend AND extract('dow' FROM now()) ~ peakdays ) THEN peakmin||':'||peakperiod||':'||peaksec ELSE offpeakmin||':'||offpeakperiod||':'||offpeaksec END,'Telkom',-1 FROM localrates where countrycode = '" . $qresult[1] . "' AND subcode = '" . $qresult[2] . "'";
         $localrate=odbcquery($LOCQUERY);
       }
-      list($locmin,$locperiod,$locrate)=split(":",$localrate[0]);
+      list($locmin,$locperiod,$locrate)=preg_split("/:/",$localrate[0]);
       $freemin[0]=0;
       $freemin[1]=ceil($locmin/$locrate);
       $freemin[2]=$locperiod;

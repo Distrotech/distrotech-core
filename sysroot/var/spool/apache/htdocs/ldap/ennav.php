@@ -23,7 +23,7 @@
     $sinfo = ldap_get_entries($ds, $sr);
     for($mcnt=0;$mcnt<=$sinfo[0]["member"]["count"] -1;$mcnt++) {
       $dns=$sinfo[0]["member"][$mcnt];
-      $dns=split("=",$dns);
+      $dns=preg_split("/=/",$dns);
       $abookdn=$dns[1];
       if ($abookdn != "admin" ) {
         $dnact[$abookdn]=true;

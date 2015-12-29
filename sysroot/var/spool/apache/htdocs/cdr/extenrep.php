@@ -18,7 +18,7 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-  $month=split("/",$date);
+  $month=preg_split("/\//",$date);
   include_once "uauth.inc";
 
   if ($ADMIN_USER != "admin") {

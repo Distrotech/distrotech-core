@@ -48,7 +48,7 @@
       fputs($socket,"Exten: $numtocall\r\n");
       fputs($socket,"Priority: 1\r\n");
     } else {
-      list($number,$domain)=split("@",$numtocall);
+      list($number,$domain)=preg_split("/@/",$numtocall);
       fputs($socket,"Application: Macro\r\n");
       fputs($socket,"Data: callout|" . $number . "|SIP/" . $number . "@" . $domain . "|" . $PHP_AUTH_USER . "|0|10|6)\r\n");
     }

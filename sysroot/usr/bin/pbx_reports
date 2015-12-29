@@ -227,7 +227,7 @@ function getuserinf() {
   $output = fopen($filename,'r');
   $groups=array();
   while (($buffer = fgets($output, 4096)) !== false) {
-    $info=split(":",rtrim($buffer,"\n"));
+    $info=preg_split("/:/",rtrim($buffer,"\n"));
     if ($info[0] == "GRP") {
       if (!is_array($groups[$info[1]])) {
         $groups[$info[1]]=array();

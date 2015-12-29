@@ -388,7 +388,7 @@ if (isset($_POST['start'])) {
     }
     $wgets=rtrim($wline);
     if ($wgets != "") {
-      list($key,$val)=split(": ",$wgets);
+      list($key,$val)=preg_split("/: /",$wgets);
       $datout[$key]=$val;
     }
   }

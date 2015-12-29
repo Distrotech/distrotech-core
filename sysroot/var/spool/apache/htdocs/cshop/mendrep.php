@@ -20,7 +20,7 @@
 
 include_once "/var/spool/apache/htdocs/cdr/func.inc";
 
-$month=split("/",$date);
+$month=preg_split("/\//",$date);
 
 ?>
 <CENTER>

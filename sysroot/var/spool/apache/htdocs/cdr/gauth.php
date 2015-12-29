@@ -28,7 +28,7 @@ if (isset($pbxupdate)) {
       pg_query($db,"INSERT INTO astdb (value,family,key) VALUES ('GAUTH','$newkey','$newval')");
     }
   } else if ($key != "") {
-    list($dbkey,$dbfam)=split(":",$key);
+    list($dbkey,$dbfam)=preg_split("/:/",$key);
     pg_query($db,"DELETE FROM astdb WHERE value='GAUTH' AND key='" . $dbkey . "' AND family='" . $dbfam . "'");
   }
 }

@@ -17,7 +17,7 @@ function nozeroout($strin) {
 }
 
 function getcodecs($allowed) {
-  $codecs=split(";",$allowed);
+  $codecs=preg_split("/;/",$allowed);
   $acodec=array();
   $vcodec=array();
   while($icodec=array_shift($codecs)) {

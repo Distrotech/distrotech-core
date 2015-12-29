@@ -114,7 +114,7 @@ function getagentstatus($agent,$socket) {
   for (;;) {
     $wrets=rtrim(fgets($socket,8192));
     if ($wrets != "") {
-      list($key,$val)=split(": ",$wrets);
+      list($key,$val)=preg_split("/: /",$wrets);
       if (($key == "Response") && ($val == "Error")) {
         break;
       } else {
@@ -172,7 +172,7 @@ function getchanstatus($channel,$socket) {
   for(;;) {
     $wrets=rtrim(fgets($socket,8192));
     if ($wrets != "") {
-      list($key,$val)=split(": ",$wrets);
+      list($key,$val)=preg_split("/: /",$wrets);
       if (($key != "Response") && ($pcnt > 0)) {
         $chaninf[$key]=$val;
       } else if ($val == "Error") {

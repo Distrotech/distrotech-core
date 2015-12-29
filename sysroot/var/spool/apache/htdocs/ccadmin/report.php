@@ -166,7 +166,7 @@ if ((!isset($_POST['id'])) && (!isset($_POST['listid'])) && (!isset($_POST['peri
     </TH></TR><?php
 
   include_once "/var/spool/apache/htdocs/cdr/func.inc";
-  $month=split("/",$date);
+  $month=preg_split("/\//",$date);
   $getcdr=pg_query($db,"SELECT date_part('month',calldate) AS month,
                                date_part('year',calldate) AS year
                              from cdr where 

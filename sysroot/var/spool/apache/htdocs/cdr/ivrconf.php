@@ -152,7 +152,7 @@ if (isset($_POST['saveivr'])) {
 
     $agi->connect("127.0.0.1","admin","admin");
     $fileinf=$_FILES['greet'];
-    $filebase = split("\.",basename($fileinf['name']));
+    $filebase = preg_split("/\./",basename($fileinf['name']));
     $type=strtolower($filebase[count($filebase)-1]);
 
     $convert=array("wav" => "/usr/bin/sox -t .wav " . $fileinf['tmp_name'] . " -t raw -c 1 -s -w -r 16000 ",

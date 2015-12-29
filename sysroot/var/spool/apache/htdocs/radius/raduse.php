@@ -58,8 +58,8 @@
   if ($sort != "UserName") {
     $sort=$sort . ",UserName,realm";
   }
- 
-  list($year,$month)=split(",",$time);
+
+  list($year,$month)=preg_split("/,/",$time);
 
 
 

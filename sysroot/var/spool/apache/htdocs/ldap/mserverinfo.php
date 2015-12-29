@@ -150,7 +150,7 @@
           $info[$catt]=";binary $dataout";
         }
       } else {
-        $data=split("\r\n",${$catt});
+        $data=preg_split("/\r\n/",${$catt});
         if (count($data) > 1) {
           $acnt=0;
           for ($cnt=0;$cnt < count($data);$cnt++) {

@@ -47,10 +47,10 @@ if (!isset($_SESSION['auth'])) {
       $output=fgets($fp, $chunk);
       preg_match("/^([A-Za-z]+ [ 0-9][0-9] [0-9:]+).*kernel: RATELIM (.*)/",$output,$data);
       if ($output != "") {
-        $tmdat=split(" ",$data[2]);
+        $tmdat=preg_split("/ /",$data[2]);
         $outd=array();
         for($i=0;$i < count($tmdat);$i++) {
-           list($key,$val)=split("=",$tmdat[$i]);
+           list($key,$val)=preg_split("/=/",$tmdat[$i]);
            if ($val != "") {
              $outd[$key]=$val;
            }

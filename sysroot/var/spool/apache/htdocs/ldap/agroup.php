@@ -132,8 +132,8 @@ if (($group != "") && ($groupedit == "Modify")){
 
   $sr=ldap_search($ds,$group,$sobj);
   if (! $sr) {
-    $dndat=split(",",$group);
-    $cndat=split("=",$dndat[0]);
+    $dndat=preg_split("/,/",$group);
+    $cndat=preg_split("/=/",$dndat[0]);
     $infoa["objectclass"][0]="top";
     $infoa["objectclass"][1]="groupOfNames";
     $infoa["cn"]=$cndat[1];
@@ -211,7 +211,7 @@ if (($group != "") && ($groupedit == "Modify")){
     $info = ldap_get_entries($ds, $sr);
     for($mcnt=0;$mcnt<=$info[0]["member"]["count"] -1;$mcnt++) {
       $dn=$info[0]["member"][$mcnt];
-      $dn=split("=",$dn);
+      $dn=preg_split("/=/",$dn);
       $abookdn=$dn[1];
       if ($abookdn != "admin" ) {
         $dnact[$abookdn]=true;

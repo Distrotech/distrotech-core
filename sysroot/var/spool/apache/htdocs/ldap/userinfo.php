@@ -140,7 +140,7 @@ array_push($atrib,"sambaSID");
         for($ir=0;$ir < $tblnum;$ir++) {
           $row=pg_fetch_row($utbl,$ir);
           for ($if=0;$if < count($row);$if++) {
-            $tdat=split("_",$row[$if]);
+            $tdat=preg_split("/_/",$row[$if]);
             pg_query($db,"ALTER TABLE " . $row[$if] . " RENAME TO " . $newuid . "_" . $tdat[1] . ";");
           }
         }
@@ -696,7 +696,7 @@ issuerAltName          = $certsubname\n");
         $cinf = ldap_get_values_len($ds, $ei,strtolower($catt));
         ${$catt}=$cinf[0];
       } else {
-        $data=split("\r\n",${$catt});
+        $data=preg_split("/\r\n/",${$catt});
         if (count($data) > 1) {
           $acnt=0;
           for ($cnt=0;$cnt < count($data);$cnt++) {
