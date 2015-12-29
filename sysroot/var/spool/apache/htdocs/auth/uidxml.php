@@ -18,7 +18,6 @@ if ((isset($_POST['utype'])) && (!isset($_SESSION['utype']))) {
 }
 
 include "/var/spool/apache/htdocs/ldap/auth.inc";
-$baseou=$_POST['baseou'];
 
 $_POST['search']=rtrim($_POST['search']);
 if (($_POST['search'] != "") && ($_POST['type'] != "")) {
@@ -27,7 +26,7 @@ if (($_POST['search'] != "") && ($_POST['type'] != "")) {
   } elseif ($_POST['type'] == "end") {
     $_POST['search']="*" . $_POST['search'];
   } elseif ($_POST['type'] == "start") {
-    $_POST['search']=$search . "*";  
+    $_POST['search']=$search . "*";
   }
 } else if ($_POST['search'] == "") {
   $_POST['search']="*";
@@ -37,13 +36,13 @@ if (($_POST['search'] != "") && ($_POST['type'] != "")) {
 
 $search="(" . $_POST['what'] . "=" . $_POST['search'] . ")";
 
-if ($baseou == "pdc") {
+if ($_POST['baseou'] == "pdc") {
   $search="(&(objectclass=officePerson)(uidNumber=*)" . $search . ")";
-} else if ($baseou == "system") {
+} else if ($_POST['baseou'] == "system") {
   $search="(&(objectclass=posixaccount)(uidNumber=*)" . $search . ")";
-} else if ($baseou == "snom") {
+} else if ($_POST['baseou'] == "snom") {
   $search="(&(objectclass=snomcontact)" . $search . ")";
-} else if ($baseou == "trust") {
+} else if ($_POST['baseou'] == "trust") {
   $search="(&(objectclass=posixaccount)" . $search . ")";
 }
 

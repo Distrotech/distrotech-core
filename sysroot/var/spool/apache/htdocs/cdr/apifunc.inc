@@ -65,7 +65,7 @@ function apiquery($command) {
   for (;;) {
     $wrets=rtrim(fgets($socket,8192));
     if ($wrets != "") {
-      list($key,$val)=split(": ",$wrets);
+      list($key,$val)=preg_split("/: /",$wrets);
       if (($key == "Response") && ($val == "Error")) {
         break;
       } else {
