@@ -145,9 +145,9 @@ $disc=array(_("Photo Album"));
     }
 ?>
     <TR CLASS=list-color1><TH COLSPAN=2 CLASS=heading-body2><?php print _("Photo Options");?></TH></TR>
-    <TR CLASS=list-color2><TD COLSPAN onmouseover="myHint.show('0')" onmouseout=myHint.hide()><?php print _("Select JPEG Image To Add/Insert Into Album");?><BR><FONT SIZE=1><?php print _("It Must Be A Unique Image Duplicates Are Rejected");?></FONT></BR></TD<TD>
-    <INPUT TYPE=FILE  NAME=<?php print $attr;?> COLS=40 ROWS=5></TD></TR>
-    <TR CLASS=list-color1><TH COLSPAN=2 CLASS=heading-body2><?php print _("Chose One Option Bellow");?></TH></TR>
+    <TR CLASS=list-color2><TD COLSPAN=1 onmouseover="myHint.show('0')" onmouseout=myHint.hide()><?php print _("Select JPEG Image To Add/Insert Into Album");?><BR><FONT SIZE=1><?php print _("It Must Be A Unique Image Duplicates Are Rejected");?></FONT></BR></TD><TD>
+    <INPUT TYPE=FILE  NAME=<?php print $attr;?>></TD></TR>
+    <TR CLASS=list-color1><TH COLSPAN=2CLASS=heading-body2><?php print _("Chose One Option Bellow");?></TH></TR>
     <TR CLASS=list-color2><TD onmouseover="myHint.show('1')" onmouseout=myHint.hide()><?php print _("Insert New Photo");?></TD><TD>
         <SELECT NAME=inpindex>
           <OPTION VALUE="">

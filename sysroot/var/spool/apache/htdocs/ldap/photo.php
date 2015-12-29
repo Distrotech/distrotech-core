@@ -23,15 +23,15 @@ if ($pcount == "") {
 include "ldapbind.inc";
 
 if ($type == "pdc" ) {
-  $sr=ldap_search($ds,"ou=Idmap", "(&(objectClass=officePerson)(uid=$euser))", array("jpegPhoto"));
+  $sr=ldap_search($ds,"ou=Idmap", "(&(objectClass=officePerson)(uid=" . $_GET['euser'] . "))", array("jpegPhoto"));
 } else {
-  $sr=ldap_search($ds,"", "(&(objectClass=officePerson)(uid=$euser)(jpegPhoto=*))", array("jpegPhoto"));
+  $sr=ldap_search($ds,"", "(&(objectClass=officePerson)(uid=" . $_GET['euser'] . ")(jpegPhoto=*))", array("jpegPhoto"));
 }
 
 $ei=ldap_first_entry($ds, $sr);
 $cinf = ldap_get_values_len($ds, $ei,"jpegPhoto");
   header("Content-type: image/jpeg");
-if (($imlim != "") && ($imlim != "0")){
+if (($_GET['imlim'] != "") && ($_GET['imlim'] != "0")){
   $tmpnme=tempnam("/tmp","jpeg");
   $cfile=fopen($tmpnme,w);
   fwrite($cfile,$cinf[$pcount]);
@@ -40,13 +40,13 @@ if (($imlim != "") && ($imlim != "0")){
   $imx=imagesx($imin);
   $imy=imagesy($imin);
  
-  if (($imx > $imlim) || ($imy > $imlim)) {
+  if (($imx > $_GET['imlim']) || ($imy > $_GET['imlim'])) {
     if ($imx <= $imy) {
-      $newy=$imlim;
-      $newx=($imlim*$imx)/$imy;
+      $newy=$_GET['imlim'];
+      $newx=($_GET['imlim']*$imx)/$imy;
     } else {
-      $newx=$imlim;
-      $newy=($imlim*$imy)/$imx;
+      $newx=$_GET['imlim'];
+      $newy=($_GET['imlim']*$imy)/$imx;
     }
     $imout=imagecreatetruecolor($newx,$newy);
     imagecopyresampled($imout,$imin,0,0,0,0,$newx,$newy,$imx,$imy);
