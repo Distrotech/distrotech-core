@@ -1,10 +1,10 @@
 <?php
-  if ($time == "") {
-    $time="86400";
+  if ($_GET['time'] == "") {
+    $_GET['time']="86400";
   }
   $opts=array();
 
-  array_push($opts,"-a","PNG","--start","-".$time);
+  array_push($opts,"-a","PNG","--start","end-" . $_GET['time'] . "s");
 
   if ($time2) {
   array_push($opts,"--end","-".($time-$time2));

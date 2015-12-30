@@ -66,17 +66,17 @@ print date("D M j G:i:s T Y",$last);
 
 <HR>
 <B>`Daily' Graph (5 Minute Snapshot)</B><BR>
-<?phpgraph_do($name,$max,1);?>
+<?php graph_do($name,$max,1);?>
 
 <HR>
 <B>`Weekly' Graph (30 Minute Average)</B><BR>
-<?phpgraph_do($name,$max,7);?>
+<?php graph_do($name,$max,7);?>
 
 <HR>
 <B>`Monthly' Graph (2 Hour Average)</B><BR>
-<?phpgraph_do($name,$max,30);?>
+<?php graph_do($name,$max,30);?>
 
 <HR>
 <B>`Yearly' Graph (1 Day Average)</B><BR>
-<?phpgraph_do($name,$max,365);?>
+<?php graph_do($name,$max,365);?>
 
