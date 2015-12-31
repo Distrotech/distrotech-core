@@ -34,7 +34,7 @@ if [ ! -d /dev/shm ];then
 fi;
 
 #Run File System Check On All Devices
-if [ -d /initrd/aufs ];then
+if [ -d /initrd/aufs/user ];then
   if [ ! -d /media/aufs/user ];then
     mkdir -p /media/aufs/user
   fi;
@@ -84,7 +84,7 @@ mount -n -o remount,rw /
 #Mount All Mount Points
 mount -at nonfs,noecryptfs > /dev/null 2>&1
 
-if [ -d /initrd/aufs ];then
+if [ -d /initrd/aufs/user ];then
 #XXX Move prepend user drive to aufs to here from mkinitrd makesure the mount is in fstab
 #  mount -o remount,add:0:/initrd/aufs/user=rw+moo /
 #  mount -o remount,del:/initrd/aufs/tmp /
