@@ -59,18 +59,7 @@ Set_Serial() {
 
 Install_System() {
   setterm -cursor off
-  INST_BASE=/media/install
-
-  /usr/bin/dialog --backtitle "$BT" --title "Yum Repo." --infobox "Creating yum repo config." 7 35
-  if [ ! -d /etc/yum/repos.d ];then
-    mkdir -p /etc/yum/repos.d;
-  fi;
-  (cat <<EOF
-[installer]
-name = Flash Installer
-baseurl = file:///media/isofs/repo
-EOF
-) > /etc/yum/repos.d/installer.repo
+  INST_BASE=${1}
 
   if [ -e /sbin/modprobe.static ];then
     cp /sbin/modprobe.static ${INST_BASE}/sbin
@@ -343,8 +332,10 @@ Fdisk() {
     done;
 
     /usr/bin/dialog --backtitle "$BT" --title "Formating Root LV" --infobox "Formating Linux Partition" 4 35
-    Create_LVM lvm boot 512M ${LVSTRIPE}
-    Create_LVM lvm images 5632M ${LVSTRIPE}
+    if [ ! -d /media/isofs/boot/${ARCH}/repo ];then
+      Create_LVM lvm boot 512M ${LVSTRIPE}
+      Create_LVM lvm images 5632M ${LVSTRIPE}
+    fi;
     Format_LVM lvm root ${LVSTRIPE}
     touch /tmp/fstab.new
     Local_Install
@@ -533,7 +524,37 @@ Date_Time() {
   done
 }
 
-Mount_Boot() {
+Install_RPM() {
+  mount /dev/lvm/root ${1}
+
+  /usr/bin/dialog --backtitle "$BT" --title "Yum Repo." --infobox "Creating yum repo config." 7 35
+  if [ ! -d /etc/yum/repos.d ];then
+    mkdir -p /etc/yum/repos.d;
+   else
+    rm /etc/yum/repos.d/*
+  fi;
+
+  (cat <<EOF
+[installer]
+name = Flash Installer
+baseurl = file:///media/isofs/boot/${ARCH}/repo
+EOF
+) > /etc/yum/repos.d/installer.repo
+
+  (yum --installroot=${1} clean all
+  rpmdb --root=${1} --rebuilddb) >/dev/null 2>&1
+
+  /usr/libexec/distrotech/instpkg ${ARCH} ${1} distrotech-core-conf 2>/dev/null |/usr/libexec/distrotech/instguage.pl |\
+    dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install Essential Packages" 8 35
+  /usr/libexec/distrotech/instpkg ${ARCH} ${1} @root 2>/dev/null |/usr/libexec/distrotech/instguage.pl |\
+    dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install System Base Packages" 8 35
+  /usr/libexec/distrotech/instpkg ${ARCH} ${1} @core 2>/dev/null |/usr/libexec/distrotech/instguage.pl |\
+    dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install System Core Packages" 8 35
+
+  /usr/bin/yum -y --installroot=${1} clean all >/dev/null 2>&1
+}
+
+Install_Embeded() {
   IMG_FILES="qemu root core buildroot";
 
   mkdir /media/aufs
@@ -576,7 +597,9 @@ Mount_Boot() {
 Local_Install(){
   #Image Based Install Images Go to "boot"
   if [ -e /dev/lvm/root ] && [ -e /dev/lvm/boot ] && [ -e /dev/lvm/images ];then
-    Mount_Boot /media/install
+    Install_Embeded /media/install
+   else
+    Install_RPM /media/install
   fi;
 
   MNTRT=`grep "/media/install " /proc/mounts`;
@@ -585,7 +608,7 @@ Local_Install(){
     return 1;
   fi;
 
-  Install_System
+  Install_System /media/install
   /sbin/init 0
 }
 
@@ -602,7 +625,7 @@ Main_Menu() {
 }
 
 if [ "${1}" == "install" ];then
-  Install_System
+  Install_System /media/install
   exit
  elif [ "${1}" == "fdisk" ];then
   shift
