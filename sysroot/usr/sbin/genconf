@@ -11446,7 +11446,7 @@ sub printcrontab() {
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","/usr/sbin/uexpired");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","(mv /tmp/core* /var/cores/asterisk;rm -rf /tmp/clamav-* /tmp/php.log  /tmp/ps2fax*)");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","1","rm -rf /var/cores/asterisk/*");
-    printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","*/5","*","*","/usr/bin/mrtg /etc/mrtg.conf --confcache-file /tmp/mrtg.ok");
+    printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","*/5","*","*","(env LANG=C /usr/bin/mrtg /etc/mrtg.conf --confcache-file /tmp/mrtg.ok)");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","*/5","*","*","/usr/bin/rrdtc $sysconf{'External'}");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","*/5","*","*","/usr/bin/rrdlog");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","*/5","*","*","(/usr/bin/rrdvoip |/bin/bash)");

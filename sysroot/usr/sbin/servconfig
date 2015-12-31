@@ -982,7 +982,7 @@ if [ "$MRTGDIFF" ];then
   if [ ! -d /var/spool/apache/htdocs/mrtg ];then
     mkdir -p /var/spool/apache/htdocs/mrtg
   fi;
-  indexmaker /etc/mrtg.conf --prefix=/mrtg --section=h1  --columns 1 --nolegend --addhead "<link rel=stylesheet type=text/css href=/style.php>" --title "Traffic Graphs" --rrdviewer /cgi-perl/auth/mrtg-rrd.cgi --output /var/spool/apache/htdocs/mrtg/index.html
+  indexmaker /etc/mrtg.conf --prefix=/mrtg --section=h1  --columns 1 --nolegend --addhead "<link rel=stylesheet type=text/css href=/style.php>" --title "Traffic Graphs" --rrdviewer /mrtg/mrtg-day.php --output /var/spool/apache/htdocs/mrtg/index.html
 fi;
 
 
