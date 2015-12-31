@@ -60,14 +60,14 @@ install_to_dir() {
       RPM_PKG_LIST="${pkggrp}"
     fi;
     if [ "${pkggrp:0:1}" == "@" ];then
-      for spkg in libs conf locale;do
+      for spkg in libs conf locale doc;do
         RPM_PKG_LIST+=" ${pkggrp}-${spkg}"
       done;
     fi;
     if [ "${pkggrp}" == "@buildroot" ];then
       RPM_PKG_LIST+=" ${pkggrp}-dev @root-dev @core-dev guile-dev gc-dev systemd-dev libatomic_ops-dev
         libunistring-dev libevent-dev libpaper-dev gtk+-dev
-        gdk-pixbuf-dev atk-dev Mesa-dev gtk3-dev qt-4-dev";
+        gdk-pixbuf-dev atk-dev Mesa-dev gtk3-dev qt-4-dev qemu qemu-doc";
       if [ "${ARCHKERN}" ];then
         RPM_PKG_LIST+=" ${ARCHKERN}-dev";
       fi;
