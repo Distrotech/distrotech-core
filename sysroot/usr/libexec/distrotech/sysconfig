@@ -144,10 +144,10 @@ Install_System() {
     mount --bind /${sysdir} ${INST_BASE}/${sysdir}
   done;
 
-  if [ ! -d ${INST_BASE}/shm ];then
+  if [ ! -d ${INST_BASE}/dev/shm ];then
     mkdir -m 1777 ${INST_BASE}/dev/shm
   fi;
-  mount -t tmpfs -o mode=1777 none /dev/shm
+  mount -t tmpfs -o mode=1777 none ${INST_BASE}/dev/shm
 
   cp /var/spool/apache/htdocs/ns/config/netsentry.conf ${INST_BASE}/var/spool/apache/htdocs/ns/config/
   if [ -e ${INST_BASE}/var/spool/apache/htdocs/ns/config/networksentry-lite ];then
