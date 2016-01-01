@@ -331,11 +331,18 @@ Fdisk() {
       let LVSTRIPE++;
     done;
 
-    /usr/bin/dialog --backtitle "$BT" --title "Formating Root LV" --infobox "Formating Linux Partition" 4 35
-    if [ ! -d /media/isofs/boot/${ARCH}/repo ];then
+    if [ -d /media/isofs/boot/${ARCH}/repo ];then
+      dialog --backtitle "$BT" --title "Embeded System" --yesno "Install embeded images instead of packages." 8 35
+      if [ "$?" == "0" ];then
+        Create_LVM lvm boot 512M ${LVSTRIPE}
+        Create_LVM lvm images 5632M ${LVSTRIPE}
+      fi;
+     else
       Create_LVM lvm boot 512M ${LVSTRIPE}
       Create_LVM lvm images 5632M ${LVSTRIPE}
     fi;
+
+    /usr/bin/dialog --backtitle "$BT" --title "Formating Root LV" --infobox "Formating Linux Partition" 4 35
     Format_LVM lvm root ${LVSTRIPE}
     touch /tmp/fstab.new
     Local_Install
@@ -550,6 +557,12 @@ EOF
     dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install System Base Packages" 8 35
   /usr/libexec/distrotech/instpkg ${ARCH} ${1} @core 2>/dev/null |/usr/libexec/distrotech/instguage.pl |\
     dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install System Core Packages" 8 35
+
+  dialog --backtitle "$BT" --title "Development Tools" --yesno "Install development packages" 8 35
+  if [ "$?" == "0" ];then
+    /usr/libexec/distrotech/instpkg ${ARCH} ${1} @buildroot 2>/dev/null |/usr/libexec/distrotech/instguage.pl |\
+      dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install Development Packages" 8 35
+  fi;
 
   /usr/bin/yum -y --installroot=${1} clean all >/dev/null 2>&1
 }
