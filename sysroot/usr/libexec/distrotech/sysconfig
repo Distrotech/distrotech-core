@@ -57,17 +57,8 @@ Set_Serial() {
   fi;
 }
 
-Install_System() {
-  setterm -cursor off
+Filesystem_Setup() {
   INST_BASE=${1}
-
-  if [ -e /sbin/modprobe.static ];then
-    cp /sbin/modprobe.static ${INST_BASE}/sbin
-  fi;
-
-  if [ ! -e ${INST_BASE}/etc/shadow ];then
-    cp /etc/shadow ${INST_BASE}/etc
-  fi;
 
   for pwd_file in passwd group;do
     if [ -e ${INST_BASE}/etc/distrotech/${pwd_file}.dist ] && [ ! -e ${INST_BASE}/etc/${pwd_file} ];then
@@ -78,12 +69,10 @@ Install_System() {
   ls -d ${INST_BASE}/opt/*/${LIBDIR} |awk -v MNT=${INST_BASE} '{printf "%s\n",substr($1,length(MNT)+1)}' > ${INST_BASE}/etc/ld.so.conf.d/opt.conf
 
   for newdir in autofs cdrom floppy initrd;do
-    mkdir -p ${INST_BASE}/mnt/${newdir}
+    if [ ! -d ${INST_BASE}/mnt/${newdir} ];then
+      mkdir -p ${INST_BASE}/mnt/${newdir}
+    fi;
   done
-
-  #Setup the kernel version in the config file used by mkinitd
-  LINKERNEL=$(rpm --root ${INST_BASE} -q -i linux-intel-${KSUF} |grep Version |sed -e "s/.*\s\(.*\)/\1/" |tr "~" "-")
-  sed -e "s/\(KERNEL=\"\).*\"/\1${LINKERNEL}-${KARCH}-${KSUF}\"/" /etc/netsentry-version > ${INST_BASE}/etc/netsentry-version
 
   for newdir in usr/share/clamav var/spool/clientmqueue var/spool/MailScanner/incoming etc/MailScanner \
                 var/empty var/spool/apache/htdocs/ssl/sign var/spool/apache/htdocs/ssl/casign var/state/dhcp \
@@ -94,7 +83,9 @@ Install_System() {
                 var/spool/mailscanner/incoming var/spool/mqueue var/spool/mailscanner/quarantine \
                 var/home/sogo/GNUstep/Defaults var/spool/avirus var/spool/update var/spool/mail \
                 var/spool/samba/share var/spool/samba/dadmin;do
-    mkdir -p ${INST_BASE}/${newdir}
+    if [ ! -d ${INST_BASE}/${newdir} ];then
+      mkdir ${INST_BASE}/${newdir}
+    fi;
   done
 
 #  rsync -a /install/update ${INST_BASE}/var/spool/ > /dev/null 2>&1
@@ -106,7 +97,42 @@ Install_System() {
     fi;
   done;
 
-  /usr/bin/dialog --backtitle "$BT" --title "Creating Mail/User Hash Directories" --infobox "Creating Mail/User Hash Directories" 5 45
+  if [ ! -d /var/spool/apache/htdocs/ns/config ];then
+    mkdir -p /var/spool/apache/htdocs/ns/config
+    mkdir /var/spool/apache/htdocs/ns/config/sslconf
+    mkdir /var/spool/apache/htdocs/ns/config/zones
+  fi;
+
+  chmod 2777 ${INST_BASE}/var/spool/samba/share/
+  chmod -R -o=rwX,g=rwX,o=rX ${INST_BASE}/var/spool/samba/share/*
+  chown -R root.139 ${INST_BASE}/var/spool/samba/share
+
+#  cp -r /install/tools/* ${INST_BASE}/var/spool/samba/share/
+
+  chmod 1777 ${INST_BASE}/tmp ${INST_BASE}/var/run
+#  chown -R www.www ${INST_BASE}/var/spool/apache/htdocs
+  chmod 770 ${INST_BASE}/var/spool/clientmqueue
+  chown 51.51 ${INST_BASE}/usr/share/clamav ${INST_BASE}/var/spool/avirus
+  chown smmsp.smmsp ${INST_BASE}/var/spool/clientmqueue/
+
+  if [ ! -e ${INST_BASE}/etc/firewall.conf ];then
+    ln -s -r ${INST_BASE}/var/spool/apache/htdocs/ns/config/netsentry.conf ${INST_BASE}/etc/firewall.conf
+  fi;
+  if [ ! -e ${INST_BASE}/etc/localtime ];then
+    ln -s -r ${INST_BASE}/usr/share/zoneinfo/Africa/Johannesburg ${INST_BASE}/etc/localtime
+  fi;
+
+  echo "clear" > ${INST_BASE}/root/.bash_logout
+  touch ${INST_BASE}/tmp/.firstconfig ${INST_BASE}/etc/.needsreconf
+}
+
+Userdir_Setup() {
+  INST_BASE=${1}
+
+  if [ ! -d /var/spool/mail ];then
+    mkdir -p /var/spool/mail
+  fi;
+
   setfacl -m u::rwX -m g::rwX -m o::0 -m g:12:rwX -m g:100:rX -m m::rwX \
           -m d:u::rwX -m d:g::rwX -m d:o::0 -m d:g:12:rwX -m d:m::rwX ${INST_BASE}/var/spool/mail;
   for root1 in a b c d e f g h i j k l m n o p q r s t u v w x y z 1 2 3 4 5 6 7 8 9 0;do
@@ -119,23 +145,34 @@ Install_System() {
       mkdir -m 0755 -p ${INST_BASE}/var/home/$root1/$root2;
     done;
   done
+}
 
-  if [ ! -d /var/spool/apache/htdocs/ns/config ];then
-    mkdir -p /var/spool/apache/htdocs/ns/config
-    mkdir /var/spool/apache/htdocs/ns/config/sslconf
-    mkdir /var/spool/apache/htdocs/ns/config/zones
+Install_System() {
+  setterm -cursor off
+  INST_BASE=${1}
+
+  #Setup the kernel version in the config file used by mkinitd
+  LINKERNEL=$(rpm --root ${INST_BASE} -q -i linux-intel-${KSUF} |grep Version |sed -e "s/.*\s\(.*\)/\1/" |tr "~" "-")
+  sed -e "s/\(KERNEL=\"\).*\"/\1${LINKERNEL}-${KARCH}-${KSUF}\"/" /etc/netsentry-version > ${INST_BASE}/etc/netsentry-version
+
+  /usr/bin/dialog --backtitle "$BT" --title "File System Setup" --infobox "Setting up basic filesystem" 5 45
+
+  if [ -e /sbin/modprobe.static ];then
+    cp /sbin/modprobe.static ${INST_BASE}/sbin
   fi;
 
-  (chmod 2777 ${INST_BASE}/var/spool/samba/share/
-  chmod -R -o=rwX,g=rwX,o=rX ${INST_BASE}/var/spool/samba/share/*
-  chown -R root.139 ${INST_BASE}/var/spool/samba/share) >/dev/null 2>&1
+  if [ ! -e ${INST_BASE}/etc/shadow ];then
+    cp /etc/shadow ${INST_BASE}/etc
+  fi;
 
-#  cp -r /install/tools/* ${INST_BASE}/var/spool/samba/share/
+  Filesystem_Setup ${1} >/dev/tty4 2>&1
+
+  /usr/bin/dialog --backtitle "$BT" --title "Creating Mail/User Hash Directories" --infobox "Creating Mail/User Hash Directories" 5 45
+  Userdir_Setup ${1} >/dev/tty4 2>&1
 
   /usr/bin/dialog --backtitle "$BT" --title "Initial Config" --infobox "Creating Initial Config" 7 35
 #  cp /install/.profile ${INST_BASE}/root/.profile
 #  chmod 750 ${INST_BASE}/root/.profile
-  echo "clear" > ${INST_BASE}/root/.bash_logout
 
   for sysdir in dev proc sys;do
     if [ ! -d ${INST_BASE}/${sysdir} ];then
@@ -150,15 +187,16 @@ Install_System() {
   mount -t tmpfs -o mode=1777 none ${INST_BASE}/dev/shm
 
   cp /var/spool/apache/htdocs/ns/config/netsentry.conf ${INST_BASE}/var/spool/apache/htdocs/ns/config/
-  if [ -e ${INST_BASE}/var/spool/apache/htdocs/ns/config/networksentry-lite ];then
-    rm ${INST_BASE}/var/spool/apache/htdocs/ns/config/networksentry-lite
-  fi;
-  if [ ! -e ${INST_BASE}/var/spool/apache/htdocs/ns/config/networksentry-full ];then
-    touch ${INST_BASE}/var/spool/apache/htdocs/ns/config/networksentry-full
-  fi;
-  if [ -e ${INST_BASE}/etc/.networksentry-lite ];then
-    rm ${INST_BASE}/etc/.networksentry-lite
-  fi;
+
+#  if [ -e ${INST_BASE}/var/spool/apache/htdocs/ns/config/networksentry-lite ];then
+#    rm ${INST_BASE}/var/spool/apache/htdocs/ns/config/networksentry-lite
+#  fi;
+#  if [ ! -e ${INST_BASE}/var/spool/apache/htdocs/ns/config/networksentry-full ];then
+#    touch ${INST_BASE}/var/spool/apache/htdocs/ns/config/networksentry-full
+#  fi;
+#  if [ -e ${INST_BASE}/etc/.networksentry-lite ];then
+#    rm ${INST_BASE}/etc/.networksentry-lite
+#  fi;
 
   #Create Serial On Install
 #  if [ "$SERIAL" ];then
@@ -167,33 +205,22 @@ Install_System() {
 #    Set_Serial ${HN_ADDR}.${DOM_ADDR}
 #  fi
 
-  chmod 1777 ${INST_BASE}/tmp ${INST_BASE}/var/run
-#  chown -R www.www ${INST_BASE}/var/spool/apache/htdocs
-  chmod 770 ${INST_BASE}/var/spool/clientmqueue
-  chown 51.51 ${INST_BASE}/usr/share/clamav ${INST_BASE}/var/spool/avirus > /dev/null 2>&1
-  chown smmsp.smmsp ${INST_BASE}/var/spool/clientmqueue/
 
-  if [ ! -e ${INST_BASE}/etc/firewall.conf ];then
-    ln -s -r ${INST_BASE}/var/spool/apache/htdocs/ns/config/netsentry.conf ${INST_BASE}/etc/firewall.conf
-  fi;
-  if [ ! -e ${INST_BASE}/etc/localtime ];then
-    ln -s -r ${INST_BASE}/usr/share/zoneinfo/Africa/Johannesburg ${INST_BASE}/etc/localtime
-  fi;
+  /usr/bin/dialog --backtitle "$BT" --title "Post Install" --infobox "Running genconf/servconfig. This Takes Several Minutes" 7 35
+  rm ${INST_BASE}/etc/.install ${INST_BASE}/etc/.cdrom > /dev/null 2>&1
+  rsync -aR /var/lib/avahi-autoipd /etc/dhclient.conf ${INST_BASE} > /dev/null 2>&1
 
   chroot ${INST_BASE} /sbin/ldconfig > /dev/null 2>&1
   chroot ${INST_BASE} /sbin/hwclock --systohc --utc >/dev/tty4 2>&1
   chroot ${INST_BASE} /usr/sbin/rndc-confgen -a -r /dev/urandom > /dev/null 2> /dev/null
   chroot ${INST_BASE} /usr/bin/rebuild-info
-
-  /usr/bin/dialog --backtitle "$BT" --title "Post Install" --infobox "Running genconf/servconfig. This Takes Several Minutes" 7 35
-  rm ${INST_BASE}/etc/.install ${INST_BASE}/etc/.cdrom > /dev/null 2>&1
-  touch ${INST_BASE}/tmp/.firstconfig ${INST_BASE}/etc/.needsreconf
-  rsync -aR /var/lib/avahi-autoipd /etc/dhclient.conf ${INST_BASE} > /dev/null 2>&1
   chroot ${INST_BASE} /usr/sbin/genconf > /dev/null 2>&1
   chroot ${INST_BASE} /usr/sbin/servconfig > /dev/tty4 2> /dev/tty4
+
   /usr/bin/dialog --backtitle "$BT" --title "PostGRE Setup" --infobox "Applying PostGRE Schema. This Takes Several Minutes" 7 35
   chroot ${INST_BASE} /usr/sbin/genconf > /dev/null 2>&1
   chroot ${INST_BASE} /usr/sbin/servconfig > /dev/tty4 2> /dev/tty4
+
   touch ${INST_BASE}/tmp/.firstconfig
   rm -rf ${INST_BASE}/var/spool/mail/shared ${INST_BASE}/root/crontab
 
@@ -202,9 +229,14 @@ Install_System() {
     rm ${INST_BASE}/etc/mtab
   fi;
   ln -s /proc/self/mounts ${INST_BASE}/etc/mtab
-  chroot ${INST_BASE} /usr/sbin/mkfstab > ${INST_BASE}/etc/fstab 2> /dev/null
-  chroot ${INST_BASE} /usr/sbin/mkgrub > /dev/null 2>&1
 
+  if [ ! "${INST_BASE}" ];then
+    /usr/sbin/mkfstab > /etc/fstab 2> /dev/null
+    /usr/sbin/mkgrub > /dev/null 2>&1
+   else
+    chroot ${INST_BASE} /usr/sbin/mkfstab > ${INST_BASE}/etc/fstab 2> /dev/null
+    chroot ${INST_BASE} /usr/sbin/mkgrub > /dev/null 2>&1
+  fi;
   setterm -cursor on
 
   clear
@@ -331,18 +363,11 @@ Fdisk() {
       let LVSTRIPE++;
     done;
 
-    if [ -d /media/isofs/boot/${ARCH}/repo ];then
-      dialog --backtitle "$BT" --title "Embeded System" --yesno "Install embeded images instead of packages." 8 35
-      if [ "$?" == "0" ];then
-        Create_LVM lvm boot 512M ${LVSTRIPE}
-        Create_LVM lvm images 5632M ${LVSTRIPE}
-      fi;
-     else
+    /usr/bin/dialog --backtitle "$BT" --title "Formating Root LV" --infobox "Formating Linux Partition" 4 35
+    if [ ! -d /media/isofs/boot/${ARCH}/repo ];then
       Create_LVM lvm boot 512M ${LVSTRIPE}
       Create_LVM lvm images 5632M ${LVSTRIPE}
     fi;
-
-    /usr/bin/dialog --backtitle "$BT" --title "Formating Root LV" --infobox "Formating Linux Partition" 4 35
     Format_LVM lvm root ${LVSTRIPE}
     touch /tmp/fstab.new
     Local_Install
@@ -558,12 +583,6 @@ EOF
   /usr/libexec/distrotech/instpkg ${ARCH} ${1} @core 2>/dev/null |/usr/libexec/distrotech/instguage.pl |\
     dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install System Core Packages" 8 35
 
-  dialog --backtitle "$BT" --title "Development Tools" --yesno "Install development packages" 8 35
-  if [ "$?" == "0" ];then
-    /usr/libexec/distrotech/instpkg ${ARCH} ${1} @buildroot 2>/dev/null |/usr/libexec/distrotech/instguage.pl |\
-      dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install Development Packages" 8 35
-  fi;
-
   /usr/bin/yum -y --installroot=${1} clean all >/dev/null 2>&1
 }
 
@@ -638,8 +657,12 @@ Main_Menu() {
 }
 
 if [ "${1}" == "install" ];then
-  Install_System /media/install
+  Install_System ${2}
   exit
+ elif [ "${1}" == "userdir" ];then
+  Userdir_Setup ${2}
+ elif [ "${1}" == "setup" ];then
+  Filesystem_Setup ${2}
  elif [ "${1}" == "fdisk" ];then
   shift
   vg=$1
