@@ -88,9 +88,6 @@ echo "*.*                                       /dev/tty5" > /etc/syslog.conf
 if [ ! -e /etc/iftab ];then
   touch /etc/iftab
 fi;
-if [ ! -e /etc/fstab ];then
-  touch /etc/fstab
-fi;
 
 #Startup udev
 (if [ -x /libexec/udev/udevd ];then
@@ -113,39 +110,4 @@ ssh-keygen -t rsa -f /etc/ssh_host_rsa_key -N "" > /dev/null 2>&1
 ssh-keygen -t ecdsa -f /etc/ssh_host_ecdsa_key -N "" > /dev/null 2>&1
 /usr/sbin/sshd > /dev/null 2>&1
 
-#Rename any stray network cards
-(NCLASSDIR=/sys/class/net/;
-
-ECNT="0";
-WCNT="0"
-
-for net in `ls ${NCLASSDIR}/`;do
-  TYPE=$(cat ${NCLASSDIR}/${net}/type)
-  if [ "${TYPE}" != "1" ] || [ ! -d ${NCLASSDIR}/${net}/device/ ] || [ -e /tmp/ifnrename-${net} ];then
-    continue;
-  fi;
-
-  if [ -d ${NCLASSDIR}/${net}/wireless ];then
-    ADDR=$(echo ${WCNT} |tr [0-9] [A-J])
-    let WCNT++;
-    DEV="wlan${ADDR}";
-   else
-    ADDR=$(echo ${ECNT} |tr [0-9] [A-J])
-    let ECNT++;
-    DEV="eth${ADDR}";
-  fi;
-  ip link set down dev ${net}
-  ifrename -i ${net} -n ${DEV}
-  ip link set up dev ${DEV}
-  touch /tmp/ifrename-${DEV}
-done
-rm /tmp/ifrename-*) > /dev/null 2>&1
-
-#Set up Bridge add ethA to it this will be the internal interface
-if [ -d /sys/class/net/ethA ];then
-  ip link add br0 type bridge
-  ip link set ethA master br0
-  ip link set br0 up
-  echo 1 > /proc/sys/net/ipv6/conf/br0/use_tempaddr
-  echo 1 > /sys/class/net/br0/bridge/stp_state
-fi;
+/etc/rc.d/install/rc.iface
