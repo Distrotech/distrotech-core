@@ -18,10 +18,7 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #Load netfilter / hwmon / acpi / dma modules
-(/sbin/modprobe -a -lt netfilter \*nf_nat* |awk -F/ '{printf "modprobe %s\n",substr($5,0,index($5,".")-1)}' |sh
-/sbin/modprobe -a -lt hwmon |awk -F/ '{printf "modprobe %s\n",substr($4,0,index($4,".")-1)}' |sh
-/sbin/modprobe -a -lt acpi |awk -F/ '{printf "modprobe %s\n",substr($4,0,index($4,".")-1)}' |sh 
-/sbin/modprobe -a -lt dma |awk -F/ '{printf "modprobe %s\n",substr($4,0,index($4,".")-1)}' |sh) > /dev/null 2>&1
+(/sbin/modprobe -a -lt netfilter \*nf_nat* |awk -F/ '{printf "modprobe %s\n",substr($5,0,index($5,".")-1)}' |sh) > /dev/null 2>&1
 
 #Load modules explicitly
 for loadmod in ppp_generic 8021q ipcomp ip_gre esp4 ah4 tun l2tp_ppp pppoe capability \
@@ -89,7 +86,9 @@ done;
 
 #Load Dummy Sound Card And Set Up Any Found Cards
 if [ -d /lib/modules/${LKERNEL}/kernel/sound/ ];then
-  (/sbin/modprobe snd-dummy
+  (if [ ! -e /dev/dsp ];then
+    /sbin/modprobe snd-dummy
+  fi;
   /sbin/modprobe snd-pcm-oss
   /sbin/modprobe snd-opl3-synth
   /sbin/modprobe snd-opl4-synth
