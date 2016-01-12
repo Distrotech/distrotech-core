@@ -88,6 +88,9 @@ echo "*.*                                       /dev/tty5" > /etc/syslog.conf
 if [ ! -e /etc/iftab ];then
   touch /etc/iftab
 fi;
+if [ ! -e /etc/fstab ];then
+  touch /etc/fstab
+fi;
 
 #Startup udev
 (if [ -x /libexec/udev/udevd ];then
