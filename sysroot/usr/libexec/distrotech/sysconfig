@@ -30,7 +30,7 @@ case ${KARCH} in
     LIBDIR="lib";;
 esac;
 
-setterm -blank 20
+setterm -blank 20 >/dev/null 2>&1
 
 if [ -e "/tmp/fstab.new" ];then
   rm /tmp/fstab.new
@@ -661,8 +661,10 @@ if [ "${1}" == "install" ];then
   exit
  elif [ "${1}" == "userdir" ];then
   Userdir_Setup ${2}
+  exit
  elif [ "${1}" == "setup" ];then
   Filesystem_Setup ${2}
+  exit
  elif [ "${1}" == "fdisk" ];then
   shift
   vg=$1
