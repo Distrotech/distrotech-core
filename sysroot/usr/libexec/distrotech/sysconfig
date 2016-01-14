@@ -66,23 +66,21 @@ Filesystem_Setup() {
     fi;
   done
 
-  ls -d ${INST_BASE}/opt/*/${LIBDIR} |awk -v MNT=${INST_BASE} '{printf "%s\n",substr($1,length(MNT)+1)}' > ${INST_BASE}/etc/ld.so.conf.d/opt.conf
-
   for newdir in autofs cdrom floppy initrd;do
     if [ ! -d ${INST_BASE}/mnt/${newdir} ];then
       mkdir -p ${INST_BASE}/mnt/${newdir}
     fi;
   done
 
-  for newdir in usr/share/clamav var/spool/clientmqueue var/spool/MailScanner/incoming etc/MailScanner \
-                var/empty var/spool/apache/htdocs/ssl/sign var/spool/apache/htdocs/ssl/casign var/state/dhcp \
-                etc/quagga etc/ipsec.d/crls etc/ipsec.d/certs etc/ipsec.d/clients etc/ipsec.d/cacerts \
-                etc/opensssl/certs etc/squid etc/samba etc/openssl/private etc/openssl/newcerts var/named \
+  for newdir in usr/share/clamav var/spool/clientmqueue  var/spool/MailScanner var/spool/MailScanner/incoming etc/MailScanner \
+                var/empty var/spool/apache/htdocs/ssl/sign var/spool/apache/htdocs/ssl/casign var/state var/state/dhcp \
+                etc/quagga etc/ipsec.d etc/ipsec.d/crls etc/ipsec.d/certs etc/ipsec.d/clients etc/ipsec.d/cacerts \
+                etc/openssl/certs etc/squid etc/samba etc/openssl etc/openssl/private etc/openssl/newcerts var/named \
                 var/spool/apache/htdocs/ns/config/zones var/spool/apache/htdocs/ns/config/tftptmpl var/db/nscd \
-                var/spool/apache/htdocs/ns/config/sslconf etc/radiusclient etc/samba/private var/run/nscd \
-                var/spool/mailscanner/incoming var/spool/mqueue var/spool/mailscanner/quarantine \
+                var/spool/apache/htdocs/ns/config/sslconf etc/radiusclient etc/samba/private var/run var/run/nscd \
+                var/spool/mailscanner var/spool/mailscanner/incoming var/spool/mqueue var/spool/mailscanner/quarantine \
                 var/home/sogo/GNUstep/Defaults var/spool/avirus var/spool/update var/spool/mail \
-                var/spool/samba/share var/spool/samba/dadmin;do
+                var/spool/samba var/spool/samba/share var/spool/samba/dadmin;do
     if [ ! -d ${INST_BASE}/${newdir} ];then
       mkdir ${INST_BASE}/${newdir}
     fi;
@@ -129,8 +127,8 @@ Filesystem_Setup() {
 Userdir_Setup() {
   INST_BASE=${1}
 
-  if [ ! -d /var/spool/mail ];then
-    mkdir -p /var/spool/mail
+  if [ ! -d ${INST_BASE}/var/spool/mail ];then
+    mkdir -p ${INST_BASE}/var/spool/mail
   fi;
 
   setfacl -m u::rwX -m g::rwX -m o::0 -m g:12:rwX -m g:100:rX -m m::rwX \
@@ -164,6 +162,8 @@ Install_System() {
   if [ ! -e ${INST_BASE}/etc/shadow ];then
     cp /etc/shadow ${INST_BASE}/etc
   fi;
+
+  ls -d ${INST_BASE}/opt/*/${LIBDIR} |awk -v MNT=${INST_BASE} '{printf "%s\n",substr($1,length(MNT)+1)}' > ${INST_BASE}/etc/ld.so.conf.d/opt.conf
 
   Filesystem_Setup ${1} >/dev/tty4 2>&1
 
