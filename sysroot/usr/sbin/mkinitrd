@@ -57,7 +57,7 @@ init_rd_drivers() {
               arch/arm/lib/xor-neon.ko.gz drivers/usb/phy/phy-tegra-usb.ko.gz drivers/dma/omap-dma.ko.gz \
               drivers/base/regmap/regmap-spmi.ko.gz drivers/spmi/spmi.ko.gz drivers/video/console \
               lib/fonts sound/soc/snd-soc-core.ko.gz sound/core/snd-pcm-dmaengine.ko.gz sound/core/snd-pcm.ko.gz \
-              sound/core/snd-timer.ko.gz sound/core/snd.ko.gz sound/soundcore.ko.gz;do
+              sound/core/snd-timer.ko.gz sound/core/snd.ko.gz sound/soundcore.ko.gz sound/core/snd-compress.ko.gz;do
    if [ -f ${2}lib/modules/${kernel}/kernel/${kmod} ];then
      cp ${2}lib/modules/${kernel}/kernel/${kmod} ${1}/lib/modules/${kernel}/drivers
     elif [ -d ${2}lib/modules/${kernel}/kernel/${kmod} ];then
@@ -127,7 +127,7 @@ init_rd_drivers() {
 
 initrd_init() {
   INITRD=$(mktemp -p /tmp initrd_XXXXXXX)
-  dd if=/dev/zero of=${INITRD} bs=1M count=24 > /dev/null 2>&1
+  dd if=/dev/zero of=${INITRD} bs=1M count=32 > /dev/null 2>&1
 
   ILOOP=$(losetup -f --show ${INITRD})
   if [ ! "${ILOOP}" ] || [ ! -b ${LOOP} ];then
