@@ -26,8 +26,8 @@ NUMBER=${RTDB(${CALLERIDNUM}/RepeatDial)})
 
 $astpaths=array("lib64/x86_64", "libx32/i686", "lib/i686", "lib64", "lib");
 while(list($astidx, $astlib) = each($astpaths)) {
-  if (is_dir("/usr/" . $astlib . "/asterisk/modules-10/")) {
-    $astmodpath="/usr/" . $astlib . "/asterisk/modules-10/";
+  if (is_dir("/usr/" . $astlib . "/asterisk/modules-13/")) {
+    $astmodpath="/usr/" . $astlib . "/asterisk/modules-13/";
   }
 }
 
