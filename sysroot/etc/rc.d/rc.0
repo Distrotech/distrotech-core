@@ -22,6 +22,7 @@ PATH=/sbin:/etc:/bin:/usr/bin
 
 clear
 stty onlcr
+date +%m%d%H%M%Y.%S > /etc/last.time
 
 case "$0" in
   *0)command="halt";;

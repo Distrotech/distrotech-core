@@ -26,7 +26,7 @@ fi;
 (flock -w 60 10 || exit
 
 cd /var/spool/apache/htdocs/ns/config
-
+date +%m%d%H%M%Y.%S > /etc/last.time
 
 Gen_CRL_Cert() {
   /usr/bin/openssl ca -gencrl -out /etc/ipsec.d/crls/crl.pem -config /etc/openssl/ca.conf -batch > /dev/null 2>&1
