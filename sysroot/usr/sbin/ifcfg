@@ -207,3 +207,13 @@ fi;
   fi;
   ip link set dev ${IFNAME} master ${BRIDGE}
 fi) > /dev/null 2>&1 &
+
+if [ "${FIREWALL}" == "INTERNAL" ];then
+  if [ ! -d /var/state/dhcp ];then
+    mkdir -p /var/state/dhcp
+  fi;
+  touch /var/state/dhcp/dhcpd.leases /var/state/dhcp/dhcpd6.leases
+  if [ -e /etc/dhcpd.conf ];then
+    (ulimit -n 65535;/usr/sbin/dhcpd > /dev/null 2>&1) &
+  fi;
+fi;

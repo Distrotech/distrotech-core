@@ -17959,6 +17959,11 @@ interface "$iface" {
 
 __EOB__
     } elsif (index($iface,"gtun") eq -1) {
+      @idata=split(/\|/,$interface{$iface});
+      if ((@idata[1] ne "0.0.0.0") || (@idata[2] ne "32")) {
+        next;
+      }
+
       print DHC<<__EOB__;
 interface "$iface" {
   script "/usr/bin/dhclient-script";
