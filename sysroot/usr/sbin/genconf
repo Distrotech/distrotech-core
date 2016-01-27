@@ -14922,6 +14922,7 @@ preload => res_stun_monitor.so
 ;preload => res_config.so
 preload => res_odbc.so
 preload => res_config_odbc.so
+preload => app_voicemail.so
 ;preload => chan_local.so
 ;preload => chan_sip.so
 ;preload => chan_iax.so
