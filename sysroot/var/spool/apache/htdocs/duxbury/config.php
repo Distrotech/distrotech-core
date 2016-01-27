@@ -181,10 +181,10 @@ TX AGC             :0
 RX AGC             :0
 Sidetone GAIN      :1
 --Port Config--    :
-P1 Voice Codec1    :PCMA/8000
-P1 Voice Codec2    :PCMU/8000
-P1 Voice Codec3    :G729/8000
-P1 Voice Codec4    :
+P1 Voice Codec1    :G729/8000
+P1 Voice Codec2    :G726-32/8000
+P1 Voice Codec3    :PCMA/8000
+P1 Voice Codec4    :G722/8000
 P1 Voice Codec5    :
 P1 Voice Codec6    :
 --Codec Config--   :
@@ -293,7 +293,7 @@ SIP1 CFNOn SvcCode :
 SIP1 CFNOff SvcCode:
 SIP1 ANCOn SvcCode :
 SIP1 ANCOff SvcCode:
-SIP1 VoiceCodecMap :
+SIP1 VoiceCodecMap :G729,G726-32,G711A,G722
 SIP1 BLFList Uri   :
 SIP1 BLF Server    :
 SIP1 Respond 182   :1
