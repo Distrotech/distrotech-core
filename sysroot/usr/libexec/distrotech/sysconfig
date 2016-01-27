@@ -364,7 +364,13 @@ Fdisk() {
     done;
 
     /usr/bin/dialog --backtitle "$BT" --title "Formating Root LV" --infobox "Formating Linux Partition" 4 35
-    if [ ! -d /media/isofs/boot/${ARCH}/repo ];then
+    if [ -d /media/isofs/boot/${ARCH}/repo ] && [ -d /media/isofs/boot/${ARCH}/images ];then
+      /usr/bin/dialog --backtitle "$BT" --title "AUFS Images" --yesno "Install system from image files" 6 35
+      AUFS=$?
+     else
+      AUFS=1;
+    fi;
+    if [ ! -d /media/isofs/boot/${ARCH}/repo ] || [ "${AUFS}" == "0" ];then
       Create_LVM lvm boot 512M ${LVSTRIPE}
       Create_LVM lvm images 5632M ${LVSTRIPE}
     fi;
@@ -541,19 +547,51 @@ Dialog_Time() {
   fi;
 }
 
-Date_Time() {
-  (cnt=0;while [ "${cnt}" != "100" ] && [ ! -e /tmp/ntptime ];do let cnt+=2;sleep 1;echo ${cnt};done) |\
+Manual_Time() {
+  while ! Dialog_Time;do
+    /usr/bin/dialog --backtitle "$BT" --clear --title "Date/Time Error"\
+     --msgbox "Invalid Date Format"  9 40
+  done
+}
+
+NTP_Time() {
+  /usr/bin/dialog --backtitle "$BT" --title "Trying NTP" --infobox "Using pool.ntp.org" 7 35
+  (ntpdate -t 20 -p 1 pool.ntp.org && /sbin/hwclock --systohc --utc) >/dev/tty4 2>&1
+  if [ "$?" == "1" ];then
+     Manual_Time
+  fi;
+}
+
+DHCP_Time() {
+  (cnt=0;while [ "${cnt}" != "100" ] && [ ! -e /tmp/ntptime ] && [ ! -e /tmp/dhcpok ];do let cnt+=2;sleep 1;echo ${cnt};done) |\
      dialog --backtitle "$BT" --title "NTP"  --gauge "Wait for NTP config via DHCP" 8 35
 
   if [ -e /tmp/ntptime ];then
     /sbin/hwclock --systohc --utc >/dev/tty4 2>&1
     return 0
   fi;
+  if [ -e /tmp/dhcpok ];then
+    NTP_Time
+    return 0
+  fi;
+  Manual_Time
+}
 
-  while ! Dialog_Time;do
-    /usr/bin/dialog --backtitle "$BT" --clear --title "Date/Time Error"\
-     --msgbox "Invalid Date Format"  9 40
-  done
+Date_Time() {
+  dialog --backtitle "${BT}" --clear --title "Date/Time" --radiolist "Select how to set date" 10 35 3 "NTP" 1 1 "DHCP" 2 2 "Manual" 3 3 2>/tmp/menu.tmp.$$
+  RESULT=$?;
+  MEN_CHOICE=`cat /tmp/menu.tmp.$$`;
+
+  if [ "${RESULT}" != "0" ];then
+    Manual_Time
+    return 0
+  fi;
+
+  case ${MEN_CHOICE} in
+    NTP)NTP_Time;;
+    DHCP)DHCP_Time;;
+    Manual)Manual_Time;;
+  esac;
 }
 
 Install_RPM() {
@@ -582,7 +620,11 @@ EOF
     dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install System Base Packages" 8 35
   /usr/libexec/distrotech/instpkg ${ARCH} ${1} @core 2>/dev/null |/usr/libexec/distrotech/instguage.pl |\
     dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install System Core Packages" 8 35
-
+  if [ -d /media/isofs/boot/${ARCH}/repo/buildroot ];then
+    /usr/bin/dialog --backtitle "$BT" --title "Install Buildutils" --yesno "Install system build packages" 6 35 &&\
+      /usr/libexec/distrotech/instpkg ${ARCH} ${1} @buildroot 2>/dev/null |/usr/libexec/distrotech/instguage.pl |\
+        dialog --backtitle "$BT" --title "Installing Packages" --gauge "Install System Build Packages" 8 35
+  fi;
   /usr/bin/yum -y --installroot=${1} clean all >/dev/null 2>&1
 }
 
