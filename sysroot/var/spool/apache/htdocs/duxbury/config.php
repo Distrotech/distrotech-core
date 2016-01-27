@@ -44,6 +44,10 @@ if (pg_num_rows($getphone) == 0) {
   if (createexten($mac,"DUXBURY","","","") > 0) {
     $getphone=pg_query($db,$getphoneq);
   }
+  if (pg_num_rows($getphone) == 0) {
+    header($_SERVER["SERVER_PROTOCOL"]." 404 Not Found");
+    exit;
+  }
 }
 
 list($exten,$pass,$name,$domain,$nat,$dtmfmode,$vlantag,$pwchange,$encrypt,$transport)=pg_fetch_array($getphone,0,PGSQL_NUM);
@@ -199,7 +203,7 @@ STUN Port          :3478
 STUN Refresh Time  :50
 SIP Wait Stun Time :800
 Extern NAT Addrs   :
-Reg Fail Interval  :15
+Reg Fail Interval  :60
 SIP Pswd Encryption:0
 Strict BranchPrefix:0
 Video Mute Attr    :0
@@ -212,7 +216,7 @@ SIP1 Register Addr :<?php print $domain . "\n";?>
 SIP1 Register Port :5060
 SIP1 Register User :<?php print $exten . "\n";?>
 SIP1 Register Pswd :<?php print $pass . "\n";?>
-SIP1 Register TTL  :1800
+SIP1 Register TTL  :300
 SIP1 Enable Reg    :1
 SIP1 Proxy Addr    :<?php print $domain . "\n";?>
 SIP1 Proxy Port    :5060
@@ -236,12 +240,12 @@ SIP1 Enable Hotline:0
 SIP1 WarmLine Time :0
 SIP1 Pickup Num    :
 SIP1 Join Num      :
-SIP1 NAT UDPUpdate :0
+SIP1 NAT UDPUpdate :1
 SIP1 UDPUpdate TTL :60
 SIP1 Server Type   :0
 SIP1 User Agent    :
 SIP1 PRACK         :0
-SIP1 Keep AUTH     :1
+SIP1 Keep AUTH     :0
 SIP1 Session Timer :0
 SIP1 S.Timer Expire:0
 SIP1 Enable GRUU   :0
@@ -250,7 +254,7 @@ SIP1 DTMF Info Mode:0
 SIP1 NAT Type      :0
 SIP1 Enable Rport  :1
 SIP1 Subscribe     :1
-SIP1 Sub Expire    :1800
+SIP1 Sub Expire    :300
 SIP1 Single Codec  :0
 SIP1 CLIR          :0
 SIP1 Strict Proxy  :0
@@ -259,16 +263,16 @@ SIP1 History Info  :0
 SIP1 DNS SRV       :0
 SIP1 XFER Expire   :0
 SIP1 Ban Anonymous :0
-SIP1 Dial Off Line :0
+SIP1 Dial Off Line :1
 SIP1 Quota Name    :0
 SIP1 Presence Mode :0
 SIP1 RFC Ver       :1
 SIP1 Signal Port   :0
-SIP1 Transport     :0
+SIP1 Transport     :<?php if ($transport == "udp") {print "0\n";} else {print "1\n";}?>
 SIP1 Use SRV Mixer :0
 SIP1 SRV Mixer Uri :
 SIP1 Long Contact  :1
-SIP1 Auto TCP      :0
+SIP1 Auto TCP      :1
 SIP1 Uri Escaped   :0
 SIP1 Click to Talk :0
 SIP1 MWI Num       :100
@@ -292,7 +296,7 @@ SIP1 ANCOff SvcCode:
 SIP1 VoiceCodecMap :
 SIP1 BLFList Uri   :
 SIP1 BLF Server    :
-SIP1 Respond 182   :0
+SIP1 Respond 182   :1
 SIP1 Enable BLFList:0
 SIP1 Caller Id Type:1
 SIP1 Syn Clock Time:0
