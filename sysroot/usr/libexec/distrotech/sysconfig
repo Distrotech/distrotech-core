@@ -217,7 +217,9 @@ Install_System() {
   chroot ${INST_BASE} /usr/sbin/genconf > /dev/null 2>&1
   chroot ${INST_BASE} /usr/sbin/servconfig > /dev/tty4 2> /dev/tty4
 
-  /usr/bin/dialog --backtitle "$BT" --title "PostGRE Setup" --infobox "Applying PostGRE Schema. This Takes Several Minutes" 7 35
+  if [ ! -d ${INST_BASE}/var/spool/pgsql ];then
+    /usr/bin/dialog --backtitle "$BT" --title "PostGRE Setup" --infobox "Applying PostGRE Schema. This Takes Several Minutes" 7 35
+  fi;
   chroot ${INST_BASE} /usr/sbin/genconf > /dev/null 2>&1
   chroot ${INST_BASE} /usr/sbin/servconfig > /dev/tty4 2> /dev/tty4
 
@@ -680,6 +682,10 @@ Local_Install(){
   if [ "$MNTRT" == "" ];then
     /usr/bin/dialog --backtitle "$BT" --title "Cannot Install" --msgbox "No Root Partition Mounted" 5 35
     return 1;
+  fi;
+
+  if [ -e /media/isofs/boot/${ARCH}/tar/pgdata.tar.xz ];then
+    tar -C /media/install -xf /media/isofs/boot/${ARCH}/tar/pgdata.tar.xz
   fi;
 
   Install_System /media/install
