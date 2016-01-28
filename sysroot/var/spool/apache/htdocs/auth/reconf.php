@@ -371,35 +371,37 @@ if (isset($saved)) {
 */
   while(list($voipkey,$vdiscrip)=each($vtemp)) {
     if ($voipcb[$voipkey]) {
-      if (${$voipkey} == "on") {
-        ${$voipkey}="1";
+      if ($_POST[$voipkey] == "on") {
+        $_POST[$voipkey]="1";
       } else {
-        ${$voipkey}="0";
+        $_POST[$voipkey]="0";
       }
     }
     if ($voiprcb[$voipkey]) {
-      if (${$voipkey} == "on") {
-        ${$voipkey}="0";
+      if ($_POST[$voipkey] == "on") {
+        $_POST[$voipkey]="0";
       } else {
-        ${$voipkey}="1";
+        $_POST[$voipkey]="1";
       }
     }
-    if (${$voipkey} != "") {
-      $ud=pg_query("UPDATE astdb SET value= '" . ${$voipkey} . "' WHERE family='Setup' AND key = '" . $voipkey . "'");
+    if ($_POST[$voipkey] != "") {
+      $ud=pg_query("UPDATE astdb SET value= '" . $_POST[$voipkey] . "' WHERE family='Setup' AND key = '" . $voipkey . "'");
       if (pg_affected_rows($ud) <= 0) {
-        pg_query("INSERT INTO astdb (family,key,value) VALUES ('Setup','" . $voipkey . "','" . ${$voipkey} . "')");
+        pg_query("INSERT INTO astdb (family,key,value) VALUES ('Setup','" . $voipkey . "','" . $_POST[$voipkey] . "')");
       }
     }
   }
-  $islpre=pg_query($db,"SELECT id,value FROM astdb WHERE family='LocalPrefix' AND key='" . $DefaultPrefix . "'");
+
+  $islpre=pg_query($db,"SELECT id,value FROM astdb WHERE family='LocalPrefix' AND key='" . $_POST['DefaultPrefix'] . "'");
   if (pg_num_rows($islpre) == 1) {
     $lpredat=pg_fetch_array($islpre,0);
     if ($lpredat[1] != 1) {
       pg_query($db,"UPDATE astdb SET value='1' WHERE id='" . $lpredat[0] . "'");
     }
   } else {
-    pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('LocalPrefix','" . $DefaultPrefix . "','1')");
+    pg_query($db,"INSERT INTO astdb (family,key,value) VALUES ('LocalPrefix','" . $_POST['DefaultPrefix'] . "','1')");
   }
+
   if ($DOMC == "on") {
     $_POST['DOMC']="0";
     $_POST['OSLEVEL']="65";
@@ -462,8 +464,8 @@ if (isset($saved)) {
     $tmp=$intdata;
     while(list($key,$val) = each($tmp)) {
       $nval=$val . ":" . $sub;
-      if (isset(${$nval})) {
-        $sval=${$nval};
+      if (isset($_POST[$nval])) {
+        $sval=$_POST[$nval];
       } else {
         $sval=$conf[$val][$sub];
       }
@@ -475,8 +477,8 @@ if (isset($saved)) {
     $tmp=$vlandata;
     while(list($key,$val) = each($tmp)) {
       $nval=$val . ":" . $sub;
-      if (isset(${$nval})) {
-        $sval=${$nval};
+      if (isset($_POST[$nval])) {
+        $sval=$_POST[$nval];
       } else {
         $sval=$conf[$val][$sub];
       }
@@ -488,8 +490,8 @@ if (isset($saved)) {
     $tmp=$aliasdata;
     while(list($key,$val) = each($tmp)) {
       $nval=$val . ":" . $sub;
-      if (isset(${$nval})) {
-        $sval=${$nval};
+      if (isset($_POST[$nval])) {
+        $sval=$_POST[$nval];
       } else {
         $sval=$conf[$val][$sub];
       }

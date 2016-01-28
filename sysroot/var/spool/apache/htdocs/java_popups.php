@@ -1004,14 +1004,8 @@ function savereconfchanges() {
     err=err+'Invalid SMTP Gateway\r\n';
 
   var ntpserv=document.confform.NTP_SERV.value.split(" ");
-  if (ntpserv.length == 1)
+  if (document.confform.NTP_SERV.value == '')
     err=err+'NTP Server[s] Not Set';
-  else {
-    for(ni = 0;ni < ntpserv.length;ni++) {
-      if (! verifyIP(ntpserv[ni])) 
-        err=err+'Invalid NTP Server IP Address ('+ntpserv[ni]+')\r\n';
-    }
-  }
 
   if ((document.confform.DYN_SERV.value != '') && (! verifyIP(document.confform.DYN_SERV.value)) && (!verifyHost(document.confform.DYN_SERV.value)))
     err=err+'Invalid Dynamic DNS Server Address\r\n';
