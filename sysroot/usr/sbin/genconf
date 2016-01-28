@@ -17946,6 +17946,14 @@ __EOB__
 
 sub printdhclient {
   open(DHC,">dhclient.conf");
+
+  if ($sysconf{'Bridge'} ne "") {
+    @brint=split(/ /,$sysconf{'Bridge'});
+    foreach $bint (@brint) {
+      $isbridge{$bint}=TRUE;
+    }
+  }
+
   foreach $iface (@ints) {
     if ($iface eq $sysconf{'Internal'}) {
       print DHC<<__EOB__;
@@ -17961,7 +17969,8 @@ interface "$iface" {
 __EOB__
     } elsif (index($iface,"gtun") eq -1) {
       @idata=split(/\|/,$interface{$iface});
-      if ((@idata[1] ne "0.0.0.0") || (@idata[2] ne "32")) {
+
+      if ((@idata[1] ne "0.0.0.0") || (@idata[2] ne "32") || ($isbridge{$iface})) {
         next;
       }
 
