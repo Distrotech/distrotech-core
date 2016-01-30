@@ -14985,6 +14985,8 @@ noload => res_calendar_ews.so
 noload => res_calendar_caldav.so
 noload => res_calendar_exchange.so
 
+noload => chan_alsa.so
+
 ;Fax Changes
 noload => app_faxdetect.so
 
@@ -15212,6 +15214,7 @@ rtpholdtimeout=300
 alwaysauthreject=yes
 prematuremedia=no
 insecure=no
+session-expires=600
 __EOF__
 
 if ( -e "/etc/asterisk/res_stun_monitor.conf") {
