@@ -216,7 +216,7 @@ SIP1 Register Addr :<?php print $domain . "\n";?>
 SIP1 Register Port :5060
 SIP1 Register User :<?php print $exten . "\n";?>
 SIP1 Register Pswd :<?php print $pass . "\n";?>
-SIP1 Register TTL  :300
+SIP1 Register TTL  :1800
 SIP1 Enable Reg    :1
 SIP1 Proxy Addr    :<?php print $domain . "\n";?>
 SIP1 Proxy Port    :5060
@@ -245,7 +245,7 @@ SIP1 UDPUpdate TTL :60
 SIP1 Server Type   :0
 SIP1 User Agent    :
 SIP1 PRACK         :0
-SIP1 Keep AUTH     :0
+SIP1 Keep AUTH     :1
 SIP1 Session Timer :0
 SIP1 S.Timer Expire:0
 SIP1 Enable GRUU   :0
@@ -254,7 +254,7 @@ SIP1 DTMF Info Mode:0
 SIP1 NAT Type      :0
 SIP1 Enable Rport  :1
 SIP1 Subscribe     :1
-SIP1 Sub Expire    :300
+SIP1 Sub Expire    :1800
 SIP1 Single Codec  :0
 SIP1 CLIR          :0
 SIP1 Strict Proxy  :0
@@ -268,7 +268,7 @@ SIP1 Quota Name    :0
 SIP1 Presence Mode :0
 SIP1 RFC Ver       :1
 SIP1 Signal Port   :0
-SIP1 Transport     :<?php if ($transport == "udp") {print "0\n";} else {print "1\n";}?>
+SIP1 Transport     :<?php if ($transport == "tcp") {print "1\n";} else {print "0\n";}?>
 SIP1 Use SRV Mixer :0
 SIP1 SRV Mixer Uri :
 SIP1 Long Contact  :1
@@ -335,7 +335,7 @@ Account2 Password  :guest
 Account2 Level     :5
 
 <QOS CONFIG MODULE>
-Enable VLAN        :1
+Enable VLAN        :<?php if ($vlantag > 1) {print "1\n";} else {print "0\n";}?>
 Enable diffServ    :1
 LLDP Transmit      :1
 LLDP Refresh Time  :60
@@ -399,6 +399,7 @@ Fkey4 Title        :
 Fkey5 Type         :3
 
 <AUTOUPDATE CONFIG MODULE>
+FDPS Enable        :0
 PNP Enable         :0
 PNP IP             :224.0.1.75
 PNP Port           :5060

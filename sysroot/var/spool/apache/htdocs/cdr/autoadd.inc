@@ -106,8 +106,12 @@ function createexten($mac,$phonetype,$prefix,$start,$tdmport) {
         $encrypt="no";
       }
 
+      $qualify="yes";
       if (($phonetype == "SNOM") || ($phonetype == "YEALINK")) {
         $transport="tls";
+      } elseif ($phonetype == "DUXBURY") {
+        $transport="udp,tcp";
+        $qualify="no";
       } else {
         $transport="udp";
       }
@@ -115,7 +119,7 @@ function createexten($mac,$phonetype,$prefix,$start,$tdmport) {
       $exaddq="INSERT INTO users (context,name,defaultuser,mailbox,secret,usertype,
                                        fullname,callgroup,pickupgroup,qualify,encryption,transport) VALUES (
                                        '6'," . $newexten . "," . $newexten . "," . $newexten . "||'@6','" . $newepass .
-                                       "','0','Exten '||" . $newexten . ",'1','1','yes','" . $encrypt . "','" . $transport . "')";
+                                       "','0','Exten '||" . $newexten . ",'1','1','" . $qualify . "','" . $encrypt . "','" . $transport . "')";
       pg_query($db,$exaddq);
       pg_query($db,"INSERT INTO voicemail (mailbox,context,email,fullname,password) SELECT users.name,context,'',fullname,name FROM users WHERE users.name = " . $newexten);
       pg_query($db,"DELETE FROM astdb where family=" . $newexten);

@@ -12,7 +12,7 @@ $ptype['snom']="SELECT name,ipaddr," . $validpw . " from users
 $ptype['polycom']="SELECT name,ipaddr," . $validpw . " from users 
   left outer join astdb as lkey on (substr(name,0,3)=lkey.key) 
   LEFT OUTER JOIN features ON (name=exten)
- WHERE snommac != '' AND snommac IS NOT NULL AND (ptype='POLYCOM' OR ptype ~ '^IP_[0-9]+$') AND length(name) = 4 AND lkey.family = 'LocalPrefix' AND lkey.value='1'";
+ WHERE snommac != '' AND snommac IS NOT NULL AND (ptype = 'DUXBURY' OR ptype='POLYCOM' OR ptype ~ '^IP_[0-9]+$') AND length(name) = 4 AND lkey.family = 'LocalPrefix' AND lkey.value='1'";
 $ptype['zap']="SELECT name,zapline," . $validpw . " from users 
   LEFT OUTER JOIN features ON (name=exten) where zapline ~ '^[1-9]'";
 $ptype['queue']="SELECT users.name,1," . $validpw . " from users 
