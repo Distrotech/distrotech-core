@@ -285,7 +285,7 @@ if ((isset($pbxupdate)) && ($pbxupdate == "Save Changes")) {
   $userarr=array("nat","dtmfmode","fullname","canreinvite","qualify","activated",
                  "language","callgroup","pickupgroup","insecure","h323prefix","simuse",
                  "tariff","h323gkid","h323permit","h323neighbor","t38pt_udptl","encryption",
-                 "encryption_taglen");
+                 "encryption_taglen","transport");
 
   $dbq="";
   for($ucnt=0;$ucnt < count($userarr);$ucnt++) {
@@ -329,7 +329,7 @@ $qconsdata=pg_query($db,"SELECT context,count FROM console WHERE mailbox = '" . 
 $qgetudata=pg_query($db,"SELECT nat,dtmfmode,users.fullname,voicemail.email,canreinvite,qualify,voicemail.password,allow,callgroup,pickupgroup,
                                 insecure,h323permit,h323gkid,h323prefix,h323neighbor,ipaddr,users.language,secret,usertype,
                                 activated,simuse,tariff,t38pt_udptl,
-                                case when (encryption_taglen = '32') then encryption||',32bit' else encryption end
+                                case when (encryption_taglen = '32') then encryption||',32bit' else encryption end,transport
                               FROM users LEFT OUTER JOIN voicemail ON (voicemail.mailbox = users.name) WHERE name='" . $_POST['exten'] . "'");
 $udata=pg_fetch_array($qgetudata,0);
 
@@ -380,6 +380,7 @@ $simuse=$udata[20];
 $tariff=$udata[21];
 $t38pt_udptl=$udata[22];
 $encryption=$udata[23];
+$transport=$udata[24];
 
 $conscont=$consdata[0];
 $conscount=$consdata[1];
@@ -1117,10 +1118,13 @@ if ($SUPER_USER == 1) {
   <TD onmouseover=myHint.show('ES34') ONMOUSEOUT=myHint.hide()><?php print _("NAT Handling");?></TD>
   <TD>
     <SELECT NAME=nat>
-      <OPTION VALUE=no <?php if ($nat == "no") {print " SELECTED";}?>><?php print _("Use NAT If Required");?></OPTION>
-      <OPTION VALUE=yes <?php if ($nat == "yes") {print " SELECTED";}?>><?php print _("Always Use Nat");?></OPTION>
-      <OPTION VALUE=never <?php if (($nat == "never") || ($nat == "")) {print " SELECTED";}?>><?php print _("Never Use NAT");?></OPTION>
-      <OPTION VALUE=route <?php if ($nat == "route") {print " SELECTED";}?>><?php print _("Assume NAT Dont Send Port");?></OPTION>
+      <OPTION VALUE="no" <?php if ($nat == "no") {print " SELECTED";}?>><?php print _("No Additional NAT Methods");?></OPTION>
+      <OPTION VALUE="force_rport" <?php if ($nat == "force_rport") {print " SELECTED";}?>><?php print _("Force use Of rport.");?></OPTION>
+      <OPTION VALUE="comedia" <?php if ($nat == "comedia") {print " SELECTED";}?>><?php print _("Send media to the port it receives from.");?></OPTION>
+      <OPTION VALUE="comedia,force_rport" <?php if ($nat == "comedia,force_rport") {print " SELECTED";}?>><?php print _("Force rport and send media to the port it receives from.");?></OPTION>
+      <OPTION VALUE="auto_force_rport" <?php if (($nat == "auto_force_rport") || ($nat == "")){print " SELECTED";}?>><?php print _("Use rport if nat is detected");?></OPTION>
+      <OPTION VALUE="auto_comedia" <?php if ($nat == "auto_comedia") {print " SELECTED";}?>><?php print _("Send media to port it received it from if nat is detected");?></OPTION>
+      <OPTION VALUE="auto_force_rport,auto_comedia" <?php if ($nat == "auto_force_rport,auto_comedia") {print " SELECTED";}?>><?php print _("Use rport and send media to port received from if nat is detected");?></OPTION>
     </SELECT>
 </TR>
 <TR CLASS=list-color2>
@@ -1153,23 +1157,43 @@ if ($SUPER_USER == 1) {
     </SELECT>
   </TD>
 </TR>
+
+
 <TR CLASS=list-color1>
+  <TD onmouseover=myHint.show('ES37') ONMOUSEOUT=myHint.hide()><?php print _("Transport Mode");?></TD>
+  <TD>
+    <SELECT NAME=transport>
+<?php
+    $xports=array("udp","tcp","tls","udp,tcp","tcp,udp","tcp,tls","tls,tcp","udp,tls","tls,udp","tls,tcp,udp","tcp,tls,udp","udp,tcp,tls");
+    while(list($tkey,$tval) = each($xports)) {
+      print "<OPTION VALUE=" . $tval;
+      if ($transport == $tval) {
+        print " SELECTED";
+      }
+      print ">" . $tval . "</OPTION>\n";
+    }
+?>
+    <SELECT>
+  </TD>
+</TR>
+
+<TR CLASS=list-color2>
   <TD onmouseover=myHint.show('ES37') ONMOUSEOUT=myHint.hide()><?php print _("Allow Peer To Peer Connections (Reinvite)");?></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=canreinvite <?php if ($canreinvite == "yes") {print "CHECKED";}?>></TD>
 </TR>
-<TR CLASS=list-color2>
+<TR CLASS=list-color1>
   <TD onmouseover=myHint.show('ES39') ONMOUSEOUT=myHint.hide()><?php print _("Send Nat Keep Alive Packets");?></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=qualify <?php if ($qualify == "yes") {print "CHECKED";}?>></TD>
 </TR>
-<TR CLASS=list-color1>
+<TR CLASS=list-color2>
   <TD onmouseover=myHint.show('ES39') ONMOUSEOUT=myHint.hide()><?php print _("Pass DDI To Extension (Set To Header)");?></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=DDIPASS <?php if ($origdata["ddipass"] == "1") {print "CHECKED";}?>></TD>
 </TR>
-<TR CLASS=list-color2>
+<TR CLASS=list-color1>
   <TD onmouseover=myHint.show('ES39') ONMOUSEOUT=myHint.hide()><?php print _("Allow T.38 Support");?></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=t38pt_udptl <?php if ($t38pt_udptl != "no") {print "CHECKED";}?>></TD>
 </TR>
-<TR CLASS=list-color1>
+<TR CLASS=list-color2>
   <TD onmouseover=myHint.show('ES39') ONMOUSEOUT=myHint.hide()><?php print _("Only Authorise If Registered");?></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=authreg <?php if ($origdata["authreg"] == "1") {print "CHECKED";}?>></TD>
 </TR>
