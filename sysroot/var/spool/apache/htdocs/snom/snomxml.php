@@ -246,7 +246,7 @@ if ($phone != "300") {
       $kdef[6]="dest 900";
       $kdef[7]="dest 901";
 
-      $fkeys=pg_query($db,"SELECT substr(key,5),value FROM astdb WHERE family='" . $exten . "' AND key ~ '^fkey[0-9]+\$' ORDER BY lpad(substr(key,5),3,0)");
+      $fkeys=pg_query($db,"SELECT substr(key,5),value FROM astdb WHERE family='" . $exten . "' AND key ~ '^fkey[0-9]+\$' ORDER BY lpad(substr(key,5),3,'0')");
       $lastfk=0;
       for($row=0;$row < pg_num_rows($fkeys);$row++) {
         $rdat=pg_fetch_array($fkeys,$row);
@@ -308,7 +308,7 @@ for($row=0;$row < pg_num_rows($pbook);$row++) {
   print "tu_" . $row . "&: " . $rdat[1] . "\n";
   print "tc_" . $row . "&: " . $rdat[2] . "\n";
   print "to_" . $row . "&: line1\n";
-}  
+}
 
 $gdbquery="SELECT lpad(substr(key,7),2,'0'),value FROM astdb WHERE family='" . $exten . "' AND key ~ '^speed\-([0-9]+)|([*#])' ORDER BY lpad(substr(key,7),2,'0')";
 $qgetdata=pg_query($db,$gdbquery);
