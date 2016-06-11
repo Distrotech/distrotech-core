@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -20,7 +20,7 @@
   include_once "/var/spool/apache/htdocs/ldap/ldap.inc";
   include_once "/var/spool/apache/htdocs/ldap/ldapbind.inc";
 
-  if (ereg("ou=Idmap",$ldn)) {
+  if (preg_match("/ou=Idmap/",$ldn)) {
     $ainfo["userPassword"]="{CRYPT}" . crypt($_SERVER['PHP_AUTH_PW']);
     ldap_mod_replace($ds,$ldn,$ainfo);
   }
@@ -54,4 +54,4 @@
 //  @ldap_unbind($ds);
     $r=@ldap_bind($ds,$ldn,$_SERVER['PHP_AUTH_PW']);
   }
-%>
+?>

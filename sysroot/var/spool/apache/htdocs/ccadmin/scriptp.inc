@@ -1,4 +1,4 @@
-<%
+<?php
 $varchart="varchar(64)";
 $dbrows=array();
 $dbrows['id']="bigint";
@@ -53,4 +53,4 @@ function getscripthtml($text,$htmls) {
     return nl2br(preg_replace_callback(array("|@([CI])([a-zA-Z0-9]+)%(.*)@|","|@([N])([a-zA-Z0-9]+)%([0-9\.]+)@|","|@([T])([a-zA-Z0-9]+)%([0-9]+):([0-9]+)@|","|(\n\n)|","|@([SR])([a-zA-Z0-9]+)%([a-zA-Z0-9\: ]+)@|","|@(D)([a-zA-Z0-9]+)%(.*)@|"),"parseinput",htmlspecialchars($text)));
   }
 }
-%>
+?>

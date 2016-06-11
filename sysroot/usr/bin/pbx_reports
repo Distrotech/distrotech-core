@@ -1,5 +1,5 @@
 #!/usr/bin/php -d safe_mode=no
-<%
+<?php
 
 
 function do_report($repname, $username, $additional) {
@@ -120,7 +120,7 @@ function do_report($repname, $username, $additional) {
     $_POST['disppage']=$report[$repname];
     $_SESSION['disppage']=$_POST['disppage'];
 
-    while(list($key,$value) = each($$repname)) {
+    while(list($key,$value) = each(${$repname})) {
       $_POST[$key]=$value;
     }
     if ($addinf[$repname] != "") {
@@ -132,7 +132,7 @@ function do_report($repname, $username, $additional) {
       extract($superglobal, EXTR_SKIP);
     }
 
-    if (ereg("([a-zA-Z]+)\/",$report[$repname],$dispdata)) {
+    if (preg_match("/([a-zA-Z]+)\//",$report[$repname],$dispdata)) {
       if ($dispdata[1] == "cdr") {
         include "/var/spool/apache/htdocs/cdr/uauth.inc";
       } else {
@@ -227,7 +227,7 @@ function getuserinf() {
   $output = fopen($filename,'r');
   $groups=array();
   while (($buffer = fgets($output, 4096)) !== false) {
-    $info=split(":",rtrim($buffer,"\n"));
+    $info=preg_split("/:/",rtrim($buffer,"\n"));
     if ($info[0] == "GRP") {
       if (!is_array($groups[$info[1]])) {
         $groups[$info[1]]=array();
@@ -269,4 +269,4 @@ foreach($uinf['users'] as $key => $value) {
   unset($files);
   unset($acd);
 }
-%>
+?>

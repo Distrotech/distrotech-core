@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -26,11 +26,11 @@ if (! isset($agi)) {
   $agi->connect("127.0.0.1","admin","admin");
 }
 
-%>
+?>
 
 <CENTER>
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
-<%
+<?php
 
 $cnt=1;
 $astcmd=array("version","uptime","license","warranty");
@@ -54,7 +54,7 @@ for($ccmd=0;$ccmd < count($astcmd);$ccmd++) {
     system("uptime");
   }
   foreach(explode("\n",$chans['data']) as $line) {
-    if (! ereg("(^Privilege: Command)|(^[0-9]*[ ]*active)|(^$)",$line)) {
+    if (! preg_match("/(^Privilege: Command)|(^[0-9]*[ ]*active)|(^$)/",$line)) {
       print $line . "\n";
     }
   }
@@ -62,5 +62,5 @@ for($ccmd=0;$ccmd < count($astcmd);$ccmd++) {
 
 print "</PRE></TD></TR>\n";
 $agi->disconnect();
-%>
+?>
 </TABLE>

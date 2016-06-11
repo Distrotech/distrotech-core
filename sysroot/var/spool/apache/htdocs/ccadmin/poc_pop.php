@@ -1,4 +1,4 @@
-<%
+<?php
 /*
  * Start the session if not started
  */
@@ -14,7 +14,7 @@ if ($sessid == "") {
     $_SESSION['auth']=false;
   }
 }
-%>
+?>
 <link rel="stylesheet" href="/style.php">
 <CENTER>
 <FORM METHOD=POST NAME=hpcats>
@@ -22,7 +22,7 @@ if ($sessid == "") {
 <TR CLASS=list-color2>
   <TH CLASS=heading-body COLSPAN=2>Category Updates</TH>
 </TR>
-<%
+<?php
 
 $now=time();
 $dnow=new DateTime("@$now");
@@ -79,7 +79,7 @@ if (!isset($_POST['cat'])) {
     $cnt++;    
   }
 }
-%>
+?>
 </TABLE>
 
 <SCRIPT>

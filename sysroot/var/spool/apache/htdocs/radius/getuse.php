@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -29,13 +29,13 @@
 
   $curmon=$curyear . "," . $curtime[4];
 
-%>
+?>
 <FORM METHOD=POST NAME=raduse onsubmit="ajaxsubmit(this.name);return false">
 <CENTER>
 <TABLE WIDTH=90% CELLSPACING=0 CELLPADDING=0>
 <INPUT TYPE=HIDDEN NAME=disppage VALUE="radius/raduse.php">
 <TR CLASS=list-color2><TH CLASS=heading-body COLSPAN=2>Display User Usage</TH></TR>
-<%
+<?php
 
   $sr=ldap_search($ds,"ou=Admin","(&(objectclass=groupofnames)(member=$ldn)(cn=Admin Access))");
   if ((ldap_count_entries($ds,$sr) != 1) && ($PHP_AUTH_USER != "admin")) {
@@ -44,7 +44,7 @@
     print "<TR CLASS=list-color1><TH COLSPAN=2>Only Displaying User " . $PHP_AUTH_USER . "</TH></TR>";
     
   } else {
-%>
+?>
       <TR CLASS=list-color1><TD WIDTH=50% ALIGN=LEFT>Order By</TH><TD>
       <SELECT NAME=sort>
         <OPTION VALUE=UserName>User Name</OPTION>
@@ -53,15 +53,15 @@
         <OPTION VALUE="BYTESIN DESC">Bytes In</OPTION>
         <OPTION VALUE="BYTESOUT DESC">Bytes Out</OPTION>
       </SELECT></TD></TR>
-<%
+<?php
   }
   $queryq="SELECT DISTINCT date_part('year',AcctStartTime) AS Year,date_part('month',AcctStartTime) AS Month 
                       FROM radacct WHERE AcctStartTime != 0 AND AcctStopTime != 0$ulimit
                       ORDER BY Year,Month";
-%>
+?>
       <TR CLASS=list-color2><TD ALIGN=LEFT WIDTH=50%>Month To View</TH><TD>
       <SELECT NAME=time><BR>
-<%
+<?php
   $query=pg_query($db,$queryq);
   $num=pg_num_rows($query);
   for($i=0;$i < $num;$i++) {
@@ -81,7 +81,7 @@
   } else {
     print "<OPTION VALUE=\"" . $curmon . "\">" . $curyear . "/" . $curtime[4]; 
   }
-%>
+?>
 
       </SELECT></TD></TR>
       <TR CLASS=list-color1><TD ALIGN=LEFT WIDTH=50%>Rows To Show</TH><TD>

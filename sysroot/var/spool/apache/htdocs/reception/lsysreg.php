@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -48,11 +48,11 @@ if (($_POST['mac'] != "") && (isset($lsysreg))) {
   }
   $upq=substr($upq,0,-1);
   pg_query($db, "UPDATE atatable SET " . $upq . " WHERE id='" . $ataid . "'");
-  if ($LSYSIPADDR != "") {%>
+  if ($LSYSIPADDR != "") {?>
     <SCRIPT>
-      atapopupwin('<%print $LSYSIPADDR;%>','<%print $LSYSPROFILE;%>');
+      atapopupwin('<?php print $LSYSIPADDR;?>','<?php print $LSYSPROFILE;?>');
     </SCRIPT>
-<%
+<?php
   }
 }
 
@@ -74,52 +74,52 @@ if (pg_num_rows($lsysgetconf) > 0) {
   $lsysdata["nat"]="Bridge";
 }
 
-%>
+?>
 <CENTER>
-<link rel="stylesheet" type="text/css" href="/style.php?style=<%print $style;%>">
+<link rel="stylesheet" type="text/css" href="/style.php?style=<?php print $style;?>">
 <FORM METHOD=POST NAME=lsysreg onsubmit="ajaxsubmit(this.name);return false">
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
 <TR CLASS=list-color2>
 <TR CLASS=list-color2>
   <TH COLSPAN=2>Linksys/Audiocodes MP-202 Settings (Shared By All Ports)</TH></TR>
 <TR CLASS=list-color1>
-  <TD ALIGN=LEFT onmouseover=myHint.show('ES24') ONMOUSEOUT=myHint.hide()><%print _("Phones MAC Address");%><BR></TD>
-  <TD><INPUT TYPE=TEXT NAME=mac VALUE="<%print $snommac;%>"></TD>
+  <TD ALIGN=LEFT onmouseover=myHint.show('ES24') ONMOUSEOUT=myHint.hide()><?php print _("Phones MAC Address");?><BR></TD>
+  <TD><INPUT TYPE=TEXT NAME=mac VALUE="<?php print $snommac;?>"></TD>
 </TR>
 <TR  CLASS=list-color2>
-  <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><%print _("Host Name");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=hostname VALUE="<%print $lsysdata["hostname"];%>"></TD>
+  <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><?php print _("Host Name");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=hostname VALUE="<?php print $lsysdata["hostname"];?>"></TD>
 </TR>
 <TR  CLASS=list-color1>
-  <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><%print _("Settings Server");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=profile VALUE="<%print $lsysdata["profile"];%>"></TD>
+  <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><?php print _("Settings Server");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=profile VALUE="<?php print $lsysdata["profile"];?>"></TD>
 </TR>
 <TR  CLASS=list-color2>
-  <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><%print _("Stun Server");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=stunsrv VALUE="<%print $lsysdata["stunsrv"];%>"></TD>
+  <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><?php print _("Stun Server");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=stunsrv VALUE="<?php print $lsysdata["stunsrv"];?>"></TD>
 </TR>
 <TR  CLASS=list-color1>
-  <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><%print _("VLAN ID (Handsets)") . "<BR>" . _("Set It On The Menu And Power Cycle The Device Before Sending The Config");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=vlan VALUE="<%print $lsysdata["vlan"];%>"></TD>
+  <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><?php print _("VLAN ID (Handsets)") . "<BR>" . _("Set It On The Menu And Power Cycle The Device Before Sending The Config");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=vlan VALUE="<?php print $lsysdata["vlan"];?>"></TD>
 </TR>
 <TR  CLASS=list-color2>
-  <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><%print _("RX/TX Gain (ATA's)");%></TD>
+  <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><?php print _("RX/TX Gain (ATA's)");?></TD>
   <TD>
-    <INPUT TYPE=TEXT NAME=rxgain SIZE=3 VALUE="<%print $lsysdata["rxgain"];%>">/
-    <INPUT TYPE=TEXT NAME=txgain SIZE=3 VALUE="<%print $lsysdata["txgain"];%>">
+    <INPUT TYPE=TEXT NAME=rxgain SIZE=3 VALUE="<?php print $lsysdata["rxgain"];?>">/
+    <INPUT TYPE=TEXT NAME=txgain SIZE=3 VALUE="<?php print $lsysdata["txgain"];?>">
   </TD>
 </TR>
 </TR>
 <TR  CLASS=list-color1>
-  <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><%print _("Current IP Address.") . "<BR>" . _("This Must Be Set And Reachable From Your Browser To Initilise The Phone Correctly.");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=LSYSIPADDR VALUE="<%print $curipaddr;%>"></TD>
+  <TD onmouseover=myHint.show('ESXX') ONMOUSEOUT=myHint.hide()><?php print _("Current IP Address.") . "<BR>" . _("This Must Be Set And Reachable From Your Browser To Initilise The Phone Correctly.");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=LSYSIPADDR VALUE="<?php print $curipaddr;?>"></TD>
 </TR>
 <TR CLASS=list-color2>
-  <TD onmouseover=myHint.show('ES8') ONMOUSEOUT=myHint.hide()><%print _("Enable NAT/DHCP On Lan Port");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=nat<%if ($lsysdata["nat"] == "NAT") {print " checked";}%>></TD>
+  <TD onmouseover=myHint.show('ES8') ONMOUSEOUT=myHint.hide()><?php print _("Enable NAT/DHCP On Lan Port");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=nat<?php if ($lsysdata["nat"] == "NAT") {print " checked";}?>></TD>
 </TR>
 <TR CLASS=list-color1>
-  <TD ALIGN=MIDDLE COLSPAN=2><INPUT TYPE=SUBMIT NAME=lsysreg VALUE="<%print _("Save");%>"></TD>
+  <TD ALIGN=MIDDLE COLSPAN=2><INPUT TYPE=SUBMIT NAME=lsysreg VALUE="<?php print _("Save");?>"></TD>
 </TR>
 
 </TABLE>

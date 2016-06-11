@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -44,8 +44,8 @@ if ($ds) {
 
       $natrib=$atrib;
       while(list($idx,$catt)=each($natrib)) {
-        if ($$catt != "") {
-          $info[$catt]=$$catt;
+        if (${$catt} != "") {
+          $info[$catt]=${$catt};
         }
       }
 
@@ -61,13 +61,13 @@ if ($ds) {
     }
   }
 }
-%>
+?>
 
 <CENTER>
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
-<TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body><%print _("Add Mail Server Access Account");%></TH></TR>
+<TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body><?php print _("Add Mail Server Access Account");?></TH></TR>
 <FORM METHOD=POST>
-<%
+<?php
 
 while(list($attr,$aname)=each($adescrip)) {
   $rem=$cnt % 2;
@@ -77,25 +77,25 @@ while(list($attr,$aname)=each($adescrip)) {
     $bcolor=" CLASS=list-color1";
   }
 
-%>
-  <TR <% print "$bcolor"%>><TD WIDTH=50% onmouseover="myHint.show('<%print $attr;%>')" onmouseout="myHint.hide()">
-<%
+?>
+  <TR <?php print "$bcolor"?>><TD WIDTH=50% onmouseover="myHint.show('<?php print $attr;?>')" onmouseout="myHint.hide()">
+<?php
       print $adescrip[$attr];
-%>
+?>
     </TD><TD WIDTH=50%>
-<%
+<?php
     if (($attr == "pass1") || ($attr == "pass2")) {
-%>
-      <INPUT TYPE=PASSWORD SIZE=40 NAME=<%print $attr;%> VALUE="">
-<%
+?>
+      <INPUT TYPE=PASSWORD SIZE=40 NAME=<?php print $attr;?> VALUE="">
+<?php
     } else {
-%>
-      <INPUT TYPE=TEXT SIZE=40 NAME=<%print $attr;%> VALUE="<%print $$attr;%>">
-<%
+?>
+      <INPUT TYPE=TEXT SIZE=40 NAME=<?php print $attr;?> VALUE="<?php print ${$attr};?>">
+<?php
     }
-%>
+?>
     </TD></TR>
-<%
+<?php
   $cnt ++;
 }
   $rem=$cnt % 2;
@@ -106,9 +106,9 @@ while(list($attr,$aname)=each($adescrip)) {
     $bgcolor["1"]=" CLASS=list-color1";
     $bgcolor["0"]=" CLASS=list-color2";
   }
-%>
-    <TR <% print $bgcolor["0"]%>><TD ALIGN=MIDDLE COLSPAN=2 WIDTH=50%>
-<%
+?>
+    <TR <?php print $bgcolor["0"]?>><TD ALIGN=MIDDLE COLSPAN=2 WIDTH=50%>
+<?php
   if ($modify) {
     print "<INPUT TYPE=SUBMIT VALUE=Modify NAME=update>";
     print "<INPUT TYPE=SUBMIT VALUE=Delete NAME=delete>";
@@ -116,7 +116,7 @@ while(list($attr,$aname)=each($adescrip)) {
   } else {
     print "<INPUT TYPE=SUBMIT VALUE=\"" . _("Add") . "\" NAME=submited>";
   }
-%>
+?>
     </TD></TR>
 </TABLE>
 </FORM>

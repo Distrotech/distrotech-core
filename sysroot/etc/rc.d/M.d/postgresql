@@ -31,8 +31,8 @@ if [ ! -e /etc/pgpool/pgpool.conf ];then
   PGPORT=5433;
 fi;
 PGDATA=/var/spool/pgsql
-
-export PGDATA PGPORT
+PGTAR=/var/lib/pgsql/pgdata.tar.xz
+export PGDATA PGPORT PGTAR
 
 Create_HBA() {
   (cat <<__EOF__
@@ -156,17 +156,11 @@ start_db() {
   fi;
 }
 
-create_db() {
-  if [ ! -d ${PGDATA} ];then
-    mkdir $PGDATA
-    chown pgsql.pgsql $PGDATA
-  fi;
+install_init_db() {
   su pgsql -c /usr/bin/initdb > /dev/null 2>&1
- 
-  check_sslcert
-  if [ $? != 0 ];then
+  if ! check_sslcert;then
     rm -rf ${PGDATA}
-    exit
+    exit;
   fi;
 
   (cat <<__EOF__
@@ -206,16 +200,34 @@ __EOF__
   setup_pgpass
   setup_dbs
 
-  stop_db
-  start_db
+  tar --exclude=${PGDATA}/server.crt --exclude=${PGDATA}/server.key -cJf ${PGTAR} /root/.pgpass ${PGDATA}
+}
+
+create_db() {
+  if [ ! -d ${PGDATA} ];then
+    mkdir $PGDATA
+    chown pgsql.pgsql $PGDATA
+    chmod 0700 ${PGDATA}
+  fi;
+
+  if [ -e ${PGTAR} ];then
+    tar -C / -xf ${PGTAR}
+   else
+    install_init_db
+    stop_db
+  fi;
+
 }
 
 if [ -e ${PGDATA}/postgresql.conf ];then
-  check_sslcert || exit
-
-  stop_db
-  start_db
-  setup_dbs
+  if check_sslcert;then
+    stop_db
+    start_db
+    setup_dbs
+  fi;
  else
   create_db
+  if check_sslcert;then
+    start_db
+  fi;
 fi;

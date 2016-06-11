@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2006  <Superset>
@@ -98,7 +98,7 @@ array_push($menu,"main");
 
 for($mcnt=0;$mcnt < count($menu);$mcnt++) {
   $subout[$menu[$mcnt]]="";
-  while(list($item,$action)=each($$menu[$mcnt])) {
+  while(list($item,$action)=each(${$menu[$mcnt]})) {
     if (substr($action,0,7) == "include") {
       $include=substr($action,8);
       if ($include == "login") {
@@ -124,4 +124,4 @@ for($mcnt=0;$mcnt < count($menu);$mcnt++) {
     print "menu_list['main_menu']=new menu (menu_items_list['main_menu'],menu_horiz);\n\n";
   }
 }
-%>
+?>

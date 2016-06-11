@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -114,4 +114,4 @@ for ($pkt=0;$pkt < count($apiinf);$pkt++)
   	}
 }
 //print_r($apiinf);
-%>
+?>

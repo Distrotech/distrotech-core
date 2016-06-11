@@ -1,4 +1,4 @@
-<%
+<?php
 $uadata=explode(";",$_SERVER['HTTP_USER_AGENT']);
 //$uadata=explode(";","Mozilla/4.0 (compatible; snom300-SIP 7.3.27)");
 $snomver=trim($uadata[1]);
@@ -38,4 +38,4 @@ if (($sipver[0] < 5) && (is_file("snom" . $phone . "-5.5a-SIP-j.bin"))) {
 } else if (is_file($firmware_file)) {
   print "firmware: http://" . $SERVER_NAME . "/snom/" . $firmware_file . "\n";
 }
-%>
+?>

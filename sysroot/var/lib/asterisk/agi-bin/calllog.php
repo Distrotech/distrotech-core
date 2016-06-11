@@ -1,4 +1,4 @@
-<%
+<?php
 
 include "/var/lib/asterisk/agi-bin/functions.inc";
 
@@ -38,7 +38,7 @@ function agisend($agicmd) {
   while($wrets=fgets($socket,8192)) {
     $wrets=rtrim($wrets);
     if ($wrets != "") {
-      list($key,$val)=split(": ",$wrets);
+      list($key,$val)=preg_split("/: /",$wrets);
       if ($val == "") {
         $key=substr($key,0,-1);
       }
@@ -78,4 +78,4 @@ if ($dstchan != "") {
   $agiinf=agisend($agicmd);
   verbose($agiinf);
 }
-%>
+?>

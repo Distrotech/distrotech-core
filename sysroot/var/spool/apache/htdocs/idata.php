@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -31,16 +31,16 @@
   $discrip["hostedSite"]="Website's (FTP/PHP/CGI Enabled)";
   $discrip["hostedFPSite"]="Website's (FrontPage Enabled)";
 
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=idatafrm onsubmit="ajaxsubmit(this.name);return false">
-<INPUT TYPE=HIDDEN NAME=disppage VALUE="<%print $showpage;%>">
-<INPUT TYPE=HIDDEN NAME=nomenu VALUE="<%if ($_POST['nomnenu'] < 2) {print $_POST['nomenu'];}%>">
-<INPUT TYPE=HIDDEN NAME=classi VALUE="<%print $euser;%>">
-<INPUT TYPE=HIDDEN NAME=mmap VALUE="<%print $info;%>">
+<INPUT TYPE=HIDDEN NAME=disppage VALUE="<?php print $showpage;?>">
+<INPUT TYPE=HIDDEN NAME=nomenu VALUE="<?php if ($_POST['nomnenu'] < 2) {print $_POST['nomenu'];}?>">
+<INPUT TYPE=HIDDEN NAME=classi VALUE="<?php print $euser;?>">
+<INPUT TYPE=HIDDEN NAME=mmap VALUE="<?php print $info;?>">
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
-<TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body><%print _("Editing");%> <%print  $discrip[$info];%></TH></TR>
-<%
+<TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body><?php print _("Editing");?> <?php print  $discrip[$info];?></TH></TR>
+<?php
   $sr=ldap_search($ds,"ou=Admin","(&(objectclass=groupofnames)(member=" . $ldn . ")(cn=Admin Access))");
   if ((ldap_count_entries($ds,$sr) == 1) || ($PHP_AUTH_USER == "admin")) {
     $ADMIN_USER="admin";
@@ -63,8 +63,8 @@
     for ($i=0; $i<$ecount; $i++) {
       $ent="del" . $i;
       $entv="delh" . $i;
-      if ($$ent) {
-        $dinfo[$info][$dcnt]=$$entv;
+      if (${$ent}) {
+        $dinfo[$info][$dcnt]=${$entv};
         $dcnt++;
       }
     }
@@ -97,17 +97,17 @@
       }
     }
     if ($info == "maillocaladdress") {
-%>
+?>
       <SCRIPT>
-        alert("Changes Made To Email Aliases Are Real Time\nAll Changes Made Are Now Active<%if ($adderr != "") { print "\\n" . $adderr;}%>");
+        alert("Changes Made To Email Aliases Are Real Time\nAll Changes Made Are Now Active<?php if ($adderr != "") { print "\\n" . $adderr;}?>");
      </SCRIPT>
-<%
+<?php
     } else {
-%>
+?>
       <SCRIPT>
-        alert("Changes Made To Websites Only Take Effect On The Hour<%if ($adderr != "") { print "\\n" . $adderr;}%>");
+        alert("Changes Made To Websites Only Take Effect On The Hour<?php if ($adderr != "") { print "\\n" . $adderr;}?>");
      </SCRIPT>
-<%
+<?php
     }
   }
 
@@ -115,11 +115,11 @@
   $iinfo = ldap_get_entries($ds, $sr);
   $dnarr2=ldap_explode_dn($dn,0);
 
-  if (eregi("^o=(.*)",$dnarr2[1],$vuser)) {
+  if (preg_match("/^o=(.*)/i",$dnarr2[1],$vuser)) {
     $_SESSION['utype']=$vuser[1];
-  } else if (eregi("^o=(.*)",$dnarr2[2],$vuser)) {
+  } else if (preg_match("/^o=(.*)/i",$dnarr2[2],$vuser)) {
     $_SESSION['utype']=$vuser[1];
-  } else if (eregi("^(uid|sambasid)=(.*)",$dnarr2[1],$mbowner)) {
+  } else if (preg_match("/^(uid|sambasid)=(.*)/i",$dnarr2[1],$mbowner)) {
     $_SESSION['utype']="system";
     $dnex=ldap_explode_dn($dn,0);
     $mbdn="";
@@ -163,11 +163,11 @@
     } else {
       $bcolor=" CLASS=list-color1";
     }
-%>
-    <TR<%print $bcolor;%>><TD WIDTH=25%><INPUT TYPE=CHECKBOX NAME="del<%print $i;%>">
-      <INPUT TYPE=HIDDEN NAME=delh<%print $i;%> VALUE="<%print $iinfo[0][$info][$i];%>">
-    </TD><TD><%print $iinfo[0][$info][$i];%></TD></TR>
-<%
+?>
+    <TR<?php print $bcolor;?>><TD WIDTH=25%><INPUT TYPE=CHECKBOX NAME="del<?php print $i;?>">
+      <INPUT TYPE=HIDDEN NAME=delh<?php print $i;?> VALUE="<?php print $iinfo[0][$info][$i];?>">
+    </TD><TD><?php print $iinfo[0][$info][$i];?></TD></TR>
+<?php
   }
   $rem=$i % 2;
   if ($rem == 1) {
@@ -182,17 +182,17 @@
 /*
  || ($ADMIN_USER == "admin")){ 
 */
-%>
-    <TR<%print $bcol[2];%>><TD WIDTH=25% onmouseover="myHint.show('<%print $_POST['mmap'];%>')" onmouseout="myHint.hide()"><%print _("Add");%></TD><TD>
+?>
+    <TR<?php print $bcol[2];?>><TD WIDTH=25% onmouseover="myHint.show('<?php print $_POST['mmap'];?>')" onmouseout="myHint.hide()"><?php print _("Add");?></TD><TD>
       <INPUT TYPE=TEXT NAME=newent>
-<%
+<?php
       if ($_POST['mmap'] == "mailLocalAddress") {
         $darr=array();
         $doms=ldap_search($ds,"ou=Email","(|(sendmailMTAClassName=LDAPRoute)(sendmailMTAClassName=R))",array("sendmailMTAClassValue"));
         $dinfo=ldap_get_entries($ds,$doms);
         for($i=0;$i<$dinfo['count'];$i++) {
           for($j=0;$j<$dinfo[$i]['sendmailmtaclassvalue']['count'];$j++) {
-            if (! ereg("^[0-9]+\.[0-9]+\.[0-9]+",$dinfo[$i]['sendmailmtaclassvalue'][$j])) {
+            if (! preg_match("/^[0-9]+\.[0-9]+\.[0-9]+/",$dinfo[$i]['sendmailmtaclassvalue'][$j])) {
               array_push($darr,$dinfo[$i]['sendmailmtaclassvalue'][$j]);
             }
           }
@@ -208,23 +208,23 @@
         }
         print "</SELECT>\n";
       }
-%>
+?>
       </TD></TR>
-    <TR><TH COLSPAN=2 <%print $bcol[1];%>>  
-<%
+    <TR><TH COLSPAN=2 <?php print $bcol[1];?>>  
+<?php
   } else {
-%>
-  <TR><TH COLSPAN=2 <%print $bcol[2];%>>
-<%
+?>
+  <TR><TH COLSPAN=2 <?php print $bcol[2];?>>
+<?php
   }
-%>  
-  <INPUT TYPE=HIDDEN NAME=ecount VALUE=<%print $iinfo[0][$info]["count"];%>>
-<%
+?>  
+  <INPUT TYPE=HIDDEN NAME=ecount VALUE=<?php print $iinfo[0][$info]["count"];?>>
+<?php
   if ($info == "hostedfpsite" ) {
-%>
+?>
   All Websites Are Frontpage Enabled You Can Only Delete Existing Front Page Sites
-<%
+<?php
   }
-%>
+?>
   <INPUT TYPE=SUBMIT VALUE="Modify" NAME=modrec></TH></TR>
 </TABLE></FORM>

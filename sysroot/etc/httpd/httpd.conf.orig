@@ -32,7 +32,7 @@ LoadModule mime_magic_module		modules/mod_mime_magic.so
 LoadModule mime_module			modules/mod_mime.so
 LoadModule negotiation_module		modules/mod_negotiation.so
 LoadModule perl_module			modules/mod_perl.so
-LoadModule php5_module			modules/libphp5.so
+LoadModule php7_module			modules/libphp7.so
 LoadModule proxy_module			modules/mod_proxy.so
 LoadModule proxy_ajp_module		modules/mod_proxy_ajp.so
 LoadModule proxy_balancer_module	modules/mod_proxy_balancer.so
@@ -586,23 +586,25 @@ RewriteRule ^/[SOGsog]{4}(.*) /SOGo$1 [R]
 RewriteRule ^/SOGo.woa/WebServerResources/(.*)$ /usr/GNUstep/Local/Library/SOGo/WebServerResources/$1 [L]
 RewriteRule ^/SOGo/so/ControlPanel/Products/(.*)/Resources/(.*) /usr/GNUstep/System/Library/SOGo/$1.SOGo/Resources/$2 [L]
 
-#Support For Phones
+#Support For Snom Phones
 RewriteRule ^/snom([MP0-9]+)-([0-9A-Fa-f]+).htm /snom/snom.php?phone=$1&mac=$2 [L,T=application/x-httpd-php]
 RewriteRule ^/m3/settings/([0-9A-Fa-f]+).cfg /snom/snomm3.php?mac=$1 [L,T=application/x-httpd-php]
 RewriteRule ^/m9/([0-9A-Fa-f]+).cfg /snom/snomm9.php?mac=$1 [L,T=application/x-httpd-php]
 RewriteRule snom-m9-([0-9A-Fa-f]+).xml /snom/snomm9.php?mac=$1 [L,T=application/x-httpd-php]
 RewriteRule ^/images/snom-([0-9]+)-([xk]p).png /snom/template.php?exten=$1&type=$2 [L,T=application/x-httpd-php]
 RewriteRule ^/images/snom-([0-9]+)-([xk]p[1-9]).png /snom/template.php?exten=$1&type=$2 [L,T=application/x-httpd-php]
+
+#Support For mp202 ATA
 RewriteRule ^/mp202-([0-9A-Fa-f_]+).conf /linksys/mp202.php?&mac=$1 [L,T=application/x-httpd-php]
+
+#Support For Linksys/Cisco ATA
 RewriteRule ^/init-([0-9A-Fa-f:]+).cfg /linksys/init.php?&mac=$1 [L,T=application/x-httpd-php]
 RewriteRule ^/init.cfg /linksys/init.php [L,T=application/x-httpd-php]
-RewriteRule ^/([0-9A-Fa-f]{12})-phone.cfg /polycom/config.php?mac=$1 [L,T=application/x-httpd-php]
-RewriteRule ^/([0-9A-Fa-f]{12})-(.*).log /polycom/$1-$2.log [R,L]
-RewriteRule ^/bootrom.ld /polycom/bootrom.ld [R,L]
-RewriteRule ^/SoundPointIPWelcome.wav /polycom/SoundPointIPWelcome.wav [R,L]
-RewriteRule ^/polycom/([0-9A-Fa-f]{12})-phone.cfg /polycom/config.php?mac=$1 [L,T=application/x-httpd-php]
-RewriteRule ^/polycom/([0-9A-Fa-f]{12})-directory.xml /polycom/directory.php?mac=$1 [L,T=application/x-httpd-php]
-RewriteRule ^/SoundPointIPLocalization(.*) /polycom/SoundPointIPLocalization$1 [R,L]
+
+#Support For Duxbury Phones
+RewriteRule ^/(00[aA]859[0-9A-Fa-f]{6}).cfg /duxbury/config.php?mac=$1 [L,T=application/x-httpd-php]
+
+#Support For Yealink Phones
 RewriteCond %{HTTP_USER_AGENT}  ^yealink [OR]
 RewriteCond %{HTTP_USER_AGENT}  ^Yealink
 RewriteRule ^/([0-9A-Fa-f]{12}).cfg /yealink/macconf.php?mac=$1 [L,T=application/x-httpd-php]
@@ -610,6 +612,14 @@ RewriteCond %{HTTP_USER_AGENT}  ^yealink [OR]
 RewriteCond %{HTTP_USER_AGENT}  ^Yealink
 RewriteRule ^/y00000000000([0-9]).cfg /yealink/generic.php?version=$1 [L,T=application/x-httpd-php]
 
+#Support For Polycom Phones
+RewriteRule ^/([0-9A-Fa-f]{12})-phone.cfg /polycom/config.php?mac=$1 [L,T=application/x-httpd-php]
+RewriteRule ^/([0-9A-Fa-f]{12})-(.*).log /polycom/$1-$2.log [R,L]
+RewriteRule ^/bootrom.ld /polycom/bootrom.ld [R,L]
+RewriteRule ^/SoundPointIPWelcome.wav /polycom/SoundPointIPWelcome.wav [R,L]
+RewriteRule ^/polycom/([0-9A-Fa-f]{12})-phone.cfg /polycom/config.php?mac=$1 [L,T=application/x-httpd-php]
+RewriteRule ^/polycom/([0-9A-Fa-f]{12})-directory.xml /polycom/directory.php?mac=$1 [L,T=application/x-httpd-php]
+RewriteRule ^/SoundPointIPLocalization(.*) /polycom/SoundPointIPLocalization$1 [R,L]
 RewriteRule ^/([0-9A-Fa-f]{12}).cfg /polycom/masterconf.php?mac=$1 [L,T=application/x-httpd-php]
 
 #CSV Download Magic
@@ -653,7 +663,7 @@ RewriteRule ^/cert/renew(.*)$ /var/spool/apache/htdocs/ldap/cert2ldap.php$1 [L,T
 RewriteRule ^/cert/(.*).key$ /var/spool/apache/htdocs/auth/cert.php?euser=$1&info=userPKCS12&keyt=1 [L,T=application/x-httpd-php]
 RewriteRule ^/cert/(.*).p12$ /var/spool/apache/htdocs/auth/cert.php?euser=$1&info=userPKCS12&keyt=12 [L,T=application/x-httpd-php]
 RewriteRule ^/cert/(.*).crt$ /var/spool/apache/htdocs/ldap/cert.php?euser=$1&info=userCertificate [L,T=application/x-httpd-php]
-RewriteRule ^/cert/(.*).ssh$ /var/spool/apache/htdocs/ldap/cert.php?euser=$1&info=userCertificate&pkey=ssh [T=application/x-httpd-php]
+RewriteRule ^/cert/(.*).ssh$ /var/spool/apache/htdocs/ldap/cert.php?euser=$1&info=userCertificate&pkey=ssh [L,T=application/x-httpd-php]
 RewriteRule ^/cert/(.*).p7b$ /var/spool/apache/htdocs/ldap/cert.php?euser=$1&info=userSMIMECertificate  [L,T=application/x-httpd-php]
 RewriteRule ^/cert/(.*).pub$ /var/spool/apache/htdocs/ldap/cert.php?euser=$1&info=userCertificate&pkey=pub [L,T=application/x-httpd-php]
 RewriteRule ^/openvpn/(.*).zip$ /var/spool/apache/htdocs/auth/openvpn.php?euser=$1 [L,T=application/x-httpd-php]

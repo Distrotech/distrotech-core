@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -23,4 +23,4 @@ $fp=fopen($fname, 'rb');
 header("Content-type: audio/x-wav");
 header("Content-Length: " . filesize($fname));
 fpassthru($fp);
-%>
+?>

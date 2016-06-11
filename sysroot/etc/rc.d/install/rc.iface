@@ -1,0 +1,62 @@
+#!/bin/bash
+
+#    Copyright (C) 2002  <Gregory Hinton Nietsky>
+#    Copyright (C) 2005  <ZA Telecomunications>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+if [ ! -e /etc/iftab ];then
+  touch /etc/iftab
+fi;
+if [ ! -e /etc/fstab ];then
+  touch /etc/fstab
+fi;
+
+#Rename any stray network cards
+(NCLASSDIR=/sys/class/net/;
+
+ECNT="0";
+WCNT="0"
+
+for net in `ls ${NCLASSDIR}/`;do
+  TYPE=$(cat ${NCLASSDIR}/${net}/type)
+  if [ "${TYPE}" != "1" ] || [ ! -d ${NCLASSDIR}/${net}/device/ ] || [ -e /tmp/ifnrename-${net} ];then
+    continue;
+  fi;
+
+  if [ -d ${NCLASSDIR}/${net}/wireless ];then
+    ADDR=$(echo ${WCNT} |tr [0-9] [A-J])
+    let WCNT++;
+    DEV="wlan${ADDR}";
+   else
+    ADDR=$(echo ${ECNT} |tr [0-9] [A-J])
+    let ECNT++;
+    DEV="eth${ADDR}";
+  fi;
+  ip link set down dev ${net}
+  ifrename -i ${net} -n ${DEV}
+  ip link set up dev ${DEV}
+  touch /tmp/ifrename-${DEV}
+done
+rm /tmp/ifrename-*) > /dev/null 2>&1
+
+#Set up Bridge add ethA to it this will be the internal interface
+if [ -d /sys/class/net/ethA ];then
+  ip link add br0 type bridge
+  ip link set ethA master br0
+  ip link set br0 up
+  echo 1 > /proc/sys/net/ipv6/conf/br0/use_tempaddr
+  echo 1 > /sys/class/net/br0/bridge/stp_state
+fi;

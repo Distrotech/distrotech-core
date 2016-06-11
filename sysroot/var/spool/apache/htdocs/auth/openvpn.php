@@ -1,4 +1,4 @@
-<%
+<?php
 header("Content-Type: application/zip");
 include "/var/spool/apache/htdocs/ldap/ldapbind.inc";
   
@@ -38,4 +38,4 @@ $zip->close();
 readfile($filename);
 unlink($filename);
 ldap_unbind($ds);
-%>
+?>

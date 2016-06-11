@@ -1,4 +1,4 @@
-<%
+<?php
 
 if (! $db) {
   include "/var/spool/apache/htdocs/cshop/auth.inc";
@@ -98,36 +98,36 @@ if ($purchrate < $mrate[0]) {
   $purchrate=$mrate[0];
 }
 
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=editrate onsubmit="ajaxsubmit(this.name);return false">
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%> 
 <TR CLASS=list-color2>
-<TH COLSPAN=2 CLASS=heading-body>Editing <%printf("%s (Cost %0.2f %s)",$_SESSION['subcode'],$purchrate,$bout[3]);%></TH></TR>
+<TH COLSPAN=2 CLASS=heading-body>Editing <?php printf("%s (Cost %0.2f %s)",$_SESSION['subcode'],$purchrate,$bout[3]);?></TH></TR>
 <TR CLASS=list-color1>
-<%
+<?php
 $margin=1 - $purchrate/($bout[1]*$exrate);
-%>
+?>
 <TD WIDTH=50%>
-<%
+<?php
 if ($margin < 0) {
   print "<FONT COLOR=RED>";
   $margin=abs($margin);
 }
-%>
-Rate (R/m Ex Vat) Current Margin <%printf("%0.0f",100*$margin);%>%</TD><TD><INPUT TYPE=TEXT NAME=rate VALUE="<%printf("%0.2f",$bout[1]*$exrate);%>"></TD></TR>
+?>
+Rate (R/m Ex Vat) Current Margin <?php printf("%0.0f",100*$margin);?>%</TD><TD><INPUT TYPE=TEXT NAME=rate VALUE="<?php printf("%0.2f",$bout[1]*$exrate);?>"></TD></TR>
 <TR CLASS=list-color2>
-<TD>Vat/Tax</TD><TD ALIGN=LEFT><%printf("%0.2f",$bout[1]*$exrate*($bout[4]/100));%>
+<TD>Vat/Tax</TD><TD ALIGN=LEFT><?php printf("%0.2f",$bout[1]*$exrate*($bout[4]/100));?>
 </TD></TR>
 <TR CLASS=list-color1>
-<TD>Total</TD><TD ALIGN=LEFT><%printf("%0.2f",$bout[1]*$exrate*(1+$bout[4]/100));%>
+<TD>Total</TD><TD ALIGN=LEFT><?php printf("%0.2f",$bout[1]*$exrate*(1+$bout[4]/100));?>
 </TD></TR>
 <TR CLASS=list-color2>
 <TD ALIGN=MIDDLE COLSPAN=2>
 <INPUT TYPE=BUTTON ONCLICK=openpage('cshop/getcsub.php','tariffs') VALUE="<<">
 <INPUT TYPE=SUBMIT onclick=this.name='saverate' VALUE="Save Changes"></TD></TR>
 <TR CLASS=list-color1><TH COLSPAN=2 CLASS=heading-body2>Prefixes</TH>
-<%
+<?php
  print "\n";
  $bcolor[0]="list-color2";
  $bcolor[1]="list-color1";
@@ -164,7 +164,7 @@ Rate (R/m Ex Vat) Current Margin <%printf("%0.0f",100*$margin);%>%</TD><TD><INPU
     print "<TR CLASS=" . $bcolor[$rem] . "><TD ALIGN=MIDDLE COLSPAN=2>";
     print "<INPUT TYPE=SUBMIT onclick=this.name='changeprefix' VALUE=\"Update Prefix[s]\"></TD></TR>";
   }
-%>
+?>
 
 
 </TABLE>

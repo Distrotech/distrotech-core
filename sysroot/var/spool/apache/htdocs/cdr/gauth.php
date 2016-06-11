@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -28,7 +28,7 @@ if (isset($pbxupdate)) {
       pg_query($db,"INSERT INTO astdb (value,family,key) VALUES ('GAUTH','$newkey','$newval')");
     }
   } else if ($key != "") {
-    list($dbkey,$dbfam)=split(":",$key);
+    list($dbkey,$dbfam)=preg_split("/:/",$key);
     pg_query($db,"DELETE FROM astdb WHERE value='GAUTH' AND key='" . $dbkey . "' AND family='" . $dbfam . "'");
   }
 }
@@ -36,19 +36,19 @@ if (isset($pbxupdate)) {
 $qgetdata=pg_query($db,"SELECT astdb.key,astdb.family FROM astdb  WHERE astdb.value='GAUTH' ORDER by family,key");
 
 
-%>
+?>
 
 <CENTER>
 <FORM METHOD=POST NAME=pbxgaform onsubmit="ajaxsubmit(this.name);return false;">
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
 <TR CLASS=list-color2>
-  <TH CLASS=heading-body COLSPAN=2><%print _("Asterisk PBX Virtual PBX Access");%></TH>
+  <TH CLASS=heading-body COLSPAN=2><?php print _("Asterisk PBX Virtual PBX Access");?></TH>
 </TR>
 <TR CLASS=list-color1>
-<TD onmouseover="myHint.show('DA0')" onmouseout="myHint.hide()"><%print _("Select Access To Delete");%></TD>
+<TD onmouseover="myHint.show('DA0')" onmouseout="myHint.hide()"><?php print _("Select Access To Delete");?></TD>
 <TD><SELECT NAME=key>
-<OPTION VALUE=""><%print _("Add New Access Control Below");%></OPTION>
-<%
+<OPTION VALUE=""><?php print _("Add New Access Control Below");?></OPTION>
+<?php
   $sr=ldap_search($ds,"ou=Admin","(|(cn=Call Logging)(cn=Voip Admin)(cn=TMS Access))",array("member"));
   $info = ldap_get_entries($ds, $sr);
 
@@ -78,14 +78,14 @@ $qgetdata=pg_query($db,"SELECT astdb.key,astdb.family FROM astdb  WHERE astdb.va
     $done[$getdata[0]]=1;
     print "      <OPTION VALUE=\"" . $getdata[0] . ":" . $getdata[1] . "\">" . $udnarr[$getdata[0]] . "->" . $getdata[1] . "</OPTION>\n";
   }
-%>
+?>
 </SELECT>
 </TR>
 <TR CLASS=list-color2>
 <TD onmouseover="myHint.show('DA1')" onmouseout="myHint.hide()">Group To Configure</TD>
 <TD>
     <SELECT NAME=newkey>
-<%
+<?php
   $bgroups=pg_query("SELECT DISTINCT value FROM astdb WHERE key='BGRP' AND value != '' ORDER BY value;");
   $bgnum=pg_num_rows($bgroups);
   for($i=0;$i<$bgnum;$i++){
@@ -94,27 +94,27 @@ $qgetdata=pg_query($db,"SELECT astdb.key,astdb.family FROM astdb  WHERE astdb.va
       print "<OPTION VALUE=\"" . $getbgdata[0] . "\">" . $getbgdata[0] . "</OPTION>\n";
     }
   }
-%>
+?>
     </SELECT><BR>
 </TD>
 </TR>
 <TR CLASS=list-color1>
-<TD onmouseover="myHint.show('DA2')" onmouseout="myHint.hide()"><%print _("Users To Allow Access");%></TD>
+<TD onmouseover="myHint.show('DA2')" onmouseout="myHint.hide()"><?php print _("Users To Allow Access");?></TD>
 <TD>
     <SELECT NAME=newval>
-<%
+<?php
 sort($usern);
 while(list($name,$uname)=each($usern)) {
   print "<OPTION VALUE=\"" . $uarray[$uname] . "\">" . $uname . "</OPTION>";
 }
-%>
+?>
   </SELECT>
 </TD>
 </TR>
 <TR CLASS=list-color2>
   <TD ALIGN=MIDDLE COLSPAN=2>
     <INPUT TYPE=RESET>
-    <INPUT TYPE=SUBMIT onclick=this.name='pbxupdate' VALUE="<%print _("Save Changes");%>">
+    <INPUT TYPE=SUBMIT onclick=this.name='pbxupdate' VALUE="<?php print _("Save Changes");?>">
   </TD>
 </TR>
 </TABLE>

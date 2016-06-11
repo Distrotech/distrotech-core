@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -25,7 +25,7 @@ if (!isset($_SESSION['auth'])) {
   if (!isset($euser)) {
     $euser=$PHP_AUTH_USER;
   }
-%>
+?>
 <html>
 <head>
 <title>Voice Over IP Configuration</title>
@@ -38,7 +38,7 @@ if (!isset($_SESSION['auth'])) {
 <CENTER>
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
 <TR CLASS=list-color2><TH COLSPAN=2>
-<%
+<?php
   $sr=ldap_search($ds,"ou=Admin","(&(objectclass=groupofnames)(member=" . $ldn . ")(cn=Admin Access))");
   if ((ldap_count_entries($ds,$sr) == 1) || ($PHP_AUTH_USER == "admin")) {
     $ADMIN_USER="admin";
@@ -50,9 +50,9 @@ if (!isset($_SESSION['auth'])) {
   } else {
     print "Viewing ";
   } 
-%>
+?>
 Voice Over IP Settings</TH></TR>
-<%
+<?php
 
   $iarr=array("cn","mail","uidnumber","dn");
   $info=strtolower($info);
@@ -91,20 +91,20 @@ Voice Over IP Settings</TH></TR>
          pg_query("DELETE FROM users WHERE name = '$name'");
          pg_query("INSERT INTO users (name,secret,username,fromuser,mailbox,callgroup,pickupgroup,password,fullname,email,unix_id,h323permit) VALUES ('$name','$passw','$name','$name','$name','$cgroup','$pgroup','$passw','$fullname','$email','$uidnum','$sigip')");
        } else {
-         %>
+         ?>
          <SCRIPT>
            alert("Not Added/Modified As The Extension Is Already Assigned!");
          </SCRIPT>
-         <%
+         <?php
          $passw="";
          $name="";
        }
      } else {
-       %>
+       ?>
        <SCRIPT>
          alert("Not Added/Modified As There Was Data Not Supplied!");
        </SCRIPT>
-       <%
+       <?php
        $passw="";
      }
   } else if (isset($modpw)) {
@@ -117,11 +117,11 @@ Voice Over IP Settings</TH></TR>
        $pgroup=$pgsqldat[2];
        pg_query("UPDATE users set secret='$passw',password='$passw',h323permit='$sigip' WHERE name = '$name'");
      } else {
-       %>
+       ?>
        <SCRIPT>
          alert("Not Added/Modified As There Was Data Not Supplied!");
        </SCRIPT>
-       <%
+       <?php
        $passw="";
      }
    } else if (isset($delrec)){
@@ -142,39 +142,39 @@ Voice Over IP Settings</TH></TR>
   $bcolor[0]=" CLASS=list-color1";
 
   if ($ADMIN_USER == "admin") {
-%>
-    <INPUT TYPE=HIDDEN NAME=fullname VALUE="<%print $iinfo[0]['cn'][0];%>">
-    <INPUT TYPE=HIDDEN NAME=email VALUE="<%print $iinfo[0]['mail'][0];%>">
-    <TR <%print $bcolor[0];%>><TD>Extension Number</TD>
-      <TD><INPUT TYPE=TEXT NAME=name VALUE="<%print $name;%>"></TD></TR>
-    <TR <%print $bcolor[1];%>><TD>SIP Caller Group</TD>
-      <TD><INPUT TYPE=TEXT NAME=cgroup VALUE="<%print $cgroup;%>"></TD></TR>
-    <TR <%print $bcolor[0];%>><TD>SIP Pickup Group</TD>
-      <TD><INPUT TYPE=TEXT NAME=pgroup VALUE="<%print $pgroup;%>"></TD></TR>
-    <TR <%print $bcolor[1];%>><TD>Password</TD>
-      <TD><INPUT TYPE=PASSWORD NAME=pass1 VALUE="<%print $passw;%>"></TD></TR>
-    <TR <%print $bcolor[0];%>><TD>Password</TD>
-      <TD><INPUT TYPE=PASSWORD NAME=pass2 VALUE="<%print $passw;%>"></TD></TR>
-    <TR <%print $bcolor[1];%>><TD>IP Address (For H323 Only)</TD>
-      <TD><INPUT TYPE=TEXT NAME=sigip VALUE="<%print $sigip;%>"></TD></TR>
-    <TR <%print $bcolor[0];%>><TH COLSPAN=2>  
+?>
+    <INPUT TYPE=HIDDEN NAME=fullname VALUE="<?php print $iinfo[0]['cn'][0];?>">
+    <INPUT TYPE=HIDDEN NAME=email VALUE="<?php print $iinfo[0]['mail'][0];?>">
+    <TR <?php print $bcolor[0];?>><TD>Extension Number</TD>
+      <TD><INPUT TYPE=TEXT NAME=name VALUE="<?php print $name;?>"></TD></TR>
+    <TR <?php print $bcolor[1];?>><TD>SIP Caller Group</TD>
+      <TD><INPUT TYPE=TEXT NAME=cgroup VALUE="<?php print $cgroup;?>"></TD></TR>
+    <TR <?php print $bcolor[0];?>><TD>SIP Pickup Group</TD>
+      <TD><INPUT TYPE=TEXT NAME=pgroup VALUE="<?php print $pgroup;?>"></TD></TR>
+    <TR <?php print $bcolor[1];?>><TD>Password</TD>
+      <TD><INPUT TYPE=PASSWORD NAME=pass1 VALUE="<?php print $passw;?>"></TD></TR>
+    <TR <?php print $bcolor[0];?>><TD>Password</TD>
+      <TD><INPUT TYPE=PASSWORD NAME=pass2 VALUE="<?php print $passw;?>"></TD></TR>
+    <TR <?php print $bcolor[1];?>><TD>IP Address (For H323 Only)</TD>
+      <TD><INPUT TYPE=TEXT NAME=sigip VALUE="<?php print $sigip;?>"></TD></TR>
+    <TR <?php print $bcolor[0];?>><TH COLSPAN=2>  
       <INPUT TYPE=SUBMIT VALUE="Modify" NAME=modrec>
       <INPUT TYPE=SUBMIT VALUE="Delete" NAME=delrec></TH></TR>
-    <TR <%print $bcolor[1];%>><TH COLSPAN=2><H4><FONT SIZE=2>The Password Should Be Reset By Dialing *99/*99*&lt;EXTEN&gt; 
+    <TR <?php print $bcolor[1];?>><TH COLSPAN=2><H4><FONT SIZE=2>The Password Should Be Reset By Dialing *99/*99*&lt;EXTEN&gt; 
                                             Or From Inside The Voice Mail System As Changing It Here 
                                             Will Not Alter The Line Access Password<BR>The User Will Be 
                                             Prompted For A New Password When The Line Access Password Is 
                                             Requested The First Time.</FONT></H4></TH></TR>
-<%
+<?php
   } else {
-%>
-    <TR <%print $bcolor[0];%>><TD>Extension Number</TD>
-      <TD><%print $name;%></TD></TR>
-    <TR <%print $bcolor[1];%>><TD>SIP Caller Group</TD>
-      <TD><%print $cgroup;%></TD></TR>
-    <TR <%print $bcolor[0];%>><TD>SIP Pickup Group</TD>
-      <TD><%print $pgroup;%></TD></TR>
-<%
+?>
+    <TR <?php print $bcolor[0];?>><TD>Extension Number</TD>
+      <TD><?php print $name;?></TD></TR>
+    <TR <?php print $bcolor[1];?>><TD>SIP Caller Group</TD>
+      <TD><?php print $cgroup;?></TD></TR>
+    <TR <?php print $bcolor[0];?>><TD>SIP Pickup Group</TD>
+      <TD><?php print $pgroup;?></TD></TR>
+<?php
   }
-%>
+?>
 </TABLE></FORM>

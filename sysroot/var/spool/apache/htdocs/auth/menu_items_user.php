@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2006  <Superset>
@@ -101,11 +101,11 @@ if ($attrs["count"] > 0) {
 
 for($mcnt=0;$mcnt < count($menu);$mcnt++) {
   $subout[$menu[$mcnt]]="";
-  while(list($item,$action)=each($$menu[$mcnt])) {
+  while(list($item,$action)=each(${$menu[$mcnt]})) {
     if (substr($action,0,7) == "include") {
       $include=substr($action,8);
       if ($include == "login") {
-        $include2="apps";  
+        $include2="apps";
       } else {
         $include2=$include;
       }
@@ -120,19 +120,19 @@ for($mcnt=0;$mcnt < count($menu);$mcnt++) {
 for($mcnt=0;$mcnt < count($menu);$mcnt++) {
   print $menu[$mcnt] . "_items_list=[\n" . $subout[$menu[$mcnt]] . "];\n\n";
 }
-%>
+?>
 
-if (((activemenu != 'asetup') || (activeuser != '<%print $_SESSION['classi'];%>')) && (asetup_items_list != null)) {
+if (((activemenu != 'asetup') || (activeuser != '<?php print $_SESSION['classi'];?>')) && (asetup_items_list != null)) {
   if (menu_list['asetup_menu'] == null ) {
     menu_list['asetup_menu']=new menu(asetup_items_list,menu_vert);
   } else {
     menu_list['asetup_menu'].configmenu(asetup_items_list);
-  }  
+  }
   if ((menu_list['asetup_menu'] != null) && (menu_list['main_menu'])) {
     document.getElementById('menu-bar').innerHTML=menu_list['main_menu'].mframe.contentDocument.body.innerHTML+menu_list['asetup_menu'].mframe.contentDocument.body.innerHTML;
     menu_list['main_menu'].show();
     menu_list['asetup_menu'].show();
     activemenu='asetup';
-    activeuser='<%print $_SESSION['classi'];%>';
-  }  
+    activeuser='<?php print $_SESSION['classi'];?>';
+  }
 }

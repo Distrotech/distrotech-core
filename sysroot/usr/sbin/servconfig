@@ -26,7 +26,7 @@ fi;
 (flock -w 60 10 || exit
 
 cd /var/spool/apache/htdocs/ns/config
-
+date +%m%d%H%M%Y.%S > /etc/last.time
 
 Gen_CRL_Cert() {
   /usr/bin/openssl ca -gencrl -out /etc/ipsec.d/crls/crl.pem -config /etc/openssl/ca.conf -batch > /dev/null 2>&1
@@ -982,7 +982,7 @@ if [ "$MRTGDIFF" ];then
   if [ ! -d /var/spool/apache/htdocs/mrtg ];then
     mkdir -p /var/spool/apache/htdocs/mrtg
   fi;
-  indexmaker /etc/mrtg.conf --prefix=/mrtg --section=h1  --columns 1 --nolegend --addhead "<link rel=stylesheet type=text/css href=/style.php>" --title "Traffic Graphs" --rrdviewer /cgi-perl/auth/mrtg-rrd.cgi --output /var/spool/apache/htdocs/mrtg/index.html
+  indexmaker /etc/mrtg.conf --prefix=/mrtg --section=h1  --columns 1 --nolegend --addhead "<link rel=stylesheet type=text/css href=/style.php>" --title "Traffic Graphs" --rrdviewer /mrtg/mrtg-day.php --output /var/spool/apache/htdocs/mrtg/index.html
 fi;
 
 

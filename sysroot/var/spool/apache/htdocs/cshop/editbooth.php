@@ -1,4 +1,4 @@
-<%
+<?php
 if (! $db) {
   include "/var/spool/apache/htdocs/cshop/auth.inc";
 }
@@ -16,43 +16,41 @@ if ($_POST['delbooth'] == "1") {
 }
 
 if (isset($_POST['savebooth'])) {
-  pg_query("UPDATE users SET password='" . $_POST['userpass'] . "',secret='" . $_POST['userpass'] . "',fullname='" . $_POST['firstname'] . 
+  pg_query("UPDATE users SET secret='" . $_POST['userpass'] . "',fullname='" . $_POST['firstname'] . 
         "',tariff='" . $_POST['tariff'] . "' WHERE name='" . $_SESSION['number'] . "'");
 }
 
-$boothq=pg_query($db,"SELECT password,fullname,tariff
+$boothq=pg_query($db,"SELECT fullname,tariff
                      FROM users
                      WHERE usertype=2 AND name='" . $_SESSION['number'] . "'
                            AND agentid = " . $_SESSION['resellerid'] . " LIMIT 1");
 $booth=pg_fetch_row($boothq,0);
-%>
+?>
 <CENTER>
 <FORM NAME=edituser METHOD=POST onsubmit="ajaxsubmit(this.name);return false">
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%> 
 <TR CLASS=list-color2>
-<TH COLSPAN=2 CLASS=heading-body>Editing <%print $_SESSION['number'];%></TH></TR>
+<TH COLSPAN=2 CLASS=heading-body>Editing <?php print $_SESSION['number'];?></TH></TR>
 <TR CLASS=list-color1>
-<TD WIDTH=50%>Pin</TD><TD><INPUT TYPE=TEXT NAME=userpass VALUE="<%print $booth[0];%>"></TD></TR>
+<TD ALIGN=LEFT>Booth Name</TD><TD><INPUT TYPE=TEXT NAME=firstname VALUE="<?php print $booth[0];?>"></TD></TR>
 <TR CLASS=list-color2>
-<TD ALIGN=LEFT>Booth Name</TD><TD><INPUT TYPE=TEXT NAME=firstname VALUE="<%print $booth[1];%>"></TD></TR>
-<TR CLASS=list-color1>
-<TD ALIGN=LEFT>Rate Plan</TD><TD><SELECT NAME=tariff><%
+<TD ALIGN=LEFT>Rate Plan</TD><TD><SELECT NAME=tariff><?php
   $tplan=pg_query($db,"SELECT tariffname,tariffcode FROM tariff WHERE tariffcode LIKE '" .
                        $_SESSION['resellerid'] . "-%' ORDER BY tariffname");
   $num=pg_num_rows($tplan);
   for ($i=0; $i < $num; $i++) {
     $r = pg_fetch_array($tplan,$i,PGSQL_NUM);
     print "<OPTION VALUE=\"" . $r[1] . "\"";
-    if ($booth[2] == "$r[1]") {
+    if ($booth[1] == "$r[1]") {
       print " SELECTED";
     }
     print ">" . $r[0] . "</OPTION>\n";
-  }%>
-<%
-%>
+  }?>
+<?php
+?>
 </SELECT>
 </TD></TR>
-<TR CLASS=list-color2>
+<TR CLASS=list-color1>
 <TD ALIGN=MIDDLE COLSPAN=2>
 <INPUT TYPE=SUBMIT NAME=savebooth VALUE="Save Changes">
 <INPUT TYPE=BUTTON ONCLICK="deleteconf('This Booth',document.edituser,document.edituser.delbooth)" VALUE="Delete">

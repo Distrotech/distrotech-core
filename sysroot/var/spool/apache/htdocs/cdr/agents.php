@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -80,16 +80,19 @@ if (($queue == "799") || ($defqueue != $queue)) {
     pg_query($db,"UPDATE astdb SET value='" . $AADelay . "' WHERE family='Setup' AND key='AADelay'");
 
 
-    $cdelvm=pg_query($db,"SELECT count(a.attname) FROM pg_catalog.pg_stat_user_tables AS t, pg_catalog.pg_attribute a WHERE t.relid = a.attrelid  AND t.relname='users' AND a.attname='deletevoicemail'");
+/*    $cdelvm=pg_query($db,"SELECT count(a.attname) FROM pg_catalog.pg_stat_user_tables AS t, pg_catalog.pg_attribute a WHERE t.relid = a.attrelid  AND t.relname='users' AND a.attname='deletevoicemail'");
     list($delvm)=pg_fetch_array($cdelvm,0);
     if ($delvm < 1) {
       pg_query($db,"ALTER TABLE users ADD deletevoicemail varchar(8) default 'no'");
+    }*/
+    $defemail=pg_query($db,"UPDATE voicemail SET deletevoicemail='yes',email='" . $_POST['AAEMAIL'] . "' WHERE mailbox='"  . $syshname . "'");
+    if (pg_affected_rows($defemail) == 0) {
+      pg_query($db,"INSERT INTO voicemail (mailbox,context,deletevoicemail,email,fullname,password) values ('" . $syshname . "','6','yes','" . $_POST['AAEMAIL'] . "','','')");
     }
-    pg_query($db,"UPDATE users SET mailbox=name,deletevoicemail='yes',email='" . $AAEMAIL . "' WHERE name='"  . $syshname . "'");
   }
 
-  $aavm=pg_query($db,"SELECT email FROM users WHERE name='" . $syshname . "'");
-  if (pg_num_rows($aavm) > 0) { 
+  $aavm=pg_query($db,"SELECT email FROM voicemail WHERE mailbox='" . $syshname . "'");
+  if (pg_num_rows($aavm) > 0) {
     list($AAEMAIL)=pg_fetch_array($aavm,0);
   }
 
@@ -128,7 +131,7 @@ if (($queue == "799") || ($defqueue != $queue)) {
     pg_query("INSERT INTO astdb (family,key,value) VALUES ('Setup','AAPenalty','". $dqpenalty ."')");
   }
 }
-%>
+?>
 <FORM NAME=queuemod METHOD=POST onsubmit="ajaxsubmit(this.name);return false;">
 <INPUT TYPE=HIDDEN NAME=delagent VALUE="">
 <INPUT TYPE=HIDDEN NAME=agentlogon VALUE="">
@@ -138,11 +141,11 @@ if (($queue == "799") || ($defqueue != $queue)) {
 <INPUT TYPE=HIDDEN NAME=agentwei VALUE="">
 <INPUT TYPE=HIDDEN NAME=agentignore VALUE="">
 <INPUT TYPE=HIDDEN NAME=agentchan VALUE="">
-<INPUT TYPE=HIDDEN NAME=defqueue VALUE="<%print $defqueue;%>">
+<INPUT TYPE=HIDDEN NAME=defqueue VALUE="<?php print $defqueue;?>">
 <CENTER>
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <TR CLASS=list-color2>
-<%
+<?php
 
 if (isset($queue)) {
   $defpenalty=pg_query($db,"SELECT penalty FROM qfeatures WHERE queue='" . $queue . "'");
@@ -150,7 +153,7 @@ if (isset($queue)) {
     list($dqpenalty) = pg_fetch_array($defpenalty,0,PGSQL_NUM);
   }  
   if (isset($agentignore)) {
-    pg_query($db,"UPDATE queue_members SET callinuse=NOT callinuse WHERE queue_name='" .  $queue . "' AND interface='" . $agentignore . "'");
+    pg_query($db,"UPDATE queue_members SET ringinuse=NOT ringinuse WHERE queue_name='" .  $queue . "' AND interface='" . $agentignore . "'");
   }
   if (isset($delagent)) {
     pg_query($db,"DELETE FROM queue_members WHERE queue_name='" .  $queue . "' AND interface='" . $delagent . "'");
@@ -210,7 +213,7 @@ if (isset($queue)) {
     } else {
       $nobusy="'t'";
     }
-    pg_query($db,"INSERT INTO queue_members (queue_name,interface,penalty,defpenalty,callinuse) VALUES ('" . $queue . "','" . $channel . "','" . $weight . "','" . $oweight . "'," . $nobusy . ")");
+    pg_query($db,"INSERT INTO queue_members (queue_name,interface,penalty,defpenalty,ringinuse) VALUES ('" . $queue . "','" . $channel . "','" . $weight . "','" . $oweight . "'," . $nobusy . ")");
     $memup=pg_send_query($db,"UPDATE queue_members SET membername='" . $origchan . "' WHERE queue_name='" . $queue . "' AND interface='" . $channel . "'");
     $pgres=pg_get_result($db);
     if (pg_result_error($pgres)) {
@@ -226,7 +229,7 @@ if (isset($queue)) {
   print "</TR>";
   $getagentq="SELECT CAST(penalty AS INT) > 0 as active,CASE WHEN (users.uniqueid is not null) THEN users.fullname ELSE 'Unknown User' END as agent,
                      interface as channel,CASE WHEN (penalty is not null) THEN defpenalty ELSE '" . $dqpenalty. "' END as weight,
-                     CASE WHEN (name is not null) THEN name ELSE interface END, callinuse,paused > 0 
+                     CASE WHEN (name is not null) THEN name ELSE interface END, ringinuse,paused > 0 
                    from queue_members left outer join features ON (zapline=substr(interface,7)) 
                      left outer join users on (users.name=substring(interface from position('/' in interface)+1) OR exten=name)
                    where queue_name='" . $queue . "' ORDER BY defpenalty,name";
@@ -238,8 +241,8 @@ if (isset($queue)) {
     $rcol=$i % 2;
     print "<TR" . $bcolor[$rcol] . ">";
     $r = pg_fetch_array($getagents,$i,PGSQL_NUM);
-    print "<TD ALIGN=MIDDLE onmouseover=\"myHint.show('AS1')\" onmouseout=myHint.hide()>";%>
-    <INPUT TYPE=BUTTON VALUE="" CLASS="option-<%
+    print "<TD ALIGN=MIDDLE onmouseover=\"myHint.show('AS1')\" onmouseout=myHint.hide()>";?>
+    <INPUT TYPE=BUTTON VALUE="" CLASS="option-<?php
     if (($r[0] == 't') && ($r[6] != 't')) {
       print "green";
     } else if ($r[6] == 't') {
@@ -247,7 +250,7 @@ if (isset($queue)) {
       $r[0]='p';
     } else {
       print "red";
-    }%>" onClick=agentonoff('<%print $r[2] . "','" . $r[0];%>')></TD><TD onmouseover="myHint.show('AS2')" onmouseout=myHint.hide()><%
+    }?>" onClick=agentonoff('<?php print $r[2] . "','" . $r[0];?>')></TD><TD onmouseover="myHint.show('AS2')" onmouseout=myHint.hide()><?php
     print $r[1] . "</TD>\n<TD onmouseover=\"myHint.show('AS3')\" onmouseout=myHint.hide()>";
     if (strpos($r[4],"@")) {
       $r[4]=substr($r[4],6,strpos($r[4],"@")-6);
@@ -280,38 +283,38 @@ if (isset($queue)) {
   $i++;
   $rcol=$i % 2;
   if (($queue == "799") || ($queue != $defqueue)) {
-%>
-    <TR <%print $bcolor[$rcol];$i++;$rcol=$i % 2;%>><TH CLASS=heading-body COLSPAN=6><%print _("Reception Queue Config");%></TH></TR>
-    <TR <%print $bcolor[$rcol];$i++;$rcol=$i % 2;%>>
-      <TD COLSPAN=3 WIDTH=50% onmouseover="myHint.show('QS8')" onmouseout=myHint.hide()><%print _("Queue Timeout Checked Every 18s");%></TD>
-      <TD COLSPAN=3 WIDTH=50%><INPUT TYPE=TEXT NAME=AATimeout VALUE="<%print $origdata["AATimeout"];%>"></TD></TR>
-    <TR <%print $bcolor[$rcol];$i++;$rcol=$i % 2;%>>
-      <TD COLSPAN=3 WIDTH=50% onmouseover="myHint.show('AS6')" onmouseout=myHint.hide()><%print _("Auto Attendant Mailbox/Forward On No Agent/Timeout");%></TD>
-      <TD COLSPAN=3 WIDTH=50%><INPUT TYPE=TEXT NAME=AANext VALUE="<%print $origdata["AANext"];%>"></TD></TR>
-    <TR <%print $bcolor[$rcol];$i++;$rcol=$i % 2;%>>
-      <TD COLSPAN=3 WIDTH=50% onmouseover="myHint.show('AS6')" onmouseout=myHint.hide()><%print _("Default System V.Mail Email");%></TD>
-      <TD COLSPAN=3 WIDTH=50%><INPUT TYPE=TEXT NAME=AAEMAIL VALUE="<%print $AAEMAIL;%>"></TD></TR>
-    <TR <%print $bcolor[$rcol];$i++;$rcol=$i % 2;%>>
-      <TD COLSPAN=3 WIDTH=50% onmouseover="myHint.show('QS9')" onmouseout=myHint.hide()><%print _("Default Agent Penalty");%></TD>
-      <TD COLSPAN=3 WIDTH=50%><INPUT TYPE=TEXT NAME=AAPenalty VALUE="<%print $origdata["AAPenalty"];%>"></TD></TR>
-    <TR <%print $bcolor[$rcol];$i++;$rcol=$i % 2;%>>
-      <TD COLSPAN=3 WIDTH=50% onmouseover="myHint.show('QS12')" onmouseout=myHint.hide()><%print _("IVR Delay Between Digits");%></TD>
-      <TD COLSPAN=3 WIDTH=50%><INPUT TYPE=TEXT NAME=AADelay VALUE="<%print $origdata["AADelay"];%>"></TD></TR>
-    <TR <%print $bcolor[$rcol];$i++;$rcol=$i % 2;%>>
-      <TD onmouseover="myHint.show('QS10')" onmouseout="myHint.hide()" COLSPAN=3><%print _("Disable Default Auto Attendant Prompts");%></TD>
-      <TD COLSPAN=3><INPUT TYPE=CHECKBOX NAME=AANOPROMPT<%if ($origdata["AANOPROMPT"] == "1") {print " CHECKED";}%>></TD>
+?>
+    <TR <?php print $bcolor[$rcol];$i++;$rcol=$i % 2;?>><TH CLASS=heading-body COLSPAN=6><?php print _("Reception Queue Config");?></TH></TR>
+    <TR <?php print $bcolor[$rcol];$i++;$rcol=$i % 2;?>>
+      <TD COLSPAN=3 WIDTH=50% onmouseover="myHint.show('QS8')" onmouseout=myHint.hide()><?php print _("Queue Timeout Checked Every 18s");?></TD>
+      <TD COLSPAN=3 WIDTH=50%><INPUT TYPE=TEXT NAME=AATimeout VALUE="<?php print $origdata["AATimeout"];?>"></TD></TR>
+    <TR <?php print $bcolor[$rcol];$i++;$rcol=$i % 2;?>>
+      <TD COLSPAN=3 WIDTH=50% onmouseover="myHint.show('AS6')" onmouseout=myHint.hide()><?php print _("Auto Attendant Mailbox/Forward On No Agent/Timeout");?></TD>
+      <TD COLSPAN=3 WIDTH=50%><INPUT TYPE=TEXT NAME=AANext VALUE="<?php print $origdata["AANext"];?>"></TD></TR>
+    <TR <?php print $bcolor[$rcol];$i++;$rcol=$i % 2;?>>
+      <TD COLSPAN=3 WIDTH=50% onmouseover="myHint.show('AS6')" onmouseout=myHint.hide()><?php print _("Default System V.Mail Email");?></TD>
+      <TD COLSPAN=3 WIDTH=50%><INPUT TYPE=TEXT NAME=AAEMAIL VALUE="<?php print $AAEMAIL;?>"></TD></TR>
+    <TR <?php print $bcolor[$rcol];$i++;$rcol=$i % 2;?>>
+      <TD COLSPAN=3 WIDTH=50% onmouseover="myHint.show('QS9')" onmouseout=myHint.hide()><?php print _("Default Agent Penalty");?></TD>
+      <TD COLSPAN=3 WIDTH=50%><INPUT TYPE=TEXT NAME=AAPenalty VALUE="<?php print $origdata["AAPenalty"];?>"></TD></TR>
+    <TR <?php print $bcolor[$rcol];$i++;$rcol=$i % 2;?>>
+      <TD COLSPAN=3 WIDTH=50% onmouseover="myHint.show('QS12')" onmouseout=myHint.hide()><?php print _("IVR Delay Between Digits");?></TD>
+      <TD COLSPAN=3 WIDTH=50%><INPUT TYPE=TEXT NAME=AADelay VALUE="<?php print $origdata["AADelay"];?>"></TD></TR>
+    <TR <?php print $bcolor[$rcol];$i++;$rcol=$i % 2;?>>
+      <TD onmouseover="myHint.show('QS10')" onmouseout="myHint.hide()" COLSPAN=3><?php print _("Disable Default Auto Attendant Prompts");?></TD>
+      <TD COLSPAN=3><INPUT TYPE=CHECKBOX NAME=AANOPROMPT<?php if ($origdata["AANOPROMPT"] == "1") {print " CHECKED";}?>></TD>
     </TR>
-    <TR <%print $bcolor[$rcol];$i++;$rcol=$i % 2;%>>
-      <TD onmouseover="myHint.show('QS11')" onmouseout="myHint.hide()" COLSPAN=3><%print _("Music On Hold When Calling Reception");%></TD>
-      <TD COLSPAN=3><INPUT TYPE=CHECKBOX NAME=AAMOH<%if ($origdata["AAMOH"] == "1") {print " CHECKED";}%>></TD>
+    <TR <?php print $bcolor[$rcol];$i++;$rcol=$i % 2;?>>
+      <TD onmouseover="myHint.show('QS11')" onmouseout="myHint.hide()" COLSPAN=3><?php print _("Music On Hold When Calling Reception");?></TD>
+      <TD COLSPAN=3><INPUT TYPE=CHECKBOX NAME=AAMOH<?php if ($origdata["AAMOH"] == "1") {print " CHECKED";}?>></TD>
     </TR>
-    <TR <%print $bcolor[$rcol];$i++;$rcol=$i % 2;%>>
-      <TD onmouseover="myHint.show('QS11')" onmouseout="myHint.hide()" COLSPAN=3><%print _("Record Inbound Calls");%></TD>
-      <TD COLSPAN=3><INPUT TYPE=CHECKBOX NAME=AAREC<%if ($origdata["AAREC"] == "1") {print " CHECKED";}%>></TD>
+    <TR <?php print $bcolor[$rcol];$i++;$rcol=$i % 2;?>>
+      <TD onmouseover="myHint.show('QS11')" onmouseout="myHint.hide()" COLSPAN=3><?php print _("Record Inbound Calls");?></TD>
+      <TD COLSPAN=3><INPUT TYPE=CHECKBOX NAME=AAREC<?php if ($origdata["AAREC"] == "1") {print " CHECKED";}?>></TD>
     </TR>
-    <TR <%print $bcolor[$rcol];$i++;$rcol=$i % 2;%>>
-      <TD COLSPAN=6 ALIGN=MIDDLE><INPUT TYPE=SUBMIT VALUE="<%print _("Save Settings");%>" onclick=this.name='update'></TD></TR>
-<%
+    <TR <?php print $bcolor[$rcol];$i++;$rcol=$i % 2;?>>
+      <TD COLSPAN=6 ALIGN=MIDDLE><INPUT TYPE=SUBMIT VALUE="<?php print _("Save Settings");?>" onclick=this.name='update'></TD></TR>
+<?php
   }
   print "<INPUT TYPE=HIDDEN NAME=queue VALUE=\"" . $queue . "\">"; 
   print "<INPUT TYPE=HIDDEN NAME=defqueue VALUE=\"" . $defqueue . "\">";
@@ -320,14 +323,14 @@ if (isset($queue)) {
     pg_query($db,"DELETE FROM queue_table WHERE name='" . $queue . "'");
     pg_query($db,"DELETE FROM users WHERE mailbox='" . $queue . "'");
   }
-%>
+?>
   <TH CLASS=heading-body COLSPAN=2>Select Queue To Edit Agents</TH>
 </TR>
 <TR CLASS=list-color1>
   <TD ALIGN=LEFT WIDTH=50% onmouseover="myHint.show('AS0')" onmouseout="myHint.hide()">Edit Agents From Queue ...</TH>
   <TD WIDTH=50% ALIGN=LEFT>
   <SELECT NAME=queue onchange=ajaxsubmit('queuemod')>
-<%
+<?php
 
   $actqueuesq="SELECT name,description FROM queue_table";
   if ($SUPER_USER != 1) {
@@ -342,12 +345,12 @@ if (isset($queue)) {
     $r = pg_fetch_array($actqueues,$i,PGSQL_NUM);
     print "    <OPTION VALUE=\"" .  $r[0] . "\">" . $r[1] . " (" . $r[0] .")</OPTION>\n";
   }
-%>
+?>
   </SELECT>
   </TD></TR>
-<%
+<?php
 }
-%>
+?>
 </TABLE>
 </FORM>
 

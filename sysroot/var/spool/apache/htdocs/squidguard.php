@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -17,7 +17,7 @@
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-%>
+?>
 <HTML><HEAD>
 <TITLE>ERROR: Access To The requested URL Was Denied</TITLE>
 </HEAD><BODY>
@@ -25,19 +25,19 @@
 <HR>
 <P>
 While trying to retrieve the URL:
-<A HREF="<%print $url;%>"><%print $url;%></A>
+<A HREF="<?php print $url;?>"><?php print $url;?></A>
 <P>
 The following error was encountered:
 <BLOCKQUOTE>
-Access Blocked By Group <%print $clientgroup;%> Rule <%print $destinationgroup;%> From User <%print $clientident;%> Address <%print "$clientaddr ($clientname)<BR>";%>
-To URL <I><%print $url;%></I>
+Access Blocked By Group <?php print $clientgroup;?> Rule <?php print $destinationgroup;?> From User <?php print $clientident;?> Address <?php print "$clientaddr ($clientname)<BR>";?>
+To URL <I><?php print $url;?></I>
 </BLOCKQUOTE>
 
 <br clear="all">
 <hr noshade size=1>
-<%
+<?php
 $datetime=date("D, d M Y T");
 $address = gethostbyaddr("$REMOTE_ADDR");
 print "Generated $datetime by $address<BR>";
-%>
+?>
 </BODY></HTML>

@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -46,42 +46,42 @@ if (!isset($_SESSION['auth'])) {
   }
   if (isset($modrec)) {
     if (($oldooactive == "active") && ($outofofficeactive ==  "")) {
-%>
+?>
       <SCRIPT>
         alert("Out Of Office Responce Will Be Disabled\nChanges Will Become Effective On The Next System Resync\nApprox Within 10 Minutes");
       </SCRIPT>
-<%
+<?php
      } else if (($oldooactive == "") && ($outofofficeactive ==  "on")) {
-%>
+?>
       <SCRIPT>
         alert("Out Of Office Responce Will Be Activated\nChanges Will Become Effective On The Next System Resync\nApprox Within 10 Minutes\nPlease Note It Will Not Be Activated Unless The User Has Loged Into Mail");
       </SCRIPT>
-<%
+<?php
      } else if (($oldooactive == "yes") && ($outofofficeactive ==  "on")) {
-%>
+?>
       <SCRIPT>
         alert("Out Of Office Activation Pending\nChanges Will Become Effective On The Next System Resync\nApprox Within 10 Minutes\nPlease Note It Will Not Be Activated Unless The User Has Loged Into Mail");
       </SCRIPT>
-<%
+<?php
      } else if (($oldooactive == "no") && ($outofofficeactive ==  "")) {
-%>
+?>
       <SCRIPT>
         alert("Out Of Office Dectivation Pending\nChanges Will Become Effective On The Next System Resync\nApprox Within 10 Minutes");
       </SCRIPT>
-<%
+<?php
      } else if (($oldooactive == "no") && ($outofofficeactive ==  "on")) {
-%>
+?>
       <SCRIPT>
         alert("Out Of Office Deactivation Canceled");
       </SCRIPT>
-<%
+<?php
       $outofofficeactive="active";
      } else if (($oldooactive == "yes") && ($outofofficeactive ==  "")) {
-%>
+?>
       <SCRIPT>
         alert("Out Of Office Activation Canceled");
       </SCRIPT>
-<%
+<?php
        $outofofficeactive="unset";
     } else if ($oldooactive == "active") {
       $outofofficeactive="active";
@@ -96,11 +96,11 @@ if (!isset($_SESSION['auth'])) {
     }
 
     for($i=0;$i<count($iarr);$i++) {
-      if ($$iarr[$i] != "") {
-        $minfo[$iarr[$i]]=$$iarr[$i];
+      if (${$iarr[$i]} != "") {
+        $minfo[$iarr[$i]]=${$iarr[$i]};
       } else {
-        if ($$oarr[$i] != "") {
-          $delinfo[$iarr[$i]]=$$oarr[$i];
+        if (${$oarr[$i]} != "") {
+          $delinfo[$iarr[$i]]=${$oarr[$i]};
           $delcnt ++; 
         }
       }
@@ -115,15 +115,15 @@ if (!isset($_SESSION['auth'])) {
   $iinfo = ldap_get_entries($ds, $sr);
   $dn=$iinfo[0]['dn'];
 
-%>
+?>
 
 <FORM METHOD=POST NAME=mdelform onsubmit="ajaxsubmit(this.name);return false">
-<INPUT TYPE=HIDDEN NAME=classi VALUE="<%print $euser;%>">
-<INPUT TYPE=HIDDEN NAME=dn VALUE="<%print $dn;%>">
+<INPUT TYPE=HIDDEN NAME=classi VALUE="<?php print $euser;?>">
+<INPUT TYPE=HIDDEN NAME=dn VALUE="<?php print $dn;?>">
 <CENTER>
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
 <TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body>Editing Mail Delivery</TH></TR>
-<%
+<?php
   for ($i=0; $i < count($iarr); $i++) {
     $rem=$i % 2;
     if ($rem == 1) {
@@ -131,13 +131,13 @@ if (!isset($_SESSION['auth'])) {
     } else {
       $bcolor=" CLASS=list-color1";
     }
-%>
-    <TR<%print $bcolor;%>>
-      <TD WIDTH=75% onmouseover="myHint.show('<%print $i;%>')" onmouseout="myHint.hide()">
-        <% print $disc[$i];%>
+?>
+    <TR<?php print $bcolor;?>>
+      <TD WIDTH=75% onmouseover="myHint.show('<?php print $i;?>')" onmouseout="myHint.hide()">
+        <?php print $disc[$i];?>
       </TD>
       <TD>
-<%
+<?php
         $attr=$iarr[$i];
         print "<INPUT TYPE=HIDDEN NAME=old" . $attr . " VALUE=" . $iinfo[0][$attr][0] . ">";
         if ($i < 2) {
@@ -153,9 +153,9 @@ if (!isset($_SESSION['auth'])) {
             print ">";
           }
         }
-%>
+?>
       </TD></TR>
-<%
+<?php
   }
   $rem=$i % 2;
   if ($rem == 1) {
@@ -165,7 +165,7 @@ if (!isset($_SESSION['auth'])) {
     $bcol[2]=" CLASS=list-color1";
     $bcol[1]=" CLASS=list-color2";
   }
-%>
-<TR <%print $bcol[2];%>><TH COLSPAN=2>  
+?>
+<TR <?php print $bcol[2];?>><TH COLSPAN=2>
   <INPUT TYPE=SUBMIT VALUE="Modify" NAME=modrec></TH></TR>
 </TABLE></FORM>

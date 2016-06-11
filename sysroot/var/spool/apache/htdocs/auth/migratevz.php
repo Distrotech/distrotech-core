@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -38,14 +38,14 @@ if (!isset($_SESSION['auth'])) {
 
 $disc=array("File Server Quota","Home Directory Quota","Mail Box Quota","Allow Access To Proxy");
 
-%>
+?>
 <FORM METHOD=POST>
-<INPUT TYPE=HIDDEN NAME=classi VALUE="<%print $euser;%>">
+<INPUT TYPE=HIDDEN NAME=classi VALUE="<?php print $euser;?>">
 <CENTER>
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
 <TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body>
-<%print _("Transfer User To Zone");%></TH></TR>
-<%
+<?php print _("Transfer User To Zone");?></TH></TR>
+<?php
   $sr=ldap_search($ds,"ou=Admin","(&(objectclass=groupofnames)(member=" . $ldn . ")(cn=Admin Access))");
   if ((ldap_count_entries($ds,$sr) == 1) || ($PHP_AUTH_USER == "admin")) {
     $ADMIN_USER="admin";
@@ -56,7 +56,7 @@ $disc=array("File Server Quota","Home Directory Quota","Mail Box Quota","Allow A
   $dnarr=array("dn");
   $sr=ldap_search($ds,"","(&(objectClass=officePerson)(uid=$euser))",$dnarr);
   $iinfo = ldap_get_entries($ds, $sr);
-  eregi("^(uid=.*,ou=Users),(dc=.*)",$iinfo[0]["dn"],$sdn);
+  preg_match("/^(uid=.*,ou=Users),(dc=.*)/i",$iinfo[0]["dn"],$sdn);
   $dn=$sdn[1];
   $dninf=ldap_explode_dn($dn,0);
 
@@ -87,7 +87,7 @@ $disc=array("File Server Quota","Home Directory Quota","Mail Box Quota","Allow A
       if (count($dinfo) > 0) {
         ldap_mod_del($ds,$dn,$dinfo);
       }
-    } else if (eregi("o=(.*)",$dninf[1],$czone)) {
+    } else if (preg_match("/o=(.*)/i",$dninf[1],$czone)) {
       $zarr=array("quotafileserver","quotamailspool","quotahomedir","smbserveraccess","squidproxyaccess","maxaliases","maxwebaliases","maxmailboxes","radiusporttype","radiusframedipaddress","radiusframedmtu","radiusframedcompression","radiussimultaneoususe","radiussessiontimeout","radiusidletimeout","radiusacctinteriminterval","radiusreplyitem","radiuscheckitem","radiusrealm");
       $zinfq=ldap_search($ds,"cn=" . $czone[1] . ",ou=vadmin","(&(objectClass=virtZoneSettings)(cn=" . $czone[1] . "))",$zarr);
       $zinf=ldap_get_entries($ds,$zinfq);
@@ -131,7 +131,7 @@ $disc=array("File Server Quota","Home Directory Quota","Mail Box Quota","Allow A
       $iinfo = ldap_get_entries($ds, $sr);
       $childdn=array();
       for($ccnt=0;$ccnt < $iinfo["count"];$ccnt++) {
-        eregi("^(uid=.*,ou=Users),(dc=.*)",$iinfo[$ccnt]["dn"],$sdn);
+        preg_match("/^(uid=.*,ou=Users),(dc=.*)/i",$iinfo[$ccnt]["dn"],$sdn);
         if ($dn != $sdn[1]) {
           $cdninf=ldap_explode_dn($sdn[1],0);
           if ($vzone != "") {
@@ -157,7 +157,7 @@ $disc=array("File Server Quota","Home Directory Quota","Mail Box Quota","Allow A
       }
       $sr=ldap_search($ds,"","(&(objectClass=officePerson)(uid=$euser))",$dnarr);
       $iinfo = ldap_get_entries($ds, $sr);
-      eregi("^(uid=.*,ou=Users),(dc=.*)",$iinfo[0]["dn"],$sdn);
+      preg_match("/^(uid=.*,ou=Users),(dc=.*)/i",$iinfo[0]["dn"],$sdn);
       $dn=$sdn[1];
       $dninf=ldap_explode_dn($dn,0);
     }
@@ -177,10 +177,10 @@ $disc=array("File Server Quota","Home Directory Quota","Mail Box Quota","Allow A
   }
   print "</SELECT>\n</TD></TR>";
   if ($ADMIN_USER == "admin") {
-%>
-<TR CLASS=list-color2><TH COLSPAN=2>  
+?>
+<TR CLASS=list-color2><TH COLSPAN=2>
   <INPUT TYPE=SUBMIT VALUE="Modify" NAME=modrec></TH></TR>
-<%
+<?php
   }
-%>
+?>
 </TABLE></FORM>

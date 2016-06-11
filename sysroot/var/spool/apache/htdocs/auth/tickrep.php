@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -37,19 +37,19 @@ if ((ldap_count_entries($ds,$sr) == 1) || ($PHP_AUTH_USER == "admin")) {
 }
 
 $colspan=9;
-%>
+?>
 <CENTER>
 <FORM NAME=pform METHOD=POST>
 <INPUT TYPE=HIDDEN NAME=print>
-<INPUT TYPE=HIDDEN NAME=disppage VALUE="<%print $_SESSION['disppage'];%>">
-<INPUT TYPE=HIDDEN NAME=mmap VALUE="<%print $_POST['mmap'];%>">
+<INPUT TYPE=HIDDEN NAME=disppage VALUE="<?php print $_SESSION['disppage'];?>">
+<INPUT TYPE=HIDDEN NAME=mmap VALUE="<?php print $_POST['mmap'];?>">
 </FORM>
 <FORM METHOD=POST NAME=tickman>
 <INPUT TYPE=HIDDEN NAME=disppage VALUE="auth/ticket.php">
 <INPUT TYPE=HIDDEN NAME=nomenu VALUE=1>
 <INPUT TYPE=HIDDEN NAME=ticket>
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
-<%
+<?php
 mysql_connect('localhost', 'admin', 'admin');
 mysql_select_db('osticket');
 $query="select ost_ticket.ticket_id,ost_ticket.created,subject,name,ost_ticket.email,concat(ost_staff.firstname,' ',ost_staff.lastname),
@@ -109,7 +109,7 @@ while ($line = mysql_fetch_array($result, MYSQL_NUM)) {
       $oset=$colspan-$arcnt-1;
       $tstat[$oset]++;
     } else if ($arcnt == ($colspan -3)) {
-      ereg("([0-9]+):([0-9]+):([0-9]+)",$line[$arcnt],$agep);
+      preg_match("/([0-9]+):([0-9]+):([0-9]+)/",$line[$arcnt],$agep);
       $tage2=$tage;
       while(list($key)=each($tage2)) {
         if ($agep[1] > $key) {
@@ -176,7 +176,7 @@ while(list($name,$otcnt)=mysql_fetch_array($stres, MYSQL_NUM)) {
 if ($_POST['print'] != "1") {
   print "<TR CLASS=list-color" . (($col % 2)+1) . "><TH COLSPAN=" . ($colspan-2) . " CLASS=heading-body><INPUT TYPE=BUTTON NAME=pbutton VALUE=\"" . _("Print") . "\"ONCLICK=\"printpage(document.pform)\"></TH></TR>";
 }
-%>
+?>
 </TH></TR>
 </FORM>
 </TABLE>

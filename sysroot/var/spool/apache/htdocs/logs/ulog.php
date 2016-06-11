@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -62,11 +62,11 @@
  
 //  print "$search<BR>";
 
-%>
+?>
 
 <link rel=stylesheet type=text/css href=/style.php>
 <CENTER>
-<%
+<?php
 if (($type == "") || ($type == "rep")) {
   print "<FORM NAME=ipdata METHOD=POST onsubmit=\"ajaxsubmit(this.name);return false;\">\n";
   print "<INPUT TYPE=HIDDEN NAME=disppage VALUE=\"logs/ulog.php\">\n";
@@ -350,4 +350,4 @@ TCP SYN Flag: $tcp_syn\\nTCP FIN Flag: $tcp_fin";
   }
   print "</TABLE>";
 }
-%>
+?>

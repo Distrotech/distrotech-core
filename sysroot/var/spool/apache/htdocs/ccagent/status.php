@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -23,4 +23,4 @@ $ret=chanstatus("Agent/0401");
 if (is_array($ret)) {
   print_r($ret);
 }
-%>
+?>

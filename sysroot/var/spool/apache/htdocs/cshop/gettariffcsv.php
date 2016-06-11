@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -42,9 +42,9 @@ $num=pg_num_rows($rateq);
 
 $bcolor[0]="list-color1";
 $bcolor[1]="list-color2";
-%>
+?>
 <PRE>
-<%
+<?php
 
 for ($i=0; $i < $num; $i++) {
   $r = pg_fetch_row($rateq,$i);
@@ -53,9 +53,9 @@ for ($i=0; $i < $num; $i++) {
     if ($j >= "2") {
       $r[$j]=sprintf("%0.4f",$r[$j]);
     }
-    print "\" . $r[$j] . "\",";
+    print "\"" . $r[$j] . "\",";
   }
   print "\n";
 }
-%>
+?>
 </PRE>

@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -208,4 +208,4 @@ function gbytes($bytes)
   imagestring($gra,$font,$xtop+50+600,$ytop+260,"31",$text_color);
 
   ImagePng($gra);
-%>
+?>

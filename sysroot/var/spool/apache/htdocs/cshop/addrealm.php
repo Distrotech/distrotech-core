@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -24,7 +24,7 @@ if (! $db) {
 
 if (isset($_POST['addrealm'])) {
   pg_query($db,"INSERT INTO realm (domain,description) VALUES ('" . $_POST["realmdomain"] . "','" . $_POST['realm'] . "')");
-%>
+?>
 <CENTER>
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <TR CLASS=list-color2>
@@ -32,11 +32,11 @@ if (isset($_POST['addrealm'])) {
 </TR>
 <TR CLASS=list-color1>
 <TD WIDTH=50%>Realm</TD>
-<TD WIDTH=50% ALIGN=LEFT><%print $_POST['realm'];%></TD>
+<TD WIDTH=50% ALIGN=LEFT><?php print $_POST['realm'];?></TD>
 </TABLE>
-<%
+<?php
 } else {
-%>
+?>
 <FORM METHOD=POST NAME=addrealm onsubmit="ajaxsubmit(this.name);return false">
 <CENTER>
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
@@ -52,5 +52,5 @@ if (isset($_POST['addrealm'])) {
 <TR CLASS=list-color1>
 <TD ALIGN=MIDDLE COLSPAN=2><INPUT TYPE=SUBMIT NAME=addrealm VALUE="Add Realm">
 </TABLE>
-</FORM><%
-}%>
+</FORM><?php
+}?>

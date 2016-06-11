@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -20,11 +20,11 @@
   if (! $rdn) {
     include "auth.inc";
   }
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=vzone onsubmit="ajaxsubmit(this.name);return false">
 <table border="0" width="90%" cellspacing="0" cellpadding="0">
-<%
+<?php
 
 $grpprop=array("quotaHomeDir"=>_("Home Directory Size Limit"),
                "quotaMailSpool"=>_("Mailbox Size Limit"),
@@ -112,23 +112,23 @@ if (($groupedit == _("Delete")) && ($group != "")){
 }
 
 if (($group != "") && ($groupedit == _("Modify"))){
-  if (($groupmod == _("Delete")) && (strtolower($ldn) != strtolower($$group))) {
-    if (ereg("(sambasid=s-1-5-21-.*,ou=idmap)",strtolower($$group),$olddn)) {
+  if (($groupmod == _("Delete")) && (strtolower($ldn) != strtolower(${$group}))) {
+    if (preg_match("/(sambasid=s-1-5-21-.*,ou=idmap)/",strtolower(${$group}),$olddn)) {
       $addent["member"]=$olddn[0];
-      $addent2["member"]=$$group;
+      $addent2["member"]=${$group};
     } else {
-      ereg("(uid=.*,ou=users)",strtolower($$group),$olddn);
+      preg_match("/(uid=.*,ou=users)/i",strtolower(${$group}),$olddn);
       $addent["member"]=$olddn[0];
-      $addent2["member"]=$$group;
+      $addent2["member"]=${$group};
     }
     ldap_mod_del($ds,"cn=" . $group . ",ou=Vadmin",$addent);
     ldap_mod_del($ds,"cn=" . $group . ",ou=Vadmin",$addent2);
   } else if (($groupmod == _("Add")) && ($add != "")) {
-    if (ereg("(sambasid=s-1-5-21-.*,ou=idmap)",strtolower($add),$olddn)) {
+    if (preg_match("/(sambasid=s-1-5-21-.*,ou=idmap)/i",strtolower($add),$olddn)) {
       $addent["member"]=$olddn[0];
       $addent2["member"]=$add;
     } else {
-      ereg("(uid=.*,ou=users)",strtolower($add),$olddn);
+      preg_match("/(uid=.*,ou=users)/i",strtolower($add),$olddn);
       $addent["member"]=$olddn[0];
       $addent2["member"]=$add;
     }
@@ -139,8 +139,8 @@ if (($group != "") && ($groupedit == _("Modify"))){
     $todel=array();
     for($cnt=0;$cnt<count($grattr);$cnt++) {
       $aattr=$grattr[$cnt];
-      if ($$aattr != "") {
-        $addent[$aattr]=$$aattr;
+      if (${$aattr} != "") {
+        $addent[$aattr]=${$aattr};
       } else if ($grchekprop[$aattr] != "") {
         $addent[$aattr]="off";
       } else if ($grtextprop[$aattr] != "") {
@@ -153,8 +153,8 @@ if (($group != "") && ($groupedit == _("Modify"))){
     $rchk=ldap_search($ds,"cn=" . $group . ",ou=Vadmin","(&(objectClass=virtZoneSettings)(cn=" . $group . "))",array("radiuscheckitem"));
     $chkinf=ldap_get_entries($ds,$rchk);
     $addci=1;
-    for($ccnt=0;$ccnt<$chkinf[0]["radiuscheckitem"]["count"];$ccnt++) {
-      eregi("^(.*) = \"(.*)\"$",$chkinf[0]["radiuscheckitem"][$ccnt],$ciarr);
+    for($ccnt=0;$ccnt<$chkinf[0]["raduscheckitem"]["count"];$ccnt++) {
+      preg_match("/^(.*) = \"(.*)\"$/i",$chkinf[0]["radiuscheckitem"][$ccnt],$ciarr);
       if (($ciarr[1] == "Realm") && ($ciarr[2] != $radiusRealm)){
         $checkdel["radiuscheckitem"]=$chkinf[0]["radiuscheckitem"][$ccnt];
         ldap_mod_del($ds,"cn=" . $group . ",ou=Vadmin",$checkdel);
@@ -179,9 +179,9 @@ if (($group != "") && ($groupedit == _("Modify"))){
 
     ldap_modify($ds,"cn=$group,ou=Vadmin",$addent);
   } else if ($groupmod == _("Delete")) {
-%>
+?>
     <SCRIPT>alert("You May Not Delete Yourself !!!");</SCRIPT>
-<%
+<?php
   }
 
   $sobj="(&(objectClass=virtZoneSettings)(cn=$group))";
@@ -214,7 +214,7 @@ if (($group != "") && ($groupedit == _("Modify"))){
 
   while(list($ent,$gattr)=each($grattr)) {
     $giattr=strtolower($gattr);
-    $$gattr=$info[0][$giattr][0];
+    ${$gattr}=$info[0][$giattr][0];
   }
 
   $allcn=array();
@@ -262,10 +262,10 @@ if (($group != "") && ($groupedit == _("Modify"))){
   while(list($var,$disc)=each($grpprop)) {
     $btm=$bcnt % 2;
 
-    if ($$var == ""){
-      $$var="0";
+    if (${$var} == ""){
+      ${$var}="0";
     }
-    print "<TR " . $bcol[$btm] . "><TD onmouseover=\"myHint.show('" . strtolower($var) . "')\" onmouseout=\"myHint.hide()\">$disc</TD><TD><INPUT TYPE=TEXT NAME=\"" . $var . "\" VALUE=\"" . $$var . "\" SIZE=4></TD></TR>\n";
+    print "<TR " . $bcol[$btm] . "><TD onmouseover=\"myHint.show('" . strtolower($var) . "')\" onmouseout=\"myHint.hide()\">$disc</TD><TD><INPUT TYPE=TEXT NAME=\"" . $var . "\" VALUE=\"" . ${$var} . "\" SIZE=4></TD></TR>\n";
     $bcnt++;
   }
 
@@ -273,7 +273,7 @@ if (($group != "") && ($groupedit == _("Modify"))){
     $btm=$bcnt % 2;
 
     print "<TR " . $bcol[$btm] . "><TD onmouseover=\"myHint.show('" . strtolower($var) . "')\" onmouseout=\"myHint.hide()\">$disc</TD><TD><INPUT TYPE=CHECKBOX NAME=\"" . $var ."\"";
-    if ($$var == "on") {
+    if (${$var} == "on") {
       print " CHECKED";
     }
     print "></TD></TR>\n";
@@ -282,7 +282,7 @@ if (($group != "") && ($groupedit == _("Modify"))){
 
   while(list($var,$disc)=each($grtextprop)) {
     $btm=$bcnt % 2;
-    print "<TR " . $bcol[$btm] . "><TD onmouseover=\"myHint.show('" . strtolower($var) . "')\" onmouseout=\"myHint.hide()\">$disc</TD><TD><INPUT TYPE=TEXT NAME=\"" . $var . "\" VALUE=\"" . $$var . "\"></TD></TR>\n";
+    print "<TR " . $bcol[$btm] . "><TD onmouseover=\"myHint.show('" . strtolower($var) . "')\" onmouseout=\"myHint.hide()\">$disc</TD><TD><INPUT TYPE=TEXT NAME=\"" . $var . "\" VALUE=\"" . ${$var} . "\"></TD></TR>\n";
     $bcnt++;
   }
 
@@ -318,7 +318,7 @@ if (($group != "") && ($groupedit == _("Modify"))){
   print "<INPUT TYPE=SUBMIT onclick=this.name='groupedit' VALUE=\"" . _("Modify") . "\">\n";
   print "<INPUT TYPE=SUBMIT onclick=this.name='groupedit' VALUE=\"" . _("Delete") . "\"><P>\n";
 }
-%>
+?>
 </TD></TR>
 </FORM>
 </table>

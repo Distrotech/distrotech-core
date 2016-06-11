@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -51,7 +51,7 @@ if (($dbfam != "") && ($dbkey != "")) {
 }
 
 $speer=$agi->command("sip show peers");
-%>
+?>
 
 <CENTER>
 <FORM METHOD=POST NAME=sipinf>
@@ -61,23 +61,23 @@ $speer=$agi->command("sip show peers");
 
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
   <TR CLASS=list-color2>
-    <TH CLASS=heading-body COLSPAN=12><%print _("Sip Extensions (Peers)");%></TH>
+    <TH CLASS=heading-body COLSPAN=12><?php print _("Sip Extensions (Peers)");?></TH>
   </TR>
 
 <TR CLASS=list-color1>
-<TH CLASS=heading-body2><%print _("Extension");%></TH><TH CLASS=heading-body2><%print _("Host");%></TH>
-<TH CLASS=heading-body2><%print _("NAT");%></TH><TH CLASS=heading-body2><%print _("Port");%></TH><TH CLASS=heading-body2><%print _("Status");%></TH>
-<TH CLASS=heading-body2><%print _("DND");%></TH><TH CLASS=heading-body2><%print _("Fwd. Imm.");%></TH><TH CLASS=heading-body2><%print _("Fwd. Busy");%></TH>
-<TH CLASS=heading-body2><%print _("Fwd. NA");%></TH>
-<TH CLASS=heading-body2><%print _("R. Time");%></TH>
-<TH CLASS=heading-body2><%print _("V. Mail");%></TH>
-<TH CLASS=heading-body2><%print _("C. Wait.");%></TH></TR>
-<%
+<TH CLASS=heading-body2><?php print _("Extension");?></TH><TH CLASS=heading-body2><?php print _("Host");?></TH>
+<TH CLASS=heading-body2><?php print _("NAT");?></TH><TH CLASS=heading-body2><?php print _("Port");?></TH><TH CLASS=heading-body2><?php print _("Status");?></TH>
+<TH CLASS=heading-body2><?php print _("DND");?></TH><TH CLASS=heading-body2><?php print _("Fwd. Imm.");?></TH><TH CLASS=heading-body2><?php print _("Fwd. Busy");?></TH>
+<TH CLASS=heading-body2><?php print _("Fwd. NA");?></TH>
+<TH CLASS=heading-body2><?php print _("R. Time");?></TH>
+<TH CLASS=heading-body2><?php print _("V. Mail");?></TH>
+<TH CLASS=heading-body2><?php print _("C. Wait.");?></TH></TR>
+<?php
 $cnt=1;
 $allexten=array();
 foreach(explode("\n",$speer['data']) as $line) {
-  if (! ereg("(^[a-zA-Z])|(^$)|(^[0-9]+ sip peers \[)",$line)) {
-    if (ereg("^([0-9]{4})/[0-9]{4}[ ]+([0-9]*\.[0-9]*\.[0-9]*\.[0-9]*|\(Unspecified\))[ ]+(D|[ ])[ ]+(N|[ ])[ ]+([0-9]*)[ ]+(UNKNOWN|Unmonitored|OK \([0-9]+ ms\)|LAGGED \([0-9]+ ms\))",$line,$data)) {
+  if (! preg_match("/(^[a-zA-Z])|(^$)|(^[0-9]+ sip peers \[)/",$line)) {
+    if (preg_match("/^([0-9]{4})/[0-9]{4}[ ]+([0-9]*\.[0-9]*\.[0-9]*\.[0-9]*|\(Unspecified\))[ ]+(D|[ ])[ ]+(N|[ ])[ ]+([0-9]*)[ ]+(UNKNOWN|Unmonitored|OK \([0-9]+ ms\)|LAGGED \([0-9]+ ms\))/",$line,$data)) {
       $getastq="SELECT cdnd,cfim,cfbu,cfna,fullname,tout,novmail,wait FROM 
                   users 
                   LEFT OUTER JOIN features ON (exten=name)";
@@ -191,7 +191,7 @@ for($ecnt=0;$ecnt<count($allexten);$ecnt++) {
 }
 
 $agi->disconnect();
-%>
-<TR CLASS=list-color<%print ((($ecnt + 1) % 2) + 1);%>><TH ALIGN=LEFT CLASS=heading-body2 COLSPAN=12><%print $ecnt. " " . _("Active Extensions");%></TH></TR>
+?>
+<TR CLASS=list-color<?php print ((($ecnt + 1) % 2) + 1);?>><TH ALIGN=LEFT CLASS=heading-body2 COLSPAN=12><?php print $ecnt. " " . _("Active Extensions");?></TH></TR>
 </TABLE>
 </FORM>

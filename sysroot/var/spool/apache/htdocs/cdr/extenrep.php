@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -18,7 +18,7 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-  $month=split("/",$date);
+  $month=preg_split("/\//",$date);
   include_once "uauth.inc";
 
   if ($ADMIN_USER != "admin") {
@@ -45,7 +45,7 @@
   }
   $curdate=getdate();
   array_push($amon,array('year'=>$curdate['year'],'mon'=>$curdate['mon']+1));
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=extenrepf onsubmit="ajaxsubmit(this.name);return false">
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
@@ -55,14 +55,14 @@
   From Month
 </TD><TD>
 <SELECT NAME=dom>
-<%
+<?php
   for($dcnt=1;$dcnt <= 31;$dcnt++) {
     print "<OPTION VALUE=" . $dcnt . ">" . $dcnt . "\n";
   }
-%>
+?>
 </SELECT>
 <SELECT NAME=date>
-<%
+<?php
   for($rcnt=0;$rcnt < count($amon);$rcnt++) {
     print "<OPTION VALUE=\"" . $amon[$rcnt]['mon'] . "/" . $amon[$rcnt]['year'] . "\"";
     if ((($dtime['year'] == $amon[$rcnt]['year']) && ($dtime['mon'] == $amon[$rcnt]['mon']) && (! isset($date))) ||
@@ -74,20 +74,20 @@
     }
     print ">" . $amon[$rcnt]['mon'] . "/" . $amon[$rcnt]['year'] . "\n";
   }
-%>
+?>
 </SELECT></TD></TR>
 <TR CLASS=list-color2><TD WIDTH=50%>
   To Month
 </TD><TD>
 <SELECT NAME=dom2>
-<%
+<?php
   for($dcnt=31;$dcnt >= 1;$dcnt--) {
     print "<OPTION VALUE=" . $dcnt . ">" . $dcnt . "\n";
   }
-%>
+?>
 </SELECT>
 <SELECT NAME=date2>
-<%
+<?php
   for($rcnt=0;$rcnt < count($amon);$rcnt++) {
     print "<OPTION VALUE=\"" . $amon[$rcnt]['mon'] . "/" . $amon[$rcnt]['year'] . "\"";
     if ((($dtime['year'] == $amon[$rcnt]['year']) && ($dtime['mon'] == $amon[$rcnt]['mon']) && (! isset($date))) ||
@@ -99,13 +99,13 @@
     }
     print ">" . $amon[$rcnt]['mon'] . "/" . $amon[$rcnt]['year'] . "\n";
   }
-%>
+?>
 </SELECT></TD></TR>
 <TR CLASS=list-color1><TD>
   Extension
 </TD><TD>
   <SELECT NAME=exten>
-<%
+<?php
   $curextq="SELECT name,fullname||'('||name||')' AS fname from users 
                    left outer join astdb on (substr(name,0,3)=astdb.key)";
   if ($TMS_USER == 1) {
@@ -122,18 +122,18 @@
     $r = pg_fetch_array($curext,$i,PGSQL_NUM);
     print "    <OPTION VALUE=\"" .  $r[0] . "\">" . $r[1] . "</OPTION>\n";
   }
-%>
+?>
   </SELECT>
 </TD></TR>
 <TR CLASS=list-color2><TD>
 Order Results By
 </TD><TD>
 <SELECT NAME=morder>
-<OPTION VALUE="sum(cost)"<%if (($morder == "sum(cost)") || ($morder == "")){print " SELECTED";}%>>Cost
-<OPTION VALUE="tottime"<%if ($morder == "tottime"){print " SELECTED";}%>>Total Time
-<OPTION VALUE="avtime"<%if ($morder == "avtime") {print " SELECTED";}%>>Average Time
-<OPTION VALUE="dv8"<%if ($morder == "dv8") {print " SELECTED";}%>>Standard Deviation
-<OPTION VALUE="holdtime"<%if ($morder == "holdtime") {print " SELECTED";}%>>Av. Hold Time
+<OPTION VALUE="sum(cost)"<?php if (($morder == "sum(cost)") || ($morder == "")){print " SELECTED";}?>>Cost
+<OPTION VALUE="tottime"<?php if ($morder == "tottime"){print " SELECTED";}?>>Total Time
+<OPTION VALUE="avtime"<?php if ($morder == "avtime") {print " SELECTED";}?>>Average Time
+<OPTION VALUE="dv8"<?php if ($morder == "dv8") {print " SELECTED";}?>>Standard Deviation
+<OPTION VALUE="holdtime"<?php if ($morder == "holdtime") {print " SELECTED";}?>>Av. Hold Time
 </SELECT></TD></TR>
 <TR CLASS=list-color1><TD>
 Descending Order</TD><TD>

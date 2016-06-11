@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -117,24 +117,24 @@
     $toc=$toc+$r[2];
     $totalcost=$totalcost+$r[5];
     if (($r[7] == "ANSWERED") && (($r[5] == "") || ($r[5] <= 0))) {
-      if (eregi("(^0[1-79][0-9]{4})[0-9]{4}",$r[1],$preinf)) {
+      if (preg_match("/(^0[1-79][0-9]{4})[0-9]{4}/i",$r[1],$preinf)) {
         if ($seenpre[$preinf[1]] != 1) {
           $seenpre[$preinf[1]]=1;
           array_push($unkpre,$preinf[1]);
         }
-      } else if (eregi("^00([1-9][0-9]+)",$r[1],$preinf)) {
+      } else if (preg_match("/^00([1-9][0-9]+)/i",$r[1],$preinf)) {
         $intpreq=pg_query("SELECT * from countryprefix where prefix=substr('" . $preinf[1] . "',1,length(prefix)) ORDER BY length(prefix) DESC LIMIT 1");
         $intpre=pg_fetch_array($intpreq,0);
         if ($seenpre[$intpre[0]] != 1) {
           $seenpre[$intpre[0]]=1;
           array_push($unkpre,"00" . $intpre[0]);
         }
-      } else if (eregi("^(08[1-9][0-9]{3})[0-9]{4}",$r[1],$preinf)) {
+      } else if (preg_match("/^(08[1-9][0-9]{3})[0-9]{4}/i",$r[1],$preinf)) {
         if ($seenpre[$preinf[1]] != 1) {
           $seenpre[$preinf[1]]=1;
           array_push($unkpre,$preinf[1]);
         }
-      } else if (eregi("^([1-9][0-9]{4}[0-9]+)",$r[1],$preinf)) {
+      } else if (preg_match("/^([1-9][0-9]{4}[0-9]+)/i",$r[1],$preinf)) {
         if ($seenpre[$preinf[1]] != 1) {
           $seenpre[$preinf[1]]=1;
           array_push($unkpre,$preinf[1]);
@@ -190,4 +190,4 @@
   if ($_POST['print'] != "2") {
     print "</TABLE>";
   }
-%>
+?>

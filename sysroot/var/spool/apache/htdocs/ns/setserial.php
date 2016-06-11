@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -19,7 +19,7 @@
 */
   $htaccess=file("/var/spool/apache/htdocs/ns/config/netsentry.conf");
   while(list($lnum,$ldata)=each($htaccess)) {
-    if (ereg("^Serial",$ldata)) {
+    if (preg_match("/^Serial/",$ldata)) {
       $mustchange=true;
       $pwlnum=$lnum;
     }
@@ -36,4 +36,4 @@
   $datain=implode($newdata);
   fwrite($cfile,$datain);
   fclose($cfile);
-%>
+?>

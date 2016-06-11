@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -20,12 +20,12 @@
 if (!isset($_SESSION['auth'])) {
   exit;
 }
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=ppplog onsubmit="ajaxsubmit(this.name);return false">
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
-<TR CLASS=list-color2><TH CLASS=heading-body><%print _("Current PPP Status");%></TH></TR>
-<%
+<TR CLASS=list-color2><TH CLASS=heading-body><?php print _("Current PPP Status");?></TH></TR>
+<?php
   $sr=ldap_search($ds,"ou=Admin","(&(objectclass=groupofnames)(member=" . $ldn . ")(cn=Admin Access))");
   if ((ldap_count_entries($ds,$sr) == 1) || ($PHP_AUTH_USER == "admin")) {
     $ADMIN_USER="admin";
@@ -46,7 +46,7 @@ if (!isset($_SESSION['auth'])) {
         $chunk=8192;
         while (!feof($fp)) {
           $output=fgets($fp, $chunk);
-          if (!ereg("(^Couldn't increase M[TR]U to 1500)|(pppoe: Interface eth[0-9a-zA-Z] has MTU of 1450)",$output)) {
+          if (!preg_match("/(^Couldn't increase M[TR]U to 1500)|(pppoe: Interface eth[0-9a-zA-Z] has MTU of 1450)/",$output)) {
             print "</TH></TR><TR" . $bcol[$col % 2] . "><TD>" . $output . "</TD></TR>\n";
             $col++;
           }
@@ -65,7 +65,7 @@ if (!isset($_SESSION['auth'])) {
       $chunk=8192;
       while (!feof($fp)) {
         $output=fgets($fp, $chunk);
-        if (!ereg("(^Couldn't increase M[TR]U to 1500)|(pppoe: Interface eth[0-9a-zA-Z] has MTU of 1450)",$output)) {
+        if (!preg_match("/(^Couldn't increase M[TR]U to 1500)|(pppoe: Interface eth[0-9a-zA-Z] has MTU of 1450)/",$output)) {
           print "</TH></TR><TR" . $bcol[$col % 2] . "><TD>" . $output . "</TD></TR>\n";
           $col++;
         }
@@ -79,6 +79,6 @@ if (!isset($_SESSION['auth'])) {
   } else {
     print "<TR CLASS=list-color1><TH CLASS=heading-body2>Administrator Access Required</TH></TR>";
   }
-%>
+?>
 </FORM>
 </TABLE>

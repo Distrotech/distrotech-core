@@ -61,30 +61,6 @@ EOF
   done;
 }
 
-sync_repo() {
-  for repo_arch in $@;do
-    if [ -d ${DTSSRVDIR}/yum/${ARCH_MAN}/${repo_arch} ];then
-      case ${repo_arch} in
-        i686|x86_32|x86_64)ARCH_MAN="intel";;
-        arm*)ARCH_MAN="arm";;
-        ppc*)ARCH_MAN="ppc";;
-        mips*)ARCH_MAN="mips";;
-      esac;
-      rsync --modify-window=1 --exclude="${repo_arch}/*/*/*-dbg-*.*.rpm" --delete -a ${DTSSRVDIR}/yum/${ARCH_MAN}/${repo_arch} ${INST_PATH}/repo/
-    fi;
-  done;
-
-  YUM_GRP_FILE=$(ls -t ${DTSSRVDIR}/yum/repodata/*-groups.xml |head -1)
-  if [ ! -d ${INST_PATH}/repo/repodata ];then
-    mkdir -p ${INST_PATH}/repo/repodata
-    cp ${YUM_GRP_FILE} ${INST_PATH}/repo/repodata/groups.xml
-    createrepo -g repodata/groups.xml ${INST_PATH}/repo
-   else
-    cp ${YUM_GRP_FILE} ${INST_PATH}/repo/repodata/groups.xml
-    createrepo -g repodata/groups.xml --skip-stat --update ${INST_PATH}/repo
-  fi;
-}
-
 config_installer() {
   INST_PATH=${1}
   shift;
@@ -108,9 +84,9 @@ config_installer() {
       mkdir -p ${INST_PATH}${IMG_BOOT_DIR}/${img_arch}/
     fi;
     if [ -d ${DTSSRVDIR}/install/${img_arch} ];then
-      rsync --no-p --no-g -rLtvP --modify-window=1 ${DTSSRVDIR}/install/${img_arch}/ ${INST_PATH}${IMG_BOOT_DIR}/${img_arch}/
+      rsync --no-p --no-g -rLt --modify-window=1 ${DTSSRVDIR}/install/${img_arch}/ ${INST_PATH}${IMG_BOOT_DIR}/${img_arch}/
      elif [ ${img_arch} == ${NARCH} ] && [ -d /boot/images ];then
-      rsync --no-p --no-g -rLtvP --modify-window=1 --exclude=lost+found /boot/images /boot/vmlinuz ${INST_PATH}${IMG_BOOT_DIR}/${img_arch}/
+      rsync --no-p --no-g -rLt --modify-window=1 --exclude=lost+found /boot/images /boot/vmlinuz ${INST_PATH}${IMG_BOOT_DIR}/${img_arch}/
       mkinitrd bootimg ${INST_PATH}${IMG_BOOT_DIR}/${img_arch}/initrd.img / $(uname -r)
      else
       continue;
@@ -162,7 +138,7 @@ if [ "${1}" ];then
   INST_PATH=${1}
   shift
   if [ ! -b ${INST_PATH} ] && [ ! -e ${INST_PATH} ];then
-    image_create ${INST_PATH} 4
+    image_create ${INST_PATH} 16
     IMGLOOP=$(losetup -f --show ${INST_PATH})
     INSTDEV=${IMGLOOP}p1
     mkdosfs -F 32 -n DTS_INSTALL ${INSTDEV}

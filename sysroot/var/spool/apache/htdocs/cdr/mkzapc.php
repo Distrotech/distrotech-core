@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -21,11 +21,11 @@
 if (! $db) {
   include "auth.inc";
 }
-%>
+?>
 <FORM METHOD=POST NAME=zapchan onsubmit="ajaxsubmit(this.name);return false">
 <CENTER>
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <TR CLASS=list-color2>
-<%
+<?php
   include "zapcadmin.php";
-%>
+?>

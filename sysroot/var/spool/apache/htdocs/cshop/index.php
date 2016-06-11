@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -28,4 +28,4 @@ for($svcnt=0;$svcnt<count($sesvar);$svcnt++) {
 }
 
 include "/var/spool/apache/htdocs/index.php";
-%>
+?>

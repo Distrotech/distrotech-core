@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -27,4 +27,4 @@ if (($_POST['number'] != "") && ($_POST['newddi'] != "")) {
   pg_query($db,"UPDATE cc_callerid SET ddifwd='" . $_POST['newddi'] . "' WHERE callerid='" . $_POST['number'] . "'");
 }
 print "<A HREF=javascript:voipddiedit('" . $_POST['number'] . "','" . $_POST['newddi'] . "')>" . $_POST['newddi'] . "</A>"
-%>
+?>

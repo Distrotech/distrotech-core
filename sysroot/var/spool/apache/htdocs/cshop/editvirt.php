@@ -1,4 +1,4 @@
-<% 
+<?php 
 if (! $db) {
   include "/var/spool/apache/htdocs/cshop/auth.inc";
 }
@@ -41,26 +41,26 @@ $vcinfq=pg_query($db,"SELECT description,contact,email,altnumber FROM virtualcom
 			"WHERE companyid=" . $_POST['number'] . " LIMIT 1");
 
 $vcinf=pg_fetch_row($vcinfq,0);
-%>
+?>
 <CENTER> 
 <FORM NAME=editvirt METHOD=POST onsubmit="ajaxsubmit(this.name);return false">
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%> 
 <TR CLASS=list-color2>
-<TH COLSPAN=2 CLASS=heading-body>Editing <%print $vcinf[0];%></TH></TR>
+<TH COLSPAN=2 CLASS=heading-body>Editing <?php print $vcinf[0];?></TH></TR>
 <TR CLASS=list-color1>
-<TD WIDTH=50%>Company Name</TD><TD><INPUT TYPE=TEXT NAME=description VALUE="<%print $vcinf[0];%>"></TD></TR>
+<TD WIDTH=50%>Company Name</TD><TD><INPUT TYPE=TEXT NAME=description VALUE="<?php print $vcinf[0];?>"></TD></TR>
 <TR CLASS=list-color2>
-<TD>Contact Person</TD><TD><INPUT TYPE=TEXT NAME=contact VALUE="<%print $vcinf[1];%>"></TD></TR>
+<TD>Contact Person</TD><TD><INPUT TYPE=TEXT NAME=contact VALUE="<?php print $vcinf[1];?>"></TD></TR>
 <TR CLASS=list-color1>
-<TD>Email</TD><TD><INPUT TYPE=TEXT NAME=email VALUE="<%print $vcinf[2];%>"></TD></TR>
+<TD>Email</TD><TD><INPUT TYPE=TEXT NAME=email VALUE="<?php print $vcinf[2];?>"></TD></TR>
 <TR CLASS=list-color2>
-<TD>Contact Number</TD><TD><INPUT TYPE=TEXT NAME=altnumber VALUE="<%print $vcinf[3];%>"></TD></TR>
+<TD>Contact Number</TD><TD><INPUT TYPE=TEXT NAME=altnumber VALUE="<?php print $vcinf[3];?>"></TD></TR>
 <TR CLASS=list-color1>
 <TD ALIGN=MIDDLE COLSPAN=2>
 <INPUT TYPE=SUBMIT onclick=this.name='savevirt' VALUE="Save Changes">
 <INPUT TYPE=BUTTON ONCLICK="deleteconf('This Company',document.editvirt,document.editvirt.deluser)" VALUE="Delete">
 <INPUT TYPE=HIDDEN NAME=deluser>
-<INPUT TYPE=HIDDEN NAME=number VALUE="<%print $_POST['number'];%>">
+<INPUT TYPE=HIDDEN NAME=number VALUE="<?php print $_POST['number'];?>">
 </TD></TR>
 </TABLE>
 </FORM>

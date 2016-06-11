@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -33,13 +33,13 @@ function show_tickets($emailaddie,$status) {
   $result = mysql_query($query);
   $numrows=mysql_num_rows($result);
 
-  if ($numrows > 0) {%>
+  if ($numrows > 0) {?>
     <CENTER>
     <FORM METHOD=POST NAME=tickman>
     <INPUT TYPE=HIDDEN NAME=disppage VALUE="auth/ticket.php">
     <INPUT TYPE=HIDDEN NAME=nomenu VALUE=1>
     <INPUT TYPE=HIDDEN NAME=ticket>
-    <TABLE WIDTH=90% cellspacing=0 cellpadding=0><%
+    <TABLE WIDTH=90% cellspacing=0 cellpadding=0><?php
 
     $align=array("LEFT","LEFT","LEFT","LEFT","RIGHT","RIGHT");
     $chead=array("Created","Subject","From","Assigned To","Age","Replies");
@@ -85,7 +85,7 @@ function show_tickets($emailaddie,$status) {
           $oset=$colspan-$arcnt-1;
           $tstat[$oset]++;
         } else if ($arcnt == ($colspan -3)) {
-          ereg("([0-9]+):([0-9]+):([0-9]+)",$line[$arcnt],$agep);
+          preg_match("/([0-9]+):([0-9]+):([0-9]+)/",$line[$arcnt],$agep);
           $tage2=$tage;
           while(list($key)=each($tage2)) {
             if ($agep[1] > $key) {

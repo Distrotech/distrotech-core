@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -18,26 +18,26 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-  if ((isset($add)) && ($baseou == "system")) {
+  if ((isset($_POST['add'])) && ($_POST['baseou'] == "system")) {
     include "adduser.php";
     return 0;
-  } else if ((isset($add)) && ($baseou == "trust")) {
+  } else if ((isset($_POST['add'])) && ($_POST['baseou'] == "trust")) {
     include "addtrust.php";
     return 0;
-  } else if ((isset($add)) && ($baseou == "mserver")) {
+  } else if ((isset($_POST['add'])) && ($_POST['baseou'] == "mserver")) {
     include "addmserv.php";
     return 0;
-  } else if ((isset($add)) && ($baseou == "snom")) {
+  } else if ((isset($_POST['add'])) && ($_POST['baseou'] == "snom")) {
     include "addsnom.php";
     return 0;
-  } else if ((isset($add)) && ($baseou == "server")) {
+  } else if ((isset($_POST['add'])) && ($_POST['baseou'] == "server")) {
     include "/var/spool/apache/htdocs/ldap/addserv.php";
     return 0;
-  } else if ((isset($add)) && ($baseou == "mserver")) {
+  } else if ((isset($_POST['add'])) && ($_POST['baseou'] == "mserver")) {
     include "/var/spool/apache/htdocs/ldap/addmserv.php";
     return 0;
-  } else if ((isset($add)) && ($baseou == "pdc")) {
-%>
+  } else if ((isset($_POST['add'])) && ($_POST['baseou'] == "pdc")) {
+?>
 <html>
 <head>
 </head>
@@ -46,27 +46,26 @@
 <H1>PDC Users Cannot Be Added</H1>
 </body>
 </html>
-<%
+<?php
     return 0;
   }
 
 
-  if (($ds) && (isset($find))) { 
-    $search=rtrim($search);
+  if (($ds) && (isset($_POST['find']))) {
+    $search=rtrim($_POST['search']);
     if ($type == "in") {
       $search="*$search*";
     } elseif ($type == "end") {
       $search="*$search";
     } elseif ($type == "start") {
       $search="$search*";
-    }     
+    }
 
-    
-    if ($baseou == "trust") {
+    if ($_POST['baseou'] == "trust") {
       $obcl="objectClass=posixAccount";
-    } elseif (($baseou == "server") || ($baseou == "mserver")){
+    } elseif (($_POST['baseou'] == "server") || ($_POST['baseou'] == "mserver")){
       $obcl="objectClass=ipHost";
-    } elseif ($baseou == "snom"){
+    } elseif ($_POST['baseou'] == "snom"){
       $obcl="objectClass=snomcontact";
     } else {
       $obcl="objectClass=officePerson)(cn=*";
@@ -77,15 +76,15 @@
     }
 
     if (($search == "") || ($search == "**")){
-      $sr=ldap_search($ds,$abdn,"(&($obcl))");  
+      $sr=ldap_search($ds,$abdn,"(&($obcl))");
     } else {
-      $sr=ldap_search($ds,$abdn,"(&($obcl)($what=$search))");  
+      $sr=ldap_search($ds,$abdn,"(&($obcl)($what=$search))");
     }
     $info = ldap_get_entries($ds, $sr);
 
     print "\n<CENTER>\n";
     print "$LDAP_OPT_PROTOCOL_VERSION";
-    $baseou=urlencode($baseou);
+    $_POST['baseou']=urlencode($_POST['baseou']);
     $ldtype=urlencode($ldtype);
     print "\n<TABLE cellspacing=0 cellpadding=0 WIDTH=90%>\n";
 
@@ -95,18 +94,17 @@
     asort($srsort);
     reset ($srsort);
 
-
     while (list($i,$val) = each($srsort)) {
       $dn=$info[$i]["dn"];
-      if (($baseou == "pdc") && (strrpos($info[$i]["uid"][0],"\$") == strlen($info[$i]["uid"][0]) -1)) {
+      if (($_POST['baseou'] == "pdc") && (strrpos($info[$i]["uid"][0],"\$") == strlen($info[$i]["uid"][0]) -1)) {
         continue;
-      } else if (($baseou == "system") && (eregi("uid=.*,o=.*,ou=users",$dn)) && ($_SESSION['utype'] == $baseou)) {
+      } else if (($_POST['baseou'] == "system") && (preg_match("/uid=.*,o=.*,ou=users/i",$dn)) && ($_SESSION['utype'] == $_POST['baseou'])) {
         continue;
       }
       $edit=urlencode($dn);
       $cname=$info[$i]["cn"][0];
       $cnhtml="<TR>\n  <TH COLSPAN=4 CLASS=heading-body>";
-      if ($baseou == "system") {
+      if ($_POST['baseou'] == "system") {
         $cnhtml="<TR>\n  <TH COLSPAN=5 CLASS=heading-body>";
         $suarr=ldap_explode_dn($dn,1);
         $cnhtml="$cnhtml<A HREF=javascript:edituser('$suarr[0]','" . $_SESSION['utype'] . "') CLASS=heading-body>$cname";
@@ -115,29 +113,29 @@
         } else {
           $cnhtml=$cnhtml . "</A>";
         }
-      } else if ($baseou == "pdc") {
+      } else if ($_POST['baseou'] == "pdc") {
         $cnhtml="<TR>\n  <TH COLSPAN=5 CLASS=heading-body>";
         $suarr=array($info[$i]["uid"][0]);
-        $cnhtml="$cnhtml<A HREF=javascript:edituser('$suarr[0]','" . $baseou . "') CLASS=heading-body>$cname ($suarr[0])</A>";
-      } else if ($baseou == "trust") {
+        $cnhtml="$cnhtml<A HREF=javascript:edituser('$suarr[0]','" . $_POST['baseou'] . "') CLASS=heading-body>$cname ($suarr[0])</A>";
+      } else if ($_POST['baseou'] == "trust") {
         $suarr=ldap_explode_dn($dn,1);
-        $cnhtml="$cnhtml<A HREF=javascript:edituser('$suarr[0]','" . $baseou . "') CLASS=heading-body>$cname ($suarr[0])</A>";
-      } else if ($baseou == "snom") {
+        $cnhtml="$cnhtml<A HREF=javascript:edituser('$suarr[0]','" . $_POST['baseou'] . "') CLASS=heading-body>$cname ($suarr[0])</A>";
+      } else if ($_POST['baseou'] == "snom") {
         $suarr=ldap_explode_dn($dn,1);
-        $cnhtml="$cnhtml<A HREF=\"javascript:edituser('$suarr[0]','" . $baseou . "')\" CLASS=heading-body>$cname (" . $info[$i]["telephonenumber"][0] . ")</A>";
-      } else if ($baseou == "server") {
+        $cnhtml="$cnhtml<A HREF=\"javascript:edituser('$suarr[0]','" . $_POST['baseou'] . "')\" CLASS=heading-body>$cname (" . $info[$i]["telephonenumber"][0] . ")</A>";
+      } else if ($_POST['baseou'] == "server") {
         $suarr=ldap_explode_dn($dn,1);
         $cnhtml="$cnhtml<A HREF=/auth/index.php?disppage=ldap/serverinfo.php&euser=$suarr[0] CLASS=heading-body>$cname</A>";
-      } else if ($baseou == "mserver") {
+      } else if ($_POST['baseou'] == "mserver") {
         $suarr=ldap_explode_dn($dn,1);
-        $cnhtml="$cnhtml<A HREF=javascript:edituser('$suarr[0]','" . $baseou . "') CLASS=heading-body>$cname ($suarr[0])</A>";
+        $cnhtml="$cnhtml<A HREF=javascript:edituser('$suarr[0]','" . $_POST['baseou'] . "') CLASS=heading-body>$cname ($suarr[0])</A>";
       } else {
-        $cnhtml="$cnhtml<A HREF=/auth/index.php?disppage=ldap/ldap.php&dn=$edit&baseou=$baseou&ldtype=$ldtype CLASS=heading-body>$cname</A>";
+        $cnhtml="$cnhtml<A HREF=/auth/index.php?disppage=ldap/ldap.php&dn=$edit&baseou=" . $_POST['baseou'] . "&ldtype=$ldtype CLASS=heading-body>$cname</A>";
       }
       $cnhtml="$cnhtml</TH>\n</TR>\n";
       print "$cnhtml";
 
-      if (($baseou == "system") || ($baseou == "pdc")) {
+      if (($_POST['baseou'] == "system") || ($_POST['baseou'] == "pdc")) {
         print "<TD COLSPAN=4><TABLE cellspacing=0 border=0 cellpadding=0 WIDTH=100%><TR CLASS=list-color1>";
       } else {
         print "<TR CLASS=list-color1>";
@@ -146,9 +144,11 @@
 
       $natrib=$atrib;
       $rcnt=0;
+
       while(list($idx,$catt)=each($natrib)) {
         $aname=$catt;
         $catt=strtolower($catt);
+
         if (($catt != "cn") && (! $cert[$aname]) && (! $bfile[$aname]) &&
             ($catt != "userpassword") && ($catt != "comment")){
           $ccnt=$rcnt % 4;
@@ -162,9 +162,9 @@
           if (count($info[$i][$catt]) <= 0) {
             print "&nbsp;";
           }
-          if ($b64[$aname]) {
+        if ($b64[$aname]) {
             $val=$info[$i][$catt][0];
-            $data=split("\r\n",$val);       
+            $data=preg_split("/\r\n/",$val); 
             if (count($data) > 1) {
               $acnt=0;
               for ($cnt=0;$cnt < count($data);$cnt++) {
@@ -176,7 +176,7 @@
             } elseif ($data[0] != "") {
               print "$val<BR>";
             }
-          } else {
+          }  else {
             for ($cnt=0;$cnt<count($info[$i][$catt]);$cnt++) {
               $val=$info[$i][$catt][$cnt];
               if ($catt == "mail") {
@@ -193,7 +193,8 @@
           }
           print "</FONT></TD></TR>\n    </TABLE>\n  </TD>";
         }
-      }
+     }
+
      $ccnt=$rcnt % 4;
      while ($ccnt != 0) {
        print "\n  <TD WIDTH=25%>\n    <TABLE WIDTH=100% cellspacing=0 cellpadding=0>\n      ";
@@ -202,16 +203,16 @@
        $rcnt++;
        $ccnt=$rcnt % 4;
      }
-     
+
      if ($info[$i]["comment"][0] != "") {
-%>
+?>
        </TR><TR CLASS=list-color2><TD COLSPAN=4>
        <TABLE WIDTH=100% cellspacing=0 cellpadding=0>
        <TR CLASS=list-color2><TD VALIGN=TOP>
          <font SIZE=1>Notes</font></TD></TR>
        <TR CLASS=list-color1 COLSPAN=4><TD VALIGN=TOP>
          <font SIZE=2>
-<%
+<?php
        print "<PRE>" . $info[$i]["comment"][0] . "</PRE></font></TD></TABLE></TD>";
 /*
        Notes</font></TD>
@@ -219,7 +220,7 @@
 */
      }
     
-     if (($baseou == "system") || ($baseou == "pdc")){
+     if (($_POST['baseou'] == "system") || ($_POST['baseou'] == "pdc")){
        if ($info[$i]["jpegphoto"][0] != "" ) {
          print "</TR></TABLE></TD><TD CLASS=list-color2 VALIGN=MIDDLE ALIGN=CENTER><A HREF=/photo/" . $suarr[0] .".jpg target=_blank><IMG SRC=/ldap/photo.php?euser=" . $suarr[0] . "&imlim=150 BORDER=0></A></TD></TR>";
        } else {
@@ -230,13 +231,13 @@
     print "</TABLE>\n";
     print "</body></html>";
   } else {
-%>
+?>
 
 <FORM METHOD=POST>
 <CENTER>
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
 
-<%
+<?php
   $modify=false;
   if (isset($delete)) {
     $ld=ldap_delete($ds,$dn);
@@ -246,7 +247,7 @@
     $dn="";
     $natrib=$atrib;
     while(list($idx,$catt)=each($natrib)) {
-      $$catt="";
+      ${$catt}="";
     }
     $c="";
   }
@@ -271,9 +272,9 @@
             $val=$adata[$acnt];
           }
         }
-        $$attr=$val;
+        ${$attr}=$val;
       } elseif ($descrip[$attr] != "") {
-        $$attr=$adata[0];
+        ${$attr}=$adata[0];
       }
     }
  }
@@ -281,7 +282,7 @@
   $rejar=array();
   $rok=true;
   while(list($idx,$attr)=each($reqat[$ldtype])) {
-    if ($$attr == "") {
+    if (${$attr} == "") {
       $rok=false;
       $rejar[$attr]=true;
     }
@@ -309,12 +310,12 @@
     $natrib=$atrib;
     while(list($idx,$catt)=each($natrib)) {
       if ($b64[$catt]) {
-        $data=$$catt;
+        $data=${$catt};
         if ($data != "") {
           $info[$catt]=$data;
         }
       } elseif ($bfile[$catt]) {
-        $fname=$$catt;
+        $fname=${$catt};
         if ($fname != "") {
           $cfile=fopen($fname,r);
           $dataout=fread($cfile,filesize($fname));
@@ -322,7 +323,7 @@
           $info[$catt]=";binary $dataout";
         }
       } else {
-        $data=split("\r\n",$$catt);       
+        $data=preg_split("/\r\n/",${$catt});
         if (count($data) > 1) {
           $acnt=0;
           for ($cnt=0;$cnt < count($data);$cnt++) {
@@ -337,16 +338,16 @@
       }
     }
 
-    $ls=ldap_search($ds,"cn=$baseou","(objectclass=device)");
+    $ls=ldap_search($ds,"cn=" . $_POST['baseou'],"(objectclass=device)");
     if (! $ls) {
       $raent["objectClass"]="top";
       $raent["objectClass"]="device";
-      $raent["cn"]="$baseou";
-      $r=ldap_add($ds,"cn=$baseou",$raent);
+      $raent["cn"]=$_POST['baseou'];
+      $r=ldap_add($ds,"cn=" . $_POST['baseou'],$raent);
     }
 
     $rou["objectClass"]="organizationalunit";
-    $ls=ldap_search($ds,"ou=Entries,cn=$baseou","(objectclass=device)");
+    $ls=ldap_search($ds,"ou=Entries,cn=" . $_POST['baseou'],"(objectclass=device)");
 
     if ($dn == "") {
       $dn="cn=$cn,$abdn";
@@ -360,7 +361,7 @@
 
     if ( ! $ls ) {
       $rou["ou"]="Entries";
-      ldap_add($ds,"ou=Entries,cn=$baseou",$rou);
+      ldap_add($ds,"ou=Entries,cn=" . $_POST['baseou'],$rou);
     }
     
     $ls=ldap_search($ds,$dn,"cn=*");
@@ -374,10 +375,10 @@
         if ((count($info[$catt]) == 0) && (count($iinfo[0][$aname]) > 0)){
           if (! $mline[$catt]) {
             $dinfo[$catt]=$iinfo[0][$aname][0];
-            $$catt="";
+            ${$catt}="";
           } else {
             $info[$catt]="Not Supplied";
-            $$catt=$info[$catt];
+            ${$catt}=$info[$catt];
           }
         }
       }
@@ -404,7 +405,7 @@
   print "<INPUT TYPE=HIDDEN NAME=dn VALUE=\"$dn\">";
   
   print "<INPUT TYPE=HIDDEN NAME=owner VALUE=\"$owner\">";
-  print "<INPUT TYPE=HIDDEN NAME=baseou VALUE=\"$baseou\">";
+  print "<INPUT TYPE=HIDDEN NAME=baseou VALUE=\"" . $_POST['baseou'] . "\">";
   print "<INPUT TYPE=HIDDEN NAME=ldtype VALUE=\"$ldtype\">";
   
   $cnt=0;
@@ -417,51 +418,51 @@
     }
     
     if (! $hidea[$attr]) {
-%>
-      <TR <%print $bcolor;%>><TD WIDTH=50%>
-<%
+?>
+      <TR <?php print $bcolor;?>><TD WIDTH=50%>
+<?php
         if ((isset($submited)) && ($rejar[$attr])) {
            print "<FONT COLOR=RED>*</FONT>";
         } else if ($rejar[$attr]) {
           print "<B>";
         }
         print $descrip[$attr];
-%>
+?>
       </TD>
       <TD WIDTH=50%
-<%
+<?php
         if (($modify) && ($dnaa[$attr])) {
-%>
-          ><INPUT TYPE=HIDDEN NAME=<%print $attr;%> VALUE="<%print $$attr;%>"><%print $$attr;%>
-<%
+?>
+          ><INPUT TYPE=HIDDEN NAME=<?php print $attr;?> VALUE="<?php print ${$attr};?>"><?php print ${$attr};?>
+<?php
         } else {
           if ($mline[$attr]) {
-%>
-            ><TEXTAREA NAME=<%print $attr;%> COLS=40 ROWS=5><%print $$attr;%></TEXTAREA>
-<%
+?>
+            ><TEXTAREA NAME=<?php print $attr;?> COLS=40 ROWS=5><?php print ${$attr};?></TEXTAREA>
+<?php
           } elseif ($b64[$attr]) {
-            $tmpval=$$attr;
-%>
-            ><TEXTAREA NAME=<%print $attr;%> COLS=40 ROWS=5><%print $tmpval;%></TEXTAREA>
-<%
+            $tmpval=${$attr};
+?>
+            ><TEXTAREA NAME=<?php print $attr;?> COLS=40 ROWS=5><?php print $tmpval;?></TEXTAREA>
+<?php
           } elseif ($bfile[$attr]) {
-%>
-            ><INPUT TYPE=FILE  NAME=<%print $attr;%> COLS=40 ROWS=5>
-<%
+?>
+            ><INPUT TYPE=FILE  NAME=<?php print $attr;?> COLS=40 ROWS=5>
+<?php
           } elseif ($cert[$attr]) {
-%>
-            ><INPUT TYPE=FILE  NAME=<%print $attr;%> COLS=40 ROWS=5>
-<%
+?>
+            ><INPUT TYPE=FILE  NAME=<?php print $attr;?> COLS=40 ROWS=5>
+<?php
           } else {
-%>
-            ><INPUT TYPE=TEXT SIZE=40 NAME=<%print $attr;%> VALUE="<%print $$attr;%>">
-<%
+?>
+            ><INPUT TYPE=TEXT SIZE=40 NAME=<?php print $attr;?> VALUE="<?php print ${$attr};?>">
+<?php
           }
         }
-%>
+?>
       </TD>
     </TR>
-<%
+<?php
       $cnt ++;
     }
   }
@@ -471,10 +472,10 @@
     } else {
       $bcolor=" class=list-color2";
     }
-%>
-  <TR<% print "$bcolor"%>>
+?>
+  <TR<?php print "$bcolor"?>>
     <TD COLSPAN=2 ALIGN=MIDDLE>
-<%
+<?php
       if ($modify) {
         print "<INPUT TYPE=SUBMIT VALUE=Modify NAME=update>";
         print "<INPUT TYPE=SUBMIT VALUE=Delete NAME=delete>";
@@ -482,12 +483,12 @@
       } else {
         print "<INPUT TYPE=SUBMIT VALUE=Add NAME=submited>";
       }
-%>
+?>
     </TD>
   </TR>
 </TABLE>
 </FORM>
-<%
+<?php
   }
-%>
+?>
 

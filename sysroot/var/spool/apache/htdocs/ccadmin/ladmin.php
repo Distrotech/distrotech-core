@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -44,7 +44,7 @@ if ($_POST['transfer'] == "on") {
   $_POST['transfer']='f';
 }
 
-if (ereg("(2[01][0-9]{2})-([0-9]{2})-([0-9]{2})$",$_POST['callbefore'],$dateinf)) {
+if (preg_match("/(2[01][0-9]{2})-([0-9]{2})-([0-9]{2})$/",$_POST['callbefore'],$dateinf)) {
   $curdate=getdate();
   if ((!checkdate($dateinf[2],$dateinf[3],$dateinf[1])) || ($dateinf[1] < $curdate['year']) || 
       (($curdate['year'] == $dateinf[1]) && ($dateinf[2] < $curdate['mon'])) ||
@@ -58,10 +58,10 @@ if (ereg("(2[01][0-9]{2})-([0-9]{2})-([0-9]{2})$",$_POST['callbefore'],$dateinf)
 if ((isset($_POST['id'])) && ($_POST['id'] != "")) {
   $getid=pg_query($db,"SELECT id,description||' ('||name||')' FROM campaign LEFT OUTER JOIN camp_admin ON (campaign.id=camp_admin.campaign AND camp_admin.userid='" . $_SERVER['PHP_AUTH_USER'] . "') WHERE id=" .  $_POST['id']);
   list($_SESSION['campid'],$_SESSION['campname'])=pg_fetch_array($getid,0);
-} else if (($_SESSION['campid'] != "") && (($_POST['description'] ==  "") || ($_POST['callbefore'] == "")) && (((isset($_POST['editlist'])) && ($_POST['listid'] == "")) || (isset($_POST['uplist'])))) {%>
+} else if (($_SESSION['campid'] != "") && (($_POST['description'] ==  "") || ($_POST['callbefore'] == "")) && (((isset($_POST['editlist'])) && ($_POST['listid'] == "")) || (isset($_POST['uplist'])))) {?>
 <SCRIPT>
   alert("Insufficient Information Supplied");
-</SCRIPT><%
+</SCRIPT><?php
 } else if ((isset($_POST['editlist'])) && ($_SESSION['campid'] != "") && ($_POST['listid'] == "")) {
   pg_query($db,"INSERT INTO list (description,callbefore,priority,active,acdmatch,campaign,owner,osticket,directdial,transfer,dialretry) VALUES ('" . $_POST['description'] . "','" . $_POST['callbefore'] . "','" . $_POST['priority'] . "','" . $_POST['active'] . "','" . $_POST['acdmatch'] . "','" . $_SESSION['campid'] . "','" . $_SESSION['uid'] . "','" . $_POST['osticket'] . "','" . $_POST['directdial'] . "','" . $_POST['transfer'] . "','" . $_POST['dialretry'] . "')");
 //'" . pg_escape_bytea($db,$_POST['information']) . "'
@@ -82,174 +82,174 @@ if ((isset($_POST['id'])) && ($_POST['id'] != "")) {
   pg_query($db,"DELETE FROM camp_admin WHERE campaign=" .  $_SESSION['campid']);
 */
 
-%>
+?>
 <FORM NAME=ladmin METHOD=POST onsubmit="ajaxsubmit(this.name);return false">
 <CENTER>
 <TABLE border=0 width=90% cellspacing=0 cellpadding=0>
-<%
+<?php
 
 if ((!isset($_POST['editlist'])) && (!isset($_POST['uplist'])) && (!isset($_POST['id']))) {
   unset($_SESSION['campid']);
   unset($_SESSION['listid']);
-  $getcamp=pg_query($db,"SELECT id,description||' ('||name||')' FROM campaign LEFT OUTER JOIN camp_admin ON (campaign.id=camp_admin.campaign AND camp_admin.userid='" . $_SERVER['PHP_AUTH_USER'] . "')" . $_SESSION['limitadmin'] . " ORDER by description,name");%>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  $getcamp=pg_query($db,"SELECT id,description||' ('||name||')' FROM campaign LEFT OUTER JOIN camp_admin ON (campaign.id=camp_admin.campaign AND camp_admin.userid='" . $_SERVER['PHP_AUTH_USER'] . "')" . $_SESSION['limitadmin'] . " ORDER by description,name");?>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TH COLSPAN=2 CLASS=heading-body>
-      <%print _("Select A Campaign To Modify");%>
+      <?php print _("Select A Campaign To Modify");?>
     </TH>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD WIDTH=50%>
-      <%print _("Select Campaign To Configure Lists");%>
+      <?php print _("Select Campaign To Configure Lists");?>
     </TD>
     <TD>
       <SELECT NAME=id onchange="ajaxsubmit(this.form.name)">
-        <OPTION VALUE=""></OPTION><%
+        <OPTION VALUE=""></OPTION><?php
         for($ccnt=0;$ccnt<pg_num_rows($getcamp);$ccnt++) {
-          list($cid,$cname)=pg_fetch_array($getcamp,$ccnt);%>
-          <OPTION VALUE="<%print $cid;%>"><%print $cname%></OPTION><%
-        }%>
+          list($cid,$cname)=pg_fetch_array($getcamp,$ccnt);?>
+          <OPTION VALUE="<?php print $cid;?>"><?php print $cname?></OPTION><?php
+        }?>
     </TD>
-  </TR><%
+  </TR><?php
 } else if (!isset($_POST['uplist'])) {
   if ((isset($_SESSION['campid'])) && (!isset($_SESSION['listid']))) {
-    $getlist=pg_query($db,"SELECT id,description FROM list WHERE campaign=" . $_SESSION['campid'] . "ORDER by description");%>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+    $getlist=pg_query($db,"SELECT id,description FROM list WHERE campaign=" . $_SESSION['campid'] . "ORDER by description");?>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TH COLSPAN=2 CLASS=heading-body>
-        <%print _("Select A List To Edit/Add Or Delete For Campaign") . " " . $_SESSION['campname'];%>
+        <?php print _("Select A List To Edit/Add Or Delete For Campaign") . " " . $_SESSION['campname'];?>
       </TH>
     </TR>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TD WIDTH=50%>
-        <%print _("Select List");%>
+        <?php print _("Select List");?>
       </TD>
       <TD>
         <SELECT NAME=listid>
-          <OPTION VALUE="">Add New Campaign List (Fill In Bellow)</OPTION><%
+          <OPTION VALUE="">Add New Campaign List (Fill In Bellow)</OPTION><?php
           for($ccnt=0;$ccnt<pg_num_rows($getlist);$ccnt++) {
-            list($cid,$cname)=pg_fetch_array($getlist,$ccnt);%>
-            <OPTION VALUE="<%print $cid;%>"><%print $cname%></OPTION><%
-          }%>
+            list($cid,$cname)=pg_fetch_array($getlist,$ccnt);?>
+            <OPTION VALUE="<?php print $cid;?>"><?php print $cname?></OPTION><?php
+          }?>
       </TD>
-    </TR><%
-  } else {%>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+    </TR><?php
+  } else {?>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TH COLSPAN=2 CLASS=heading-body>
-         <%print _("Editing") . " " . $_SESSION['listname'] . " " . _("List For Campaign") . " " . $_SESSION['campname'];%>
+         <?php print _("Editing") . " " . $_SESSION['listname'] . " " . _("List For Campaign") . " " . $_SESSION['campname'];?>
       </TH>
-    </TR><%
-  }%>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+    </TR><?php
+  }?>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD WIDTH=50%>
-      <%print _("Priority Of Calls In This List Compared To Other Lists");%>
+      <?php print _("Priority Of Calls In This List Compared To Other Lists");?>
     </TD>
     <TD>
-      <SELECT NAME=priority><%
+      <SELECT NAME=priority><?php
       for($pcnt=1;$pcnt <= count($prios);$pcnt++) {
         print "<OPTION VALUE=" . $pcnt;
         if ($_POST['priority'] == $pcnt) {
           print " SELECTED";
         }
         print ">" . $prios[$pcnt-1] . "</OPTION>";
-      }%>
+      }?>
       </SELECT>
     </TD>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD>
-      <%print _("Description");%>
+      <?php print _("Description");?>
     </TD>
     <TD>
-      <INPUT NAME=description VALUE="<%print $_POST['description'];%>">
+      <INPUT NAME=description VALUE="<?php print $_POST['description'];?>">
     </TD>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD>
-      <%print _("Call Before (Date YYYY-MM-DD)");%>
+      <?php print _("Call Before (Date YYYY-MM-DD)");?>
     </TD>
     <TD>
-      <INPUT NAME=callbefore VALUE="<%print $_POST['callbefore'];%>">
+      <INPUT NAME=callbefore VALUE="<?php print $_POST['callbefore'];?>">
     </TD>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD>
-      <%print _("Delay Before Calling Back (seconds)");%>
+      <?php print _("Delay Before Calling Back (seconds)");?>
     </TD>
     <TD>
-      <INPUT NAME=dialretry VALUE="<%print (($_POST['dialretry'] == "")?"1800":$_POST['dialretry']);%>">
+      <INPUT NAME=dialretry VALUE="<?php print (($_POST['dialretry'] == "")?"1800":$_POST['dialretry']);?>">
     </TD>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD>
-      <%print _("ACD Regex Pattern For This Data");%>
+      <?php print _("ACD Regex Pattern For This Data");?>
     </TD>
     <TD>
-      <INPUT NAME=acdmatch VALUE="<%print $_POST['acdmatch'];%>">
+      <INPUT NAME=acdmatch VALUE="<?php print $_POST['acdmatch'];?>">
     </TD>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD>
-      <%print _("List Is Active");%>
+      <?php print _("List Is Active");?>
     </TD>
     <TD>
-      <INPUT TYPE=CHECKBOX NAME=active<%if ((!isset($_POST['active'])) || ($_POST['active'] == 't')) {print " CHECKED";}%>>
+      <INPUT TYPE=CHECKBOX NAME=active<?php if ((!isset($_POST['active'])) || ($_POST['active'] == 't')) {print " CHECKED";}?>>
     </TD>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD>
-      <%print _("OST Ticket Intergration");%>
+      <?php print _("OST Ticket Intergration");?>
     </TD>
     <TD>
-      <INPUT TYPE=CHECKBOX NAME=osticket<%if ((!isset($_POST['osticket'])) || ($_POST['osticket'] == 't')) {print " CHECKED";}%>>
+      <INPUT TYPE=CHECKBOX NAME=osticket<?php if ((!isset($_POST['osticket'])) || ($_POST['osticket'] == 't')) {print " CHECKED";}?>>
     </TD>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD>
-      <%print _("Allow Transfer");%>
+      <?php print _("Allow Transfer");?>
     </TD>
     <TD>
-      <INPUT TYPE=CHECKBOX NAME=transfer<%if ((!isset($_POST['transfer'])) || ($_POST['transfer'] == 't')) {print " CHECKED";}%>>
+      <INPUT TYPE=CHECKBOX NAME=transfer<?php if ((!isset($_POST['transfer'])) || ($_POST['transfer'] == 't')) {print " CHECKED";}?>>
     </TD>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD>
-      <%print _("Allow Direct Dial");%>
+      <?php print _("Allow Direct Dial");?>
     </TD>
     <TD>
-      <INPUT TYPE=CHECKBOX NAME=directdial<%if ((!isset($_POST['directdial'])) || ($_POST['directdial'] == 't')) {print " CHECKED";}%>>
+      <INPUT TYPE=CHECKBOX NAME=directdial<?php if ((!isset($_POST['directdial'])) || ($_POST['directdial'] == 't')) {print " CHECKED";}?>>
     </TD>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
-    <TD COLSPAN=2 ALIGN=MIDDLE><%
-      if ((isset($_SESSION['campid'])) && (!isset($_SESSION['listid']))){%>
-        <INPUT TYPE=SUBMIT onclick="this.name='dellist'" VALUE="<%print _("Delete")%>">
-        <INPUT TYPE=SUBMIT onclick="this.name='editlist'" VALUE="<%print _("Edit/Add")%>"><%
-      } else {%>
-        <INPUT TYPE=BUTTON ONCLICK=testscript('<%print $_POST['uniqueid'];%>') VALUE="<%print _("Edit Script");%>">
-        <INPUT TYPE=SUBMIT NAME=uplist VALUE="<%print _("Update");%>"><%
-      }%>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
+    <TD COLSPAN=2 ALIGN=MIDDLE><?php
+      if ((isset($_SESSION['campid'])) && (!isset($_SESSION['listid']))){?>
+        <INPUT TYPE=SUBMIT onclick="this.name='dellist'" VALUE="<?php print _("Delete")?>">
+        <INPUT TYPE=SUBMIT onclick="this.name='editlist'" VALUE="<?php print _("Edit/Add")?>"><?php
+      } else {?>
+        <INPUT TYPE=BUTTON ONCLICK=testscript('<?php print $_POST['uniqueid'];?>') VALUE="<?php print _("Edit Script");?>">
+        <INPUT TYPE=SUBMIT NAME=uplist VALUE="<?php print _("Update");?>"><?php
+      }?>
     </TD>
-  </TR><%
-} else {%>
+  </TR><?php
+} else {?>
   <TR CLASS=list-color2>
     <TH CLASS=heading-body>
-      <%print _("Script For") . " " . $_SESSION['campname'] . _("Campaign") . " [" . $_POST['description'] . " " . _("List") . "]";%>
+      <?php print _("Script For") . " " . $_SESSION['campname'] . _("Campaign") . " [" . $_POST['description'] . " " . _("List") . "]";?>
     </TH>
   </TR>
   <TR CLASS=list-color1>
     <TD>
-<%
+<?php
   $data_tb=strtolower("contactdata_" . $_SESSION['campid'] . "_" . $_SESSION['listid']);
   $data_tb2=strtolower("inputdata_" . $_SESSION['campid'] . "_" . $_SESSION['listid']);
-%>
+?>
     </TD>
   </TR>
   <TR CLASS=list-color2>
     <TH CLASS=heading-body2>
-      Database Table Setup <%print $data_tb;%>
+      Database Table Setup <?php print $data_tb;?>
     </TD>
   </TR>
   <TR CLASS=list-color1>
-    <TD><%
+    <TD><?php
       $testdb=pg_query($db,"SELECT * from information_schema.tables where table_catalog='asterisk' and table_name='" . $data_tb . "'");
       if (pg_num_rows($testdb) == 1) {
         print "Contact Database Table Exists<BR>";
@@ -287,10 +287,10 @@ if ((!isset($_POST['editlist'])) && (!isset($_POST['uplist'])) && (!isset($_POST
       while(list($trow,$ttype) = each($dbrows)) {
         pg_query("ALTER TABLE " . $data_tb . " ADD " . $trow . " " . $ttype);
         print "Adding Database Field " . $trow . "<BR>";
-      }%>
+      }?>
     </TD>
-<%
+<?php
 }
-%>
+?>
 </TABLE>
 </FORM>

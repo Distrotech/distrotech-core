@@ -1,4 +1,4 @@
-<%
+<?php
 $bgcolor="rgb(128,128,128)";
 $bgimg="/images/background.png";
 $fontcolor="#000000";
@@ -19,4 +19,4 @@ $menufg2="#FFFFFF";
 $rowcol2="#7875a3";
 $rowcol1="rgb(227,222,225)";
 */
-%>
+?>

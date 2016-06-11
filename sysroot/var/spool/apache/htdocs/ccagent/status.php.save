@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -62,4 +62,4 @@ fputs($socket,"Action: Logoff\r\n");
 fputs($socket,"\r\n");
 fclose($socket);
 
-%>
+?>

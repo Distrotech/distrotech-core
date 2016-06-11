@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -21,12 +21,12 @@
 if (! $db) {
   include "auth.inc";
 }
-%>
+?>
 <FORM METHOD=POST NAME=spanform onsubmit="ajaxsubmit(this.name);return false">
 <CENTER>
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <TR CLASS=list-color2>
-<%
+<?php
 if ((isset($pbxupdate)) && (($zapspan != "") || (($zapspan == "") && ($newspan != "")))) {
   if (($zapspan == "") && ($newspan != "")) {
     $zapspan=$newspan;
@@ -56,34 +56,34 @@ if ((isset($pbxupdate)) && (($zapspan != "") || (($zapspan == "") && ($newspan !
   if ((isset($pbxdelete)) && ($zapspan != ""))  {
     pg_query($db,"DELETE FROM zapspan WHERE spannum='" . $zapspan . "'");
   }
-%>
-  <TH CLASS=heading-body COLSPAN=2><%print _("Select TDM Span To Modify");%></TH>
+?>
+  <TH CLASS=heading-body COLSPAN=2><?php print _("Select TDM Span To Modify");?></TH>
 </TR>
 <TR CLASS=list-color1>
-  <TD ALIGN=LEFT WIDTH=50% onmouseover="myHint.show('Z1')" onmouseout="myHint.hide()"><%print _("Span To Configure");%></TH>
+  <TD ALIGN=LEFT WIDTH=50% onmouseover="myHint.show('Z1')" onmouseout="myHint.hide()"><?php print _("Span To Configure");?></TH>
   <TD WIDTH=50% ALIGN=LEFT>
-<%
+<?php
   $spanq=pg_query($db,"SELECT spannum,spannum||','||timingsource||','||lbo||','||framing||','||coding||case when (crc4) then ',crc4' else '' end||case when (yalarm) then ',yellow' else '' end||case when (dchannel is not null AND dchannel > 0) THEN ' - '||dchannel else '' end from zapspan ORDER BY spannum");
   print "  <SELECT NAME=zapspan onchange=this.form.subme.click()>\n    <OPTION VALUE=\"\">" . _("Add New Span Bellow") . "</OPTION>\n";
   for($i=0;$i < pg_num_rows($spanq);$i++) {
     $span=pg_fetch_array($spanq,$i);
     print "    <OPTION VALUE=\"" .  $span[0] . "\">" . $span[1] . "</OPTION>\n";
   }
-%>
+?>
   </SELECT>
   </TD></TR>
 <TR CLASS=list-color2>
-  <TD ALIGN=LEFT WIDTH=50% onmouseover="myHint.show('Z2')" onmouseout="myHint.hide()"><%print _("Span To Add");%></TH>
+  <TD ALIGN=LEFT WIDTH=50% onmouseover="myHint.show('Z2')" onmouseout="myHint.hide()"><?php print _("Span To Add");?></TH>
   <TD WIDTH=50% ALIGN=LEFT>
     <INPUT NAME=newspan VALUE="">
   </TD></TR>
 <TR CLASS=list-color1>
   <TH COLSPAN=2>
-    <INPUT TYPE=SUBMIT NAME=subme onclick=this.name='pbxupdate' VALUE="<%print _("Add/Modify Span");%>">
+    <INPUT TYPE=SUBMIT NAME=subme onclick=this.name='pbxupdate' VALUE="<?php print _("Add/Modify Span");?>">
 </TH>
 </TR>
   </TABLE>
   </FORM>
-<%
+<?php
 }
-%>
+?>

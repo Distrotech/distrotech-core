@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -34,8 +34,8 @@ if ($ds) {
 
     $natrib=$atrib;
     while(list($idx,$catt)=each($natrib)) {
-      if ($$catt != "") {
-        $info[$catt]=$$catt;
+      if (${$catt} != "") {
+        $info[$catt]=${$catt};
       }
     }
 
@@ -58,15 +58,15 @@ if ($ds) {
     }
   }
 }
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=snomadd onsubmit="ajaxsubmit(this.name);return false">
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
-<INPUT TYPE=HIDDEN NAME=classi VALUE="<%print $_POST['classi']%>">
+<INPUT TYPE=HIDDEN NAME=classi VALUE="<?php print $_POST['classi']?>">
 <INPUT TYPE=HIDDEN NAME=disppage VALUE="ldap/addsnom.php">
-<INPUT TYPE=HIDDEN NAME=utype VALUE="<%print $_POST['utype']%>">
+<INPUT TYPE=HIDDEN NAME=utype VALUE="<?php print $_POST['utype']?>">
 <TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body>Adding Entry To Snom Global Phone Book</TH></TR>
-<%
+<?php
 
 while(list($attr,$aname)=each($adescrip)) {
   $rem=$cnt % 2;
@@ -76,15 +76,15 @@ while(list($attr,$aname)=each($adescrip)) {
     $bcolor=" CLASS=list-color1";
   }
 
-%>
-  <TR <% print "$bcolor"%>><TD WIDTH=50% onmouseover="myHint.show('<%print $attr;%>')" onmouseout="myHint.hide()">
-<%
+?>
+  <TR <?php print "$bcolor"?>><TD WIDTH=50% onmouseover="myHint.show('<?php print $attr;?>')" onmouseout="myHint.hide()">
+<?php
       print $adescrip[$attr];
-%>
+?>
     </TD><TD WIDTH=50%>
-    <INPUT TYPE=TEXT SIZE=40 NAME=<%print $attr;%> VALUE="<%print $$attr;%>">
+    <INPUT TYPE=TEXT SIZE=40 NAME=<?php print $attr;?> VALUE="<?php print ${$attr};?>">
     </TD></TR>
-<%
+<?php
   $cnt ++;
 }
   $rem=$cnt % 2;
@@ -95,9 +95,9 @@ while(list($attr,$aname)=each($adescrip)) {
     $bgcolor["1"]=" CLASS=list-color1";
     $bgcolor["0"]=" CLASS=list-color2";
   }
-%>
-    <TR <% print $bgcolor["0"]%>><TD ALIGN=MIDDLE COLSPAN=2 WIDTH=50%>
-<%
+?>
+    <TR <?php print $bgcolor["0"]?>><TD ALIGN=MIDDLE COLSPAN=2 WIDTH=50%>
+<?php
   if ($modify) {
     print "<INPUT TYPE=SUBMIT VALUE=Modify onclick=this.name='update'>";
     print "<INPUT TYPE=SUBMIT VALUE=Delete onclick=this.name='delete'>";
@@ -105,9 +105,9 @@ while(list($attr,$aname)=each($adescrip)) {
   } else {
     print "<INPUT TYPE=SUBMIT VALUE=Add onclick=this.name='submited'>";
   }
-%>
+?>
     </TD></TR>
-<INPUT TYPE=HIDDEN NAME=baseou VALUE="<%print $baseou;%>">
+<INPUT TYPE=HIDDEN NAME=baseou VALUE="<?php print $baseou;?>">
 </FORM>
 </TABLE>
 

@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -147,21 +147,21 @@
   $getcdr=pg_query($db,$getcdrq);
   if ($_POST['print'] < 2) {
 
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=printrep>
-<INPUT TYPE=HIDDEN NAME=tavg VALUE="<%print $monavg[0];%>">
-<INPUT TYPE=HIDDEN NAME=thold VALUE="<%print $monavg[1];%>">
-<INPUT TYPE=HIDDEN NAME=type VALUE="<%print $type;%>">
-<INPUT TYPE=HIDDEN NAME=exep VALUE="<%print $exep;%>">
-<INPUT TYPE=HIDDEN NAME=xexep VALUE="<%print $xexep;%>">
-<INPUT TYPE=HIDDEN NAME=date VALUE="<%print $date;%>">
-<INPUT TYPE=HIDDEN NAME=date2 VALUE="<%print $date2;%>">
-<INPUT TYPE=HIDDEN NAME=dom VALUE="<%print $dom;%>">
-<INPUT TYPE=HIDDEN NAME=dom2 VALUE="<%print $dom2;%>">
-<INPUT TYPE=HIDDEN NAME=mweight VALUE="<%print $mweight;%>">
-<INPUT TYPE=HIDDEN NAME=morder VALUE="<%print $omorder;%>">
-<INPUT TYPE=HIDDEN NAME=disppage VALUE="<%print $_SESSION['disppage'];%>">
+<INPUT TYPE=HIDDEN NAME=tavg VALUE="<?php print $monavg[0];?>">
+<INPUT TYPE=HIDDEN NAME=thold VALUE="<?php print $monavg[1];?>">
+<INPUT TYPE=HIDDEN NAME=type VALUE="<?php print $type;?>">
+<INPUT TYPE=HIDDEN NAME=exep VALUE="<?php print $exep;?>">
+<INPUT TYPE=HIDDEN NAME=xexep VALUE="<?php print $xexep;?>">
+<INPUT TYPE=HIDDEN NAME=date VALUE="<?php print $date;?>">
+<INPUT TYPE=HIDDEN NAME=date2 VALUE="<?php print $date2;?>">
+<INPUT TYPE=HIDDEN NAME=dom VALUE="<?php print $dom;?>">
+<INPUT TYPE=HIDDEN NAME=dom2 VALUE="<?php print $dom2;?>">
+<INPUT TYPE=HIDDEN NAME=mweight VALUE="<?php print $mweight;?>">
+<INPUT TYPE=HIDDEN NAME=morder VALUE="<?php print $omorder;?>">
+<INPUT TYPE=HIDDEN NAME=disppage VALUE="<?php print $_SESSION['disppage'];?>">
 <INPUT TYPE=HIDDEN NAME=disp>
 <INPUT TYPE=HIDDEN NAME=exten>
 <INPUT TYPE=HIDDEN NAME=print>
@@ -169,29 +169,29 @@
 <FORM METHOD=POST NAME=getrepform onsubmit="ajaxsubmit(this.name);return false">
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <TR CLASS=list-color2>
-<INPUT TYPE=HIDDEN NAME=tavg VALUE="<%print $monavg[0];%>">
-<INPUT TYPE=HIDDEN NAME=thold VALUE="<%print $monavg[1];%>">
-<INPUT TYPE=HIDDEN NAME=disppage VALUE="<%
+<INPUT TYPE=HIDDEN NAME=tavg VALUE="<?php print $monavg[0];?>">
+<INPUT TYPE=HIDDEN NAME=thold VALUE="<?php print $monavg[1];?>">
+<INPUT TYPE=HIDDEN NAME=disppage VALUE="<?php
   if ($type != "6") {
     print "cdr/getrep.php";
   } else {
     print "cdr/callq.php";
   }
-%>">
-<INPUT TYPE=HIDDEN NAME=type VALUE="<%print $type;%>">
-<INPUT TYPE=HIDDEN NAME=exep VALUE="<%print $exep;%>">
-<INPUT TYPE=HIDDEN NAME=xexep VALUE="<%print $xexep;%>">
-<INPUT TYPE=HIDDEN NAME=date VALUE="<%print $date;%>">
-<INPUT TYPE=HIDDEN NAME=date2 VALUE="<%print $date2;%>">
-<INPUT TYPE=HIDDEN NAME=dom VALUE="<%print $dom;%>">
-<INPUT TYPE=HIDDEN NAME=dom2 VALUE="<%print $dom2;%>">
-<INPUT TYPE=HIDDEN NAME=mweight VALUE="<%print $mweight;%>">
-<INPUT TYPE=HIDDEN NAME=morder VALUE="<%print $morder;%>">
+?>">
+<INPUT TYPE=HIDDEN NAME=type VALUE="<?php print $type;?>">
+<INPUT TYPE=HIDDEN NAME=exep VALUE="<?php print $exep;?>">
+<INPUT TYPE=HIDDEN NAME=xexep VALUE="<?php print $xexep;?>">
+<INPUT TYPE=HIDDEN NAME=date VALUE="<?php print $date;?>">
+<INPUT TYPE=HIDDEN NAME=date2 VALUE="<?php print $date2;?>">
+<INPUT TYPE=HIDDEN NAME=dom VALUE="<?php print $dom;?>">
+<INPUT TYPE=HIDDEN NAME=dom2 VALUE="<?php print $dom2;?>">
+<INPUT TYPE=HIDDEN NAME=mweight VALUE="<?php print $mweight;?>">
+<INPUT TYPE=HIDDEN NAME=morder VALUE="<?php print $morder;?>">
 <INPUT TYPE=HIDDEN NAME=disp>
 <INPUT TYPE=HIDDEN NAME=exten>
 <INPUT TYPE=HIDDEN NAME=print>
 </FORM>
-<%
+<?php
 
   if ($type == "6") {
     print "<TH ALIGN=LEFT CLASS=heading-body2>Queue</TH>";
@@ -296,4 +296,4 @@
     }
     print "</TABLE>";
   }
-%>
+?>

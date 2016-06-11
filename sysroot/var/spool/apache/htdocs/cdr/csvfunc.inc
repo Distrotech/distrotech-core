@@ -1,4 +1,4 @@
-<%
+<?php
 function booltostr($strin) {
   $quin=strtolower($strin);
   if (($strin == "yes") || ($quin == "1") || ($quin == "y") || ($quin == "t") || ($quin == "true")) {
@@ -17,7 +17,7 @@ function nozeroout($strin) {
 }
 
 function getcodecs($allowed) {
-  $codecs=split(";",$allowed);
+  $codecs=preg_split("/;/",$allowed);
   $acodec=array();
   $vcodec=array();
   while($icodec=array_shift($codecs)) {
@@ -55,4 +55,4 @@ function telformat($number) {
   }
   return $number;
 }
-%>
+?>

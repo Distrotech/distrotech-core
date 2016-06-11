@@ -83,3 +83,13 @@ fi;
 if [ -e /var/spool/pgsql/postmaster.pid ];then
   rm /var/spool/pgsql/postmaster.pid
 fi;
+
+#Modules Pango / GTK
+if [ ! -d /etc/pango ];then
+  mkdir /etc/pango
+fi;
+pango-querymodules --update-cache
+pango-querymodules > /etc/pango/pango.modules
+gdk-pixbuf-query-loaders --update-cache
+gtk-query-immodules-2.0  --update-cache
+gtk-query-immodules-3.0  --update-cache

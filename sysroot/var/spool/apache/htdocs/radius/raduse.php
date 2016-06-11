@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -58,8 +58,8 @@
   if ($sort != "UserName") {
     $sort=$sort . ",UserName,realm";
   }
- 
-  list($year,$month)=split(",",$time);
+
+  list($year,$month)=preg_split("/,/",$time);
 
 
 
@@ -73,9 +73,9 @@
                       ORDER BY $sort"; 
   $query=pg_query($queryq);
 
-%>
+?>
 <FORM NAME=openrdata METHOD=POST onsubmit="ajaxsubmit(this.name);return false;">
-<INPUT TYPE=HIDDEN NAME=disppage VALUE="<%print $_SESSION['disppage']%>">
+<INPUT TYPE=HIDDEN NAME=disppage VALUE="<?php print $_SESSION['disppage']?>">
 <INPUT TYPE=HIDDEN NAME=username>
 <INPUT TYPE=HIDDEN NAME=year>
 <INPUT TYPE=HIDDEN NAME=month>
@@ -92,7 +92,7 @@
   <TH CLASS=heading-body2>Out</TH>
   <TH CLASS=heading-body2>Total</TH>
 </TR>
-<%
+<?php
 
   $rowcol[0]="list-color2";  
   $rowcol[1]="list-color1";  
@@ -136,6 +136,6 @@
     print gbytes($totalb) . "</TD></TR>\n";
   }
 
-%>
+?>
 </TABLE>
 </FORM>

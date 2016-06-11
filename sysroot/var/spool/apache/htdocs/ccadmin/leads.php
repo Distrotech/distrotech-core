@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -32,78 +32,78 @@ if ((isset($_POST['id'])) && ($_POST['id'] != "")) {
 
 include "/var/spool/apache/htdocs/ccadmin/csvimport.inc";
 
-%>
+?>
 <CENTER>
 <TABLE border=0 width=90% cellspacing=0 cellpadding=0>
-<%
+<?php
 
 if ((!isset($_POST['uplead'])) && (!isset($_POST['listid'])) && (!isset($_POST['id']))) {
   unset($_SESSION['campid']);
   unset($_SESSION['listid']);
-  $getcamp=pg_query($db,"SELECT id,description||' ('||name||')' FROM campaign LEFT OUTER JOIN camp_admin ON (campaign.id=camp_admin.campaign AND camp_admin.userid='" . $_SERVER['PHP_AUTH_USER'] . "')" . $_SESSION['limitadmin'] . " ORDER by description,name");%>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  $getcamp=pg_query($db,"SELECT id,description||' ('||name||')' FROM campaign LEFT OUTER JOIN camp_admin ON (campaign.id=camp_admin.campaign AND camp_admin.userid='" . $_SERVER['PHP_AUTH_USER'] . "')" . $_SESSION['limitadmin'] . " ORDER by description,name");?>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TH COLSPAN=2 CLASS=heading-body>
-      <%print _("Select A Campaign");%>
+      <?php print _("Select A Campaign");?>
     </TH>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD WIDTH=50%>
-      <%print _("Select Campaign To Configure Lead Lists");%>
+      <?php print _("Select Campaign To Configure Lead Lists");?>
     </TD>
     <TD>
       <SELECT NAME=id onchange="ajaxsubmit(this.form.name)">
-        <OPTION VALUE=""></OPTION><%
+        <OPTION VALUE=""></OPTION><?php
         for($ccnt=0;$ccnt<pg_num_rows($getcamp);$ccnt++) {
-          list($cid,$cname)=pg_fetch_array($getcamp,$ccnt);%>
-          <OPTION VALUE="<%print $cid;%>"><%print $cname%></OPTION><%
-        }%>
-    </TD><%
+          list($cid,$cname)=pg_fetch_array($getcamp,$ccnt);?>
+          <OPTION VALUE="<?php print $cid;?>"><?php print $cname?></OPTION><?php
+        }?>
+    </TD><?php
 } else if ((!isset($_POST['uplead'])) && (!isset($_POST['listid'])) && (isset($_SESSION['campid']))) {
   unset($_SESSION['listid']);
-  $getlist=pg_query($db,"SELECT id,description FROM list WHERE campaign=" .  $_SESSION['campid']);%>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  $getlist=pg_query($db,"SELECT id,description FROM list WHERE campaign=" .  $_SESSION['campid']);?>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TH COLSPAN=2 CLASS=heading-body>
-      <%print _("Select A List To Add Leads To");%>
+      <?php print _("Select A List To Add Leads To");?>
     </TH>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD WIDTH=50%>
-      <%print _("Select List To Configure Leads");%>
+      <?php print _("Select List To Configure Leads");?>
     </TD>
     <TD>
       <SELECT NAME=listid onchange="ajaxsubmit(this.form.name)">
-        <OPTION VALUE=""></OPTION><%
+        <OPTION VALUE=""></OPTION><?php
         for($ccnt=0;$ccnt<pg_num_rows($getlist);$ccnt++) {
-          list($cid,$cname)=pg_fetch_array($getlist,$ccnt);%>
-          <OPTION VALUE="<%print $cid;%>"><%print $cname%></OPTION><%
-        }%>
+          list($cid,$cname)=pg_fetch_array($getlist,$ccnt);?>
+          <OPTION VALUE="<?php print $cid;?>"><?php print $cname?></OPTION><?php
+        }?>
     </TD>
-  </TR><%
-} else if ((!isset($_POST['uplead'])) && (isset($_SESSION['campid'])) && (isset($_SESSION['listid']))) {%>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  </TR><?php
+} else if ((!isset($_POST['uplead'])) && (isset($_SESSION['campid'])) && (isset($_SESSION['listid']))) {?>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TH COLSPAN=2 CLASS=heading-body>
-      <%print _("Adding Leads To") . " " . $_SESSION['listname'] . " " . _("List For Campaign") . " " . $_SESSION['campname'];%>
+      <?php print _("Adding Leads To") . " " . $_SESSION['listname'] . " " . _("List For Campaign") . " " . $_SESSION['campname'];?>
     </TH>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD>
-      <%print _("Call After (HH:MM:SS)");%>
+      <?php print _("Call After (HH:MM:SS)");?>
     </TD>
     <TD>
       <INPUT NAME=availfrom VALUE="08:00:00">
     </TD>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD>
-      <%print _("Call Before (HH:MM:SS)");%>
+      <?php print _("Call Before (HH:MM:SS)");?>
     </TD>
     <TD>
       <INPUT NAME=availtill VALUE="17:00:00">
     </TD>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD>
-      <%print _("Aditional Numbers");%>
+      <?php print _("Aditional Numbers");?>
     </TD>
     <TD>
       <SELECT NAME=addnum>
@@ -115,40 +115,40 @@ if ((!isset($_POST['uplead'])) && (!isset($_POST['listid'])) && (!isset($_POST['
       </SELECT>
     </TD>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD>
-      <%print _("CSV File (Title,First Name,Surname,Number....)");%>
+      <?php print _("CSV File (Title,First Name,Surname,Number....)");?>
     </TD>
     <TD>
       <INPUT TYPE=FILE NAME=leads>
     </TD>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TH COLSPAN=2 ALIGN=MIDDLE CLASS=heading-body2>
       Additional Fields Defined
     </TH>
-  </TR><%
+  </TR><?php
   $data_tb=strtolower("inputdata_" . $_SESSION['campid'] . "_" . $_SESSION['listid']);
   $testdbtbl=pg_query($db,"SELECT CASE WHEN (fname IS NOT NULL) THEN fname ELSE column_name END,data_type,character_maximum_length from information_schema.columns LEFT OUTER JOIN field_names ON (field_names.field = information_schema.columns.column_name) where table_catalog='asterisk' and table_name='" .$data_tb . "' AND (column_name != 'leadid' AND column_name != 'id' AND column_name != 'osticket')");
   for($dtrcnt=0;$dtrcnt < pg_num_rows($testdbtbl);$dtrcnt++) {
     list($trown,$trowt,$trows)=pg_fetch_array($testdbtbl,$dtrcnt);
     if ($trowt == "character varying") {
         $trowt.="(" . $trows . ")";
-      }%>
-      <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+      }?>
+      <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
         <TD>
-          <%print $trown;%>
+          <?php print $trown;?>
         </TD>   
         <TD> 
-          <%print $trowt;%>
+          <?php print $trowt;?>
         </TD>
-      </TR><%
-  }%>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+      </TR><?php
+  }?>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD COLSPAN=2 ALIGN=MIDDLE>
-      <INPUT TYPE=SUBMIT NAME=uplead VALUE="<%print _("Load File");%>">
+      <INPUT TYPE=SUBMIT NAME=uplead VALUE="<?php print _("Load File");?>">
     </TD>
-  </TR><%
+  </TR><?php
 } else {
   $tmpcsv=tempnam("/tmp","lead");
   $data_tb=strtolower("inputdata_" . $_SESSION['campid'] . "_" . $_SESSION['listid']);
@@ -158,8 +158,8 @@ if ((!isset($_POST['uplead'])) && (!isset($_POST['listid'])) && (!isset($_POST['
    $isnum[$numeric[$numcnt]]=true;
   }
 
-  if (move_uploaded_file($_FILES['leads']['tmp_name'],$tmpcsv)) {%>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>><TH CLASS=heading-body><%
+  if (move_uploaded_file($_FILES['leads']['tmp_name'],$tmpcsv)) {?>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>><TH CLASS=heading-body><?php
     print _("Adding Leads To") . " " . _("Campaign") . " " . $_SESSION['campname'] . " [" . _("List") . " " . $_SESSION['listname'] . "]";
     print "</TH></TR>";
 
@@ -178,8 +178,8 @@ if ((!isset($_POST['uplead'])) && (!isset($_POST['listid'])) && (!isset($_POST['
     $csvfd = fopen($tmpcsv, "r");
     $head = fgetcsv($csvfd, 0, ",");
 
-    while (($csvlead = fgetcsv($csvfd, 0, ",")) !== FALSE) {%>
-      <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>><TD>Adding <%
+    while (($csvlead = fgetcsv($csvfd, 0, ",")) !== FALSE) {?>
+      <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>><TD>Adding <?php
       $newlead=array(array_shift($csvlead),array_shift($csvlead),array_shift($csvlead),array_shift($csvlead));
 
       for($nlcnt=0;$nlcnt < count($newlead);$nlcnt++) {
@@ -214,34 +214,34 @@ if ((!isset($_POST['uplead'])) && (!isset($_POST['listid'])) && (!isset($_POST['
           $qvals.=",'" . pg_escape_bytea($db,$csvlead[$csva]) . "'";
           $qfields.="," . $arrname[$csva];
         } else if ($arrtype[$csva] == "timestamp with time zone") {
-          if (ereg ("^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}:[0-9]{2}:[0-9]{2})([-\+0-9]+)$", $csvlead[$csva], $dateinf)) {
+          if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}:[0-9]{2}:[0-9]{2})([-\+0-9]+)$/", $csvlead[$csva], $dateinf)) {
             if (checkdate($dateinf[2],$dateinf[3],$dateinf[1])) {
               $qfields.="," . $arrname[$csva];
               $qvals.=",'" . $csvlead[$csva] . "'";
             }
-          } else if (ereg ("^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}:[0-9]{2}:[0-9]{2})$", $csvlead[$csva], $dateinf)) {
+          } else if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}:[0-9]{2}:[0-9]{2})$/", $csvlead[$csva], $dateinf)) {
             if (checkdate($dateinf[2],$dateinf[3],$dateinf[1])) {
               $qfields.="," . $arrname[$csva];
               $qvals.=",'" . $csvlead[$csva] . "'";
             }
           }
         } else if ($arrtype[$csva] == "timestamp without time zone") {
-          if (ereg ("^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}:[0-9]{2}:[0-9]{2})$", $csvlead[$csva], $dateinf)) {
+          if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}:[0-9]{2}:[0-9]{2})$/", $csvlead[$csva], $dateinf)) {
             if (checkdate($dateinf[2],$dateinf[3],$dateinf[1])) {
               $qfields.="," . $arrname[$csva];
               $qvals.=",'" . $csvlead[$csva] . "'";
             }
           }
         } else if ($arrtype[$csva] == "time with time zone") {
-          if (ereg ("^([0-9]{2}:[0-9]{2}:[0-9]{2})([-\+0-9]+)$", $csvlead[$csva], $dateinf)) {
+          if (preg_match("/^([0-9]{2}:[0-9]{2}:[0-9]{2})([-\+0-9]+)$/", $csvlead[$csva], $dateinf)) {
             $qfields.="," . $arrname[$csva];
             $qvals.=",'" . $csvlead[$csva] . "'";
-          } else if (ereg ("^([0-9]{2}:[0-9]{2}:[0-9]{2})$", $csvlead[$csva], $dateinf)) {
+          } else if (preg_match("/^([0-9]{2}:[0-9]{2}:[0-9]{2})$/", $csvlead[$csva], $dateinf)) {
             $qfields.="," . $arrname[$csva];
             $qvals.=",'" . $csvlead[$csva] . "'";
           }
         } else if ($arrtype[$csva] == "time without time zone") {
-          if (ereg ("^([0-9]{2}:[0-9]{2}:[0-9]{2})$", $csvlead[$csva], $dateinf)) {
+          if (preg_match("/^([0-9]{2}:[0-9]{2}:[0-9]{2})$/", $csvlead[$csva], $dateinf)) {
             $qfields.="," . $arrname[$csva];
             $qvals.=",'" . $csvlead[$csva] . "'";
           }
@@ -268,14 +268,14 @@ if ((!isset($_POST['uplead'])) && (!isset($_POST['listid'])) && (!isset($_POST['
         pg_query("INSERT INTO " .  $data_tb . " (leadid," . $qfields . ") VALUES (" . $leadid . "," . $qvals . ")");
         print "INSERT INTO " .  $data_tb . " (leadid," . $qfields . ") VALUES (" . $leadid . "," . $qvals . ");<P>";
       }
-%>
-      </TD></TR><%
+?>
+      </TD></TR><?php
     }
   }
   unlink($tmpcsv);
 }
 
-%>
+?>
 </TABLE>
 </TABLE>
 </FORM>

@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -60,21 +60,21 @@ if ((isset($pbxupdate)) && ($newchan != "") && ($newrxgain != "") && ($newtxgain
   pg_query($db,"UPDATE zapchan SET " . $update . "='" . $chandata . "' WHERE id=" . $chanup);
 }
 
-%>
+?>
 <INPUT TYPE=HIDDEN NAME=chandata>
 <INPUT TYPE=HIDDEN NAME=chanup>
 <INPUT TYPE=HIDDEN NAME=update>
 
-  <TH CLASS=heading-body COLSPAN=5><%print _("Channels For TDM Groups")%></TH>
+  <TH CLASS=heading-body COLSPAN=5><?php print _("Channels For TDM Groups")?></TH>
 </TR>
 <TR CLASS=list-color1>
-  <TH CLASS=heading-body2><%print _("Delete");%></TH>
-  <TH CLASS=heading-body2><%print _("Channel(s)");%></TH>
-  <TH CLASS=heading-body2><%print _("RX Gain");%></TH>
-  <TH CLASS=heading-body2><%print _("TX Gain");%></TH>
-  <TH CLASS=heading-body2><%print _("Trunk");%></TH>
+  <TH CLASS=heading-body2><?php print _("Delete");?></TH>
+  <TH CLASS=heading-body2><?php print _("Channel(s)");?></TH>
+  <TH CLASS=heading-body2><?php print _("RX Gain");?></TH>
+  <TH CLASS=heading-body2><?php print _("TX Gain");?></TH>
+  <TH CLASS=heading-body2><?php print _("Trunk");?></TH>
 </TR>
-<%
+<?php
 
 $qgetzdata=pg_query($db,"SELECT channel,rxgain,txgain,zaptrunk,id FROM zapchan  ORDER BY zaptrunk,channel");
 $col=1;
@@ -82,12 +82,12 @@ for($ccnt=0;$ccnt < pg_num_rows($qgetzdata);$ccnt++) {
   $zdata=pg_fetch_array($qgetzdata,$ccnt);
   $mtest="move" . $zdata[4];
   $dtest="del" . $zdata[4];
-  if ((isset($pbxupdate)) && ($$dtest == "on")) {
+  if ((isset($pbxupdate)) && (${$dtest} == "on")) {
     pg_query($db,"DELETE FROM zapchan WHERE id=" . $zdata[4]); 
     continue;
-  } else if ((isset($pbxupdate)) && ($$mtest != $zdata[3])) {
-    pg_query($db,"UPDATE zapchan SET zaptrunk=" . $$mtest . " WHERE id=" . $zdata[4]); 
-    $zdata[3]=$$mtest;
+  } else if ((isset($pbxupdate)) && (${$mtest} != $zdata[3])) {
+    pg_query($db,"UPDATE zapchan SET zaptrunk=" . ${$mtest} . " WHERE id=" . $zdata[4]); 
+    $zdata[3]=${$mtest};
   }
     
   print "<TR CLASS=list-color" . (($col % 2) +1) . ">\n  <TD ALIGN=MIDDLE>\n    ";
@@ -103,10 +103,10 @@ for($ccnt=0;$ccnt < pg_num_rows($qgetzdata);$ccnt++) {
   print "\n  </TD>\n</TR>";
   $col++;
 }
-%>
-<TR CLASS=list-color<%print (($col % 2) +1);%>>
+?>
+<TR CLASS=list-color<?php print (($col % 2) +1);?>>
   <TH CLASS=heading-body2  onmouseover="myHint.show('Z3')" onmouseout="myHint.hide()">
-    <%print _("Add New Channel");%>
+    <?php print _("Add New Channel");?>
   </TH>
   <TD ALIGN=MIDDLE>
     <INPUT TYPE=TEXT NAME=newchan>
@@ -118,15 +118,15 @@ for($ccnt=0;$ccnt < pg_num_rows($qgetzdata);$ccnt++) {
     <INPUT TYPE=TEXT NAME=newtxgain VALUE=0>
   </TD>
   <TD>
-<%
+<?php
     tgrplist("","zaptrunk");
-%>
+?>
   </TD>
 </TR>
-<%$col++%>
-<TR CLASS=list-color<%print (($col % 2) +1);%>>
+<?php $col++?>
+<TR CLASS=list-color<?php print (($col % 2) +1);?>>
   <TD ALIGN=MIDDLE COLSPAN=5>
-    <INPUT TYPE=SUBMIT NAME=pbxupdate VALUE="<%print _("Update");%>">
+    <INPUT TYPE=SUBMIT NAME=pbxupdate VALUE="<?php print _("Update");?>">
   </TD>
 </TR>
 </TABLE>

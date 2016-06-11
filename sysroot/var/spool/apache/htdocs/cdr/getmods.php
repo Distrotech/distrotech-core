@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -27,13 +27,13 @@ if (! isset($agi)) {
 }
 
 $chans=$agi->command("module show");
-%>
+?>
 
 <CENTER>
 
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
   <TR CLASS=list-color2>
-    <TH COLSPAN=3 CLASS=heading-body><%print _("Loaded Modules");%></TH>
+    <TH COLSPAN=3 CLASS=heading-body><?php print _("Loaded Modules");?></TH>
   </TR>
   <TR CLASS=list-color1>
     <TH>Module</TH>
@@ -41,17 +41,17 @@ $chans=$agi->command("module show");
     <TH>Usage Count</TH>
   </TR>
 
-<%
+<?php
 
 $cnt=1;
 foreach(explode("\n",$chans['data']) as $line) {
-  if (! ereg("(^Privilege: Command)|(^Module)|(^$)|(^[0-9]+ modules)",$line)) {
-    ereg("^([a-zA-Z0-9\._]+)[ ]+(.*)[ ]([0-9]+) ",$line,$data);
+  if (! preg_match("/(^Privilege: Command)|(^Module)|(^$)|(^[0-9]+ modules)/",$line)) {
+    preg_match("/^([a-zA-Z0-9\._]+)[ ]+(.*)[ ]([0-9]+) /",$line,$data);
     print "<TR CLASS=list-color" . (($cnt % 2) + 1). "><TD>" . $data[1] . "</TD><TD>" . $data[2] . "</TD><TD>" . $data[3] . "</TD></TR>\n";
     $cnt++;
   }
 }
 print "</TD></TR>\n";
 $agi->disconnect();
-%>
+?>
 </TABLE>

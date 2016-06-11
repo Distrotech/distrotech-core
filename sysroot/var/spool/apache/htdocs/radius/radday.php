@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -17,8 +17,8 @@
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-%>
-<%
+?>
+<?php
   include "opendb.inc";
 
   $sr=ldap_search($ds,"ou=Admin","(&(objectclass=groupofnames)(member=$ldn)(cn=Admin Access))");
@@ -70,7 +70,7 @@
                       ORDER BY Day"; 
 
   $query=pg_query($queryq);
-%>
+?>
 <FORM NAME=openrdata METHOD=post>
 <INPUT TYPE=HIDDEN NAME=disppage>
 <INPUT TYPE=HIDDEN NAME=username>
@@ -81,7 +81,7 @@
 <CENTER>
 <TABLE WIDTH=90% cellspacing=0 cellpadding=0>
 <TR CLASS=list-color2><TH CLASS=heading-body COLSPAN=7>
-<%
+<?php
   print "Daily Usage For " . $unme . " (" . $year . "/" . $month . ")</TH></TR>";
   print "<TR CLASS=list-color1><TH CLASS=heading-body2>Day</TH><TH CLASS=heading-body2>Conn.</TH>" .
         "<TH CLASS=heading-body2>Time<BR>Online</TH><TH CLASS=heading-body2>Avg.<BR>Time/Ses</TH><TH CLASS=heading-body2>In</TH><TH CLASS=heading-body2>Out</TH>" .
@@ -116,6 +116,6 @@
   }
   print "</TABLE>\n";
 
-%>
+?>
 </FORM>
 

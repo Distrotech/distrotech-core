@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -140,7 +140,7 @@ array_push($atrib,"sambaSID");
         for($ir=0;$ir < $tblnum;$ir++) {
           $row=pg_fetch_row($utbl,$ir);
           for ($if=0;$if < count($row);$if++) {
-            $tdat=split("_",$row[$if]);
+            $tdat=preg_split("/_/",$row[$if]);
             pg_query($db,"ALTER TABLE " . $row[$if] . " RENAME TO " . $newuid . "_" . $tdat[1] . ";");
           }
         }
@@ -161,13 +161,13 @@ array_push($atrib,"sambaSID");
   }
 
 
-%>
+?>
 <base target="_self">
 
 <FORM NAME=uinfo METHOD=POST onsubmit="ajaxsubmit(this.name);return false">
-<INPUT TYPE=HIDDEN NAME=classi VALUE="<%print $euser;%>">
+<INPUT TYPE=HIDDEN NAME=classi VALUE="<?php print $euser;?>">
 <INPUT TYPE=HIDDEN NAME=curdiv VALUE=genral>
-<%
+<?php
 /*
   $descrip["jpegPhoto"]="Users Photograph (JPEG)";
   array_push($atrib,"jpegPhoto");
@@ -202,11 +202,11 @@ array_push($atrib,"sambaSID");
     $ldtype="pdc";
   }
   if ($newacc == "yes") {
-%>
+?>
     <SCRIPT>
       alert("This New Account Will Only Be Activated Fully When\nLoged Into For The First Time.\n\nThe Password Will Be Activated On The Next System Sync.\nApprox. 10 Minutes.");
     </SCRIPT>
-<%
+<?php
   }
 
 /*
@@ -254,11 +254,11 @@ array_push($atrib,"sambaSID");
 //       print "$attr " . $adata["count"] . " " . $adata[0] . "<BR>";
       if ($cert[$attr] ) {
         $adata=ldap_get_values_len($ds,$entry,strtolower($attr));
-        $$attr=$adata[0];
+        ${$attr}=$adata[0];
       } elseif ($bfile[$attr] ) {
         $adata=ldap_get_values_len($ds,$entry,strtolower($attr));
         $pcount=$adata["count"];
-        $$attr=$adata[0];        
+        ${$attr}=$adata[0];        
       } else {
         $adata=ldap_get_values($ds,$entry,$attr);
         if (($adata["count"] > 1) && ($descrip[$attr] != "")){
@@ -271,10 +271,10 @@ array_push($atrib,"sambaSID");
               $val=$adata[$acnt];
             }
           }
-          $$attr=$val;
+          ${$attr}=$val;
         } elseif ($descrip[$attr] != "") {
           $adata=ldap_get_values($ds,$entry,$attr);
-          $$attr=$adata[0];
+          ${$attr}=$adata[0];
         }
       }
     }
@@ -285,7 +285,7 @@ array_push($atrib,"sambaSID");
 
 
   while(list($idx,$attr)=each($reqat[$ldtype])) {
-    if ($$attr == "") {
+    if (${$attr} == "") {
       $rok=false;
       $rejar[$attr]=true;
     }
@@ -301,21 +301,21 @@ array_push($atrib,"sambaSID");
     $dnaa[$attr]=true;
   }
 
-%>
+?>
 <DIV CLASS=content><DIV CLASS=list-color2 ID=headcol>
-<DIV CLASS=heading-body><%print _("Editing User");%> <%print $cn . " (" . $euser;%>)</DIV></DIV>
+<DIV CLASS=heading-body><?php print _("Editing User");?> <?php print $cn . " (" . $euser;?>)</DIV></DIV>
 <DIV CLASS=list-color1><DIV CLASS=formrow>
-<DIV CLASS=formselect ID=genral_but onclick=showdiv('genral',document.uinfo) onmouseover=showdiv('genral',document.uinfo)><%print _("Genral Settings");%></DIV>
-<%
+<DIV CLASS=formselect ID=genral_but onclick=showdiv('genral',document.uinfo) onmouseover=showdiv('genral',document.uinfo)><?php print _("Genral Settings");?></DIV>
+<?php
 while(list($divkey,$divval)=each($label)) {
   print "<DIV CLASS=formselect ID=" . $divkey . "_but onclick=showdiv('" . $divkey . "',document.uinfo) onmouseover=showdiv('" . $divkey . "',document.uinfo)>" . $divval . "</DIV>\n";
 }
-%>
-<DIV CLASS=formselect ID=save_but onclick="document.uinfo.csave.value='click';ajaxsubmit('uinfo')" onmouseover=showdiv('save',document.uinfo)><%print _("Save");%></DIV>
+?>
+<DIV CLASS=formselect ID=save_but onclick="document.uinfo.csave.value='click';ajaxsubmit('uinfo')" onmouseover=showdiv('save',document.uinfo)><?php print _("Save");?></DIV>
 </DIV></DIV>
 <DIV id=genral CLASS=formpart>
 <TABLE CLASS=formtable>
-<%
+<?php
   if (((isset($update)) || ($csave == "click")) && ($ds)) {
     $iinfo = ldap_get_entries($ds, $sr);
 
@@ -325,11 +325,11 @@ while(list($divkey,$divval)=each($label)) {
     } else if ((($ppass1 != "") || (($ppassold != "") && ($certupdate != "NEWKEY:"))) && 
         ($c != "") && ($st != "") && ($l != "") && ($o != "") && ($ou != "") && 
         ($cn != "") && ($mail != "")) {
-      %>
+      ?>
       <SCRIPT>
         alert("Certificates Generated Will Need\nTo Be Verifyed By A System Administrator\nThe Certificate Will Not Be Trusted\nUntil Signed.\nOnce Signed You Will Need To\nUpdate Your Certificate With The\nPassphrase.\nUpdating The PKCS#7 File\nDoes Not Require The\nPassphrase.\n");
       </SCRIPT>
-<%
+<?php
       if ($ppassold != "") {
         if ($ppass1 != "") {
           $newpass=$ppass1;
@@ -507,54 +507,54 @@ issuerAltName          = $certsubname\n");
       print "<TR><TH COLSPAN=2 CLASS=heading-body2><FONT COLOR=RED>Password Mismatch</FONT></TH></TR>";
       $userPassword="";
     } else if ($pass1 != "") {
-      %>
+      ?>
       <SCRIPT>
         alert("Password Changes Made Here Are Not Real Time\nChanges Will Become Effective On The Next System Resync\nApprox Within 10 Minutes");
       </SCRIPT>
-<%
+<?php
       $userPassword=$pass1;
     } else {
       $userPassword="";
     }
 
     if (($iinfo[0]["accountsuspended"][0] == "suspended") && ($accountSuspended ==  "")) { 
-%>
+?>
       <SCRIPT>
         alert("Account Unsuspentions Are Not Real Time\nChanges Will Become Effective On The Next System Resync\nApprox Within 10 Minutes");
       </SCRIPT>
-<%
+<?php
     } else if ((($iinfo[0]["accountsuspended"][0] == "unsuspended") || ($iinfo[0]["accountsuspended"][0] == "")) &&
                ($accountSuspended ==  "on")) {
-%>
+?>
       <SCRIPT>
         alert("Account Suspentions Are Not Real Time\nChanges Will Become Effective On The Next System Resync\nApprox Within 10 Minutes");
       </SCRIPT>
-<%
+<?php
     } else if (($iinfo[0]["accountsuspended"][0] == "yes") && ($accountSuspended ==  "on")) {
-%>
+?>
       <SCRIPT>
         alert("Account Suspention Is Pending\nChanges Will Become Effective On The Next System Resync\nApprox Within 10 Minutes");
       </SCRIPT>
-<%
+<?php
     } else if (($iinfo[0]["accountsuspended"][0] == "no") && ($accountSuspended ==  "")) {
-%>
+?>
       <SCRIPT>
         alert("Account Unsuspention Is Pending\nChanges Will Become Effective On The Next System Resync\nApprox Within 10 Minutes");
       </SCRIPT>
-<%
+<?php
     } else if (($iinfo[0]["accountsuspended"][0] == "yes") && ($accountSuspended ==  "")) {
-%>
+?>
       <SCRIPT>
         alert("Account Suspention Was Pending\nSuspention Has Been Canceled");
       </SCRIPT>
-<%
+<?php
       $accountSuspended="unsuspended";
     } else if (($iinfo[0]["accountsuspended"][0] == "no") && ($accountSuspended ==  "on")) {
-%>
+?>
       <SCRIPT>
         alert("Account Unsuspention Was Pending\nSuspention Will Continue");
       </SCRIPT>
-<%
+<?php
       $accountSuspended="suspended";
     } else if ($iinfo[0]["accountsuspended"][0] != "") {
       $accountSuspended=$iinfo[0]["accountsuspended"][0];
@@ -600,19 +600,19 @@ issuerAltName          = $certsubname\n");
            unset($userPassword);
          }
       } else if ($catt == "certificateGenerate") {
-        if ($$catt != "") {
-          $info[$catt]=$$catt;
+        if (${$catt} != "") {
+          $info[$catt]=${$catt};
         } else {
-          unset($$catt);
+          unset(${$catt});
         }
       } else if ($catt == "cn") {
         $info[$catt]=$cn;
         $info["displayName"]=$cn;
       } else if (($catt == "hostedSite") || ($catt == "hostedFPSite") || ($catt == "mailLocalAddress")) {
-        unset($$catt);
+        unset(${$catt});
         unset($catt);
       } else if ($b64[$catt]) {
-        $data=$$catt;
+        $data=${$catt};
         if ($data != "") {
           $info[$catt]=$data;
         }
@@ -681,22 +681,22 @@ issuerAltName          = $certsubname\n");
           $pcount--;
         }
       } elseif ($cbox[$catt]) {
-        if ($$catt == "on") {
+        if (${$catt} == "on") {
           $info[$catt]="yes";
-          $$catt="yes";
-        } else if ($$catt == "") {
+          ${$catt}="yes";
+        } else if (${$catt} == "") {
           if ($catt != "pkcs7update") {
             $info[$catt]="no";
-            $$catt="no";
+            ${$catt}="no";
           }
-        } else if ($$catt != "unset") {
-          $info[$catt]=$$catt;
+        } else if (${$catt} != "unset") {
+          $info[$catt]=${$catt};
         }
       } elseif ($cert[$catt] ) {
         $cinf = ldap_get_values_len($ds, $ei,strtolower($catt));
-        $$catt=$cinf[0];
+        ${$catt}=$cinf[0];
       } else {
-        $data=split("\r\n",$$catt);
+        $data=preg_split("/\r\n/",${$catt});
         if (count($data) > 1) {
           $acnt=0;
           for ($cnt=0;$cnt < count($data);$cnt++) {
@@ -728,11 +728,11 @@ issuerAltName          = $certsubname\n");
               ($catt != "sambaSID")) {
             $dinfocnt++;
             $dinfo[$catt]=$iinfo[0][$aname][0];
-            $$catt="";
+            ${$catt}="";
           }
         } elseif ((!$cert[$catt]) || ($sline[$catt])) {
           $info[$catt]="Not Supplied";
-          $$catt=$info[$catt];
+          ${$catt}=$info[$catt];
         }
       }
     }
@@ -811,96 +811,96 @@ issuerAltName          = $certsubname\n");
       $bcolor2=" CLASS=list-color2";
     }
 
-    if (($$attr == "") && ($attr == "hostedFPSite")) {
+    if ((${$attr} == "") && ($attr == "hostedFPSite")) {
       $hidea[$attr]=true;
     }
     if (! $hidea[$attr]) {
-        if (($PHP_AUTH_USER == $euser) || ($$attr != "") || ($ADMIN_USER != "pleb")) {
-%>
-          <TR <%print "$bcolor"%>><TD WIDTH=50% onmouseover="myHint.show('<%print $attr;%>')" onmouseout="myHint.hide()">
-<%
+        if (($PHP_AUTH_USER == $euser) || (${$attr} != "") || ($ADMIN_USER != "pleb")) {
+?>
+          <TR <?php print "$bcolor"?>><TD WIDTH=50% onmouseover="myHint.show('<?php print $attr;?>')" onmouseout="myHint.hide()">
+<?php
           if (($adduser == "yes") && (($rejar[$attr]) || ($certreqat[$attr]))) {
              print "<FONT COLOR=RED>*</FONT>";
           } else if (($ADMIN_USER != "pleb") && (($rejar[$attr]) || ($certreqat[$attr]))) {
             print "<B>";        
           }
           print $descrip[$attr];
-%>
+?>
         </TD>
         <TD WIDTH=50% 
-<%
+<?php
         }
         if (($dnaa[$attr]) || (($PHP_AUTH_USER != $euser) && ($ADMIN_USER == "pleb"))) {
-          if (($bfile[$attr] ) && ($$attr != "")) {
-%>
+          if (($bfile[$attr] ) && (${$attr} != "")) {
+?>
             VALIGN=MIDDLE>
-<%
+<?php
             if ($pcount > 0) {
-%>
+?>
             <CENTER>
-            <A HREF=/photo/<%print urlencode($euser);%>.jpg TARGET=_BLANK><IMG SRC=/photo/<%print urlencode($euser);%>.jpg&imlim=400&type=<%print $ldtype;%> BORDER=0></A><BR>
+            <A HREF=/photo/<?php print urlencode($euser);?>.jpg TARGET=_BLANK><IMG SRC=/photo/<?php print urlencode($euser);?>.jpg&imlim=400&type=<?php print $ldtype;?> BORDER=0></A><BR>
             </CENTER>
-<%
+<?php
             }
           } else if ($cert[$attr]) {
-            if ($$attr != "") {
-%>
-              ><A HREF=<%print "/cert/" . $euser . $certext[$attr] . ">/cert/" . $euser .$certext[$attr];%></A><BR>
-<%
+            if (${$attr} != "") {
+?>
+              ><A HREF=<?php print "/cert/" . $euser . $certext[$attr] . ">/cert/" . $euser .$certext[$attr];?></A><BR>
+<?php
             }
-          } else if ($$attr != "") {
+          } else if (${$attr} != "") {
             print "$bcolor";
-%>
-            ><INPUT TYPE=HIDDEN NAME=<%print $attr;%> VALUE="<%print $$attr;%>">
-<%
+?>
+            ><INPUT TYPE=HIDDEN NAME=<?php print $attr;?> VALUE="<?php print ${$attr};?>">
+<?php
             if ($attr == "mail") {
-              print "<A HREF=\"mailto:" . $$attr . "\">" . $$attr . "</A>";
+              print "<A HREF=\"mailto:" . ${$attr} . "\">" . ${$attr} . "</A>";
             } elseif (strtolower($attr) == "url") {
-              print "<A HREF=\"" . $$attr . "\" TARGET=_BLANK>" . $$attr . "</A>";
+              print "<A HREF=\"" . ${$attr} . "\" TARGET=_BLANK>" . ${$attr} . "</A>";
             } else {
-              print $$attr;
+              print ${$attr};
             }
           }
         } else {
           if (($mline[$attr]) || ($b64[$attr])){
-%>
-            ><TEXTAREA NAME=<%print $attr;%> COLS=40 ROWS=5><%print $$attr;%></TEXTAREA>
-<%
+?>
+            ><TEXTAREA NAME=<?php print $attr;?> COLS=40 ROWS=5><?php print ${$attr};?></TEXTAREA>
+<?php
           } elseif ($bfile[$attr]) {
-%>
+?>
            VALIGN=MIDDLE>
-<%
+<?php
            if ($pcount > 0) {
-%>
+?>
            <CENTER>
-           <A HREF=/photo/<%print urlencode($euser);%>.jpg TARGET=_BLANK><IMG SRC=/photo/<%print urlencode($euser);%>.jpg&imlim=400&type=<%print $ldtype;%> BORDER=0></A><BR>
+           <A HREF=/photo/<?php print urlencode($euser);?>.jpg TARGET=_BLANK><IMG SRC=/photo/<?php print urlencode($euser);?>.jpg&imlim=400&type=<?php print $ldtype;?> BORDER=0></A><BR>
            </CENTER>
-<%
+<?php
            }
-%>
+?>
            Select JPEG Image To Add/Insert Into Album It Must Be A Unique Image Duplicates Are Rejected<BR>
-           <INPUT TYPE=FILE  NAME=<%print $attr;%> COLS=40 ROWS=5><BR>
+           <INPUT TYPE=FILE  NAME=<?php print $attr;?> COLS=40 ROWS=5><BR>
            Chose One Option Bellow<P>
            Insert New Photo <SELECT NAME=inpindex>
              <OPTION VALUE="">
              <OPTION VALUE="">At The End
-<%
+<?php
            for ($pcnt=0;$pcnt<$pcount;$pcnt++) {
              print "<OPTION VALUE=" . $pcnt . ">At Position " . $pcnt;
            }
            print "</SELECT><BR>";
-%>
+?>
            Replace Photo<SELECT NAME=pindex>
              <OPTION VALUE="">
-<%
+<?php
            for ($pcnt=0;$pcnt<$pcount;$pcnt++) {
              print "<OPTION VALUE=" . $pcnt . ">At Position " . $pcnt;
            }
            print "</SELECT><BR>";
-%>
+?>
            Delete Photo At Position <SELECT NAME=dpindex>
              <OPTION VALUE="">
-<%
+<?php
            for ($pcnt=0;$pcnt<$pcount;$pcnt++) {
              print "<OPTION VALUE=" . $pcnt . ">" . $pcnt;
            }
@@ -908,62 +908,62 @@ issuerAltName          = $certsubname\n");
            print "At Least One Photo Must Be In The Data Base<BR>";
            print "<CENTER><A HREF=/ldap/album.php?euser=" . urlencode($euser) . " TARGET=_blank>My Album</A></CENTER>";
           } elseif ($cert[$attr]) {
-            if ($$attr != "") {
-%>
-              ><A HREF=<%print "/cert/" . $euser . $certext[$attr] . ">/cert/" . $euser .$certext[$attr];%></A><BR>
-<%
+            if (${$attr} != "") {
+?>
+              ><A HREF=<?php print "/cert/" . $euser . $certext[$attr] . ">/cert/" . $euser .$certext[$attr];?></A><BR>
+<?php
             } else {
-%>
+?>
               >Either The Certificate Does Not Exist Or You Dont Own The Certificate
-<%
+<?php
             }
           } elseif ($cbox[$attr]) {
-%>
-            ><INPUT TYPE=CHECKBOX  NAME=<%print $attr;%> <%if (($$attr != "no") && ($$attr != "") && ($$attr !="unsuspended") && ($$attr !="unset")) {print "CHECKED";};%>>
-<%
+?>
+            ><INPUT TYPE=CHECKBOX  NAME=<?php print $attr;?> <?php if ((${$attr} != "no") && (${$attr} != "") && (${$attr} !="unsuspended") && (${$attr} !="unset")) {print "CHECKED";};?>>
+<?php
           } else {
             if ($attr == "userPassword") {
-%>
+?>
               ><INPUT TYPE=PASSWORD SIZE=40 NAME=pass1 VALUE="">
-              <TR <%print "$bcolor2"%>><TD WIDTH=50% onmouseover="myHint.show('userPassword2')" onmouseout="myHint.hide()">Confirm Password</TD>
+              <TR <?php print "$bcolor2"?>><TD WIDTH=50% onmouseover="myHint.show('userPassword2')" onmouseout="myHint.hide()">Confirm Password</TD>
               <TD WIDTH=50%>
               <INPUT TYPE=PASSWORD SIZE=40 NAME=pass2 VALUE="">
-<%
+<?php
               $cnt ++;
             } elseif ($attr == "certificateGenerate") {
-%>
+?>
               ><INPUT TYPE=PASSWORD SIZE=40 NAME=ppassold VALUE="">
-              <TR <%print "$bcolor2"%>><TD WIDTH=50%>New Pass Phrase (For New Private Key)</TD>
+              <TR <?php print "$bcolor2"?>><TD WIDTH=50%>New Pass Phrase (For New Private Key)</TD>
               <TD WIDTH=50%>
               <INPUT TYPE=PASSWORD SIZE=40 NAME=ppass1 VALUE=""></TD></TR>
-              <TR <%print "$bcolor"%>><TD WIDTH=50%>Confirm New Pass Phrase (For New Private Key)</TD>
+              <TR <?php print "$bcolor"?>><TD WIDTH=50%>Confirm New Pass Phrase (For New Private Key)</TD>
               <TD WIDTH=50%>
               <INPUT TYPE=PASSWORD SIZE=40 NAME=ppass2 VALUE="">
-<%
+<?php
               $cnt ++;
               $cnt ++;
-%>
-              </TD></TR><TR <%print "$bcolor2";%>><TD WIDTH=50%>Type Of Certificate Update<FONT SIZE=1><BR>Required Items For The Certificate Are Shown In Bold<BR>This Certificate Must Be Signed By A Admin User To Be Trusted</FONT></TD><TD>
+?>
+              </TD></TR><TR <?php print "$bcolor2";?>><TD WIDTH=50%>Type Of Certificate Update<FONT SIZE=1><BR>Required Items For The Certificate Are Shown In Bold<BR>This Certificate Must Be Signed By A Admin User To Be Trusted</FONT></TD><TD>
               <SELECT NAME=certupdate>
                 <OPTION VALUE="">
                 <OPTION VALUE="UPDATE:">Update Certificate
                 <OPTION VALUE="NEWREQ:">Create A New Public Certificate
                 <OPTION VALUE="NEWKEY:">Create A New Private And Public Certificate
               </SELECT>
-<%
+<?php
               $cnt ++;
 	            } else {
-%>
-              ><INPUT TYPE=TEXT SIZE=40 NAME=<%print $attr;%> VALUE="<%print $$attr;%>">
-<%
+?>
+              ><INPUT TYPE=TEXT SIZE=40 NAME=<?php print $attr;?> VALUE="<?php print ${$attr};?>">
+<?php
             }
           }
         }
-%>
+?>
       </TD>
     </TR>
-<%	
-      if (($PHP_AUTH_USER == $euser) || ($$attr != "") || ($ADMIN_USER != "pleb")) {
+<?php	
+      if (($PHP_AUTH_USER == $euser) || (${$attr} != "") || ($ADMIN_USER != "pleb")) {
         $cnt ++;
       }
     }
@@ -975,7 +975,7 @@ issuerAltName          = $certsubname\n");
         $sambaSID=$domain;
         $data[1]=$domain;
       } else {
-        ereg("^(S-1-5-21-[0-9]+-[0-9]+-[0-9]+)-[0-9]+",$sambaSID,$data);
+        preg_match("/^(S-1-5-21-[0-9]+-[0-9]+-[0-9]+)-[0-9]+/",$sambaSID,$data);
       }
       print "<TR CLASS=list-color2><TD>SMB Domain (SID To Set On Repair)";
       $ssr=ldap_search($ds,"","(&(sambadomainname=*)(sambasid=*))",array("sambaSID","sambaDomainName"));
@@ -1015,7 +1015,7 @@ issuerAltName          = $certsubname\n");
     }
     print "<INPUT TYPE=RESET VALUE=Reset></TD></TR>\n";
   }
-%>
+?>
 </TABLE>
 </DIV>
 
@@ -1024,7 +1024,7 @@ issuerAltName          = $certsubname\n");
 
 <SCRIPT>
 document.getElementById(document.uinfo.curdiv.value).style.visibility='visible';
-document.getElementById(document.uinfo.curdiv.value+'_but').style.backgroundColor='<%print $menubg2;%>';
-document.getElementById(document.uinfo.curdiv.value+'_but').style.color='<%print $menufg2;%>';
+document.getElementById(document.uinfo.curdiv.value+'_but').style.backgroundColor='<?php print $menubg2;?>';
+document.getElementById(document.uinfo.curdiv.value+'_but').style.color='<?php print $menufg2;?>';
 </SCRIPT>
 

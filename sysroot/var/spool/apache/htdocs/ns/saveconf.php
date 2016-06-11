@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -17,13 +17,13 @@
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-  if ($datain != "") {
+  if ($_POST['datain'] != "") {
     $fname="config/netsentry.conf";
     $cfile=fopen($fname,w);
     chmod($fname,0660);
-    $datain=stripslashes($datain);
-    fwrite($cfile,$datain);
+    $_POST['datain']=stripslashes($_POST['datain']);
+    fwrite($cfile,$_POST['datain']);
     fclose($cfile);
     system("/usr/sbin/genconf");
   }
-%>
+?>

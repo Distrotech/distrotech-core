@@ -1,4 +1,4 @@
-<%
+<?php
 $vadmindef=array(
 	"AADelay" => "2",
 	"AAMOH" => "0",
@@ -113,4 +113,4 @@ $vadmindef=array(
 	"mISDNports4" => "0",
 	"mISDNrr" => "1"
 	);
-%>
+?>

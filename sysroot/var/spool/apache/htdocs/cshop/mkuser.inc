@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -39,7 +39,7 @@ function cardpin() {
   mt_srand ((double) microtime() * 1000000);
   while (strlen($pwd)<$chrs) {
     $chr = chr(mt_rand (0,255));
-    if (eregi("^[0-9]$", $chr))
+    if (preg_match("/^[0-9]$/i", $chr))
       $pwd = $pwd.$chr;
   };
  return $pwd;
@@ -51,7 +51,7 @@ function randpwgen($len) {
     for($cnt=0;$cnt < $len;$cnt++) {
       $newcode .= chr(!rand(0, 2) ? rand(48, 57) : (!rand(0, 1) ? rand(65, 90) : rand(97, 122)));
     }
-  } while (!ereg("[a-z]",$newcode) || !ereg("[A-Z]",$newcode) || !ereg("[0-9]",$newcode));
+  } while (!preg_match("/[a-z]/",$newcode) || !preg_match("/[A-Z]/",$newcode) || !preg_match("/[0-9]/",$newcode));
   return $newcode;
 };
-%>
+?>

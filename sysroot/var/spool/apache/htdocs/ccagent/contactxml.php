@@ -1,4 +1,4 @@
-<%
+<?php
 header('Content-type: text/xml');
 include_once "/var/spool/apache/htdocs/reception/auth.inc";
 
@@ -34,4 +34,4 @@ for($rcnt=0;$rcnt<pg_num_rows($contacts);$rcnt++) {
 }
 print "</users>\n";
 pg_close($db);
-%>
+?>

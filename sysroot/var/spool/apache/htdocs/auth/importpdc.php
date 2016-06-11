@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -35,13 +35,13 @@ if (!isset($_SESSION['auth'])) {
 
 $disc=array(_("File Server Quota"),_("Home Directory Quota"),_("Mail Box Quota"),_("Allow Access To Proxy"));
 
-%>
+?>
 <FORM METHOD=POST>
-<INPUT TYPE=HIDDEN NAME=classi VALUE="<%print $euser;%>">
+<INPUT TYPE=HIDDEN NAME=classi VALUE="<?php print $euser;?>">
 <CENTER>
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
-<TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body><%print _("Import User To System From PDC");%></TH></TR>
-<%
+<TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body><?php print _("Import User To System From PDC");?></TH></TR>
+<?php
   $sr=ldap_search($ds,"ou=Admin","(&(objectclass=groupofnames)(member=" . $ldn . ")(cn=Admin Access))");
   if ((ldap_count_entries($ds,$sr) == 1) || ($PHP_AUTH_USER == "admin")) {
     $ADMIN_USER="admin";
@@ -59,11 +59,11 @@ $disc=array(_("File Server Quota"),_("Home Directory Quota"),_("Mail Box Quota")
   $dn=$iinfo[0]["dn"];
 
   if (isset($modrec)) {
-     %>
+     ?>
      <SCRIPT>
-       alert("<%print _("Quota Changes Are Updated Every 4 Hours");%>\n(00:00 04:00 08:00 12:00 16:00 20:00)");
+       alert("<?php print _("Quota Changes Are Updated Every 4 Hours");?>\n(00:00 04:00 08:00 12:00 16:00 20:00)");
      </SCRIPT>
-     <%
+     <?php
 
     $ocadd["objectClass"][0]="posixAccount";
     $ocadd["objectClass"][1]="shadowAccount";
@@ -102,7 +102,7 @@ $disc=array(_("File Server Quota"),_("Home Directory Quota"),_("Mail Box Quota")
     }
 
     ldap_rename($ds,$dn,"uid=" . $euser,"ou=Users",false);
- 
+
     for($ccnt=0;$ccnt < count($childdn);$ccnt++) {
       ldap_rename($ds,$childdn[$ccnt] . ",uid=admin,ou=users",$childdn[$ccnt],"uid=" . $euser . ",ou=Users",false);
     }
@@ -116,9 +116,9 @@ $disc=array(_("File Server Quota"),_("Home Directory Quota"),_("Mail Box Quota")
   }
 
   $sr=ldap_search($ds,$dn,"(&(objectClass=officePerson)(uid=$euser))",$iarr);
- 
+
   $iinfo = ldap_get_entries($ds, $sr);
-  
+
   for ($i=0; $i < count($iarr); $i++) {
     $rem=$i % 2;
     if ($rem == 1) {
@@ -126,36 +126,36 @@ $disc=array(_("File Server Quota"),_("Home Directory Quota"),_("Mail Box Quota")
     } else {
       $bcolor=" CLASS=list-color1";
     }
-%>
-    <TR<%print $bcolor;%>>
-      <TD onmouseover="myHint.show('<%print strtolower($iarr[$i]);%>')" onmouseout="myHint.hide()" WIDTH=75%>
-        <% print $disc[$i];
+?>
+    <TR<?php print $bcolor;?>>
+      <TD onmouseover="myHint.show('<?php print strtolower($iarr[$i]);?>')" onmouseout="myHint.hide()" WIDTH=75%>
+        <?php print $disc[$i];
         if ($i <= "2") {
           print " (Mb)";
-        }%>
+        }?>
       </TD>
       <TD>
-<%
+<?php
         $attr=strtolower($iarr[$i]);
         if ($iinfo[0][$attr][0] == "") {
           $iinfo[0][$attr][0]="0";
         }
         if ($ADMIN_USER == "admin") {
           if ($i <= "2") {
-%>
-            <INPUT TYPE=TEXT NAME=<%print $iarr[$i];%> VALUE="<%print $iinfo[0][$attr][0];%>">
-<%
+?>
+            <INPUT TYPE=TEXT NAME=<?php print $iarr[$i];?> VALUE="<?php print $iinfo[0][$attr][0];?>">
+<?php
           } else {
-%>
-            <INPUT TYPE=CHECKBOX NAME="<%print $iarr[$i];%>"<%if ($iinfo[0][$attr][0] == "yes") {print " CHECKED";}%>>
-<%            
+?>
+            <INPUT TYPE=CHECKBOX NAME="<?php print $iarr[$i];?>"<?php if ($iinfo[0][$attr][0] == "yes") {print " CHECKED";}?>>
+<?php
           }
         } else {
           print $iinfo[0][$attr][0];
         }
-%>
+?>
       </TD></TR>
-<%
+<?php
   }
   $rem=$i % 2;
   if ($rem == 1) {
@@ -165,15 +165,15 @@ $disc=array(_("File Server Quota"),_("Home Directory Quota"),_("Mail Box Quota")
     $bcol[2]=" CLASS=list-color1";
     $bcol[1]=" CLASS=list-color2";
   }
-%>
-<TR <%print $bcol[2];%>><TD onmouseover="myHint.show('PW1')" onmouseout="myHint.hide()"><%print _("New Password For Account");%></TD><TD><INPUT TYPE=PASSWORD NAME=userpass1></TD></TR>
-<TR <%print $bcol[1];%>><TD onmouseover="myHint.show('PW2')" onmouseout="myHint.hide()"><%print _("Confirm Password");%></TD><TD><INPUT TYPE=PASSWORD NAME=userpass2></TD></TR>
-<%
+?>
+<TR <?php print $bcol[2];?>><TD onmouseover="myHint.show('PW1')" onmouseout="myHint.hide()"><?php print _("New Password For Account");?></TD><TD><INPUT TYPE=PASSWORD NAME=userpass1></TD></TR>
+<TR <?php print $bcol[1];?>><TD onmouseover="myHint.show('PW2')" onmouseout="myHint.hide()"><?php print _("Confirm Password");?></TD><TD><INPUT TYPE=PASSWORD NAME=userpass2></TD></TR>
+<?php
   if ($ADMIN_USER == "admin") {
-%>
-<TR <%print $bcol[2];%>><TH COLSPAN=2>  
-  <INPUT TYPE=SUBMIT VALUE="<%print _("Modify");%>" NAME=modrec></TH></TR>
-<%
+?>
+<TR <?php print $bcol[2];?>><TH COLSPAN=2>
+  <INPUT TYPE=SUBMIT VALUE="<?php print _("Modify");?>" NAME=modrec></TH></TR>
+<?php
   }
-%>
+?>
 </TABLE></FORM>

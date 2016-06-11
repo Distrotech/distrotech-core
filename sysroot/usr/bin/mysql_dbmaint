@@ -1,5 +1,5 @@
 #!/usr/bin/php -d safe_mode=no
-<%
+<?php
 include "/var/spool/apache/htdocs/ldap/myauth.inc";
 
 /*
@@ -28,4 +28,4 @@ $res=mysql_query("create index oob_time_sec_index ON packet_filter (oob_time_sec
 $res=mysql_query("delete from packet_filter where oob_time_sec < unix_timestamp()-86400*14");
 $deleted=mysql_affected_rows($db);
 print "Rows Removed: " . $deleted . "\n";
-%>
+?>

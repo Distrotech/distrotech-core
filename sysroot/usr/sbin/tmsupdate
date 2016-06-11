@@ -1,5 +1,5 @@
 #!/usr/bin/php -d safe_mode=no
-<%
+<?php
 include_once "/var/spool/apache/htdocs/cdr/auth.inc";
 
 $getbill=on;
@@ -12,4 +12,4 @@ if ($argv[1] > 0) {
 }
 
 include "/var/spool/apache/htdocs/cdr/func.inc";
-%>
+?>

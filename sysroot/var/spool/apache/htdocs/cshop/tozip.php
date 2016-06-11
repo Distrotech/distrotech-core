@@ -1,4 +1,4 @@
-<%
+<?php
 header("Content-Type: application/zip");
 include "/var/spool/apache/htdocs/cshop/auth.inc";
 include_once "/var/spool/apache/htdocs/cdr/func.inc";
@@ -120,4 +120,4 @@ $zip->addFromString($afile, $output);
 $zip->close();
 readfile($zfile);
 unlink($zfile);
-%>
+?>

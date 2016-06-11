@@ -6,7 +6,7 @@
 <FORM METHOD=POST NAME=deletexten onsubmit="ajaxsubmit(this.name);return false">
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <INPUT TYPE=HIDDEN NAME=print>
-<%
+<?php
 include_once "autoadd.inc";
 $extensq="SELECT name,fullname,secret,
             CASE WHEN (ptype = 'SNOM') THEN 'snom' ELSE CASE WHEN (ptype ~ '(^POLYCOM$)|(^IP_[0-9]+$)') THEN 'polycom' END END from users 
@@ -49,7 +49,7 @@ for($tcnt=0;$tcnt<pg_num_rows($extens);$tcnt++) {
   $r=pg_fetch_array($extens,$tcnt);
   
   $uppin="newpin" . $r[0];
-  if ($$uppin == "on") {
+  if (${$uppin} == "on") {
     $r[2]=randpwgen(8);
     if ($r[3] != "") {
       $agi->command("sip notify reboot-" . $r[3]. " " . $r[0]);
@@ -90,11 +90,11 @@ if ($_POST['print'] != "1") {
   $rcol++;
   print "<TR CLASS=list-color" . (($rcol % 2)+1) . "><TH COLSPAN=" . $colspan . " CLASS=heading-body><INPUT TYPE=SUBMIT NAME=delexten VALUE=\"" . _("Update") . "\"><INPUT TYPE=BUTTON NAME=pbutton VALUE=\"" . _("Print") . "\" ONCLICK=\"printpage(document.ppage)\"></TH></TR>";
 }
-%>
+?>
 </FORM>
 </TABLE>
-<%
+<?php
 if (isset($_POST['delexten'])) {
   $agi->disconnect();
 }
-%>
+?>

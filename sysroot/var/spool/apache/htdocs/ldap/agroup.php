@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -26,11 +26,11 @@ if ($_POST['classi'] != "") {
   $groupedit="Modify";
 }
 
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=agrpfrm onsubmit="ajaxsubmit(this.name);return false">
 <table border="0" width="90%" cellspacing="0" cellpadding="0">
-<%
+<?php
 $abdn="ou=Admin";
 
 
@@ -38,14 +38,14 @@ if (($group != "") && ($groupedit == "Modify")){
   if (($groupmod == "Delete") && (strtolower($ldn) != strtolower($active))) {
     $addent=array();
     $dnarr=ldap_explode_dn($active,1);
-    if (ereg("(sambasid=s-1-5-21-.*,ou=idmap)",$active,$olddn)) {
+    if (preg_match("/(sambasid=s-1-5-21-.*,ou=idmap)/i",$active,$olddn)) {
       $oldent["member"][0]=$olddn[0];
       $addent["member"][0]=$active;
       $usr=ldap_search($ds,"ou=idmap","(&(objectClass=radiusprofile)(sambaSID=" . $dnarr[0] . "))",array("uid"));
       $uidinfo = ldap_get_entries($ds, $usr);
       $addent3["memberUid"]=$uidinfo[0]["uid"][0];
     } else {
-      ereg("(uid=.*,ou=users)",$active,$olddn);
+      preg_match("/(uid=.*,ou=users)/i",$active,$olddn);
       $oldent["member"][0]=$olddn[0];
       $addent["member"][0]=$active;
       $addent3["memberUid"]=$dnarr[0];
@@ -61,7 +61,7 @@ if (($group != "") && ($groupedit == "Modify")){
     $addent=array();
     $add=strtolower($add);
     $dnarr=ldap_explode_dn($add,1);
-    if (ereg("(sambasid=s-1-5-21-.*,ou=idmap),(.*)",$add,$olddn)) {
+    if (preg_match("/(sambasid=s-1-5-21-.*,ou=idmap),(.*)/i",$add,$olddn)) {
       $addent["member"][0]=$olddn[1];
       ldap_mod_del($ds,$group,$addent);
       $addent["member"][1]=$add;
@@ -69,7 +69,7 @@ if (($group != "") && ($groupedit == "Modify")){
       $uidinfo = ldap_get_entries($ds, $usr);
       $addent3["memberUid"]=$uidinfo[0]["uid"][0];
     } else {
-      ereg("(uid=.*,ou=users),(.*)",$add,$olddn);
+      preg_match("/(uid=.*,ou=users),(.*)/i",$add,$olddn);
       $addent["member"][0]=$olddn[1];
       ldap_mod_del($ds,$group,$addent);
       $addent["member"][1]=$add;
@@ -92,9 +92,9 @@ if (($group != "") && ($groupedit == "Modify")){
       ldap_mod_add($ds,$group,$addent);
     }
   } else if ($groupmod == _("Delete")) {
-%>
-    <SCRIPT>alert("<%print _("You May Not Delete Yourself !!!");%>");</SCRIPT>
-<%
+?>
+    <SCRIPT>alert("<?php print _("You May Not Delete Yourself !!!");?>");</SCRIPT>
+<?php
   }
 
   $sobj="objectClass=groupofnames";
@@ -132,8 +132,8 @@ if (($group != "") && ($groupedit == "Modify")){
 
   $sr=ldap_search($ds,$group,$sobj);
   if (! $sr) {
-    $dndat=split(",",$group);
-    $cndat=split("=",$dndat[0]);
+    $dndat=preg_split("/,/",$group);
+    $cndat=preg_split("/=/",$dndat[0]);
     $infoa["objectclass"][0]="top";
     $infoa["objectclass"][1]="groupOfNames";
     $infoa["cn"]=$cndat[1];
@@ -201,17 +201,17 @@ if (($group != "") && ($groupedit == "Modify")){
 } else {
 
   print "Select Access Group To Edit<P><SELECT NAME=group>\n";
-%>
+?>
     <OPTION VALUE="cn=Admin Access,ou=Admin">Admin Access
     <OPTION VALUE="cn=User Read Access,ou=Admin">Access To User Information
     <OPTION VALUE="cn=Call Shop Access,ou=Admin">Call Shop Users
-<%
+<?php
   if (! file_exists("/etc/.networksentry-lite")) {
     $sr=ldap_search($ds,"cn=Addressbooks","objectClass=groupofnames");
     $info = ldap_get_entries($ds, $sr);
     for($mcnt=0;$mcnt<=$info[0]["member"]["count"] -1;$mcnt++) {
       $dn=$info[0]["member"][$mcnt];
-      $dn=split("=",$dn);
+      $dn=preg_split("/=/",$dn);
       $abookdn=$dn[1];
       if ($abookdn != "admin" ) {
         $dnact[$abookdn]=true;
@@ -223,7 +223,7 @@ if (($group != "") && ($groupedit == "Modify")){
   print "\n</SELECT><P>\n";
   print "<INPUT TYPE=SUBMIT onclick=this.name='groupedit' VALUE=\"Modify\">\n";
 }
-%>
+?>
   </TD></TR>
 </table>
 </FORM>

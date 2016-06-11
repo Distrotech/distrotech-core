@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -54,7 +54,7 @@ if (isset($pbxupdate)) {
   }
 
   pg_query($db,"UPDATE qfeatures SET timeout='" . $QTIMEOUT . "',penalty='" . $QAPENALTY . "' WHERE queue='" . $queue . "'");
-  pg_query($db,"UPDATE users SET fullname='$description',email='$email' WHERE mailbox='$queue'");
+  pg_query($db,"UPDATE voicemail SET fullname='$description',email='$email' WHERE mailbox='$queue'");
   pg_query($db,"UPDATE queue_table SET strategy='$strategy',timeout='$timeout',
                                        description='$description',wrapuptime='$wrapuptime',
                                        memberdelay='$memberdelay',servicelevel='$servicelevel',
@@ -64,20 +64,20 @@ if (isset($pbxupdate)) {
                                        playmusiconhold='$playmusiconhold'
                                    WHERE name='$queue'");
 
-                      
+
   if (($pass1 == $pass2) && ($pass1 != "")){
-    pg_query($db,"UPDATE users SET password='$pass1' WHERE mailbox='$queue'");
+    pg_query($db,"UPDATE voicemail SET password='$pass1' WHERE mailbox='$queue'");
   } else if ($pass1 != "") {
-%>
+?>
     <SCRIPT>
       alert("Password Mismach/Unset.Password Unchanged");
     </SCRIPT>
-<%
+<?php
   }
 }
 
 $qgetdata=pg_query($db,"SELECT timeout,penalty FROM qfeatures WHERE queue='" . $queue . "'");
-$qgetudata=pg_query($db,"SELECT email,password FROM users WHERE mailbox='" . $queue . "'");
+$qgetudata=pg_query($db,"SELECT email,password FROM voicemail WHERE mailbox='" . $queue . "'");
 $qgetqdata=pg_query($db,"SELECT strategy,timeout,description,wrapuptime,
                                 memberdelay,retry,servicelevel,weight,maxlen,
                                 autopausedelay,announce_round_seconds,
@@ -118,100 +118,100 @@ if ($origdata["QAPENALTY"] == "") {
   $origdata["QAPENALTY"]=$dqapenalty;
 }
 
-%>
+?>
 
-<INPUT TYPE=HIDDEN NAME=queue VALUE=<%print $queue;%>>
-  <TH CLASS=heading-body COLSPAN=2>Configuration For Queue <%print $queue%></TH>
+<INPUT TYPE=HIDDEN NAME=queue VALUE=<?php print $queue;?>>
+  <TH CLASS=heading-body COLSPAN=2>Configuration For Queue <?php print $queue?></TH>
 </TR>
 <TR CLASS=list-color1>
   <TD>Call Routing Scheme</TD>
   <TD>
     <SELECT NAME=strategy>
       <OPTION VALUE="ringall">Ring All Agents</OPTION>
-      <OPTION VALUE="rrmemory"<%if ($strategy == "rrmemory") {print " SELECTED";}%>>Round Robin</OPTION>
-      <OPTION VALUE="random"<%if ($strategy == "random") {print " SELECTED";}%>>Random</OPTION>
-      <OPTION VALUE="leastrecent"<%if ($strategy == "leastrecent") {print " SELECTED";}%>>Least Recent Call</OPTION>
-      <OPTION VALUE="fewestcalls"<%if ($strategy == "fewestcalls") {print " SELECTED";}%>>Fewest Calls</OPTION>
+      <OPTION VALUE="rrmemory"<?php if ($strategy == "rrmemory") {print " SELECTED";}?>>Round Robin</OPTION>
+      <OPTION VALUE="random"<?php if ($strategy == "random") {print " SELECTED";}?>>Random</OPTION>
+      <OPTION VALUE="leastrecent"<?php if ($strategy == "leastrecent") {print " SELECTED";}?>>Least Recent Call</OPTION>
+      <OPTION VALUE="fewestcalls"<?php if ($strategy == "fewestcalls") {print " SELECTED";}?>>Fewest Calls</OPTION>
     </SELECT>
   </TD>
 </TR>
 <TR CLASS=list-color2>
   <TD>Queue Description</TD>
-  <TD><INPUT TYPE=TEXT NAME=description VALUE="<%print $description;%>"></TD>
+  <TD><INPUT TYPE=TEXT NAME=description VALUE="<?php print $description;?>"></TD>
 </TR>
 <TR CLASS=list-color1>
   <TD>Email Address To Send Voice Mail</TD>
-  <TD><INPUT TYPE=TEXT NAME=email VALUE="<%print $email;%>"></TD>
+  <TD><INPUT TYPE=TEXT NAME=email VALUE="<?php print $email;?>"></TD>
 </TR>
 <TR CLASS=list-color2>
   <TD ALIGN=LEFT>Maximum Number Of Waiting Calls</TD>
-  <TD><INPUT TYPE=TEXT NAME=maxlen VALUE="<%print $maxlen;%>"></TD></TR>
+  <TD><INPUT TYPE=TEXT NAME=maxlen VALUE="<?php print $maxlen;?>"></TD></TR>
 </TR>
 <TR CLASS=list-color1>
   <TD ALIGN=LEFT>Queue Weight Factor</TD>
-  <TD><INPUT TYPE=TEXT NAME=weight VALUE="<%print $weight;%>"></TD></TR>
+  <TD><INPUT TYPE=TEXT NAME=weight VALUE="<?php print $weight;?>"></TD></TR>
 </TR>
 <TR CLASS=list-color2>
   <TD ALIGN=LEFT>Service Level Time Frame</TD>
-  <TD><INPUT TYPE=TEXT NAME=servicelevel VALUE="<%print $servicelevel;%>"></TD></TR>
+  <TD><INPUT TYPE=TEXT NAME=servicelevel VALUE="<?php print $servicelevel;?>"></TD></TR>
 </TR>
 <TR CLASS=list-color1>
   <TD>Queue Time Out</TD>
   <TD>
-     <INPUT TYPE=TEXT NAME=QTIMEOUT VALUE="<%if ($origdata["timeout"] != "0") {print $origdata[timeout"];}%>">
+     <INPUT TYPE=TEXT NAME=QTIMEOUT VALUE="<?php if ($origdata["timeout"] != "0") {print $origdata["timeout"];}?>">
   </TD>
 </TR>
 <TR CLASS=list-color2>
   <TD>Queue Default Agent Penalty Factor</TD>
   <TD>
-     <INPUT TYPE=TEXT NAME=QAPENALTY VALUE="<%if ($origdata["penalty"] != "0") {print $origdata["penalty"];}%>">
+     <INPUT TYPE=TEXT NAME=QAPENALTY VALUE="<?php if ($origdata["penalty"] != "0") {print $origdata["penalty"];}?>">
   </TD>
 </TR>
 <TR CLASS=list-color1>
   <TD>Queue Agent Time Out</TD>
   <TD>
-     <INPUT TYPE=TEXT NAME=timeout VALUE="<%print $timeout;%>">
+     <INPUT TYPE=TEXT NAME=timeout VALUE="<?php print $timeout;?>">
   </TD>
 </TR>
 <TR CLASS=list-color2>
   <TD ALIGN=LEFT>Retry Delay</TD>
-  <TD><INPUT TYPE=TEXT NAME=retry VALUE="<%print $retry;%>"></TD></TR>
+  <TD><INPUT TYPE=TEXT NAME=retry VALUE="<?php print $retry;?>"></TD></TR>
 </TR>
 <TR CLASS=list-color1>
   <TD ALIGN=LEFT>Agent Answer Delay</TD>
-  <TD><INPUT TYPE=TEXT NAME=memberdelay VALUE="<%print $memberdelay;%>"></TD></TR>
+  <TD><INPUT TYPE=TEXT NAME=memberdelay VALUE="<?php print $memberdelay;?>"></TD></TR>
 </TR>
 <TR CLASS=list-color2>
   <TD ALIGN=LEFT>Agent Wrap Up Time</TD>
-  <TD><INPUT TYPE=TEXT NAME=wrapuptime VALUE="<%print $wrapuptime;%>"></TD></TR>
+  <TD><INPUT TYPE=TEXT NAME=wrapuptime VALUE="<?php print $wrapuptime;?>"></TD></TR>
 </TR>
 <TR CLASS=list-color1>
   <TD>Announcement Frequency</TD>
-  <TD><INPUT TYPE=TEXT NAME=announce_frequency VALUE="<%print $announce_frequency;%>"></TD>
+  <TD><INPUT TYPE=TEXT NAME=announce_frequency VALUE="<?php print $announce_frequency;?>"></TD>
 </TR>
 <TR CLASS=list-color2>
   <TD>Announcement Holdtime Round To ...s</TD>
-  <TD><INPUT TYPE=TEXT NAME=announce_round_seconds VALUE="<%print $announce_round_seconds;%>"></TD>
+  <TD><INPUT TYPE=TEXT NAME=announce_round_seconds VALUE="<?php print $announce_round_seconds;?>"></TD>
 </TR>
 <TR CLASS=list-color1>
   <TD>Autologoff Idle Time</TD>
-  <TD><INPUT TYPE=TEXT NAME=autopausedelay VALUE="<%print $autopausedelay;%>"></TD>
+  <TD><INPUT TYPE=TEXT NAME=autopausedelay VALUE="<?php print $autopausedelay;?>"></TD>
 </TR>
 <TR CLASS=list-color2>
   <TD>Announce Expected Hold Time</TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=announce_holdtime<%if ($announce_holdtime == "yes" ) {print " CHECKED";}%>></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=announce_holdtime<?php if ($announce_holdtime == "yes" ) {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color1>
   <TD>Play Music On Hold (Alternative Is Ringing)</TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=playmusiconhold<%if ($playmusiconhold == "t" ) {print " CHECKED";}%>></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=playmusiconhold<?php if ($playmusiconhold == "t" ) {print " CHECKED";}?>></TD>
 </TR>
 <TR CLASS=list-color2>
   <TD>Voicemail Password</TD>
-  <TD><INPUT TYPE=PASSWORD NAME=pass1 VALUE="<%print $password;%>"></TD>
+  <TD><INPUT TYPE=PASSWORD NAME=pass1 VALUE="<?php print $password;?>"></TD>
 </TR>
 <TR CLASS=list-color1>
   <TD>Confirm Password</TD>
-  <TD><INPUT TYPE=PASSWORD NAME=pass2 VALUE="<%print $password;%>"></TD>
+  <TD><INPUT TYPE=PASSWORD NAME=pass2 VALUE="<?php print $password;?>"></TD>
 </TR>
 
 <TR CLASS=list-color2>

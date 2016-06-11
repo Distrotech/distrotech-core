@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -27,10 +27,10 @@ if ((isset($pbxupdate)) && ($sdpos != "") && ($sdnumber != "") && ((($sdpos >= 0
 $gdbquery="SELECT lpad(substr(key,7),2,'0'),value FROM astdb WHERE family='" . $PHP_AUTH_USER . "' AND key ~ '^speed\-([0-9]+)|([*#])' ORDER BY lpad(substr(key,7),2,'0')";
 $qgetdata=pg_query($db,$gdbquery);
 
-%>
+?>
 
 <CENTER>
-<link rel="stylesheet" type="text/css" href="/style.php?style=<%print $style;%>">
+<link rel="stylesheet" type="text/css" href="/style.php?style=<?php print $style;?>">
 <FORM METHOD=POST>
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
 <TR CLASS=list-color2>
@@ -41,7 +41,7 @@ $qgetdata=pg_query($db,$gdbquery);
 <TH CLASS=heading-body2 WIDTH=50%>Position</TH>
 <TH CLASS=heading-body2 WIDTH=30%>Number</TH>
 </TR>
-<%
+<?php
 
 $rcnt=0;
 $dnum=pg_num_rows($qgetdata);
@@ -53,7 +53,7 @@ for($i=0;$i<$dnum;$i++){
   } else {
     $sdpos=$getdata[0][1];
   }
-  if ((isset($pbxupdate)) && ($$sdtodel == "on")) {
+  if ((isset($pbxupdate)) && (${$sdtodel} == "on")) {
     pg_query($db,"DELETE FROM astdb WHERE family='" . $PHP_AUTH_USER . "' AND key='speed-" . $sdpos . "'");
   } else {
     if ($rcnt % 2 == 0) {
@@ -74,30 +74,30 @@ for($i=0;$i<$dnum;$i++){
     $bcol[0]="CLASS=list-color1";
     $bcol[1]="CLASS=list-color2";
   }
-%>
+?>
 </TR>
 
-<%
+<?php
 if ($rcnt < 100) {
-%>
-  <TR <%print $bcol[0];%>>
+?>
+  <TR <?php print $bcol[0];?>>
   <TH COLSPAN=3 CLASS=heading-body2>Add New Entry</TH></TR>
-  <TR <%print $bcol[1];%>>
+  <TR <?php print $bcol[1];?>>
   <TD>&nbsp;</TD>
   <TD><INPUT NAME=sdpos VALUE=""></TD>
   <TD><INPUT NAME=sdnumber></TD></TR>
-<%
+<?php
 }
-%>
-<TR <%print $bcol[0];%>>
+?>
+<TR <?php print $bcol[0];?>>
   <TD ALIGN=MIDDLE COLSPAN=3>
     <INPUT TYPE=SUBMIT NAME=pbxupdate VALUE="Save Changes">
     <INPUT TYPE=RESET>
   </TD>
 </TR>
-<TR <%print $bcol[1];%>>
+<TR <?php print $bcol[1];?>>
   <TD ALIGN=MIDDLE COLSPAN=3>
-  <A HREF=/reception/vladmin.php?style=<%print $style;%>>Account Configuration</A>
+  <A HREF=/reception/vladmin.php?style=<?php print $style;?>>Account Configuration</A>
 </TD>
 </TR>
 </TABLE>

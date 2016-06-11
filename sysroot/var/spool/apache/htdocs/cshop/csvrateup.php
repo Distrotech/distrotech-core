@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -38,7 +38,7 @@ if ((isset($_POST['addreq'])) && ($_SESSION['auser'])) {
       
       $patterns=array("/^[\"]+([A-Z]{3})[\",]+.*[,\"]+([a-zA-Z0-9 \-\']+)[\",]+([0-9\.]+)/");
       while(list($lnum,$ldata)=each($ratefd)) {
-        $ldata=ereg_replace("'","\'", $ldata);
+        $ldata=preg_replace("/'/","\'", $ldata);
         $ldata="\"" . $ldata;
         if ($_POST['tarcode'] != "A") {
           $replace=array("INSERT INTO tariffrate (countrycode,subcode,rate,trunkprefix,tariffcode) SELECT 
@@ -73,7 +73,7 @@ if ((isset($_POST['addreq'])) && ($_SESSION['auser'])) {
   $tariff=pg_query($db,"SELECT tariffcode,tariffname
                         FROM tariff WHERE tariffcode LIKE '" . $_SESSION['resellerid'] . "-%' ORDER BY tariffname");
   $num=pg_num_rows($tariff);
-%>
+?>
 <CENTER>
   <FORM enctype="multipart/form-data" METHOD=POST>
   <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
@@ -83,7 +83,7 @@ if ((isset($_POST['addreq'])) && ($_SESSION['auser'])) {
     <TR CLASS=list-color1>
       <TD>Select Tariff Plan To Load</TD>
       <TD ALIGN=LEFT VALIGN=MIDDLE>
-        <SELECT NAME=tarcode><%
+        <SELECT NAME=tarcode><?php
           print "\n";
           if ($_SESSION['resellerid'] == "0") {
             print "<OPTION VALUE=A>Master Rate</OPTION>";
@@ -92,7 +92,7 @@ if ((isset($_POST['addreq'])) && ($_SESSION['auser'])) {
             $r = pg_fetch_row($tariff,$i);
             $r[0]=substr($r[0],strpos($r[0],"-")+1);
             print  "<OPTION VALUE=\"" . $_SESSION['resellerid'] . "-" . $r[0] . "\">" . $r[1] . "</OPTION>\n";
-          }%>
+          }?>
         </SELECT>
       </TD>
     </TR>
@@ -111,6 +111,6 @@ if ((isset($_POST['addreq'])) && ($_SESSION['auser'])) {
     <TR>
   </TABLE>
   </FORM>
-<%
+<?php
 }
-%>
+?>

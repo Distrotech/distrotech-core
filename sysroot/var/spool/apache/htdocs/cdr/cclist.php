@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -28,20 +28,20 @@ $cclist=pg_query($db,"SELECT DISTINCT ON (countryname,subcode) countryname,count
 $bcolor[0]="list-color2";
 $bcolor[1]="list-color1";
 
-%>
+?>
 <CENTER>
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <TR CLASS=list-color2>
-<TH CLASS=heading-body COLSPAN=5><%print _("Country Code List");%></TH>
+<TH CLASS=heading-body COLSPAN=5><?php print _("Country Code List");?></TH>
 </TR>
 <TR CLASS=list-color1>
-<TH CLASS=heading-body2 WIDTH=60%><%print _("Country");%></TH>
-<TH CLASS=heading-body2 WIDTH=10%><%print _("Code");%></TH>
-<TH CLASS=heading-body2 WIDTH=10%><%print _("Prefix");%></TH>
-<TH CLASS=heading-body2 WIDTH=10%><%print _("Peak");%></TH>
-<TH CLASS=heading-body2 WIDTH=10%><%print _("Offpeak");%></TH>
+<TH CLASS=heading-body2 WIDTH=60%><?php print _("Country");?></TH>
+<TH CLASS=heading-body2 WIDTH=10%><?php print _("Code");?></TH>
+<TH CLASS=heading-body2 WIDTH=10%><?php print _("Prefix");?></TH>
+<TH CLASS=heading-body2 WIDTH=10%><?php print _("Peak");?></TH>
+<TH CLASS=heading-body2 WIDTH=10%><?php print _("Offpeak");?></TH>
 </TR>
-<%
+<?php
 $num=pg_num_rows($cclist);
 for ($i=0; $i < $num; $i++) {
   $r = pg_fetch_row($cclist,$i);
@@ -57,7 +57,7 @@ for ($i=0; $i < $num; $i++) {
   print "</TD><TD ALIGN=RIGHT>" . sprintf("%0.2f",$r[4]) . "</TD><TD ALIGN=RIGHT>" . sprintf("%0.2f",$r[5]) . "</TD>";
   print "</TR>\n";
 }
-%>
+?>
 </TABLE>
 <FORM NAME=irateform METHOD=POST>
   <INPUT TYPE=HIDDEN NAME=countrycode>

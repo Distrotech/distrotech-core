@@ -1,4 +1,4 @@
-<%
+<?php
 include "../cdr/auth.inc";
 include "../cdr/autoadd.inc";
 include "../ldap/ldapbind.inc";
@@ -96,31 +96,31 @@ if ($domain == "" ) {
   $domain=$LOCAL_DOMAIN;
 }
 
-%>
+?>
 [ AdminPassword ]
 path = /config/Setting/autop.cfg
-password = <%print $pass . "\n";%>
+password = <?php print $pass . "\n";?>
 
 [ UserPassword ]
 path = /config/Setting/autop.cfg
-password = <%print $exten . "\n";%>
+password = <?php print $exten . "\n";?>
 
 [ autoprovision ]
 path = /config/Setting/autop.cfg  
-server_address = http://<%print $SERVER_NAME . "/" . $mac . ".cfg\n";%>
+server_address = http://<?php print $SERVER_NAME . "/" . $mac . ".cfg\n";?>
 
 [ account ]
 path = /config/voip/sipAccount0.cfg
 Enable = 1
-Label = <%print $name . "\n";%>
-DisplayName = <%print $exten . "\n";%>
-AuthName = <%print $exten . "\n";%>
-Username = <%print $exten . "\n";%>
-Password = <%print $pass . "\n";%>
-Transport = <%print $trans . "\n";%>
-srtp_encryption = <%print $encrypt . "\n";%>
-SIPServerHost = <%print $SERVER_NAME . "\n";%>
-SIPServerPort = <%print ($trans == "2") ? "5061\n" : "5060\n"%>
+Label = <?php print $name . "\n";?>
+DisplayName = <?php print $exten . "\n";?>
+AuthName = <?php print $exten . "\n";?>
+Username = <?php print $exten . "\n";?>
+Password = <?php print $pass . "\n";?>
+Transport = <?php print $trans . "\n";?>
+srtp_encryption = <?php print $encrypt . "\n";?>
+SIPServerHost = <?php print $SERVER_NAME . "\n";?>
+SIPServerPort = <?php print ($trans == "2") ? "5061\n" : "5060\n"?>
 UseOutboundProxy = 0
 SubsribeRegister = 1
 SubsribeMWI = 1
@@ -131,7 +131,7 @@ Expire = 60
 path = /config/voip/sipAccount0.cfg
 DTMFPayload = 101
 DTMFToneLen = 300
-DTMFInbandTransfer = <%print $dtmfm . "\n";%>
+DTMFInbandTransfer = <?php print $dtmfm . "\n";?>
 InfoType = 2
 
 [ audio0 ]
@@ -243,19 +243,19 @@ Country = Great Britain
 [ Time ]  
 path = /config/Setting/Setting.cfg
 TimeZone = +2
-TimeServer1 = <%print $SERVER_NAME . "\n";%>
-TimeServer2 = <%print $SERVER_NAME . "\n";%>
+TimeServer1 = <?php print $SERVER_NAME . "\n";?>
+TimeServer2 = <?php print $SERVER_NAME . "\n";?>
 SummerTime = 0
 
 [ LDAP ]
 path = /config/Contacts/LDAP.cfg
 NameFilter = (&(telephoneNumber=*)(cn=%))
 NumberFilter = (&(telephoneNumber=%)(cn=*))
-host = <%print $SERVER_NAME . "\n";%>
+host = <?php print $SERVER_NAME . "\n";?>
 port = 389
 base =
 user = cn=Snom,ou=Snom
-pswd = <%print $suser["userPassword"][0] . "\n";%>
+pswd = <?php print $suser["userPassword"][0] . "\n";?>
 MaxHits = 50
 NameAttr = cn
 NumbAttr = telephoneNumber
@@ -266,9 +266,9 @@ CallInLookup = 1
 LDAPSort = 1
 DialLookup = 1
 
-<%
+<?php
 if ($vlantag > 1) {
-%>
+?>
 [ cutom_option  ]
 path = /config/Setting/autop.cfg
 cutom_option_code0 = 
@@ -278,11 +278,11 @@ cutom_option_type0 = 1
 path = /config/Network/Network.cfg
 USRPRIORITY = 5
 ISVLAN = 1
-VID = <%print $vlantag . "\n";%>
+VID = <?php print $vlantag . "\n";?>
 
-<%
+<?php
 } else {
-%>
+?>
 
 [ cutom_option  ]
 path = /config/Setting/autop.cfg
@@ -295,19 +295,19 @@ USRPRIORITY = 0
 ISVLAN = 0
 VID = 0
 
-<%
+<?php
 }
 
 for ($lkey=11;$lkey <=16;$lkey++) {
-%>
-[ memory<%print $lkey;%> ]
+?>
+[ memory<?php print $lkey;?> ]
 path = /config/vpPhone/vpPhone.ini
 Line = 1
 DKtype = 15
 
-<%
+<?php
 }
-%>
+?>
 [ programablekey3 ]
 path = /config/vpPhone/vpPhone.ini
 DKtype = 9

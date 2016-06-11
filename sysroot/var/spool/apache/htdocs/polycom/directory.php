@@ -1,11 +1,11 @@
-<%
+<?php
 include "getphone.inc";
-%>
-<<%print "?";%>xml version="1.0" encoding="UTF-8" standalone="yes"?>
+?>
+<<?php print "?";?>xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <!-- $Revision: 1.2 $  $Date: 2004/12/21 18:28:05 $ -->
 <directory>
   <item_list>
-<%
+<?php
 if ($mac != "") {
   $dirq="SELECT fullname,name,CASE WHEN (name != exten AND callgroup = '" . $callgroup . "') THEN 1 ELSE 0 END 
            FROM users 
@@ -63,6 +63,6 @@ if ($mac != "") {
     print "    </item>\n";
   }
 }
-%>
+?>
   </item_list>
 </directory>

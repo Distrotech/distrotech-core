@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -23,7 +23,7 @@ $cdr=pg_query($db,"SELECT distinct date_part('year',starttime),date_part('month'
 $bcolor[0]="list-color1";
 $bcolor[1]="list-color2";
 
-%>
+?>
 <SCRIPT>
 function settarget() {
   if (document.ibill.csvout.checked) {
@@ -39,7 +39,7 @@ function settarget() {
 <TR CLASS=list-color2>
 <TH ALIGN=LEFT>Select Month</TH>
 <TD><SELECT NAME=bmon>
-<%
+<?php
 $num=pg_num_rows($cdr);
 $total="0";
 for ($i=0; $i < $num; $i++) {
@@ -47,12 +47,12 @@ for ($i=0; $i < $num; $i++) {
   print "<OPTION VALUE=" . $r[0] . ":" . $r[1] . ">" . $r[0] . "/" . $r[1];
 }
 $rem=$i % 2; 
-%></SELECT></TD></TR>
+?></SELECT></TD></TR>
 <TR CLASS=list-color1>
 <TH ALIGN=LEFT>Select Day</TH>
 <TD><SELECT NAME=bday>
 <OPTION VALUE="">ALL
-<%
+<?php
 $num=pg_num_rows($cdr);
 $total="0";
 for ($i=0; $i <= 31; $i++) {
@@ -60,7 +60,7 @@ for ($i=0; $i <= 31; $i++) {
   print "<OPTION VALUE=" . $i . ">" . $i;
 }
 $rem=$i % 2; 
-%></SELECT></TD></TR>
+?></SELECT></TD></TR>
 <TR CLASS=list-color2>
 <TH ALIGN=LEFT>Output As CSV</TH><TD><INPUT TYPE=CHECKBOX NAME=csvout></TD></TR>
 <TR CLASS=list-color1>

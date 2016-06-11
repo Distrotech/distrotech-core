@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -31,7 +31,7 @@ if ($sessid == "") {
 
 if (!isset($_SERVER['HTTP_REFERER'])) {
   pg_close($db);
-  %>
+  ?>
   <html><head>
       <link rel="stylesheet" href="/style.php?sesname=server_admin">
       <script type="text/javascript" src="/ajax.js"></script>
@@ -151,7 +151,7 @@ if (!isset($_SERVER['HTTP_REFERER'])) {
       </script>
     </div>
   </body>
-  </html><%
+  </html><?php
   exit();
 }
 
@@ -343,10 +343,10 @@ function contactsearch() {
   print "<TR CLASS=list-color" . (($rcol % 2)+1) . "><TD ALIGN=MIDDLE COLSPAN=2><INPUT TYPE=SUBMIT ONCLICK=this.name='newcontact' VALUE=\"Add Contact\"></TD></TR>";
   $rcol++;
 
-  print "</TABLE></FORM>\n";%>
+  print "</TABLE></FORM>\n";?>
   <SCRIPT>
     var contsearch=new TextComplete(document.pform.searchfor,autocompletedata,'contactxml.php',setcompleteurl,document.pform,ajaxsubmit);
-  </SCRIPT><%
+  </SCRIPT><?php
 }
 
 include_once "/var/spool/apache/htdocs/cdr/apifunc.inc";
@@ -388,7 +388,7 @@ if (isset($_POST['start'])) {
     }
     $wgets=rtrim($wline);
     if ($wgets != "") {
-      list($key,$val)=split(": ",$wgets);
+      list($key,$val)=preg_split("/: /",$wgets);
       $datout[$key]=$val;
     }
   }
@@ -533,15 +533,15 @@ function showcontact($condata=null) {
   if ($xtracol != "") {
     $leadinf=pg_query($db,"SELECT title,fname,sname,number" . $xtracol . " FROM lead LEFT OUTER JOIN " . $data_tb . " AS xtradata ON (lead.id = xtradata.leadid) WHERE lead.id=" . $_SESSION['nextid']);
   }
-  $leaddata=pg_fetch_array($leadinf,0,PGSQL_NUM);%>
+  $leaddata=pg_fetch_array($leadinf,0,PGSQL_NUM);?>
 
   <CENTER>
   <FORM NAME=pform METHOD=POST onsubmit="ajaxsubmit();return false">
-  <TABLE border=0 width=90% cellspacing=0 cellpadding=0><%
+  <TABLE border=0 width=90% cellspacing=0 cellpadding=0><?php
 
-  if ($_SESSION['nextid'] != "") {%>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
-      <TH COLSPAN=4 CLASS=heading-body ALIGN=MIDDLE><TABLE CELLPADDING=0 CELLSPACING=0><TR><%
+  if ($_SESSION['nextid'] != "") {?>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
+      <TH COLSPAN=4 CLASS=heading-body ALIGN=MIDDLE><TABLE CELLPADDING=0 CELLSPACING=0><TR><?php
         for($cell=0;$cell<4;$cell++) {
           $leddat[$cell]="<TH CLASS=heading-body><DIV ONCLICK=\"editcon('" . $rnme[$cell] . "')\" ID=editcon_" . $rnme[$cell] . " STYLE=\"cursor: pointer;text-decoration : underline;\" CLASS=heading-body>" . $leaddata[$cell] . "</DIV>";
           if ($cell < 2) {
@@ -553,7 +553,7 @@ function showcontact($condata=null) {
           }
         }
         print $leddat[0] . $leddat[1] . $leddat[2] . $leddat[3];
-      %></TR></TABLE></TH><%
+      ?></TR></TABLE></TH><?php
     $celloff=0;
     for ($cell=4;$cell < count($leaddata);$cell++) {
       if (($rnme[$cell] == "osticket") && ($osticket == "t")){
@@ -572,30 +572,30 @@ function showcontact($condata=null) {
       print "<TD COLSPAN=2>&nbsp</TD></TR>";
     } else {
       print "</TR>";
-    }%>
+    }?>
     </TABLE>
     <DIV ID=script>
     <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90% ID=stable>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TH CLASS=heading-body2 COLSPAN=4>
         Contact Script
       </TH>
     </TR>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
-      <TD COLSPAN=4><%
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
+      <TD COLSPAN=4><?php
         include "/var/spool/apache/htdocs/ccadmin/scriptp.inc";
-        print getscripthtml(stripslashes(pg_unescape_bytea($script)),$htmlscript);%> 
+        print getscripthtml(stripslashes(pg_unescape_bytea($script)),$htmlscript);?> 
       </TD>
     </TR>
     </TABLE>
     </DIV>
     <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TH CLASS=heading-body2 COLSPAN=4>
         Contact Information
       </TH>
     </TR>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TH CLASS=heading-body2 COLSPAN=2 ALIGN=LEFT>
         Status
       </TH>
@@ -606,7 +606,7 @@ function showcontact($condata=null) {
         </SELECT>
       </TD>
     </TR>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TD CLASS=heading-body2 COLSPAN=2 ALIGN=LEFT>
         Further Followup Required
       </TH>
@@ -614,7 +614,7 @@ function showcontact($condata=null) {
         <INPUT TYPE=CHECKBOX NAME=CONT_followup>
       </TD>
     </TR>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TH CLASS=heading-body2 COLSPAN=2 ALIGN=LEFT>
         Date/Time Of Next Contact (Leave Blank For Default) [YYYY-MM-DD HH:MM:SS] 
       </TH>
@@ -622,37 +622,37 @@ function showcontact($condata=null) {
         <INPUT TYPE=INPUT NAME=CONT_nextcall>
       </TD>
     </TR>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TH CLASS=heading-body2 COLSPAN=2 ALIGN=LEFT>
         Feedback
       </TH>
       <TD COLSPAN=2>
         <TEXTAREA NAME=CONT_feedback ROWS=8 COLS=60></TEXTAREA>
       </TD>
-    </TR><%
-  } else {%>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+    </TR><?php
+  } else {?>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TH COLSPAN=4 CLASS=heading-body>
         There Are Currently No Calls
       </TH>
-    </TR><%
-  }%>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+    </TR><?php
+  }?>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD ALIGN=MIDDLE COLSPAN=4>
       <INPUT TYPE=BUTTON NAME=dialbut onclick=ccdial() VALUE="Dial">
       <INPUT TYPE=SUBMIT onclick=this.name='abortcall' VALUE="Hangup/Cancel">
-      <INPUT TYPE=BUTTON NAME=transbut onclick=transcall('<%print $_SESSION['lastcon'];%>') VALUE="Transfer">
+      <INPUT TYPE=BUTTON NAME=transbut onclick=transcall('<?php print $_SESSION['lastcon'];?>') VALUE="Transfer">
       <INPUT TYPE=BUTTON NAME=ddialbut onclick=directdial() VALUE="Direct Dial">
       <INPUT TYPE=SUBMIT NAME=subme onclick=this.name='senddata' VALUE="Complete">
       <INPUT TYPE=BUTTON NAME=reset onclick=resetcall() VALUE="Reset">
     </TD>
-  </TR><%
-  if ($_SESSION['nextid'] != "") {%>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  </TR><?php
+  if ($_SESSION['nextid'] != "") {?>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TH CLASS=heading-body2 COLSPAN=4>
         Previous 20 Contacts
       </TH>
-    </TR><%
+    </TR><?php
 
     $testdb=pg_query($db,"SELECT * from information_schema.tables where table_catalog='asterisk' and table_name='" . $datain_tb . "'");
     $xtracol="";
@@ -675,57 +675,57 @@ function showcontact($condata=null) {
     $lastcontq=pg_query($db,$conthistq);
 
     for($pcont=0;$pcont < pg_num_rows($lastcontq);$pcont++) {
-      $contd=pg_fetch_array($lastcontq,$pcont,PGSQL_NUM);%>
-      <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+      $contd=pg_fetch_array($lastcontq,$pcont,PGSQL_NUM);?>
+      <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
         <TD COLSPAN=2>
           Date :
-          <%print $contd[3];%><BR>
+          <?php print $contd[3];?><BR>
           Status :
-          <%print $contd[0];%><BR>
+          <?php print $contd[0];?><BR>
           Followup :
-          <%print ($contd[1] == "t")?"Yes":"No";%><BR>
+          <?php print ($contd[1] == "t")?"Yes":"No";?><BR>
           Agent :
-          <%print $contd[4];%><BR><%
+          <?php print $contd[4];?><BR><?php
           for($xdat=5;$xdat<count($outrows)+5;$xdat++) {
             if ($xdatt[($xdat-5)] == "boolean") {
               $contd[$xdat]=($contd[$xdat] == "t")?"Yes":"No";
             }
             print $outrows[($xdat-5)] . " : " . $contd[$xdat] . "<BR>";
           }
-      %></TH>
+      ?></TH>
         <TD  COLSPAN=2 VALIGN=TOP ALIGN=LEFT>
-          <%print htmlspecialchars($contd[2]);%>
+          <?php print htmlspecialchars($contd[2]);?>
         </TH>
-      </TR><%
+      </TR><?php
     }
-  }%>
+  }?>
   </TABLE></FORM>
   <FORM NAME=caller METHOD=POST ACTION=/ccagent/caller.php>
-    <INPUT TYPE=HIDDEN NAME=numtocall VALUE="<%print $_SESSION['lastcon'];%>">
-    <INPUT TYPE=HIDDEN NAME=disppage VALUE="<%print $showpage;%>">
-    <INPUT TYPE=HIDDEN NAME=nomenu VALUE="<%print $_POST['nomenu'];%>">
+    <INPUT TYPE=HIDDEN NAME=numtocall VALUE="<?php print $_SESSION['lastcon'];?>">
+    <INPUT TYPE=HIDDEN NAME=disppage VALUE="<?php print $showpage;?>">
+    <INPUT TYPE=HIDDEN NAME=nomenu VALUE="<?php print $_POST['nomenu'];?>">
   </FORM>
   <FORM NAME=celledit METHOD=POST>
     <INPUT TYPE=HIDDEN NAME=newvalue>
     <INPUT TYPE=HIDDEN NAME=cellname>
   </FORM>
-  <SCRIPT><%
-  if ($_SESSION['incall']) {%>
+  <SCRIPT><?php
+  if ($_SESSION['incall']) {?>
     document.getElementById('script').style.visibility='visible';
     document.getElementById('script').style.height=document.getElementById('stable').clientHeight;
     document.pform.ddialbut.disabled=true;
     document.pform.dialbut.disabled=true;
     document.pform.subme.disabled=false;
-    document.pform.transbut.disabled=false;<%
-  } else {%>
+    document.pform.transbut.disabled=false;<?php
+  } else {?>
     document.getElementById('script').style.visibility='hidden';
     document.getElementById('script').style.height='0px';
     document.pform.ddialbut.disabled=false;
     document.pform.dialbut.disabled=false;
     document.pform.subme.disabled=true;
-    document.pform.transbut.disabled=true;<%
-  }%>
-  </SCRIPT><%
+    document.pform.transbut.disabled=true;<?php
+  }?>
+  </SCRIPT><?php
 }
 
 function completecall() {
@@ -764,19 +764,19 @@ function completecall() {
           unset($_POST[$pname]);
           $qfields.="," . $coldata[0];
         } else if ($coldata[1] == "timestamp with time zone") {
-          if (ereg ("^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}:[0-9]{2}:[0-9]{2})([-\+0-9]+)$", $_POST[$pname], $dateinf)) {
+          if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}:[0-9]{2}:[0-9]{2})([-\+0-9]+)$/", $_POST[$pname], $dateinf)) {
             if (checkdate($dateinf[2],$dateinf[3],$dateinf[1])) {
               $qfields.="," . $coldata[0];
               $qvals.=",'" . $_POST[$pname] . "'"; 
               unset($_POST[$pname]);
             }
-          } else if (ereg ("^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}:[0-9]{2}:[0-9]{2})$", $_POST[$pname], $dateinf)) {
+          } else if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}:[0-9]{2}:[0-9]{2})$/", $_POST[$pname], $dateinf)) {
             if (checkdate($dateinf[2],$dateinf[3],$dateinf[1])) {
               $qfields.="," . $coldata[0];
               $qvals.=",'" . $_POST[$pname] . "'";
               unset($_POST[$pname]);
             }
-          } else if (ereg ("^([0-9]{4})-([0-9]{2})-([0-9]{2})$", $_POST[$pname], $dateinf)) {
+          } else if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $_POST[$pname], $dateinf)) {
             if (checkdate($dateinf[2],$dateinf[3],$dateinf[1])) {
               $qfields.="," . $coldata[0];
               $qvals.=",'" . $_POST[$pname] . "'";

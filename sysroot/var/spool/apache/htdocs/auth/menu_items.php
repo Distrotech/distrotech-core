@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -21,4 +21,4 @@ include_once "auth.inc";
 include "menu_items.inc";
 include "../menu_items.php";
 ldap_close($ds);
-%>
+?>

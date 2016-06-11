@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -21,7 +21,7 @@ include "ldapbind.inc";
 
 $subj=`/usr/bin/openssl x509 -in /etc/openssl/newcerts/$cert.pem  -noout -subject`;
 $subj=chop($subj);
-$x509dn=split("/",$subj);
+$x509dn=preg_split("/\//",$subj);
 array_shift($x509dn);
 
 $search=join(")(",$x509dn);
@@ -40,4 +40,4 @@ if ($cinf[0] != "") {
 } else {
   header("Location: https://$SERVER_NAME:666/auth/index.php?navpage=ldap/ennav.php");
 }
-%>
+?>

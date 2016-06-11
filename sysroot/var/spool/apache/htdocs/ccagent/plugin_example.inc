@@ -1,7 +1,7 @@
-<%
-function plug_div() {%>
+<?php
+function plug_div() {?>
   <TABLE WIDTH=100% CELLPADDING=0 CELLSPACING=0>
-<%
+<?php
   $now=time();
   $dnow=new DateTime("@$now");
 
@@ -44,24 +44,24 @@ function plug_div() {%>
     print "<TD>&nbsp;</TD>\n";
   }
   print "</TR>\n";
-%>
-  </TABLE><%
+?>
+  </TABLE><?php
 }
 
-function plug_js() {%>
+function plug_js() {?>
 function subcat(catid) {
   popup(null,450,450);
   document.hpcats.cat.value=catid;
   AJAX.senddata('popUpDivContent','hpcats','/ccadmin/poc.php', false);
 }
-<%
+<?php
 }
 
-function plug_form() {%>
+function plug_form() {?>
 <FORM METHOD=POST NAME=hpcats>
 <INPUT TYPE=HIDDEN NAME=cat>
 </FORM>
-<%
+<?php
 }
 
 $plug_t="Customer Intelegence";

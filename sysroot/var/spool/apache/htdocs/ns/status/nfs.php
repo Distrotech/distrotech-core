@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -18,17 +18,17 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
     system("/usr/sbin/nfsstat");
-%>
+?>
 
-<%
+<?php
     system("/usr/sbin/nfsstat -o net");
-%>
+?>
 
-<%
+<?php
     system("/usr/sbin/nfsstat -o fh");
-%>
+?>
 
-<%
+<?php
     system("/usr/sbin/nfsstat -o rc");
-%>
+?>
 

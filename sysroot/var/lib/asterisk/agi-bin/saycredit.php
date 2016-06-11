@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -25,4 +25,4 @@ if (! isset($agi)) {
 
 include "/var/lib/asterisk/agi-bin/functions.inc";
 play_credit($username);
-%>
+?>

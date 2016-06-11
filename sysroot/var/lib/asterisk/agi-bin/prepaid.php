@@ -161,7 +161,7 @@ function getuserdest() {
     //OH323 Calls are trunks so no IVR the username/destination is in the h323cdr
     $noivr=1;
     list($proto,$epid,$ipinf)=preg_split("/[\/@]/",$channel);
-    list($ipaddr)=split("-",$ipinf);
+    list($ipaddr)=preg_split("/-/",$ipinf);
     
 
     $oh323callid=getagivar("OH323_CALLID");
@@ -390,7 +390,7 @@ function authorize_call($tariffcode, $phonenumber, $username, $reseller){
       } else {
         $localrate=odbcquery("SELECT CASE WHEN(to_char(now(), 'HH24:MI:SS') >= peakstart AND to_char(now(), 'HH24:MI:SS') <= peakend AND extract('dow' FROM now()) ~ peakdays ) THEN peakmin||':'||peakperiod||':'||peaksec ELSE offpeakmin||':'||offpeakperiod||':'||offpeaksec END,'Telkom',-1 FROM localrates where countrycode = '" . $qresult[1] . "' AND subcode = '" . $qresult[2] . "'");
       }
-      list($locmin,$locperiod,$locrate)=split(":",$localrate[0]);
+      list($locmin,$locperiod,$locrate)=preg_split("/:/",$localrate[0]);
       $freemin[0]=0;
       $freemin[1]=ceil($locmin/$locrate);
       $freemin[2]=$locperiod;
@@ -641,4 +641,4 @@ function create_call($callauth,$reseller){
   }
   return 0;
 }
-%>
+?>

@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -53,16 +53,16 @@
 //  print $getcdrq . "<P>";
   $getcdr=pg_query($db,$getcdrq);
 
-%>
+?>
 <FORM NAME=pform METHOD=POST>
 <INPUT TYPE=HIDDEN NAME=print>
-<INPUT TYPE=HIDDEN NAME=date VALUE="<%print $date;%>">
-<INPUT TYPE=HIDDEN NAME=disppage VALUE="<%print $showpage;%>">
-<INPUT TYPE=HIDDEN NAME=nomenu VALUE="<%if ($_POST['nomnenu'] < 2) {print $_POST['nomenu'];}%>">
+<INPUT TYPE=HIDDEN NAME=date VALUE="<?php print $date;?>">
+<INPUT TYPE=HIDDEN NAME=disppage VALUE="<?php print $showpage;?>">
+<INPUT TYPE=HIDDEN NAME=nomenu VALUE="<?php if ($_POST['nomnenu'] < 2) {print $_POST['nomenu'];}?>">
 </FORM>
 <CENTER>
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
-<TR CLASS=list-color2><%
+<TR CLASS=list-color2><?php
 
   print "<TH ALIGN=LEFT CLASS=heading-body2>" . _("Call Leg") . "</TH>";
   print "<TH ALIGN=LEFT CLASS=heading-body2>" . _("Extension") . "</TH>";
@@ -144,4 +144,4 @@
   print "</TH></TR>\n";
 
   print "</TABLE>";
-%>
+?>

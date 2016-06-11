@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -35,7 +35,7 @@ if ((isset($_POST['addcredit'])) && ($_POST['exchangerate'] > 0)){
   pg_query($db,"UPDATE reseller SET credit=" . $_POST['credit'] . ",exchangerate=" . $_SESSION['rexrate'] . " WHERE id= 0 ");
   pg_query($db,"UPDATE reseller SET resetcredit=" . $_POST['credit'] . ",exchangerate=" . $_SESSION['rexrate'] . " WHERE id= 0 ");
   $_POST['credit']=sprintf("%0.2f",$_POST['credit']/10000);
-%>
+?>
 <CENTER>
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <TR CLASS=list-color2>
@@ -43,15 +43,15 @@ if ((isset($_POST['addcredit'])) && ($_POST['exchangerate'] > 0)){
 </TR>
 <TR CLASS=list-color1>
 <TD WIDTH=50%>Credit Avaialable</TD>
-<TD WIDTH=50% ALIGN=LEFT><%print $_POST['credit'];%></TD>
+<TD WIDTH=50% ALIGN=LEFT><?php print $_POST['credit'];?></TD>
 <TR CLASS=list-color2>
 <TD WIDTH=50%>Exchange Rate</TD>
-<TD WIDTH=50% ALIGN=LEFT><%print $_POST['exchangerate'];%></TD>
+<TD WIDTH=50% ALIGN=LEFT><?php print $_POST['exchangerate'];?></TD>
 </TR>
 </TABLE>
-<%
+<?php
 } else {
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=acredit onsubmit="ajaxsubmit(this.name);return false">
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
@@ -64,9 +64,9 @@ if ((isset($_POST['addcredit'])) && ($_POST['exchangerate'] > 0)){
 </TD></TR>
 <TR CLASS=list-color2>
   <TD>Exchange Rate</TD>
-  <TD><INPUT TYPE=TEXT NAME=exchangerate VALUE="<%print $_SESSION['rexrate'];%>"></TD>
+  <TD><INPUT TYPE=TEXT NAME=exchangerate VALUE="<?php print $_SESSION['rexrate'];?>"></TD>
 <TR CLASS=list-color1>
 <TD ALIGN=MIDDLE COLSPAN=2><INPUT TYPE=SUBMIT NAME=addcredit VALUE="Add Credit"></TD>
 </TABLE>
-</FORM><%
-}%>
+</FORM><?php
+}?>

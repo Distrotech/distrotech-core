@@ -31,6 +31,12 @@ if [ ! -e /dev/fd ];then
   ln -s /proc/self/fd /dev
 fi;
 
+#Set time to last time if bad rtc
+if [ -e /etc/last.time ] && [ /etc/last.time -nt /dev/null ];then
+  date `cat /etc/last.time` > /dev/null 2>&1
+  touch /dev/null
+fi
+
 #Disable screen blanking till later
 /usr/bin/setterm -blank 0
 

@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -50,21 +50,21 @@ for($lacnt=0;$lacnt<count($iarr2);$lacnt++) {
   $vadminattr[$iarr2[$lacnt]]=1;
 }
 
-%>
+?>
 <FORM METHOD=POST NAME=laccform onsubmit="ajaxsubmit(this.name);return false">
-<INPUT TYPE=HIDDEN NAME=classi VALUE="<%print $euser;%>">
+<INPUT TYPE=HIDDEN NAME=classi VALUE="<?php print $euser;?>">
 <CENTER>
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
 <TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body>
-<%
+<?php
   if ($ADMIN_USER == "admin") {
     print _("Editing Access Control");
   } else {
     print _("Viewing Access Control");
   } 
-%>
+?>
 </TH></TR>
-<%
+<?php
   $iarr=array("dialupAccess","accountSuspended","maxAliases","maxMailBoxes","maxWebAliases");
   $dnarr=array("dn","accountSuspended","dialupAccess");
   $info=strtolower($info);
@@ -79,46 +79,46 @@ for($lacnt=0;$lacnt<count($iarr2);$lacnt++) {
     $susstatus=$dinfo[0]["accountsuspended"][0];
 
     if (($susstatus == "suspended") && ($accountSuspended ==  "")) {
-%>
+?>
       <SCRIPT>
         alert("Account Unsuspentions Are Not Real Time\nChanges Will Become Effective On The Next System Resync\nApprox Within 10 Minutes");
       </SCRIPT>
-<%
+<?php
       $accountSuspended="no";
     } else if ((($susstatus == "unsuspended") || ($susstatus == "")) && ($accountSuspended ==  "on")) {
-%>
+?>
       <SCRIPT>
         alert("Account Suspentions Are Not Real Time\nChanges Will Become Effective On The Next System Resync\nApprox Within 10 Minutes");
       </SCRIPT>
-<%
+<?php
       $accountSuspended="yes";
     } else if (($susstatus == "yes") && ($accountSuspended ==  "on")) {
-%>
+?>
       <SCRIPT>
         alert("Account Suspention Is Pending\nChanges Will Become Effective On The Next System Resync\nApprox Within 10 Minutes");
       </SCRIPT>
-<%
+<?php
       $accountSuspended="yes";
     } else if (($susstatus == "no") && ($accountSuspended ==  "")) {
-%>
+?>
       <SCRIPT>
         alert("Account Unsuspention Is Pending\nChanges Will Become Effective On The Next System Resync\nApprox Within 10 Minutes");
       </SCRIPT>
-<%
+<?php
       $accountSuspended="no";
     } else if (($susstatus == "yes") && ($accountSuspended ==  "")) {
-%>
+?>
       <SCRIPT>
         alert("Account Suspention Was Pending\nSuspention Has Been Canceled");
       </SCRIPT>
-<%
+<?php
       $accountSuspended="unsuspended";
     } else if (($susstatus == "no") && ($accountSuspended ==  "on")) {
-%>
+?>
       <SCRIPT>
         alert("Account Unsuspention Was Pending\nSuspention Will Continue");
       </SCRIPT>
-<%
+<?php
       $accountSuspended="suspended";
     } else if ($susstatus == "on") {
       $accountSuspended="yes";
@@ -130,17 +130,17 @@ for($lacnt=0;$lacnt<count($iarr2);$lacnt++) {
 
     for ($i=0; $i < count($iarr); $i++) {
       if (($cbox[$iarr[$i]]) && ($iarr[$i] != "accountSuspended")) {
-        if ($$iarr[$i] == "on") {
-          $$iarr[$i]="yes";
+        if (${$iarr[$i]} == "on") {
+          ${$iarr[$i]}="yes";
         } else {
-          $$iarr[$i]="no";
+          ${$iarr[$i]}="no";
         }
-      } else if (($iarr[$i] != "accountSuspended") && ($$iarr[$i] == "")) {
-        $$iarr[$i]="0";
+      } else if (($iarr[$i] != "accountSuspended") && (${$iarr[$i]} == "")) {
+        ${$iarr[$i]}="0";
       }
-      if ($$iarr[$i] != "") {
+      if (${$iarr[$i]} != "") {
         if (($vadmin == "0") || ($vadminattr[strtolower($iarr[$i])])) {
-          $minfo[$iarr[$i]]=$$iarr[$i];
+          $minfo[$iarr[$i]]=${$iarr[$i]};
           
         }
       }
@@ -158,7 +158,7 @@ for($lacnt=0;$lacnt<count($iarr2);$lacnt++) {
     }
   } else {
     $dninf=ldap_explode_dn($dn,0);
-    if (eregi("^o=(.*)",$dninf[1],$vzinf)) {
+    if (preg_match("/^o=(.*)/i",$dninf[1],$vzinf)) {
       $sr=ldap_search($ds,"cn=" .  $vzinf[1] . ",ou=vadmin","(&(objectClass=virtZoneSettings)(cn=" .  $vzinf[1] . "))",$iarr);
       $iinfo = ldap_get_entries($ds, $sr);
       $sr2=ldap_search($ds,$dn,"(&(objectClass=officePerson)(uid=$euser))",$iarr2);
@@ -180,31 +180,31 @@ for($lacnt=0;$lacnt<count($iarr2);$lacnt++) {
     } else {
       $bcolor=" CLASS=list-color1";
     }
-%>
-    <TR<%print $bcolor;%>>
-      <TD WIDTH=75% onmouseover="myHint.show('<%print strtolower($iarr[$i]);%>')" onmouseout="myHint.hide()">
-        <% print $disc[$i];%>
+?>
+    <TR<?php print $bcolor;?>>
+      <TD WIDTH=75% onmouseover="myHint.show('<?php print strtolower($iarr[$i]);?>')" onmouseout="myHint.hide()">
+        <?php print $disc[$i];?>
       </TD>
       <TD>
-<%
+<?php
 	$attr=strtolower($iarr[$i]);
-        $$attr=$iinfo[0][$attr][0];
+        ${$attr}=$iinfo[0][$attr][0];
         if (($ADMIN_USER == "admin") && (($vadmin == "0") || ($vadminattr[$attr]))) {
           if ($cbox[$iarr[$i]]) {
             if ($attr == "accountsuspended") {
               print "<INPUT TYPE=HIDDEN NAME=susstatus VALUE=\"" . $iinfo[0][$attr][0] . "\">";
             }
-%>
-            <INPUT TYPE=CHECKBOX NAME=<%print $iarr[$i];%><%if (($$attr != "no") && ($$attr != "") && ($$attr !="unsuspended") && ($$attr !="unset"))  {print " CHECKED";};%>>
-<%
+?>
+            <INPUT TYPE=CHECKBOX NAME=<?php print $iarr[$i];?><?php if ((${$attr} != "no") && (${$attr} != "") && (${$attr} !="unsuspended") && (${$attr} !="unset"))  {print " CHECKED";};?>>
+<?php
            } else {
-%>
-            <INPUT TYPE=TEXT NAME=<%print $iarr[$i];%> VALUE="<%print $iinfo[0][$attr][0];%>">
-<%
+?>
+            <INPUT TYPE=TEXT NAME=<?php print $iarr[$i];?> VALUE="<?php print $iinfo[0][$attr][0];?>">
+<?php
            }
         } else {
           if ($cbox[$iarr[$i]]) {
-            if (($$attr != "no") && ($$attr != "") && ($$attr !="unsuspended") && ($$attr !="unset")) {
+            if ((${$attr} != "no") && (${$attr} != "") && (${$attr} !="unsuspended") && (${$attr} !="unset")) {
               print "Yes";
             } else {
               print "No";
@@ -213,9 +213,9 @@ for($lacnt=0;$lacnt<count($iarr2);$lacnt++) {
             print $iinfo[0][$attr][0];
           }
         }
-%>
+?>
       </TD></TR>
-<%
+<?php
   }
   $rem=$i % 2;
   if ($rem == 1) {
@@ -226,10 +226,10 @@ for($lacnt=0;$lacnt<count($iarr2);$lacnt++) {
     $bcol[1]=" CLASS=list-color2";
   }
   if ($ADMIN_USER == "admin") {
-%>
-<TR <%print $bcol[2];%>><TH COLSPAN=2>  
+?>
+<TR <?php print $bcol[2];?>><TH COLSPAN=2>
   <INPUT TYPE=SUBMIT VALUE="Modify" NAME=modrec></TH></TR>
-<%
+<?php
   }
-%>
+?>
 </TABLE></FORM>

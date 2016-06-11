@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -27,7 +27,7 @@ if (($router != "") && ($channel != "") && ($dbrow != "")) {
     }
     pg_query($db,"UPDATE gsmchannels SET " . $dbrow . "=now() + interval '" . $dbval . "',faultcount=0 WHERE router='" . $router . "' AND channel='" . $channel . "'");
   } else if ($dbrow == "calltime") {
-    $ctdata=split(":",$dbval);
+    $ctdata=preg_split("/:/",$dbval);
     if (count($ctdata) == 2) {
       if ($ctdata > 0) {
         $dbval=$ctdata[0]*60+$ctdata[1];
@@ -48,7 +48,7 @@ if (($router != "") && ($channel != "") && ($dbrow != "")) {
 
 $getchanq=pg_query($db,"SELECT router,channel,calltime,inuse,starttime,endtime,CASE WHEN (expires > now()) THEN date_trunc('seconds',expires-now()) else date_trunc('seconds',now()-expires) END,CASE WHEN (now() > outofservice) THEN date_trunc('seconds',now()-outofservice) ELSE date_trunc('seconds',outofservice-now()) END,regex,faultcount,expires>now(),outofservice>now() from gsmchannels ORDER BY router,channel");
 
-%>
+?>
 
 <CENTER>
 <FORM METHOD=POST NAME=gsmchan>
@@ -60,22 +60,22 @@ $getchanq=pg_query($db,"SELECT router,channel,calltime,inuse,starttime,endtime,C
 
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
   <TR CLASS=list-color2>
-    <TH CLASS=heading-body COLSPAN=9><%print _("Asterisk GSM Channel Status");%></TH>
+    <TH CLASS=heading-body COLSPAN=9><?php print _("Asterisk GSM Channel Status");?></TH>
   </TR>
 
 <TR CLASS=list-color1>
-<TH CLASS=heading-body2><%print _("Channel");%></TH>
-<TH CLASS=heading-body2><%print _("Calltime");%></TH>
-<TH CLASS=heading-body2><%print _("Inuse");%></TH>
-<TH CLASS=heading-body2><%print _("Start time");%></TH>
-<TH CLASS=heading-body2><%print _("End Time");%></TH>
-<TH CLASS=heading-body2><%print _("Expire(d/s)");%></TH>
-<TH CLASS=heading-body2><%print _("In/Out Of Service");%></TH>
-<TH CLASS=heading-body2><%print _("Number Match");%></TH>
-<TH CLASS=heading-body2><%print _("Faultcount");%></TH>
+<TH CLASS=heading-body2><?php print _("Channel");?></TH>
+<TH CLASS=heading-body2><?php print _("Calltime");?></TH>
+<TH CLASS=heading-body2><?php print _("Inuse");?></TH>
+<TH CLASS=heading-body2><?php print _("Start time");?></TH>
+<TH CLASS=heading-body2><?php print _("End Time");?></TH>
+<TH CLASS=heading-body2><?php print _("Expire(d/s)");?></TH>
+<TH CLASS=heading-body2><?php print _("In/Out Of Service");?></TH>
+<TH CLASS=heading-body2><?php print _("Number Match");?></TH>
+<TH CLASS=heading-body2><?php print _("Faultcount");?></TH>
 </TR>
 
-<%
+<?php
 $bcolor[0]="CLASS=list-color2";
 $bcolor[1]="CLASS=list-color1";
 
@@ -157,7 +157,7 @@ if ($_POST['print'] != "1") {
   print "<TR " . $bcolor[$r % 2]  . "><TH COLSPAN=9 CLASS=heading-body><INPUT TYPE=BUTTON NAME=pbutton VALUE=\"" . _("Print") . "\" ONCLICK=\"printpage(document.gsmchan)\"></TH></TR>";
 }
 
-%>
+?>
 </TABLE></FORM>
 <FORM NAME=gsmform METHOD=POST>
   <INPUT TYPE=HIDDEN NAME=router>

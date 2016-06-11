@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -60,31 +60,31 @@ faxcover -C /var/spool/samba/share/fax-software/faxcover.ps -t to -l thereloc -L
 */
 
     fclose($socket);
-%>
+?>
     <SCRIPT>
       window.close();
     </SCRIPT>
-<%
-  } else {%>
-    <link rel="stylesheet" type="text/css" href="/style.php?style=<%print $style;%>">
+<?php
+  } else {?>
+    <link rel="stylesheet" type="text/css" href="/style.php?style=<?php print $style;?>">
     <script language="JavaScript" src="/hints.js" type="text/javascript"></script>
     <script language="JavaScript" src="/hints_cfg.php?disppage=reception%2Fc2c.php" type="text/javascript"></script>
     <CENTER>
     <FORM METHOD=POST enctype="multipart/form-data">
     <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
       <TR CLASS=list-color2>
-        <TH COLSPAN=2 ALIGN=CENTER CLASS=heading-body><%print _("Send PS Fax");%></TH>
+        <TH COLSPAN=2 ALIGN=CENTER CLASS=heading-body><?php print _("Send PS Fax");?></TH>
       </TR><TR  CLASS=list-color1>
-        <TD ALIGN=LEFT onmouseover="myHint.show('QC0')" onmouseout="myHint.hide()"><%print _("Fax Number");%></TD>
+        <TD ALIGN=LEFT onmouseover="myHint.show('QC0')" onmouseout="myHint.hide()"><?php print _("Fax Number");?></TD>
         <TD><INPUT TYPE=TEXT NAME=numtocall></TD>
       </TR><TR  CLASS=list-color2>
-        <TD ALIGN=LEFT onmouseover="myHint.show('QC1')" onmouseout="myHint.hide()"><%print _("PS File To Fax");%></TD>
+        <TD ALIGN=LEFT onmouseover="myHint.show('QC1')" onmouseout="myHint.hide()"><?php print _("PS File To Fax");?></TD>
         <TD><INPUT TYPE=FILE NAME=tofax></TD>
       </TR><TR CLASS=list-color1>
         <TD COLSPAN=2 ALIGN=CENTER><INPUT TYPE=SUBMIT></TD>
       </TR>
     </TABLE>
     </FORM>
-    <%
+    <?php
   }
-%>
+?>

@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -19,17 +19,17 @@
 */
 
 include_once "auth.inc";
-%>
+?>
 
 <CENTER>
 <FORM METHOD=POST NAME=crouteform onsubmit="ajaxsubmit(this.name);return false">
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
   <TR CLASS=list-color2>
-    <TH COLSPAN=2 CLASS=heading-body><%print _("Asterisk PBX Inter Branch Configuration");%></TH>
+    <TH COLSPAN=2 CLASS=heading-body><?php print _("Asterisk PBX Inter Branch Configuration");?></TH>
   </TR>
   <TR CLASS=list-color1>
 
-<%
+<?php
 if ((isset($modcompany)) || (isset($delbranch))){
   if ($newkey != "") {
     pg_query($db,"INSERT INTO astdb (family,value,key) VALUES ('Company','$newkey','$fbranch')");
@@ -39,42 +39,42 @@ if ((isset($modcompany)) || (isset($delbranch))){
     $key=$company;
   }
   $qgetdata=pg_query($db,"SELECT key,fullname FROM astdb LEFT OUTER JOIN users ON (key=name) WHERE family='Company' AND value='$key' ORDER BY fullname");
-%>
-  <TD><%print _("Select Branch");%></TD>
+?>
+  <TD><?php print _("Select Branch");?></TD>
   <TD><SELECT NAME=key>
-  <%
+  <?php
   $dnum=pg_num_rows($qgetdata);
   for($i=0;$i<$dnum;$i++){
     $getdata=pg_fetch_array($qgetdata,$i);
     print "<OPTION VALUE=" . $getdata[0] . ">" . $getdata[1] . "(" . $getdata[0] . ")</OPTION>"; 
   }
-  %>
+  ?>
   </SELECT> 
-  <INPUT TYPE=HIDDEN NAME=company VALUE="<%print $key;%>">
+  <INPUT TYPE=HIDDEN NAME=company VALUE="<?php print $key;?>">
   </TR>
   <TR CLASS=list-color2>
-  <TD><%print _("New Branch");%></TD>
+  <TD><?php print _("New Branch");?></TD>
   <TD><INPUT TYPE=TEXT NAME=newkey></TD>
   </TR>
   <TR CLASS=list-color1>
-  <TD><%print _("First Prefix For Branch");%></TD>
+  <TD><?php print _("First Prefix For Branch");?></TD>
   <TD><INPUT TYPE=TEXT NAME=fbranch></TD>
   </TR>
   <TR CLASS=list-color2>
-  <TD><%print _("Alias For Above Branch");%></TD>
+  <TD><?php print _("Alias For Above Branch");?></TD>
   <TD><INPUT TYPE=TEXT NAME=alias></TD>
   </TR>
   <TR CLASS=list-color1>
-  <TD><%print _("Send DTMF On Answer For This Branch");%></TD>
+  <TD><?php print _("Send DTMF On Answer For This Branch");?></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=dtmf></TD>
   </TR>
   <TR CLASS=list-color2>
     <TD ALIGN=MIDDLE COLSPAN=2>
       <INPUT TYPE=RESET>
-      <INPUT TYPE=SUBMIT onclick=this.name='modbranch' VALUE="<%print _("Modify");%>">
-      <INPUT TYPE=SUBMIT onclick=this.name=delbranch' VALUE="<%print _("Delete");%>">
+      <INPUT TYPE=SUBMIT onclick=this.name='modbranch' VALUE="<?php print _("Modify");?>">
+      <INPUT TYPE=SUBMIT onclick=this.name=delbranch' VALUE="<?php print _("Delete");?>">
     </TD>
-<%
+<?php
 } elseif ((isset($modbranch)) || (isset($delpre))) {
   if ($newkey != "") {
     pg_query($db,"INSERT INTO astdb (family,value,key) VALUES ('Company','$company','$newkey')");
@@ -97,40 +97,40 @@ if ((isset($modcompany)) || (isset($delbranch))){
     }
   }
   $qgetdata=pg_query($db,"SELECT key FROM astdb WHERE family='$company' AND value='$key' ORDER BY key");
-%>
-  <TD><%print _("Select Prefix To Modify");%></TD>
+?>
+  <TD><?php print _("Select Prefix To Modify");?></TD>
   <TD><SELECT NAME=key>
-  <OPTION VALUE=""><%print _("Add New Prefix");%></OPTION>
-  <%
+  <OPTION VALUE=""><?php print _("Add New Prefix");?></OPTION>
+  <?php
   $dnum=pg_num_rows($qgetdata);
   for($i=0;$i<$dnum;$i++){
     $getdata=pg_fetch_array($qgetdata,$i);
     print "<OPTION VALUE=" . $getdata[0] . ">" . $getdata[0] . "</OPTION>"; 
   }
-  %>
+  ?>
   </SELECT> 
   </TR>
   <TR CLASS=list-color2>
-  <TD><%print _("New Branch");%></TD>
+  <TD><?php print _("New Branch");?></TD>
   <TD><INPUT TYPE=TEXT NAME=newkey></TD>
   </TR>
   <TR CLASS=list-color1>
-  <TD><%print _("Alias For Above Branch");%></TD>
+  <TD><?php print _("Alias For Above Branch");?></TD>
   <TD><INPUT TYPE=TEXT NAME=alias></TD>
   </TR>
   <TR CLASS=list-color2>
-  <TD><%print _("Send DTMF On Answer For This Branch");%></TD>
+  <TD><?php print _("Send DTMF On Answer For This Branch");?></TD>
   <TD><INPUT TYPE=CHECKBOX NAME=dtmf></TD>
   </TR>
-  <INPUT TYPE=HIDDEN NAME=company VALUE="<%print $company;%>">
-  <INPUT TYPE=HIDDEN NAME=branch VALUE="<%print $key;%>">
+  <INPUT TYPE=HIDDEN NAME=company VALUE="<?php print $company;?>">
+  <INPUT TYPE=HIDDEN NAME=branch VALUE="<?php print $key;?>">
   <TR CLASS=list-color1>
     <TD ALIGN=MIDDLE COLSPAN=2>
       <INPUT TYPE=RESET>
-      <INPUT TYPE=SUBMIT onclick=this.name='modpre' VALUE="<%print _("Modify/Add");%>">
-      <INPUT TYPE=SUBMIT onclick=this.name='delpre' VALUE="<%print _("Delete");%>">
+      <INPUT TYPE=SUBMIT onclick=this.name='modpre' VALUE="<?php print _("Modify/Add");?>">
+      <INPUT TYPE=SUBMIT onclick=this.name='delpre' VALUE="<?php print _("Delete");?>">
     </TD>
-<%
+<?php
 } elseif ((isset($modpre)) || (isset($modup)))  {
   if ($newkey != "") {
     pg_query($db,"INSERT INTO astdb (family,value,key) VALUES ('$company','$branch','$newkey')");
@@ -167,58 +167,58 @@ if ((isset($modcompany)) || (isset($delbranch))){
     }
     $bpre=$key;
   }
-%>
+?>
   <TR CLASS=list-color1>
-  <TD><%print _("Alias");%></TD>
-  <TD><INPUT TYPE=TEXT NAME=alias VALUE="<%print $alias;%>"></TD>
+  <TD><?php print _("Alias");?></TD>
+  <TD><INPUT TYPE=TEXT NAME=alias VALUE="<?php print $alias;?>"></TD>
   </TR>
   <TR CLASS=list-color2>
-  <TD><%print _("Send DTMF On Answer");%></TD>
-  <TD><INPUT TYPE=CHECKBOX NAME=dtmf <%print $dtmf;%>></TD>
+  <TD><?php print _("Send DTMF On Answer");?></TD>
+  <TD><INPUT TYPE=CHECKBOX NAME=dtmf <?php print $dtmf;?>></TD>
   </TR>
-  <INPUT TYPE=HIDDEN NAME=company VALUE="<%print $company;%>">
-  <INPUT TYPE=HIDDEN NAME=bpre VALUE="<%print $bpre;%>">
+  <INPUT TYPE=HIDDEN NAME=company VALUE="<?php print $company;?>">
+  <INPUT TYPE=HIDDEN NAME=bpre VALUE="<?php print $bpre;?>">
   <TR CLASS=list-color1>
     <TD ALIGN=MIDDLE COLSPAN=2>
       <INPUT TYPE=RESET>
-      <INPUT TYPE=SUBMIT onclick=this.name='modup' VALUE="<%print _("Modify");%>">
+      <INPUT TYPE=SUBMIT onclick=this.name='modup' VALUE="<?php print _("Modify");?>">
     </TD>
-<%
+<?php
 } else {
   if ((isset($delcompany)) && ($key != "")) {
     pg_query($db,"DELETE FROM astdb WHERE (family='$key') OR (family='Company' AND value='$key')");
   }
   $qgetdata=pg_query($db,"SELECT DISTINCT value FROM astdb WHERE family='Company' ORDER BY value");
-%>
-  <TD><%print _("Select Company To Edit");%></TD>
+?>
+  <TD><?php print _("Select Company To Edit");?></TD>
   <TD><SELECT NAME=key>
-  <OPTION VALUE=""><%print _("Add New Company");%></OPTION>
-  <%
+  <OPTION VALUE=""><?php print _("Add New Company");?></OPTION>
+  <?php
   $dnum=pg_num_rows($qgetdata);
   for($i=0;$i<$dnum;$i++){
     $getdata=pg_fetch_array($qgetdata,$i);
     print "<OPTION VALUE=" . $getdata[0] . ">" . $getdata[0] . "</OPTION>"; 
   }
-  %>
+  ?>
   </SELECT> 
   </TR>
   <TR CLASS=list-color2>
-  <TD><%print _("New Company Number");%></TD>
+  <TD><?php print _("New Company Number");?></TD>
   <TD><INPUT TYPE=TEXT NAME=newkey></TD>
   </TR>
   <TR CLASS=list-color1>
-  <TD><%print _("First Branch Number");%></TD>
+  <TD><?php print _("First Branch Number");?></TD>
   <TD><INPUT TYPE=TEXT NAME=fbranch></TD>
   </TR>
   <TR CLASS=list-color2>
     <TD ALIGN=MIDDLE COLSPAN=2>
       <INPUT TYPE=RESET>
-      <INPUT TYPE=SUBMIT onclick=this.name='modcompany' VALUE="<%print _("Modify");%>">
-      <INPUT TYPE=SUBMIT onclick=this.name='delcompany' VALUE="<%print _("Delete");%>">
+      <INPUT TYPE=SUBMIT onclick=this.name='modcompany' VALUE="<?php print _("Modify");?>">
+      <INPUT TYPE=SUBMIT onclick=this.name='delcompany' VALUE="<?php print _("Delete");?>">
     </TD>
-<%
+<?php
 }
-%>
+?>
 </TR>
 </TABLE>
 </FORM>

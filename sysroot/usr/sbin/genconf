@@ -1014,6 +1014,21 @@ if ((@eidat[1] eq "0.0.0.0") && ($zcipaddr ne "")) {
   $interface{$sysconf{'Internal'}}=join("|",@eidat);
 }
 
+@astmoddirs=("lib64/x86_64","libx32/i686","lib/i686","lib64","lib64");
+
+foreach $libdir (@astmoddirs) {
+  for($ver=15;$ver >= 10;$ver--) {
+    if ($astmoddir eq "") {
+      $astmoddir="/usr/" . $libdir . "/asterisk/modules-" . $ver;
+    }
+    if ( ! -d $astmoddir ) {
+      $astmoddir="";
+    } else {
+      break;
+    }
+  }
+}
+
 print SV "DOM_WG=\"" . $smboption{'Domain'} . "\";\n";
 print SV "DTYPE=\"" . $smboption{'Security'} . "\";\n";
 print SV "DOM_ADS=\"" . $smboption{'ADSRealm'} . "\";\n";
@@ -1881,14 +1896,14 @@ EOF
 )>/etc/openldap/ldap.conf
 
 (cat <<EOF
-<\%
+<?php
   \\\$ds=ldap_connect("ldap://$repmaster");    
   ldap_set_option(\\\$ds, LDAP_OPT_PROTOCOL_VERSION,3);
   \\\$LDAP_LIMIT_DN="$ldapserv{'limited'}";
   \\\$LDAP_LIMIT_PW="\${LDAPLIMPW}";
   \\\$LOCAL_DOMAIN="$dnsconf{'Domain'}";
   \\\$LDAP_BDN="$vsuf";
-\%>
+?>
 EOF
 )>/var/spool/apache/htdocs/ldap/ldapcon.inc
 chmod 600 /var/spool/apache/htdocs/ldap/ldapcon.inc
@@ -2002,14 +2017,14 @@ EOF
 )>/etc/openldap/ldap.conf
 
 (cat <<EOF
-<\%
+<?php
   \\\$ds=ldap_connect("ldaps://$repmaster");    
   ldap_set_option(\\\$ds, LDAP_OPT_PROTOCOL_VERSION,3);
   \\\$LDAP_LIMIT_DN="$ldapserv{'limited'}";
   \\\$LDAP_LIMIT_PW="\${LDAPLIMPW}";
   \\\$LOCAL_DOMAIN="$dnsconf{'Domain'}";
   \\\$LDAP_BDN="$vsuf";
-\%>
+?>
 EOF
 )>/var/spool/apache/htdocs/ldap/ldapcon.inc
 chmod 600 /var/spool/apache/htdocs/ldap/ldapcon.inc
@@ -2044,19 +2059,19 @@ chmod 644 /etc/ldap.conf
 chown 0.139 /etc/ldap.conf
 
 (cat <<EOF
-<%
+<?php
   \\\$db=pg_connect("host=127.0.0.1 dbname=exchange user=exchange password=$exchangepass sslmode=allow");
-%>
+?>
 EOF
 ) > /var/spool/apache/htdocs/ldap/pgauth.inc
 chmod 600 /var/spool/apache/htdocs/ldap/pgauth.inc
 chown www.root /var/spool/apache/htdocs/ldap/pgauth.inc
 
 (cat <<EOF
-<%
+<?php
   \\\$db=mysql_connect("$sqlserver","admin","$sqladminpass");
   mysql_select_db("asterisk");
-%>
+?>
 EOF
 ) > /var/spool/apache/htdocs/ldap/myauth.inc
 chmod 600 /var/spool/apache/htdocs/ldap/myauth.inc
@@ -2064,23 +2079,23 @@ chown www.root /var/spool/apache/htdocs/ldap/myauth.inc
 
 
 (cat <<EOF
-<%
+<?php
   date_default_timezone_set("Africa/Johannesburg");
   \\\$dtime=getdate();
   \\\$syshname="$dnsconf{'Hostname'}";
   \\\$db=pg_connect("host=$sqlserver dbname=asterisk user=asterisk password=$sqlvoippass sslmode=allow");
-%>
+?>
 EOF
 ) > /var/spool/apache/htdocs/cdr/auth.inc
 chmod 600 /var/spool/apache/htdocs/cdr/auth.inc
 chown www.root /var/spool/apache/htdocs/cdr/auth.inc
 
 (cat <<EOF
-<%
+<?php
   date_default_timezone_set("Africa/Johannesburg");
   \\\$dtime=getdate();
   \\\$db=pg_connect("host=$sqlserver dbname=asterisk user=asterisk password=$sqlvoippass sslmode=allow");
-%>
+?>
 EOF
 ) > /var/lib/asterisk/agi-bin/auth.inc
 chmod 600 /var/lib/asterisk/agi-bin/auth.inc
@@ -2120,20 +2135,6 @@ EOF
 #if [ -e /etc/asterisk/res_odbc.conf.local ];then
 #  cat /etc/asterisk/res_odbc.conf.local >> /etc/asterisk/res_odbc.conf
 #fi;
-
-(cat << EOF
-#!/usr/bin/perl
-
-use DBI;
-
-\\\$dbh = DBI->connect("DBI:ODBC:Asterisk","asterisk","$sqlvoippass");
-\\\$dbh->do("UPDATE users SET password='\@ARGV[2]' WHERE mailbox = '\@ARGV[1]' AND context='\@ARGV[0]'");
-
-EOF
-)>/usr/sbin/voippass
-chmod 700 /usr/sbin/voippass
-chown root.root /usr/sbin/voippass
-
 
 (cat << EOF
 #!/usr/bin/perl
@@ -2225,19 +2226,19 @@ fi;
 
 
 (cat <<EOF
-<%
+<?php
   \\\$link = mysql_connect("localhost", "logview", "$sqlulogdpass");
   mysql_select_db("networksentry_log");
-%>
+?>
 EOF
 )> /var/spool/apache/htdocs/logs/ulogauth.php
 chmod 640 /var/spool/apache/htdocs/logs/ulogauth.php
 chown www.www /var/spool/apache/htdocs/logs/ulogauth.php
 
 (cat <<EOF
-<%
+<?php
 \\\$db=pg_connect("host=$sqlradiusserv dbname=radius user=radius password=$sqlradiuspass sslmode=allow")
-%>
+?>
 EOF
 )> /var/spool/apache/htdocs/radius/opendb.inc
 chown www.www /var/spool/apache/htdocs/radius/opendb.inc
@@ -10319,7 +10320,6 @@ if ( -d "/usr/share/squid/errors/templates") {
 }
 
 print SC<<__EOB__;
-tcp_outgoing_address [::]
 hosts_file /etc/hosts
 cache_swap_low  80
 cache_swap_high 90
@@ -10481,7 +10481,7 @@ if (@pbypass[0] ne "") {
 #  print SC "http_access deny squidbypass\n";
 }
 
-#<%print "$squiddenyrule"%>
+#<?php print "$squiddenyrule"?>
 if (@pdeny[0] ne "")
   {
     print SC "http_access deny squiddeny\n";
@@ -11446,7 +11446,7 @@ sub printcrontab() {
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","/usr/sbin/uexpired");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","(mv /tmp/core* /var/cores/asterisk;rm -rf /tmp/clamav-* /tmp/php.log  /tmp/ps2fax*)");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","1","rm -rf /var/cores/asterisk/*");
-    printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","*/5","*","*","/usr/bin/mrtg /etc/mrtg.conf --confcache-file /tmp/mrtg.ok");
+    printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","*/5","*","*","(env LANG=C /usr/bin/mrtg /etc/mrtg.conf --confcache-file /tmp/mrtg.ok)");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","*/5","*","*","/usr/bin/rrdtc $sysconf{'External'}");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","*/5","*","*","/usr/bin/rrdlog");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","*/5","*","*","(/usr/bin/rrdvoip |/bin/bash)");
@@ -14453,7 +14453,7 @@ BDATE=`date +%Y-%m-%d`
 BFILE=/var/spool/backup/backup-\${BDATE}.tar
 
 if [ `"whoami"` == "root" ] || [ `"whoami"` == "admin" ];then
-  /usr/bin/pg_dump -U asterisk -h 127.0.0.1 -cDt users -t interbranch -t atatable -t qfeatures -t features -t astdb -t queues -t queue_members \\
+  /usr/bin/pg_dump -U asterisk -h 127.0.0.1 -cDt users -t voicemail -t interbranch -t atatable -t qfeatures -t features -t astdb -t queues -t queue_members \\
                    -t queue_table -t dynspan -t zapspan -t zapchan -t zapgroup -t gsmchannels -t provider -t speed_dial \\
                    -t trunk -t officehours -t cc_callerid |/usr/bin/grep -vE "(^\$)|(^--)" |/usr/bin/gzip -c > /var/spool/backup/pbxdata-\${BDATE}.sql.gz
 fi;
@@ -14572,7 +14572,7 @@ if ( $voipbackup eq "true") {
   print BUS "echo $fcnt VOIP Configuration\n";
   print BUS "/bin/touch /tmp/asterisk.psql.gz\n/bin/chmod 600 /tmp/asterisk.psql.gz\n";
   print BUS <<__EOF__;
-pg_dump -U asterisk -h 127.0.0.1 -dat users -t interbranch -t atatable -t qfeatures -t features -t astdb -t queue_members -t queue_tables -t officehours -t dynspan \\
+pg_dump -U asterisk -h 127.0.0.1 -dat users -t voicemail -t interbranch -t atatable -t qfeatures -t features -t astdb -t queue_members -t queue_tables -t officehours -t dynspan \\
                                  -t zapchan -t zapspan -t zapgroup -t gsmchannels -t trunk -t speed_dial -t localrates \\
                                  -t provider -t tariff -t tariffrate -t reseller |gzip -c |dd of=/tmp/asterisk.psql.gz
 
@@ -14917,13 +14917,75 @@ print AM<<__EOB__;
 autoload=yes
 
 ;Make sure the db bits are loaded.
-preload => res_config.so
+preload => func_periodic_hook.so
+preload => res_stun_monitor.so
+;preload => res_config.so
 preload => res_odbc.so
 preload => res_config_odbc.so
-preload => chan_local.so
-preload => chan_sip.so
-preload => chan_iax.so
-preload => chan_dahdi.so
+preload => app_voicemail.so
+;preload => chan_local.so
+;preload => chan_sip.so
+;preload => chan_iax.so
+;preload => chan_dahdi.so
+
+;PJSIP Dont Load
+noload => chan_pjsip.so
+noload => func_pjsip_aor.so
+noload => func_pjsip_contact.so
+noload => func_pjsip_endpoint.so
+noload => res_hep_pjsip.so
+noload => res_pjsip.so
+noload => res_pjsip_acl.so
+noload => res_pjsip_authenticator_digest.so
+noload => res_pjsip_caller_id.so
+noload => res_pjsip_config_wizard.so
+noload => res_pjsip_dialog_info_body_generator.so
+noload => res_pjsip_diversion.so
+noload => res_pjsip_dlg_options.so
+noload => res_pjsip_dtmf_info.so
+noload => res_pjsip_endpoint_identifier_anonymous.so
+noload => res_pjsip_endpoint_identifier_ip.so
+noload => res_pjsip_endpoint_identifier_user.so
+noload => res_pjsip_exten_state.so
+noload => res_pjsip_header_funcs.so
+noload => res_pjsip_keepalive.so
+noload => res_pjsip_log_forwarder.so
+noload => res_pjsip_logger.so
+noload => res_pjsip_messaging.so
+noload => res_pjsip_multihomed.so
+noload => res_pjsip_mwi.so
+noload => res_pjsip_mwi_body_generator.so
+noload => res_pjsip_nat.so
+noload => res_pjsip_notify.so
+noload => res_pjsip_one_touch_record_info.so
+noload => res_pjsip_outbound_authenticator_digest.so
+noload => res_pjsip_outbound_publish.so
+noload => res_pjsip_outbound_registration.so
+noload => res_pjsip_path.so
+noload => res_pjsip_pidf_body_generator.so
+noload => res_pjsip_pidf_digium_body_supplement.so
+noload => res_pjsip_pidf_eyebeam_body_supplement.so
+noload => res_pjsip_publish_asterisk.so
+noload => res_pjsip_pubsub.so
+noload => res_pjsip_refer.so
+noload => res_pjsip_registrar.so
+noload => res_pjsip_registrar_expire.so
+noload => res_pjsip_rfc3326.so
+noload => res_pjsip_sdp_rtp.so
+noload => res_pjsip_send_to_voicemail.so
+noload => res_pjsip_session.so
+noload => res_pjsip_sips_contact.so
+noload => res_pjsip_t38.so
+noload => res_pjsip_transport_websocket.so
+noload => res_pjsip_xpidf_body_generator.so
+noload => res_pjsip_phoneprov_provider.so
+
+noload => res_calendar_icalendar.so
+noload => res_calendar_ews.so
+noload => res_calendar_caldav.so
+noload => res_calendar_exchange.so
+
+noload => chan_alsa.so
 
 ;Fax Changes
 noload => app_faxdetect.so
@@ -14979,16 +15041,6 @@ __EOB__
 #noload => chan_oh323.so
 #noload => codec_speex.so
 #noload => app_fax.so
-
-if (( -e "/usr/lib64/x86_64/asterisk/modules-1.8/codec_g723.so") ||
-    ( -e "/usr/lib64/x86_64/asterisk/modules-10/codec_g723.so")) {
-  print AM ";Load g723\nload => codec_g723.so\n\n";
-}
-
-if (( -e "/usr/lib64/x86_64/asterisk/modules-1.8/codec_g729.so")  ||
-    ( -e "/usr/lib64/x86_64/asterisk/modules-10/codec_g729.so")) {
-  print AM ";Load g729\nload => codec_g729.so\n\n";
-}
 
 if ( ! -e "/dev/mISDN" )  {
   print AM<<__EOB__;
@@ -15132,7 +15184,7 @@ dbuser=asterisk
 dbpass=$sqlvoippass
 dbhost=$sqlvoipserv
 dbname=asterisk
-nat=yes
+nat=force_rport,comedia
 disallow=all
 rtcachefriends=yes
 vmexten=100
@@ -15162,6 +15214,7 @@ rtpholdtimeout=300
 alwaysauthreject=yes
 prematuremedia=no
 insecure=no
+session-expires=600
 __EOF__
 
 if ( -e "/etc/asterisk/res_stun_monitor.conf") {
@@ -15183,8 +15236,7 @@ if ( -d "/etc/openssl/voipca") {
   print SC "tlsenable=no\n";
 }
 
-if (( -e "/usr/lib64/x86_64/asterisk/modules-1.8/codec_g729.so")  ||
-    ( -e "/usr/lib64/x86_64/asterisk/modules-10/codec_g729.so")) {
+if ( -e $astmoddir . "/codec_g729.so") {
   print SC "allow=g729\n";
 }
 
@@ -15193,8 +15245,7 @@ print SC "allow=speex\n";
 print SC "allow=ilbc\n";
 print SC "allow=g726\n";
 
-if (( -e "/usr/lib64/x86_64/asterisk/modules-1.8/codec_g723.so") ||
-    ( -e "/usr/lib64/x86_64/asterisk/modules-10/codec_g723.so")) {
+if ( -e $astmoddir . "/codec_g723.so") {
   print SC "allow=g723.1\n";
 }
 
@@ -15287,7 +15338,7 @@ __EOB__
       if ( -e "/etc/asterisk/res_stun_monitor.conf") {
         print SC "nat=no\nqualify=no\n";
       } else {
-        print SC "nat=yes\nqualify=yes\n";
+        print SC "nat=force_rport,comedia\nqualify=yes\n";
       }
       print SC<<__EOB__;
 directmedia=no
@@ -15318,7 +15369,7 @@ context=sipddi
 qualify=yes
 regexten=$sipexten
 directmedia=no
-nat=yes
+nat=force_rport,comedia
 insecure=port,invite$sipcodec
 sendrpid=yes
 trustrpid=yes
@@ -15432,13 +15483,11 @@ rtcachefriends=yes
 calltokenoptional = 0.0.0.0/0.0.0.0
 __EOF__
 
-if (( -e "/usr/lib64/x86_64/asterisk/modules-1.8/codec_g723.so") ||
-    ( -e "/usr/lib64/x86_64/asterisk/modules-10/codec_g723.so")) {
+if ( -e $astmoddir . "/codec_g723.so") {
   print IC "allow=g723.1\n";
 }
 
-if (( -e "/usr/lib64/x86_64/asterisk/modules-1.8/codec_g729.so")  ||
-    ( -e "/usr/lib64/x86_64/asterisk/modules-10/codec_g729.so")) {
+if ( -e $astmoddir . "/codec_g729.so") {
   print IC "allow=g729\n";
 }
 print IC "allow=gsm\n";
@@ -15572,16 +15621,20 @@ sub printastagent() {
   $dbh = DBI->connect($dsn,"asterisk", $sqlvoippass) or return;
   open(AAC,">agents.conf");
   chmod(0600,"agents.conf");
-  print AAC "[agents]\n";
-  print AAC "autologoffunavail=yes\n";
+  print AAC "[my-agents](!)\n";
+  print AAC ";autologoffunavail=yes\n";
   print AAC "ackcall=no\n";
-  print AAC "endcall=no\n";
-  $getagent=$dbh->prepare("SELECT 'agent => '||name||',,'||fullname from users left outer join astdb on (family='LocalPrefix' AND key=substr(name,1,2)) where value='1' ORDER BY name");
+  print AAC ";endcall=no\n\n";
+  $getagent=$dbh->prepare("SELECT name,fullname from users left outer join astdb on (family='LocalPrefix' AND key=substr(name,1,2)) where value='1' ORDER BY name");
 #  $getagent=$dbh->prepare("SELECT 'agent => '||name||','||secret||','||fullname from users left outer join astdb on (family='LocalPrefix' AND key=substr(name,1,2)) where value='1'");
   $getagent->execute;
   
   while(@row=$getagent->fetchrow_array) {
-    print AAC @row[0] . "\n";
+    print AAC<<__EOF__;
+[@row[0]](my-agents)
+fullname=@row[1]
+
+__EOF__
   }
 
   close(AAC);
@@ -16193,7 +16246,7 @@ __EOB__
 #    print ZC "\n";
 #  }
 
-  $zapchanq=" SELECT name as label,'\"'||fullname||'\" <'||name||'>' as callerid,mailbox||'\@'||context as mailbox,context,
+  $zapchanq=" SELECT name as label,'\"'||fullname||'\" <'||name||'>' as callerid,mailbox,context,
         callgroup,pickupgroup,case when (zapproto is not null) then zapproto else 'fxo_ks' end as signalling,
         case when (zaprxgain is not null) then zaprxgain else '0' end as rxgain,
         case when (zaptxgain is not null) then zaptxgain else '0' end as txgain,
@@ -16684,7 +16737,7 @@ sub printgnugkh323() {
     do {
       $_=join('',(0..9, 'A'..'Z', 'a'..'z')[rand 64, rand 64, rand 64, rand 64, rand 64, rand 64, rand 64,rand 64]);
     } until ((/[0-9]/) && (/[a-z]/) && (/[A-Z]/));
-    $addast=$dbh->prepare("INSERT INTO users (defaultuser,name,secret,password,h323permit,h323gkid,ipaddr,h323neighbor,agentid) VALUES ('" . $h323gwid . "','" . $h323gwid . "','" . $_ . "','" . $_ . "','allow','" . $h323gkid . "','" . $localip . "','t',0)");
+    $addast=$dbh->prepare("INSERT INTO users (defaultuser,name,secret,h323permit,h323gkid,ipaddr,h323neighbor,agentid) VALUES ('" . $h323gwid . "','" . $h323gwid . "','" . $_ . "','allow','" . $h323gkid . "','" . $localip . "','t',0)");
     $addast->execute;
   } else { 
     if (@row[0] ne "") {
@@ -16918,7 +16971,7 @@ sub printrrdlim() {
   open(II,">intinfo.inc");
   chmod(0600,"intinfo.inc");
   $lcnt=0;
-  print II "<%\n";
+  print II "<?php\n";
   if ($sysconf{'External'} eq "Dialup") {
     print II "\$ints[\"ppp0\"]=" . $tcctl{'Egress'}/8 . ";\n";
     print II "\$imq[\"ppp0\"]=0" . ";\n";
@@ -16935,7 +16988,7 @@ sub printrrdlim() {
     print II "\$imq[\"ppp" . $lcnt . "\"]=" . $lcnt . ";\n";
     print II "\$imqmax[" . $lcnt . "]=" . @ldata[3]/8 . ";\n";
   }
-  print II "%>\n";
+  print II "?>\n";
   close(II);
 }
 
@@ -17896,6 +17949,14 @@ __EOB__
 
 sub printdhclient {
   open(DHC,">dhclient.conf");
+
+  if ($sysconf{'Bridge'} ne "") {
+    @brint=split(/ /,$sysconf{'Bridge'});
+    foreach $bint (@brint) {
+      $isbridge{$bint}=TRUE;
+    }
+  }
+
   foreach $iface (@ints) {
     if ($iface eq $sysconf{'Internal'}) {
       print DHC<<__EOB__;
@@ -17910,6 +17971,12 @@ interface "$iface" {
 
 __EOB__
     } elsif (index($iface,"gtun") eq -1) {
+      @idata=split(/\|/,$interface{$iface});
+
+      if ((@idata[1] ne "0.0.0.0") || (@idata[2] ne "32") || ($isbridge{$iface})) {
+        next;
+      }
+
       print DHC<<__EOB__;
 interface "$iface" {
   script "/usr/bin/dhclient-script";

@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -73,4 +73,4 @@ function sesgc ($maxlifetime) {
 }
 
 session_set_save_handler ("sesopen", "sesclose", "sesread", "seswrite", "sesdestroy", "sesgc");
-%>
+?>

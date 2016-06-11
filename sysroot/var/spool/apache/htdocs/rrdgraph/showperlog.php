@@ -1,4 +1,4 @@
-<%
+<?php
 function graph_do($period) {
   include "/var/spool/apache/htdocs/logs/uloginc.php";
   $valname[0]="Max";
@@ -57,31 +57,31 @@ function graph_do($period) {
   }
   print "</TABLE>";
 }
-%>
+?>
 <META HTTP-EQUIV="Refresh" CONTENT="300;url=/auth">
 <META HTTP-EQUIV="Cache-Control" content="no-cache">
 <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
-<META HTTP-EQUIV="Expires" CONTENT="<%print gmdate("D, d M Y G:i:s T");%>">
+<META HTTP-EQUIV="Expires" CONTENT="<?php print gmdate("D, d M Y G:i:s T");?>">
 
 <H1>Firewall Violations</H1> 
-<HR>The statistics were last updated <B><%
+<HR>The statistics were last updated <B><?php
 $last=rrd_last("/var/spool/apache/htdocs/mrtg/violations.rrd");
 print date("D M j G:i:s T Y",$last);
-%></B>
+?></B>
 
 <HR>
 <B>`Daily' Graph (5 Minute Average)</B><BR>
-<%graph_do(1);%>
+<?phpgraph_do(1);?>
 
 <HR>
 <B>`Weekly' Graph (30 Minute Average)</B><BR>
-<%graph_do(7);%>
+<?phpgraph_do(7);?>
 
 <HR>
 <B>`Monthly' Graph (2 Hour Average)</B><BR>
-<%graph_do(30);%>
+<?phpgraph_do(30);?>
 
 <HR>
 <B>`Yearly' Graph (1 Day Average)</B><BR>
-<%graph_do(365);%>
+<?phpgraph_do(365);?>
 

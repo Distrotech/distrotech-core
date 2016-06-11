@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -94,32 +94,32 @@ if (isset($_POST['ctfx'])) {
   $users=pg_query("SELECT id,username,description,admin,credit,exchangerate FROM reseller WHERE admin AND owner = " . $_SESSION['resellerid'] . " ORDER BY description,username");
 
   $num=pg_num_rows($users); 
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=credform onsubmit="ajaxsubmit(this.name);return false">
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
-  <TR <%print $bcolor[0];%>>
+  <TR <?php print $bcolor[0];?>>
   <TH COLSPAN=2 CLASS=heading-body>Transfer Credit To A Reseller</TH>
   </TR>
-  <TR <%print $bcolor[1];%>>
+  <TR <?php print $bcolor[1];?>>
   <TD WIDTH=50%>Select Reseller To Transfer Credit To</TD>
   <TD>
   <SELECT NAME=edituser>
-  <%
+  <?php
 
   for ($i=0; $i < $num; $i++) {
     $r = pg_fetch_row($users,$i);
     $curcred=sprintf("R%0.2f",floor($r[4]*$r[5])/10000);
     print  "<OPTION VALUE=" . $r[0] . ">" . $r[2] . " - " . $r[1] . " (" . $curcred . ")</OPTION>\n";
   }
-%>
+?>
   </SELECT></TH></TR>
-  <TR <%print $bcolor[0];%>>
+  <TR <?php print $bcolor[0];?>>
     <TD>Ammount To Transfer (R)<BR>
-      R<%printf("%0.2f",$cavail);%> Avail.<BR>
-      R<%printf("%0.2f",$ccred[2]);%> Balance.
+      R<?php printf("%0.2f",$cavail);?> Avail.<BR>
+      R<?php printf("%0.2f",$ccred[2]);?> Balance.
     </TD>
     <TD><INPUT TYPE=TEXT NAME=credit></TD></TR>
-  <TR <%print $bcolor[1];%>><TD ALIGN=MIDDLE COLSPAN=2><INPUT TYPE=SUBMIT NAME=ctfx></TD></TR>
+  <TR <?php print $bcolor[1];?>><TD ALIGN=MIDDLE COLSPAN=2><INPUT TYPE=SUBMIT NAME=ctfx></TD></TR>
   </FORM>
 </TABLE>

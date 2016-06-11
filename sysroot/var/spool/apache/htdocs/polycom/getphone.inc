@@ -1,8 +1,8 @@
-<%
+<?php
 include "../cdr/auth.inc";
 include "../cdr/autoadd.inc";
 
-$mac=ereg_replace(":","",$mac);
+$mac=preg_replace("/:/","",$mac);
 $mac=strtoupper($mac);
 
 $pwlen=8;
@@ -47,4 +47,4 @@ if ($pwchange == "t") {
   pg_query($db,"UPDATE users SET secret='" . $passwd . "' WHERE name='" . $exten . "'");
   $agi->disconnect();
 }
-%>
+?>

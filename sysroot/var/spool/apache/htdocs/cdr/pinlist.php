@@ -6,10 +6,11 @@
 <FORM METHOD=POST NAME=deletexten onsubmit="ajaxsubmit(this.name);return false">
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <INPUT TYPE=HIDDEN NAME=print>
-<%
+<?php
 include_once "auth.inc";
-$extensq="SELECT name,fullname,secret,password,roampass from users
+$extensq="SELECT name,users.fullname,secret,voicemail.password,roampass from users
  left outer join features on (name = exten)
+ left outer join voicemail on (name = voicemail.mailbox)
  left outer join astdb as lpre on (lpre.family = 'LocalPrefix' and lpre.key = substr(name,0,3))";
 if ($SUPER_USER != 1) {
   $extensq.=" LEFT OUTER JOIN astdb AS bgrp ON (name=bgrp.family AND bgrp.key='BGRP')";
@@ -19,7 +20,6 @@ if ($SUPER_USER != 1) {
   $extensq.=" AND " . $clogacl;
 }
 $extensq.=" order by name";
-
 $extens=pg_query($db,$extensq);
 
 function newpin($exten) {
@@ -62,7 +62,7 @@ for($tcnt=0;$tcnt<pg_num_rows($extens);$tcnt++) {
   $r=pg_fetch_array($extens,$tcnt);
   
   $uppin="newpin" . $r[0];
-  if (($$uppin == "on") || ($r[4] == "") || ($r[4] == $r[0])) {
+  if ((${$uppin} == "on") || ($r[4] == "") || ($r[4] == $r[0])) {
     $r[4]=newpin($r[0]);
   }
 
@@ -94,6 +94,6 @@ if ($_POST['print'] != "1") {
   $rcol++;
   print "<TR CLASS=list-color" . (($rcol % 2)+1) . "><TH COLSPAN=" . $colspan . " CLASS=heading-body><INPUT TYPE=SUBMIT NAME=delexten VALUE=\"" . _("Update") . "\"><INPUT TYPE=BUTTON NAME=pbutton VALUE=\"" . _("Print") . "\" ONCLICK=\"printpage(document.ppage)\"></TH></TR>";
 }
-%>
+?>
 </FORM>
 </TABLE>

@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -37,36 +37,36 @@ if (isset($pbxupdate)) {
 $qgetdata=pg_query($db,"SELECT astdb.key FROM astdb  WHERE astdb.family='EMERG'");
 
 
-%>
+?>
 
 <CENTER>
 <FORM METHOD=POST NAME=e911form onsubmit="ajaxsubmit(this.name);return false">
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
 <TR CLASS=list-color2>
-  <TH CLASS=heading-body COLSPAN=2><%print _("Asterisk PBX Emergancy Numbers");%></TH>
+  <TH CLASS=heading-body COLSPAN=2><?php print _("Asterisk PBX Emergancy Numbers");?></TH>
 </TR>
 <TR CLASS=list-color1>
-<TD onmouseover="myHint.show('DA0')" onmouseout="myHint.hide()"><%print _("Select Emergancy Number To Delete");%></TD>
+<TD onmouseover="myHint.show('DA0')" onmouseout="myHint.hide()"><?php print _("Select Emergancy Number To Delete");?></TD>
 <TD><SELECT NAME=key>
-<OPTION VALUE=""><%print _("Add New Emergancy Number Below");%></OPTION>
-<%
+<OPTION VALUE=""><?php print _("Add New Emergancy Number Below");?></OPTION>
+<?php
 $dnum=pg_num_rows($qgetdata);
 for($i=0;$i<$dnum;$i++){
   $getdata=pg_fetch_array($qgetdata,$i);
   print "<OPTION VALUE=" . $getdata[0] . ">" . $getdata[0];
   print "</OPTION>"; 
 }
-%>
+?>
 </SELECT>
 </TR>
 <TR CLASS=list-color2>
-<TD onmouseover="myHint.show('DA1')" onmouseout="myHint.hide()"><%print _("Emergancy Number");%></TD>
+<TD onmouseover="myHint.show('DA1')" onmouseout="myHint.hide()"><?php print _("Emergancy Number");?></TD>
 <TD><INPUT TYPE=TEXT NAME=newkey></TD>
 </TR>
 <TR CLASS=list-color1>
   <TD ALIGN=MIDDLE COLSPAN=2>
     <INPUT TYPE=RESET>
-    <INPUT TYPE=SUBMIT NAME=subme onclick=this.name='pbxupdate' VALUE="<%print _("Save Changes");%>">
+    <INPUT TYPE=SUBMIT NAME=subme onclick=this.name='pbxupdate' VALUE="<?php print _("Save Changes");?>">
   </TD>
 </TR>
 </TABLE>

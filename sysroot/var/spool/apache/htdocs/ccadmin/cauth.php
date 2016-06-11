@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -20,11 +20,11 @@
 
 $prios=array("Low","Medium","High","Urgent");
 
-%>
+?>
 <FORM METHOD=POST NAME=cauthf onsubmit="ajaxsubmit(this.name);return false">
 <CENTER>
 <TABLE border=0 width=90% cellspacing=0 cellpadding=0>
-<%
+<?php
 
 if ($_POST['active'] == "on") {
   $_POST['active']='t';
@@ -51,76 +51,76 @@ if ((isset($_POST['id'])) && ($_POST['id'] != "")) {
 }
 
 if ((!isset($_POST['upcamp'])) && (!isset($_POST['id']))) {
-  $getcamp=pg_query($db,"SELECT id,description||' ('||name||')' FROM campaign LEFT OUTER JOIN camp_admin ON (campaign.id=camp_admin.campaign AND camp_admin.userid='" . $_SERVER['PHP_AUTH_USER'] . "')" . $_SESSION['limitadmin'] . " ORDER by description,name");%>
-<TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  $getcamp=pg_query($db,"SELECT id,description||' ('||name||')' FROM campaign LEFT OUTER JOIN camp_admin ON (campaign.id=camp_admin.campaign AND camp_admin.userid='" . $_SERVER['PHP_AUTH_USER'] . "')" . $_SESSION['limitadmin'] . " ORDER by description,name");?>
+<TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
   <TH COLSPAN=2 CLASS=heading-body>
-    <%print _("Select A Campaign To Modify");%>
+    <?php print _("Select A Campaign To Modify");?>
   </TH>
 </TR>
-<TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+<TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
   <TD WIDTH=50%>
-    <%print _("Select Campaign");%>
+    <?php print _("Select Campaign");?>
   </TD>
   <TD>
     <SELECT NAME=id onchange=ajaxsubmit(this.form.name)>
       <OPTION VALUE=""></OPTION>
-      <%
+      <?php
       for($ccnt=0;$ccnt<pg_num_rows($getcamp);$ccnt++) {
-        list($cid,$cname)=pg_fetch_array($getcamp,$ccnt);%>
-        <OPTION VALUE="<%print $cid;%>"><%print $cname%></OPTION><%
-      }%>
+        list($cid,$cname)=pg_fetch_array($getcamp,$ccnt);?>
+        <OPTION VALUE="<?php print $cid;?>"><?php print $cname?></OPTION><?php
+      }?>
   </TD>
 </TR>
-<%
+<?php
 } else {
-  $getadmin=pg_query($db,"SELECT userid FROM camp_admin WHERE campaign=" . $_SESSION['campid'] . " ORDER by userid");%>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  $getadmin=pg_query($db,"SELECT userid FROM camp_admin WHERE campaign=" . $_SESSION['campid'] . " ORDER by userid");?>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TH COLSPAN=2 CLASS=heading-body>
-      <%print _("Campaign Administrators") . " " . $_SESSION['campname'];%>
+      <?php print _("Campaign Administrators") . " " . $_SESSION['campname'];?>
     </TH>
-  </TR><%
+  </TR><?php
   $admincnt=pg_num_rows($getadmin);
-  if ($admincnt > 0) {%>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  if ($admincnt > 0) {?>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TH ALIGN=LEFT WIDTH=25% CLASS=heading-body2>
         Del.
       </TH>
       <TH ALIGN=LEFT CLASS=heading-body2>
         Username
       </TH>
-    </TR><%
+    </TR><?php
     for($ucnt=0;$ucnt<$admincnt;$ucnt++) {
-      list($auser)=pg_fetch_array($getadmin);%>
-      <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+      list($auser)=pg_fetch_array($getadmin);?>
+      <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
         <TD>
-          <INPUT TYPE=CHECKBOX NAME="del<%print $auser;%>">
+          <INPUT TYPE=CHECKBOX NAME="del<?php print $auser;?>">
         </TD>
         <TD>
-          <%print $auser;%>
+          <?php print $auser;?>
         </TD>
-      </TR><%
+      </TR><?php
     }
-  }%>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  }?>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD WIDTH=50%>
-      <%print _("Add Admin");%>
+      <?php print _("Add Admin");?>
     </TD>
     <TD>
       <INPUT TYPE=TEXT NAME=newadmin autocomplete="off" SIZE=50>
     </TD>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD COLSPAN=2 ALIGN=MIDDLE>
-      <INPUT TYPE=SUBMIT NAME=upcamp VALUE="<%print _("Modify");%>">
+      <INPUT TYPE=SUBMIT NAME=upcamp VALUE="<?php print _("Modify");?>">
     </TD>
   </TR>
   <INPUT TYPE=HIDDEN NAME=type VALUE=in>
   <INPUT TYPE=HIDDEN NAME=what VALUE=uid>
   <INPUT TYPE=HIDDEN NAME=baseou VALUE=system>
   <INPUT TYPE=HIDDEN NAME=utype VALUE=system>
-<%
+<?php
 }
-%>
+?>
 </TABLE>
 </TABLE>
 </FORM>

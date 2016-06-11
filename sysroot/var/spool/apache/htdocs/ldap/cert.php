@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -17,14 +17,14 @@
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-$info=strtolower($info);
+$info=strtolower($_GET['info']);
 if ($info == "usercertificate") {
   $info .=";binary";
 }
 
 include "ldapbind.inc";
 
-$sr=ldap_search($ds,"","(&(objectClass=officePerson)(uid=$euser)($info=*))", array($info));
+$sr=ldap_search($ds,"","(&(objectClass=officePerson)(uid=" . $_GET['euser'] . ")($info=*))", array($info));
 $ei=ldap_first_entry($ds, $sr);
 $cinf = ldap_get_values_len($ds, $ei,$info);
 ldap_unbind($ds);
@@ -42,14 +42,14 @@ $derfile=fopen($certfile,"w");
 fwrite($derfile,$cinf[0]);
 fclose($derfile);
 
-if ($pkey != "") {
-  if ($pkey == "pub") {
+if ($_GET['pkey'] != "") {
+  if ($_GET['pkey'] == "pub") {
     system("/usr/bin/openssl x509 -in " . $certfile . " -inform der  -outform pem -pubkey -noout");
-  } else if ($pkey == "ssh") {
-    system("/usr/bin/openssl x509 -in " . $certfile . " -inform der  -pubkey -noout |/usr/bin/pubkey2ssh - " . $euser);
+  } else if ($_GET['pkey'] == "ssh") {
+    system("/usr/bin/openssl x509 -in " . $certfile . " -inform der  -pubkey -noout |/usr/bin/pubkey2ssh - " . $_GET['euser']);
   }
 } else {
   system("/usr/bin/openssl " . $certtype . " -in " . $certfile . " -inform der  -outform pem");
 }
 unlink($certfile);
-%>
+?>

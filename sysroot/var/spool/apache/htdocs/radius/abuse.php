@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -17,7 +17,7 @@
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-%>
+?>
 <CENTER>
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
 <FORM METHOD=POST>
@@ -31,7 +31,7 @@
  </TR> 
  <TR CLASS=list-color1>
       <TD ALIGN=MIDDLE><SELECT NAME=year>
-<%
+<?php
   include "opendb.inc";
   if (! $rdn) {
     include "../ldap/auth.inc";
@@ -61,11 +61,11 @@
   if (!$curyset) {
       print "<OPTION VALUE=\"" . $curyear . "\" SELECTED>" . $curyear; 
   }
-%>
+?>
 
       </SELECT></TD>
       <TD ALIGN=MIDDLE><SELECT NAME=month>
-<%
+<?php
   for($smnt=1;$smnt <= 12;$smnt++) {
     if ((($smnt == $curtime[4]) && ($month == "")) || ($month == $smnt)){
       print "<OPTION VALUE=" . $smnt . " SELECTED>" . $smnt;
@@ -73,10 +73,10 @@
       print "<OPTION VALUE=" . $smnt . ">" . $smnt;
     }
   }
-%>
+?>
       </SELECT></TD>
       <TD ALIGN=MIDDLE><SELECT NAME=day>
-<%
+<?php
   for($sday=1;$sday <= 31;$sday++) {
     if ((($sday == $curtime[3]) && ($day == "")) || ($day == $sday)) {
       print "<OPTION VALUE=" . $sday . " SELECTED>" . $sday;
@@ -84,7 +84,7 @@
       print "<OPTION VALUE=" . $sday . ">" . $sday;
     }
   }
-%>
+?>
       </SELECT></TD></TR>
 
       <tr CLASS=list-color2><TH CLASS=heading-body2 COLSPAN=3>Select Time</TH></TR>
@@ -92,7 +92,7 @@
       <TR CLASS=list-color2>
 
       <TD ALIGN=MIDDLE><SELECT NAME=hour>
-<%
+<?php
   for($shour=0;$shour <= 23;$shour++) {
     print "<OPTION VALUE=" . $shour;
     if ($shour == $hour) {
@@ -100,10 +100,10 @@
     }
     print ">" . $shour;
   }
-%>
+?>
       </SELECT></TD>
       <TD ALIGN=MIDDLE><SELECT NAME=min>
-<%
+<?php
   for($smin=0;$smin <= 59;$smin++) {
     print "<OPTION VALUE=" . $smin;
     if ($smin == $min) {
@@ -111,10 +111,10 @@
     }
     print ">" . $smin;
   }
-%>
+?>
       </SELECT></TD>
       <TD ALIGN=MIDDLE><SELECT NAME=sec>
-<%
+<?php
   for($ssec=0;$ssec <= 59;$ssec++) {
     print "<OPTION VALUE=" . $ssec;
     if ($ssec == $sec) {
@@ -122,13 +122,13 @@
     }
     print ">" . $ssec;
   }
-%>
+?>
       </SELECT></TD></TR>
 
 
 
       <TR CLASS=list-color1><TD ALIGN=MIDDLE>IP Address</TD><TD>&nbsp;</TD><TD ALIGN=MIDDLE>
-      <INPUT NAME="ipaddr" VALUE="<% print $ipaddr;%>"></TD></TR>
+      <INPUT NAME="ipaddr" VALUE="<?php print $ipaddr;?>"></TD></TR>
       <TR CLASS=list-color2><TD COLSPAN=3 ALIGN=MIDDLE>
       <INPUT TYPE=SUBMIT NAME="Show Usage" VALUE="Search For User"></TD></TR>
       </FORM>

@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -36,4 +36,4 @@ pg_query($db,$upquery);
 $getval=pg_query($db,"SELECT " . $_POST['cellname'] . " FROM lead LEFT OUTER JOIN contact ON (lead.id=contact.lead) WHERE contact.id='" . $_SESSION['lastcon'] . "'");
 list($outval)=pg_fetch_array($getval,0,PGSQL_NUM);
 print $outval;
-%>
+?>

@@ -5,7 +5,7 @@
 <INPUT TYPE=HIDDEN NAME=dbfam>
 
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
-<%
+<?php
 include_once "/var/spool/apache/htdocs/cdr/uauth.inc";
 include_once "/var/spool/apache/htdocs/cdr/apifunc.inc";
 include_once "/var/spool/apache/htdocs/cdr/autoadd.inc";
@@ -99,14 +99,14 @@ for ($pkt=0;$pkt < count($apiinf);$pkt++) {
       $chaninf[$port]=$zchan;
       array_push($chansort,$port);
       $toadd="aadd" . $port;
-      if ($$toadd == "on") {
+      if (${$toadd} == "on") {
         $nexten=createexten("","","","",$port);
         if ($nexten == "") {
-%>
+?>
 <SCRIPT>
 alert('Error: Cannot Create A Extension Please Add Manualy.');
 </SCRIPT>
-<%
+<?php
         }
       }
     }
@@ -145,7 +145,7 @@ for($tcnt=0;$tcnt<pg_num_rows($extens);$tcnt++) {
     $todel="adel" . $r[0];
   }
 
-  if ($$todel == "on") {
+  if (${$todel} == "on") {
       pg_query($db,"DELETE FROM users WHERE name='" . $r[0] . "'");
       pg_query($db,"DELETE FROM astdb WHERE family='" . $r[0] . "'");
       pg_query($db,"DELETE FROM features WHERE exten='" . $r[0] . "'");
@@ -261,7 +261,7 @@ if ($_POST['print'] != "1") {
   }
   print "<INPUT TYPE=BUTTON NAME=pbutton VALUE=\"" . _("Print") . "\" ONCLICK=\"printpage(document.ppage)\"></TH></TR>";
 }
-%>
+?>
 </FORM>
 </TABLE>
 <FORM NAME=ppage METHOD=POST>

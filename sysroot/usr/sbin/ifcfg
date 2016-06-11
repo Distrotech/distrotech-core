@@ -82,6 +82,16 @@ if [ -s /etc/chilli/${IFNAME}.conf ] && [ "${CHILLI}" == "1" ];then
   if [ "${NETWORK}" != "0.0.0.0" ] && [ "${NETWORK}" != "169.254.0.0" ];then
 #   /sbin/ip route add ${NETWORK}/${NETMASK} src ${ADDRESS} dev ${IFNAME} table Ipsec > /dev/null 2>&1
     /sbin/ip route add ${NETWORK}/${NETMASK} src ${ADDRESS} dev ${IFNAME} scope link table 80 > /dev/null 2>&1
+   elif [ "${FIREWALL}" == "OTHER" ] && [ "${BRIDGE}" == "" ] && [ "${NETWORK}" == "0.0.0.0" ] && [ "${NETMASK}" == "32" ];then
+    /usr/sbin/dhclient -6 -r ${IFNAME} > /dev/null 2>&1 &
+    if [ -s /var/state/dhcp/dhclient.leases ];then
+      /usr/sbin/dhclient -4 -r ${IFNAME} > /dev/null 2>&1 &
+     else
+      touch /var/state/dhcp/dhclient.leases
+    fi;
+    sleep 4
+    (/usr/sbin/dhclient -4 -nw ${IFNAME}
+    /usr/sbin/dhclient -6 -nw ${IFNAME}) > /dev/null 2>&1
   fi;
 fi;
 
@@ -205,5 +215,17 @@ fi;
     echo 1 > /sys/class/net/${BRIDGE}/bridge/stp_state
     sleep 5
   fi;
+  ip link set dev ${IFNAME} down
   ip link set dev ${IFNAME} master ${BRIDGE}
+  ip link set dev ${IFNAME} up
 fi) > /dev/null 2>&1 &
+
+if [ "${FIREWALL}" == "INTERNAL" ];then
+  if [ ! -d /var/state/dhcp ];then
+    mkdir -p /var/state/dhcp
+  fi;
+  touch /var/state/dhcp/dhcpd.leases /var/state/dhcp/dhcpd6.leases
+  if [ -e /etc/dhcpd.conf ];then
+    (ulimit -n 65535;/usr/sbin/dhcpd > /dev/null 2>&1) &
+  fi;
+fi;

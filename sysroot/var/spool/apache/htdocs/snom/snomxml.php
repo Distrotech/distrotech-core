@@ -1,15 +1,15 @@
-<%
+<?php
 header('Content-type: text/xml');
 
 print "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
-%>
+?>
 <settings>
   <phone-settings>
     <language perm="R">English(UK)</language>
     <dnd_on_code perm="R">*541</dnd_on_code>
     <dnd_off_code perm="R">*540</dnd_off_code>
     <utc_offset perm="R">7200</utc_offset>
-    <ntp_server perm="R"><%print $domain;%></ntp_server>
+    <ntp_server perm="R"><?php print $domain;?></ntp_server>
     <timezone perm="R">CAT+2</timezone>
     <challenge_response perm="R">off</challenge_response>
     <filter_registrar perm="!">off</filter_registrar>
@@ -19,51 +19,51 @@ print "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
     <update_policy perm="R">auto_update</update_policy>
     <tone_scheme perm="R">GBR</tone_scheme>
     <auto_connect_type perm="R">auto_connect_type_handset</auto_connect_type>
-<%
-if ($sipver[0] >= 8) {%>
+<?php
+if ($sipver[0] >= 8) {?>
     <guess_number perm="R">on</guess_number>
     <guess_start_length perm="R">5</guess_start_length>
     <ldap_predict_text perm="R">on</ldap_predict_text>
     <ldap_sort_results perm="R">on</ldap_sort_results>
-<%
+<?php
 }
-%>
+?>
     <display_method perm="R">display_name_number</display_method>
     <update_policy perm="R">auto_update</update_policy>
-<% 
+<?php 
 if (($sipver[0] >= 8) && ($sipver[1] >= 4)) {
   if (($vlantag != "") && ($vlantag > 1)) {
-%>
-    <vlan_id perm="R"><%print $vlantag;%></vlan_id>
+?>
+    <vlan_id perm="R"><?php print $vlantag;?></vlan_id>
     <vlan_qos perm="R">5</vlan_qos>
-<%
+<?php
   } else {
-%>
+?>
     <vlan_id perm="!"></vlan_id>
     <vlan_qos perm="!"></vlan_qos>
-<%
+<?php
   }
 } else {
   if (($vlantag != "") && ($vlantag > 1)) {
-%>
-    <vlan perm="R"><%print $vlantag . " 5";%></vlan>
-<%
+?>
+    <vlan perm="R"><?php print $vlantag . " 5";?></vlan>
+<?php
   } else {
-%>
+?>
     <vlan perm="!"></vlan>
-<%
+<?php
   }
 }
 if (($SERVER_NAME != "") && ($phone != "") && (is_file("snom" . $phone . "-fw.php"))) {
-%>
-    <firmware_status><%print "http://" . $SERVER_NAME . "/snom/snom" . $phone . "-fw.php";%></firmware_status>
-<%
+?>
+    <firmware_status><?php print "http://" . $SERVER_NAME . "/snom/snom" . $phone . "-fw.php";?></firmware_status>
+<?php
 //  print "firmware_status: http://provisioning.snom.com/update6to7/firmware.php\n";
 };
-%>
+?>
     <firmware_interval perm="R">1440</firmware_interval>
     <with_flash perm="R">on</with_flash>
-    <eth_net perm="R"><%print $netport;%></eth_net>
+    <eth_net perm="R"><?php print $netport;?></eth_net>
     <ntp_refresh_timer perm="!">300</ntp_refresh_timer>
     <keyboard_lock_emergency perm="R"></keyboard_lock_emergency>
     <subscription_delay perm="!">5</subscription_delay>
@@ -94,7 +94,7 @@ if (($SERVER_NAME != "") && ($phone != "") && (is_file("snom" . $phone . "-fw.ph
     <presence_timeout perm="R">15</presence_timeout>
     <keyboard_lock perm="R">off</keyboard_lock>
     <keyboard_lock_pw perm="R"></keyboard_lock_pw>
-    <no_dnd perm="R"><%print ($dndsetting == "-1") ? "on" : "off";%></no_dnd>
+    <no_dnd perm="R"><?php print ($dndsetting == "-1") ? "on" : "off";?></no_dnd>
     <call_waiting perm="R">on</call_waiting>
     <mwi_dialtone perm="R">stutter</mwi_dialtone>
     <mwi_notification perm="R">silent</mwi_notification>
@@ -127,7 +127,7 @@ if (($SERVER_NAME != "") && ($phone != "") && (is_file("snom" . $phone . "-fw.ph
     <dkey_dnd perm="R">keyevent F_DND</dkey_dnd>
     <dkey_menu perm="R">keyevent F_SETTINGS</dkey_menu>
     <dkey_directory perm="R">keyevent F_DIRECTORY_SEARCH</dkey_directory>
-<%
+<?php
 
 $getring=pg_query($db,"SELECT sring0,sring1,sring2,sring3 from features where exten = '" . $exten . "' LIMIT 1");
 
@@ -147,19 +147,19 @@ for($gotring=0;$gotring <= 3;$gotring++) {
 }
 
 if ($domain != "") {
-%>
-    <ldap_server perm="R"><% print$SERVER_NAME;%></ldap_server>
+?>
+    <ldap_server perm="R"><?php print$SERVER_NAME;?></ldap_server>
     <ldap_port perm="R">389</ldap_port>
     <ldap_base perm="R"></ldap_base>
     <ldap_username perm="R">cn=Snom,ou=Snom</ldap_username>
-    <ldap_password perm="R"><%print htmlentities($suser["userPassword"][0], ENT_QUOTES, "UTF-8");%></ldap_password>
-    <ldap_search_filter perm="R"><%print htmlentities("(&(telephoneNumber=*)(cn=%))");%></ldap_search_filter>
-    <ldap_number_filter perm="R"><%print htmlentities("(&(telephoneNumber=%)(cn=*))");%></ldap_number_filter>
+    <ldap_password perm="R"><?php print htmlentities($suser["userPassword"][0], ENT_QUOTES, "UTF-8");?></ldap_password>
+    <ldap_search_filter perm="R"><?php print htmlentities("(&(telephoneNumber=*)(cn=%))");?></ldap_search_filter>
+    <ldap_number_filter perm="R"><?php print htmlentities("(&(telephoneNumber=%)(cn=*))");?></ldap_number_filter>
     <ldap_name_attributes perm="R">cn</ldap_name_attributes>
     <ldap_number_attributes perm="R">telephoneNumber</ldap_number_attributes>
     <ldap_display_name perm="R">%cn</ldap_display_name>
     <ldap_max_hits perm="R">50</ldap_max_hits>
-<%
+<?php
   $port = ($transport == "tls") ? "5061" : "5060";
   $proxy = ($transport == "udp" || $transport == "") ? $domain . ":" . $port : $domain . ":" . $port . ";transport=" . $transport;
   print "    <user_host idx=\"1\" perm=\"R\">" . $domain . "</user_host>\n";
@@ -170,16 +170,16 @@ if ($domain != "") {
   } else {
     print "    <stun_server idx=\"1\" perm=\"R\"></stun_server>\n";
   }
-%>
+?>
     <user_expiry idx="1" perm="R">600</user_expiry>
-    <user_ringer idx="1" perm="R"><%print "Ringer" . $defring;%></user_ringer>
+    <user_ringer idx="1" perm="R"><?php print "Ringer" . $defring;?></user_ringer>
     <user_sipusername_as_line idx="1" perm="R">on</user_sipusername_as_line>
     <codec1_name idx="1" perm="R">18</codec1_name>
     <codec2_name idx="1" perm="R">3</codec2_name>
     <codec3_name idx="1" perm="R">2</codec3_name>
     <codec4_name idx="1" perm="R">0</codec4_name>
     <codec5_name idx="1" perm="R">8</codec5_name>
-<%
+<?php
   if ($mac != "") {
     if ($exten != "") {
       print "    <phone_name perm=\"R\">exten-" . $exten . "</phone_name>\n";
@@ -225,17 +225,17 @@ if ($domain != "") {
 }
 
 if ($phone != "300") {
-%>
+?>
     <gui_fkey1 perm="R">F_REGS</gui_fkey1>
     <gui_fkey2 perm="R">F_CALL_LIST</gui_fkey2>
     <gui_fkey3 perm="R">F_DIRECTORY_SEARCH</gui_fkey3>
     <gui_fkey4 perm="R">F_MISSED_LIST</gui_fkey4>
-<%
+<?php
 }
-%>
+?>
   </phone-settings>
   <functionKeys>
-<%
+<?php
 if ($phone != "300") {
   if ($mac != "") {
     if ($exten != "") {
@@ -289,18 +289,18 @@ if ($phone != "300") {
     }
   }
 } else {
-%>
+?>
     <fkey idx="0" context="active" label="" perm="">line</fkey>
     <fkey idx="1" context="active" label="" perm="">line</fkey>
     <fkey idx="2" context=\"1\" perm="R">keyevent F_REDIAL</fkey>
     <fkey idx="3" context=\"1\" perm="R">keyevent F_DIRECTORY_SEARCH</fkey>
     <fkey idx="4" context=\"1\" perm="R">keyevent F_TRANSFER</fkey>
     <fkey idx="5" context=\"1\" perm="R">keyevent F_MUTE</fkey>
-<%
+<?php
 }
-%>
+?>
   </functionKeys>
-<%
+<?php
 $pbook=pg_query($db,"SELECT name,number,type FROM snom_pbook WHERE exten='" . $exten . "' LIMIT 100");
 for($row=0;$row < pg_num_rows($pbook);$row++) {
   $rdat=pg_fetch_array($pbook,$row);
@@ -328,5 +328,5 @@ for($i=0;$i < pg_num_rows($qgetdata);$i++){
   }
   print "speed" . $sdpos . "&: " . $getdata[1] . "\n";
 }
-%>
+?>
 </settings>

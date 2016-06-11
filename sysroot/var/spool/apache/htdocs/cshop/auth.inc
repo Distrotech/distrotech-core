@@ -1,4 +1,4 @@
-<%
+<?php
 include "/var/spool/apache/htdocs/session.inc";
 
 $sessid=session_id();
@@ -19,6 +19,8 @@ if ($qlink[$matches[1]] != "") {
   if (($_POST['disppage'] == "") && ($_SESSION['disppage'] == "")) {
     $_POST['disppage']=$qlink[$matches[1]];
   }
+} else if ($_SERVER['SCRIPT_URL'] == "/cshop/") {
+    $_POST['disppage']="cshop";
 }
 
 if (($_POST['vboxlogoff'] == $sessid) && ($_POST['vboxlogoff'] != "")) {
@@ -123,4 +125,4 @@ if (isset($_COOKIE[session_name()])) {
   setcookie(session_name(), $_COOKIE[session_name()], time() + $_SESSION['seslimit'], "/");
 }
 
-%>
+?>

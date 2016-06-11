@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -26,13 +26,13 @@
   }
 
 
-%>
+?>
 <FORM METHOD=POST>
 <CENTER>
 
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
 <TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body>Mail Server Access Account</TH></TR>
-<%
+<?php
   $sr=ldap_search($ds,"ou=Admin","(&(objectclass=groupofnames)(member=" . $ldn . ")(cn=Admin Access))");
   if (ldap_count_entries($ds,$sr) == 1) {
     $ADMIN_USER="admin";
@@ -91,9 +91,9 @@
             $val=$adata[$acnt];
           }
         }
-        $$attr=$val;
+        ${$attr}=$val;
       } elseif ($descrip[$attr] != "") {
-        $$attr=$adata[0];
+        ${$attr}=$adata[0];
       }
     }
   }
@@ -101,7 +101,7 @@
   $rejar=array();
   $rok=true;
   while(list($idx,$attr)=each($reqat[$ldtype])) {
-    if ($$attr == "") {
+    if (${$attr} == "") {
       $rok=false;
       $rejar[$attr]=true;
     }
@@ -137,12 +137,12 @@
            $info["userPassword"]=$uinfo[0]["userpassword"][0];
          }
       } elseif ($b64[$catt]) {
-        $data=$$catt;
+        $data=${$catt};
         if ($data != "") {
           $info[$catt]=$data;
         }
       } elseif ($bfile[$catt]) {
-        $fname=$$catt;
+        $fname=${$catt};
         if ($fname != "") {
           $cfile=fopen($fname,r);
           $dataout=fread($cfile,filesize($fname));
@@ -150,7 +150,7 @@
           $info[$catt]=";binary $dataout";
         }
       } else {
-        $data=split("\r\n",$$catt);
+        $data=preg_split("/\r\n/",${$catt});
         if (count($data) > 1) {
           $acnt=0;
           for ($cnt=0;$cnt < count($data);$cnt++) {
@@ -177,10 +177,10 @@
       if ((count($info[$catt]) == 0) && (count($iinfo[0][$aname]) > 0) && ($hideae[$catt] != "true")){
         if (! $mline[$catt]) {
           $dinfo[$catt]=$iinfo[0][$aname][0];
-          $$catt="";
+          ${$catt}="";
         } else {
           $info[$catt]="Not Supplied";
-          $$catt=$info[$catt];
+          ${$catt}=$info[$catt];
         }
       }
     }
@@ -222,52 +222,52 @@
     }
     
     if (! $hidea[$attr]) {
-%>
-      <TR<% print "$bcolor"%>><TD WIDTH=50% onmouseover="myHint.show('<%print $attr;%>')" onmouseout="myHint.hide()">
-<%
+?>
+      <TR<?php print "$bcolor"?>><TD WIDTH=50% onmouseover="myHint.show('<?php print $attr;?>')" onmouseout="myHint.hide()">
+<?php
         if ((isset($submited)) && ($rejar[$attr])) {
            print "<FONT COLOR=RED>*</FONT>";
         } else if ($rejar[$attr]) {
           print "<B>";
         }
         print $descrip[$attr];
-%>
+?>
       </TD>
       <TD WIDTH=50%
-<%
+<?php
         if (($dnaa[$attr]) || ($PHP_AUTH_USER != $euser) && ($PHP_AUTH_USER != "admin") && ($ADMIN_USER != "admin")) {
-%>
-          ><INPUT TYPE=HIDDEN NAME=<%print $attr;%> VALUE="<%print $$attr;%>"><%print $$attr;%>
-<%
+?>
+          ><INPUT TYPE=HIDDEN NAME=<?php print $attr;?> VALUE="<?php print ${$attr};?>"><?php print ${$attr};?>
+<?php
         } else {
           if (($mline[$attr]) || ($b64[$attr])){
-%>
-            ><TEXTAREA NAME=<%print $attr;%> COLS=40 ROWS=5><%print $$attr;%></TEXTAREA>
-<%
+?>
+            ><TEXTAREA NAME=<?php print $attr;?> COLS=40 ROWS=5><?php print ${$attr};?></TEXTAREA>
+<?php
           } elseif ($bfile[$attr]) {
-%>
-            ><INPUT TYPE=FILE  NAME=<%print $attr;%> COLS=40 ROWS=5>
-<%
+?>
+            ><INPUT TYPE=FILE  NAME=<?php print $attr;?> COLS=40 ROWS=5>
+<?php
           } else {
             if ($attr != "userPassword") {
-%>
-              ><INPUT TYPE=TEXT SIZE=40 NAME=<%print $attr;%> VALUE="<%print $$attr;%>">
-<%
+?>
+              ><INPUT TYPE=TEXT SIZE=40 NAME=<?php print $attr;?> VALUE="<?php print ${$attr};?>">
+<?php
             } else {
-%>
+?>
               ><INPUT TYPE=PASSWORD SIZE=40 NAME=pass1 VALUE="">
-              <TR <%print "$bcolor2"%>><TD WIDTH=50% onmouseover="myHint.show('userPassword2')" onmouseout="myHint.hide()">Confirm Password</TD>
+              <TR <?php print "$bcolor2"?>><TD WIDTH=50% onmouseover="myHint.show('userPassword2')" onmouseout="myHint.hide()">Confirm Password</TD>
               <TD WIDTH=50%1>
               <INPUT TYPE=PASSWORD SIZE=40 NAME=pass2 VALUE="">
-<%
+<?php
               $cnt ++;
             }
           }
         }
-%>
+?>
       </TD>
     </TR>
-<%
+<?php
       $cnt ++;
     }
   }
@@ -278,20 +278,20 @@
       $bcolor=" CLASS=list-color1";
     }
     if (($PHP_AUTH_USER == $euser) || ($PHP_AUTH_USER == "admin") || ($ADMIN_USER="admin")) {
-%>
-      <TR<% print "$bcolor"%>>
+?>
+      <TR<?php print "$bcolor"?>>
         <TD COLSPAN=2 ALIGN=MIDDLE>
-<%
+<?php
          print "<INPUT TYPE=SUBMIT VALUE=Modify NAME=update>";
          if (($ADMIN_USER == "admin") || ($PHP_AUTH_USER == "admin")) {
            print "<INPUT TYPE=SUBMIT VALUE=Delete NAME=delete>";
          }
          print "<INPUT TYPE=RESET VALUE=Reset>";
-%>
+?>
        </TD>
     </TR>
-<%
+<?php
     }
-%>
+?>
 </TABLE>
 </FORM>

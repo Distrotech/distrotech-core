@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -76,9 +76,9 @@ if ((isset($_POST['senddata'])) || (isset($_POST['transcall']))) {
   hangupactchan(2);
   pg_query($db,"DELETE FROM contact WHERE id=" . $_SESSION['lastcon']);
 }
-%>
+?>
 
-<%
+<?php
 /*
  * lead.availfrom < now() AND lead.availtill < now() AND lead.active
  */
@@ -108,15 +108,15 @@ if (pg_num_rows($testdb) > 0) {
 if ($xtracol != "") {
   $leadinf=pg_query($db,"SELECT title,fname,sname,number" . $xtracol . " FROM lead LEFT OUTER JOIN " . $data_tb . " AS xtradata ON (lead.id = xtradata.leadid) WHERE lead.id=" . $_SESSION['nextid']);
 }
-$leaddata=pg_fetch_array($leadinf,0,PGSQL_NUM);%>
+$leaddata=pg_fetch_array($leadinf,0,PGSQL_NUM);?>
 
 <CENTER>
 <FORM NAME=ccagentf METHOD=POST onsubmit="ajaxsubmit(this.name);return false">
 <TABLE border=0 width=90% cellspacing=0 cellpadding=0>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TH COLSPAN=4 CLASS=heading-body>
-      <%print $leaddata[0] . " " . $leaddata[1] . "  " . $leaddata[2] . " [" . $leaddata[3] . "]";%>
-    </TH><%
+      <?php print $leaddata[0] . " " . $leaddata[1] . "  " . $leaddata[2] . " [" . $leaddata[3] . "]";?>
+    </TH><?php
   for ($cell=4;$cell < count($leaddata);$cell++) {
     if ((($cell-4) % 2) == 0) {
       print "</TR><TR" . $bcolor[$rcnt % 2] . ">";
@@ -128,26 +128,26 @@ $leaddata=pg_fetch_array($leadinf,0,PGSQL_NUM);%>
     print "<TD COLSPAN=2>&nbsp</TD></TR>";
   } else {
     print "</TR>";
-  }%>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  }?>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TH CLASS=heading-body2 COLSPAN=4>
       Contact Script
     </TH>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD COLSPAN=4>
-<%
+<?php
       include "/var/spool/apache/htdocs/ccadmin/scriptp.inc";
       print getscripthtml(stripslashes(pg_unescape_bytea($script)));
-%>  
+?>  
     </TD>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TH CLASS=heading-body2 COLSPAN=4>
       Contact Information
     </TH>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TH CLASS=heading-body2 COLSPAN=2 ALIGN=LEFT>
       Status
     </TH>
@@ -158,7 +158,7 @@ $leaddata=pg_fetch_array($leadinf,0,PGSQL_NUM);%>
       </SELECT>
     </TD>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD CLASS=heading-body2 COLSPAN=2 ALIGN=LEFT>
       Further Followup Required
     </TH>
@@ -166,7 +166,7 @@ $leaddata=pg_fetch_array($leadinf,0,PGSQL_NUM);%>
       <INPUT TYPE=CHECKBOX NAME=CONT_followup>
     </TD>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TH CLASS=heading-body2 COLSPAN=2 ALIGN=LEFT>
       Date/Time Of Next Contact (Leave Blank For Default) [YYYY-MM-DD HH:MM:SS] 
     </TH>
@@ -174,7 +174,7 @@ $leaddata=pg_fetch_array($leadinf,0,PGSQL_NUM);%>
       <INPUT TYPE=INPUT NAME=CONT_nextcall>
     </TD>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TH CLASS=heading-body2 COLSPAN=2 ALIGN=LEFT>
       Feedback
     </TH>
@@ -182,43 +182,43 @@ $leaddata=pg_fetch_array($leadinf,0,PGSQL_NUM);%>
       <TEXTAREA NAME=CONT_feedback ROWS=8 COLS=80></TEXTAREA>
     </TD>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD ALIGN=MIDDLE COLSPAN=4>
       <INPUT TYPE=SUBMIT onclick=this.name='senddata' VALUE="Process">
       <INPUT TYPE=SUBMIT NAME=subme onclick=this.name='abortcall' VALUE="Hangup">
-      <INPUT TYPE=BUTTON onclick=transcall('<%print $_SESSION['lastcon'];%>') VALUE="Transfer">
+      <INPUT TYPE=BUTTON onclick=transcall('<?php print $_SESSION['lastcon'];?>') VALUE="Transfer">
       <INPUT TYPE=BUTTON onclick=directdial() VALUE="Direct Dial">
     </TD>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TH CLASS=heading-body2 COLSPAN=4>
       Previous 20 Contacts
     </TH>
-  </TR><%
+  </TR><?php
   $lastcontq=pg_query($db,"SELECT status,followup,feedback,date_trunc('second',datetime) from contact where status != 'INIT' AND lead=" . $_SESSION['nextid'] . " and id != " . $_SESSION['lastcon'] . " order by datetime  DESC LIMIT 20");
   for($pcont=0;$pcont < pg_num_rows($lastcontq);$pcont++) {
-    $contd=pg_fetch_array($lastcontq,$pcont,PGSQL_NUM);%>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+    $contd=pg_fetch_array($lastcontq,$pcont,PGSQL_NUM);?>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TD COLSPAN=2>
         Date :
-        <%print $contd[3];%><BR>
+        <?php print $contd[3];?><BR>
         Status :
-        <%print $contd[0];%><BR>
+        <?php print $contd[0];?><BR>
         Followup :
-        <%print ($contd[1] == "t")?"Yes":"No";%><BR>
+        <?php print ($contd[1] == "t")?"Yes":"No";?><BR>
       </TH>
       <TD  COLSPAN=2 VALIGN=TOP ALIGN=LEFT>
-        <%print htmlspecialchars($contd[2]);%>
+        <?php print htmlspecialchars($contd[2]);?>
       </TH>
     </TR>
 
-<%
+<?php
   }
-%>
+?>
 </TABLE>
 </FORM>
 <FORM NAME=caller METHOD=POST ACTION=/ccagent/caller.php>
-<INPUT TYPE=HIDDEN NAME=numtocall VALUE="<%print $_SESSION['lastcon'];%>">
+<INPUT TYPE=HIDDEN NAME=numtocall VALUE="<?php print $_SESSION['lastcon'];?>">
 </FORM>
 <SCRIPT>
 ccaccept();

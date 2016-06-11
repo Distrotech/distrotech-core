@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2006  <Superset>
@@ -94,15 +94,18 @@ if ($authtype >= 0) {
   $main[_("Login")]="/auth";
 }
 
-mysql_connect('localhost', 'admin', 'admin');
-mysql_select_db('osticket');
-$tdepsq=mysql_query("select dept_name,dept_id from ost_department order by dept_name");
-if ($_SESSION['showmenu'] == "tickdep") {
-  $tickdep[_("User Applications ..")]=openpage("apps","");
+
+$osdb=@mysqli_connect('localhost', 'admin', 'admin', 'osticket');
+if (!mysqli_connect_error()) {
+  $tdepsq=mysqli_query($osdb, "select dept_name,dept_id from ost_department order by dept_name");
+  if ($_SESSION['showmenu'] == "tickdep") {
+    $tickdep[_("User Applications ..")]=openpage("apps","");
+  }
+  while($tdeps=mysqli_fetch_array($tdepsq,MYSQLI_NUM)) {
+    $tickdep[_($tdeps[0])]="javascript:openticket($tdeps[1],\'" . _($tdeps[0]) . "\')";
+  }
 }
-while($tdeps=mysql_fetch_array($tdepsq,MYSQL_NUM)) {
-  $tickdep[_($tdeps[0])]="javascript:openticket($tdeps[1],\'" . _($tdeps[0]) . "\')";
-}
+@mysqli_close($osdb);
 
 if ($authtype >= 0) {
   $apps[_("VOIP Console")]="javascript:openvoip()";
@@ -140,7 +143,7 @@ if ($authtype >= 0) {
   }
   if ((! isset($a_limit['GWARE'])) || ($a_limit['GWARE'])) {
     $apps[_("Groupware")]="javascript:opensogo()";
-  }	
+  }
   if ((! isset($a_limit['MBOARD'])) || ($a_limit['MBOARD'])) {
     $apps[_("Message Board")]="javascript:openbb()";
   }
@@ -149,7 +152,7 @@ if ($authtype >= 0) {
     $apps[_("Ticket Status")]="include:tickdep";
   }
 */
-  
+
   if ((! isset($a_limit['ACD'])) || ($a_limit['ACD'])) {
     $apps[_("CC. Agent Login")]="javascript:openccagent()";
     $apps[_("Agent Login/Out")]="javascript:openagentapp()";
@@ -349,6 +352,7 @@ if ($_SESSION['showmenu'] == "vroute") {
   $vroute[_(".. Voip Config")]=openpage("voip","");
 }
 $vroute[_("DDI Forwarding")]=openpage("vroute","cdr/ddiadmin.php");
+$vroute[_("DDI Forward Map")]=openpage("vroute","cdr/ddimap.php");
 $vroute[_("DDI Port Forwarding")]=openpage("vroute","cdr/ddipfwd.php");
 $vroute[_("DDI FAX Box")]=openpage("vroute","cdr/ddifax.php");
 //$vroute[_("DDI IVR Defaults")]=openpage("vroute","cdr/ddidefault.php");
@@ -504,8 +508,8 @@ if ($authtype > 0) {
 
 for($mcnt=0;$mcnt < count($menu);$mcnt++) {
   $subout[$menu[$mcnt]]="";
-  if (is_array($$menu[$mcnt])) {
-    while(list($item,$action)=each($$menu[$mcnt])) {
+  if (is_array(${$menu[$mcnt]})) {
+    while(list($item,$action)=each(${$menu[$mcnt]})) {
       if (substr($action,0,7) == "include") {
          $include=substr($action,8);
         if ($include == "login") {
@@ -531,4 +535,4 @@ for($mcnt=0;$mcnt < count($menu);$mcnt++) {
     print "menu_list['main_menu']=new menu (menu_items_list['main_menu'],menu_horiz);\n\n";
   }
 }
-%>
+?>

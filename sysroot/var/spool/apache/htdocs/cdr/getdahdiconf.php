@@ -1,4 +1,4 @@
-<%
+<?php
 
 include_once "auth.inc";
 
@@ -36,14 +36,14 @@ foreach ($files as $file) {
   $zfile=file($dir . $file);
   while(list($lnum,$ldata)=each($zfile)) {
     $ldata=rtrim($ldata);
-    if (eregi("^Span ([0-9]+: [WBT].*)\$",$ldata)) {
+    if (preg_match("/^Span ([0-9]+: [WBT].*)\$/i",$ldata)) {
       print "<TR CLASS=list-color" . (($bcol %2) + 1). "><TH COLSPAN=2 CLASS=heading-body2>" . $ldata . "</TH></TR>\n";
       $bcol++;
-    } else if (eregi("^.*([0-9]+) ([BXTW].*)\$",$ldata,$chaninf)) {
+    } else if (preg_match("/^.*([0-9]+) ([BXTW].*)\$/i",$ldata,$chaninf)) {
       print "<TR CLASS=list-color" . (($bcol %2) + 1). "><TD>" . $chan . "</TD><TD>" . $chaninf[2] . "</TD></TR>\n";
       $bcol++;
       $chan++;
-    } else if ((! eregi("^Span ([0-9]+: [Z].*)\$",$ldata)) && ($ldata != "")) {
+    } else if ((! preg_match("/^Span ([0-9]+: [Z].*)\$/i",$ldata)) && ($ldata != "")) {
       print "<TR CLASS=list-color" . (($bcol %2) + 1). "><TD COLSPAN=2>"  . $ldata . "</TD></TR>\n";
       $bcol++;
     }
@@ -56,18 +56,18 @@ if ($bcol == "0") {
 }
 
 print "<TR CLASS=list-color" . (($bcol %2) + 1). ">";
-%>
+?>
   
-    <TH COLSPAN=2 CLASS=heading-body><%print _("DAHDI Channels");%></TH>
+    <TH COLSPAN=2 CLASS=heading-body><?php print _("DAHDI Channels");?></TH>
   </TR>
 
-<%
+<?php
 
 $bcol++;
 print "<TR CLASS=list-color" . (($bcol % 2) + 1). "><TD COLSPAN=2 ALIGN=MIDDLE>";
 foreach(explode("\n",$chans['data']) as $line) {
-  if (! ereg("(^Privilege: Command)|(^[ ]+Chan)|(^$)|(^[ ]+pseudo)",$line)) {
-    ereg("^[ ]+([0-9]+)[ ]+([0-9d]+)",$line,$data);
+  if (! preg_match("/(^Privilege: Command)|(^[ ]+Chan)|(^$)|(^[ ]+pseudo)/",$line)) {
+    preg_match("/^[ ]+([0-9]+)[ ]+([0-9d]+)/",$line,$data);
     if (($data[2] == "dd") || ($data[2] == "6")) {
       $data[2]="";
     }
@@ -77,6 +77,6 @@ foreach(explode("\n",$chans['data']) as $line) {
 }
 print "</TD></TR>\n";
 $agi->disconnect();
-%>
+?>
 </TABLE>
 </FORM>

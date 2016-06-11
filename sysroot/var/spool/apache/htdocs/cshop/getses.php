@@ -1,6 +1,6 @@
 <CENTER>
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -37,16 +37,16 @@ if (($_POST['year'] != "" ) || ($_POST['month'] != "") || ($_POST['day'] != ""))
 
   $num=pg_num_rows($sesions); 
   $bcolor[0]="list-color2";
-  $bcolor[1]="list-color1";%>
+  $bcolor[1]="list-color1";?>
 
 <TR CLASS=list-color2>
-<TH COLSPAN=4 CLASS=heading-body>All Sessions For <%print $_POST['year'] . "/" . $_POST['month'] . "/" . $_POST['day'];%></TH></TR>
+<TH COLSPAN=4 CLASS=heading-body>All Sessions For <?php print $_POST['year'] . "/" . $_POST['month'] . "/" . $_POST['day'];?></TH></TR>
 <TR CLASS=list-color1>
 <TH ALIGN=LEFT CLASS=heading-body2>Time</TH>
 <TH ALIGN=LEFT CLASS=heading-body2>Session ID</TH>
 <TH ALIGN=LEFT CLASS=heading-body2>Booth</TH>
 <TH ALIGN=LEFT CLASS=heading-body2>Number</TH>
-</TR><%
+</TR><?php
 
   for ($i=0; $i < $num; $i++) {
     $r = pg_fetch_row($sesions,$i);
@@ -64,12 +64,12 @@ if (($_POST['year'] != "" ) || ($_POST['month'] != "") || ($_POST['day'] != ""))
   $_POST['year']=$today['year'];
   $_POST['day']=$today['mday'];
   $_POST['month']=$today['mon'];
-%>
+?>
 <FORM METHOD=post>
 <TR CLASS=list-color2>
 <TH COLSPAN=2 CLASS=heading-body>Show All Sessions For Day</TH></TR>
 <TR CLASS=list-color1>
-<TD ALIGN=LEFT WIDTH=50%>Year</TD><TD><SELECT NAME=year><%
+<TD ALIGN=LEFT WIDTH=50%>Year</TD><TD><SELECT NAME=year><?php
   $yearq=pg_query($db,"SELECT DISTINCT date_part('year',saletime) AS year FROM sale ORDER BY year DESC");
   for($i=0;$i < pg_num_rows($yearq);$i++) {
     $r=pg_fetch_row($yearq,$i);
@@ -79,10 +79,10 @@ if (($_POST['year'] != "" ) || ($_POST['month'] != "") || ($_POST['day'] != ""))
     }
     print ">" . $r[0] . "</OPTION>\n";
   }
-%></SELECT></TD></TR>
+?></SELECT></TD></TR>
 
 <TR CLASS=list-color2>
-<TD ALIGN=LEFT>Month</TD><TD><SELECT NAME=month><%
+<TD ALIGN=LEFT>Month</TD><TD><SELECT NAME=month><?php
   for($i=1;$i <= 12;$i++) {
     print "<OPTION VALUE=" . $i;
     if ($_POST['month'] == $i) {
@@ -90,10 +90,10 @@ if (($_POST['year'] != "" ) || ($_POST['month'] != "") || ($_POST['day'] != ""))
     }
     print ">" . $i . "</OPTION>\n";
   }
-%></SELECT></TD></TR>
+?></SELECT></TD></TR>
 
 <TR CLASS=list-color1>
-<TD ALIGN=LEFT>Day</TD><TD><SELECT NAME=day><%
+<TD ALIGN=LEFT>Day</TD><TD><SELECT NAME=day><?php
   for($i=1;$i <= 31;$i++) {
     print "<OPTION VALUE=" . $i;
     if ($_POST['day'] == $i) {
@@ -101,11 +101,11 @@ if (($_POST['year'] != "" ) || ($_POST['month'] != "") || ($_POST['day'] != ""))
     }
     print ">" . $i . "</OPTION>\n";
   }
-%></SELECT></TD>
+?></SELECT></TD>
 </TR>
 <TR CLASS=list-color2>
 <TD ALIGN=MIDDLE COLSPAN=2><INPUT TYPE=SUBMIT VALUE="Show Sessions"></TH></TR>
-</FORM><%
+</FORM><?php
 }
-%>
+?>
 </TABLE>

@@ -1,5 +1,5 @@
 <link rel="stylesheet" type="text/css" href="/style.php">
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -101,4 +101,4 @@
   }
 
   print "</TABLE>";
-%>
+?>

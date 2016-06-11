@@ -1,4 +1,4 @@
-<%
+<?php
 
 function randpwgen($len) {
   do {
@@ -6,7 +6,7 @@ function randpwgen($len) {
     for($cnt=0;$cnt < $len;$cnt++) {
       $newcode .= chr(!rand(0, 2) ? rand(48, 57) : (!rand(0, 1) ? rand(65, 90) : rand(97, 122)));
     }
-  } while (!ereg("[a-z]",$newcode) || !ereg("[A-Z]",$newcode) || !ereg("[0-9]",$newcode));
+  } while (!preg_match("/[a-z]/",$newcode) || !preg_match("/[A-Z]/",$newcode) || !preg_match("/[0-9]/",$newcode));
   return $newcode;
 }
 
@@ -97,7 +97,7 @@ function createexten($mac,$phonetype,$prefix,$start,$tdmport) {
     }
     if ($cno <= $autovars['AutoEnd']) {
       $extennum=sprintf("%02u%02u",$autovars['DefaultPrefix'],$cno);
-      $newexten="'" . $autovars['DefaultPrefix'] . "'||lpad('" . $cno . "',2,0)";
+      $newexten="'" . $autovars['DefaultPrefix'] . "'||lpad('" . $cno . "',2,'0')";
       $newepass=randpwgen(8);
 
       if (($phonetype == "SNOM") || ($phonetype == "YEALINK") || ($phonetype == "POLYCOM") || (substr($phonetype,0,3) == "IP_")) {
@@ -106,17 +106,22 @@ function createexten($mac,$phonetype,$prefix,$start,$tdmport) {
         $encrypt="no";
       }
 
+      $qualify="yes";
       if (($phonetype == "SNOM") || ($phonetype == "YEALINK")) {
         $transport="tls";
+      } elseif ($phonetype == "DUXBURY") {
+        $transport="udp,tcp";
+        $qualify="no";
       } else {
         $transport="udp";
       }
 
-      $exaddq="INSERT INTO users (context,name,defaultuser,mailbox,secret,password,usertype,
-                                       fullname,email,callgroup,pickupgroup,qualify,encryption,transport) VALUES (
-                                       '6'," . $newexten . "," . $newexten . "," . $newexten . ",'" . $newepass . "'," . $newexten . "
-                                       ,'0','Exten '||" . $newexten . ",'','1','1','yes','" . $encrypt . "','" . $transport . "')";
+      $exaddq="INSERT INTO users (context,name,defaultuser,mailbox,secret,usertype,
+                                       fullname,callgroup,pickupgroup,qualify,encryption,transport) VALUES (
+                                       '6'," . $newexten . "," . $newexten . "," . $newexten . "||'@6','" . $newepass .
+                                       "','0','Exten '||" . $newexten . ",'1','1','" . $qualify . "','" . $encrypt . "','" . $transport . "')";
       pg_query($db,$exaddq);
+      pg_query($db,"INSERT INTO voicemail (mailbox,context,email,fullname,password) SELECT users.name,context,'',fullname,name FROM users WHERE users.name = " . $newexten);
       pg_query($db,"DELETE FROM astdb where family=" . $newexten);
       pg_query($db,"DELETE FROM features where exten=" . $newexten);
       pg_query($db,"INSERT INTO features (exten) VALUES (" . $newexten . ")");
@@ -144,4 +149,4 @@ function createexten($mac,$phonetype,$prefix,$start,$tdmport) {
   }
   return $ret;
 }
-%>
+?>

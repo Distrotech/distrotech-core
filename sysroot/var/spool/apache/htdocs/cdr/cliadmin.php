@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -34,7 +34,7 @@ if (isset($pbxupdate)) {
 
 $qgetdata=pg_query($db,"SELECT key,value FROM astdb WHERE family='CLI'");
 
-%>
+?>
 
 <CENTER>
 <FORM METHOD=POST>
@@ -46,13 +46,13 @@ $qgetdata=pg_query($db,"SELECT key,value FROM astdb WHERE family='CLI'");
 <TD>Select CLI Map To Delete</TD>
 <TD><SELECT NAME=key>
 <OPTION VALUE="">Add New CLI Map Below</OPTION>
-<%
+<?php
 $dnum=pg_num_rows($qgetdata);
 for($i=0;$i<$dnum;$i++){
   $getdata=pg_fetch_array($qgetdata,$i);
   print "<OPTION VALUE=" . $getdata[0] . ">" . $getdata[0] . "->" . $getdata[1] . "</OPTION>"; 
 }
-%>
+?>
 </SELECT>
 </TR>
 <TR CLASS=list-color2>

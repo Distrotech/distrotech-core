@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -23,4 +23,4 @@ if ((file_exists("/etc/.needsreconf")) && ($_POST['disppage'] == "")) {
   $_POST['showmenu']="inet";
 }
 include "../index.php";
-%>
+?>

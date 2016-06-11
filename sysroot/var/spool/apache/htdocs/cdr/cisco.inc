@@ -1,4 +1,4 @@
-<%
+<?php
 function ciscoxml($exten,$pass,$servip,$macaddr) {
   $config="<device>
 	<deviceProtocol>SIP</deviceProtocol>
@@ -182,4 +182,4 @@ function ciscoxml($exten,$pass,$servip,$macaddr) {
 </device>\n";
   file_put_contents("/tftpboot/SEP" . $macaddr . ".cnf.xml",$config);
 }
-%>
+?>

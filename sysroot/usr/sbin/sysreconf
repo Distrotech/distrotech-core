@@ -19,10 +19,10 @@ if [ -d /sys/class/net/ethA ] && [ -d /sys/class/net/wlanA ] && [ -e /etc/.insta
   INT_IFACE[1]="ethA";
 fi;
 
-if [ -e /etc/distrotech/default.conf ];then
-  config_file=/etc/distrotech/default.conf
- else
+if [ -e /etc/firewall.conf ] && [ ! -e /etc/.install ];then
   config_file=/etc/firewall.conf
+ else
+  config_file=/etc/distrotech/default.conf
 fi;
 
 echo -n "" > /tmp/netsentry.conf

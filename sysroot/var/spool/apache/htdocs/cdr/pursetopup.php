@@ -8,7 +8,7 @@
 <INPUT TYPE=HIDDEN NAME=print>
 <INPUT TYPE=HIDDEN NAME=account>
 <INPUT TYPE=HIDDEN NAME=ammount>
-<%
+<?php
 include_once "auth.inc";
 
 if (($_POST['account'] != "") && ($_POST['ammount'] != "")) {
@@ -82,6 +82,6 @@ if ($_POST['print'] != "1") {
   $rcol++;
   print "<TR CLASS=list-color" . (($rcol % 2)+1) . "><TH COLSPAN=" . $colspan . " CLASS=heading-body><INPUT TYPE=BUTTON NAME=pbutton VALUE=\"" . _("Print") . "\" ONCLICK=\"printpage(document.ppage)\"></TH></TR>";
 }
-%>
+?>
 </FORM>
 </TABLE>

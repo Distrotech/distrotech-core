@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -74,4 +74,4 @@ $imsg["15-0"]="Information request (obsolete)";
 $imsg["16-0"]="Information reply (obsolete)";
 $imsg["17-0"]="Address mask request";
 $imsg["18-0"]="Address mask reply";
-%>
+?>

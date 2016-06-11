@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -39,4 +39,4 @@
 
   ImagePng($imout);
   ImageDestroy($imout);
-%>
+?>

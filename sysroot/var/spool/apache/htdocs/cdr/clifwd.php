@@ -6,7 +6,7 @@
 <INPUT TYPE=HIDDEN NAME=index VALUE="">
 <INPUT TYPE=HIDDEN NAME=timerange VALUE="">
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
-<%
+<?php
 include_once "cdr/auth.inc";
 include_once "ldap/auth.inc";
 
@@ -47,7 +47,7 @@ $tmap=pg_query($db,"SELECT prefix,strip,match,id FROM climap ORDER by length(pre
 for($tcnt=0;$tcnt<pg_num_rows($tmap);$tcnt++) {
   $r=pg_fetch_array($tmap,$tcnt);
   $todel="del" . $r[3];
-  if ($$todel == "on") {
+  if (${$todel} == "on") {
     pg_query("DELETE FROM climap WHERE id=" . $r[3]);
     continue;
   }
@@ -78,6 +78,6 @@ if ($_POST['print'] != "1") {
   }
   print "<INPUT TYPE=BUTTON NAME=pbutton VALUE=\"" . _("Print") . "\" ONCLICK=\"printpage(document.ppage)\"></TH></TR>\n";
 }
-%>
+?>
 </FORM>
 </TABLE>

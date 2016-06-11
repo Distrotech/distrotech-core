@@ -1,4 +1,4 @@
-<%
+<?php
   include "../logs/uloginc.php";
   if ($time == "") {
     $time="86400";
@@ -42,4 +42,4 @@
 
   $imin=imagecreatefrompng("/var/spool/apache/htdocs/mrtg/violations.png");
   imagepng($imin);
-%>
+?>

@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -35,14 +35,14 @@ if (!isset($_SESSION['auth'])) {
 
 $disc=array(_("Photo Album"));
 
-%>
+?>
 <FORM ENCTYPE="multipart/form-data" METHOD=POST>
-<INPUT TYPE=HIDDEN NAME=classi VALUE="<%print $euser;%>">
+<INPUT TYPE=HIDDEN NAME=classi VALUE="<?php print $euser;?>">
 <CENTER>
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
-<TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body><%print _("Editing Photo Album");%></TH></TR>
-<TR CLASS=list-color1><TH COLSPAN=2 CLASS=heading-body2><%print _("Default Image");%> (0)</TH></TR>
-<%
+<TR CLASS=list-color2><TH COLSPAN=2 CLASS=heading-body><?php print _("Editing Photo Album");?></TH></TR>
+<TR CLASS=list-color1><TH COLSPAN=2 CLASS=heading-body2><?php print _("Default Image");?> (0)</TH></TR>
+<?php
 
   $iarr=array("jpegPhoto");
   $dnarr=array("dn");
@@ -133,55 +133,55 @@ $disc=array(_("Photo Album"));
     $attr=$iarr[$i];
     $adata=ldap_get_values_len($ds,$entry,strtolower($attr));
     $pcount=$adata["count"];
-    $$attr=$adata[0];
+    ${$attr}=$adata[0];
 
     print "<TR CLASS=list-color2><TD COLSPAN=2 VALIGN=MIDDLE ALIGN=CENTER>";
     if ($pcount > 0) {
-%>
-      <A HREF=/photo/<%print urlencode($euser);%>.jpg TARGET=_BLANK><IMG SRC=/photo/<%print urlencode($euser);%>.jpg&imlim=400 onmouseover="myHint.show('photo')" onmouseout="myHint.hide()" BORDER=0></A><BR>
-<%
+?>
+      <A HREF=/photo/<?php print urlencode($euser);?>.jpg TARGET=_BLANK><IMG SRC=/photo/<?php print urlencode($euser);?>.jpg&imlim=400 onmouseover="myHint.show('photo')" onmouseout="myHint.hide()" BORDER=0></A><BR>
+<?php
     } else {
       print _("NO IMAGE");
     }
-%>
-    <TR CLASS=list-color1><TH COLSPAN=2 CLASS=heading-body2><%print _("Photo Options");%></TH></TR>
-    <TR CLASS=list-color2><TD COLSPAN onmouseover="myHint.show('0')" onmouseout=myHint.hide()><%print _("Select JPEG Image To Add/Insert Into Album");%><BR><FONT SIZE=1><%print _("It Must Be A Unique Image Duplicates Are Rejected");%></FONT></BR></TD<TD>
-    <INPUT TYPE=FILE  NAME=<%print $attr;%> COLS=40 ROWS=5></TD></TR>
-    <TR CLASS=list-color1><TH COLSPAN=2 CLASS=heading-body2><%print _("Chose One Option Bellow");%></TH></TR>
-    <TR CLASS=list-color2><TD onmouseover="myHint.show('1')" onmouseout=myHint.hide()><%print _("Insert New Photo");%></TD><TD>
+?>
+    <TR CLASS=list-color1><TH COLSPAN=2 CLASS=heading-body2><?php print _("Photo Options");?></TH></TR>
+    <TR CLASS=list-color2><TD COLSPAN=1 onmouseover="myHint.show('0')" onmouseout=myHint.hide()><?php print _("Select JPEG Image To Add/Insert Into Album");?><BR><FONT SIZE=1><?php print _("It Must Be A Unique Image Duplicates Are Rejected");?></FONT></BR></TD><TD>
+    <INPUT TYPE=FILE  NAME=<?php print $attr;?>></TD></TR>
+    <TR CLASS=list-color1><TH COLSPAN=2CLASS=heading-body2><?php print _("Chose One Option Bellow");?></TH></TR>
+    <TR CLASS=list-color2><TD onmouseover="myHint.show('1')" onmouseout=myHint.hide()><?php print _("Insert New Photo");?></TD><TD>
         <SELECT NAME=inpindex>
           <OPTION VALUE="">
-          <OPTION VALUE=""><%print _("At The End");%>
-<%
+          <OPTION VALUE=""><?php print _("At The End");?>
+<?php
           for ($pcnt=0;$pcnt<$pcount;$pcnt++) {
             print "<OPTION VALUE=" . $pcnt . ">" .  _("At Position") . " " . $pcnt;
           }
-%>
+?>
         </SELECT></TD></TR>
       <TR CLASS=list-color1><TD onmouseover="myHint.show('2')" onmouseout=myHint.hide()>
-      <%print _("Replace Photo");%></TD><TD>
+      <?php print _("Replace Photo");?></TD><TD>
         <SELECT NAME=pindex>
           <OPTION VALUE="">
-<%
+<?php
           for ($pcnt=0;$pcnt<$pcount;$pcnt++) {
             print "<OPTION VALUE=" . $pcnt . ">" . _("At Position") . " " . $pcnt;
           }
-%>
+?>
         </SELECT></TD></TR>
       <TR CLASS=list-color2><TD onmouseover="myHint.show('3')" onmouseout=myHint.hide()>
-      <%print _("Delete Photo At Position");%><BR><FONT SIZE=1>
-      <%print _("At Least One Photo Must Be In The Data Base");%></FONT>
+      <?php print _("Delete Photo At Position");?><BR><FONT SIZE=1>
+      <?php print _("At Least One Photo Must Be In The Data Base");?></FONT>
       </TD><TD>
         <SELECT NAME=dpindex>
           <OPTION VALUE="">
-<%
+<?php
           for ($pcnt=0;$pcnt<$pcount;$pcnt++) {
             print "<OPTION VALUE=" . $pcnt . ">" . $pcnt;
           }
         print "</SELECT>";
       print "</TD></TR>\n\r";
   }
-%>
+?>
 <TR CLASS=list-color1><TH COLSPAN=2>  
-  <INPUT TYPE=SUBMIT VALUE="<%print _("Modify");%>" NAME=modrec></TH></TR>
+  <INPUT TYPE=SUBMIT VALUE="<?php print _("Modify");?>" NAME=modrec></TH></TR>
 </TABLE></FORM>

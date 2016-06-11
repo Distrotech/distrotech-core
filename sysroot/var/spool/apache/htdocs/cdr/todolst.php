@@ -7,7 +7,7 @@
 <FORM NAME=officehours METHOD=POST>
 <INPUT TYPE=HIDDEN NAME=index VALUE="">
 <INPUT TYPE=HIDDEN NAME=timerange VALUE="">
-<%
+<?php
 include_once "cdr/auth.inc";
 include_once "ldap/auth.inc";
 
@@ -45,7 +45,7 @@ $tmap=pg_query($db,"SELECT createby,todolist,assignedto,id,date_trunc('minute',d
 for($tcnt=0;$tcnt<pg_num_rows($tmap);$tcnt++) {
   $r=pg_fetch_array($tmap,$tcnt);
   $todel="del" . $r[3];
-  if ($$todel == "on") {
+  if (${$todel} == "on") {
     pg_query("DELETE FROM todolist WHERE id=" . $r[3]);
     continue;
   }
@@ -77,6 +77,6 @@ if ($_POST['print'] != "1") {
   }
   print "<INPUT TYPE=BUTTON NAME=pbutton VALUE=\"" . _("Print") . "\" ONCLICK=\"printpage(document.ppage)\"></TH></TR>\n";
 }
-%>
+?>
 </FORM>
 </TABLE>

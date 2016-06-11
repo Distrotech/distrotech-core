@@ -1,15 +1,15 @@
-<%
+<?php
 
 if ($_POST['print'] < 2) {
-%>
+?>
 <CENTER>
 <CENTER>
 <FORM NAME=ppage METHOD=POST>
-<INPUT TYPE=HIDDEN NAME=disppage VALUE="<%print $_SESSION['disppage'];%>">
+<INPUT TYPE=HIDDEN NAME=disppage VALUE="<?php print $_SESSION['disppage'];?>">
 <INPUT TYPE=HIDDEN NAME=print>
 </FORM>
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
-<%
+<?php
 }
 $tariffq1=pg_query($db,"SELECT description,peakstart,peakend,peakmin,peaksec,peakperiod,offpeakmin,offpeaksec,offpeakperiod,index,distance,match,peakdays from localrates where validfrom < now() AND validto > now() AND peakstart != peakend  AND index > 0 order by peakmin");
 $heading="<TH CLASS=heading-body2>" . _("Min Charge") . "</TH><TH CLASS=heading-body2>" . _("Per Sec.") . "</TH><TH CLASS=heading-body2>" . _("Period (s)") . "</TH><TH CLASS=heading-body2>" . _("Min Charge") . "</TH><TH CLASS=heading-body2>" . _("Per Sec.") . "</TH><TH CLASS=heading-body2>" . _("Period (s)") . "</TH>";
@@ -72,8 +72,8 @@ if ($_POST['print'] < "1") {
   print "</TH></TR>";
 }
 if ($_POST['print'] < 2) {
-%>
+?>
 </TABLE>
-<%
+<?php
 }
-%>
+?>

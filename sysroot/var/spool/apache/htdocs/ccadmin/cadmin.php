@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -20,12 +20,12 @@
 
 $prios=array("Low","Medium","High","Urgent");
 
-%>
+?>
 <FORM METHOD=POST NAME=cadminf onsubmit="ajaxsubmit(this.name);return false">
 <CENTER>
 <TABLE border=0 width=90% cellspacing=0 cellpadding=0>
 
-<%
+<?php
 
 if ($_POST['active'] == "on") {
   $_POST['active']='t';
@@ -50,80 +50,80 @@ if ((isset($_POST['editcamp'])) && ($_POST['id'] == "")) {
 
 if ((!isset($_POST['editcamp'])) && (!isset($_POST['upcamp']))) {
   $getcamp=pg_query($db,"SELECT id,description||' ('||name||')' FROM campaign ORDER by description,name");
-%>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+?>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TH COLSPAN=2 CLASS=heading-body>
-      <%print _("Select A Campaign To Edit/Add Or Delete");%>
+      <?php print _("Select A Campaign To Edit/Add Or Delete");?>
     </TH>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD WIDTH=50%>
-      <%print _("Select Campaign");%>
+      <?php print _("Select Campaign");?>
     </TD>
     <TD>
       <SELECT NAME=id>
-        <OPTION VALUE="">Add New Campaign (Fill In Bellow)</OPTION><%
+        <OPTION VALUE="">Add New Campaign (Fill In Bellow)</OPTION><?php
         for($ccnt=0;$ccnt<pg_num_rows($getcamp);$ccnt++) {
-          list($cid,$cname)=pg_fetch_array($getcamp,$ccnt);%>
-          <OPTION VALUE="<%print $cid;%>"><%print $cname%></OPTION><%
-        }%>
+          list($cid,$cname)=pg_fetch_array($getcamp,$ccnt);?>
+          <OPTION VALUE="<?php print $cid;?>"><?php print $cname?></OPTION><?php
+        }?>
     </TD>
-  </TR><%
-} else {%>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  </TR><?php
+} else {?>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TH COLSPAN=2 CLASS=heading-body>
-      <%print _("Editing Campaign") . " (" . $_POST['description'] . " - " . $_POST['name'] . ")";%>
+      <?php print _("Editing Campaign") . " (" . $_POST['description'] . " - " . $_POST['name'] . ")";?>
     </TH>
-  </TR><%
-}%>
-<TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  </TR><?php
+}?>
+<TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
   <TD WIDTH=50%>
-    <%print _("Priority Of Calls In This Campaign Compared To Other Campaigns");%>
+    <?php print _("Priority Of Calls In This Campaign Compared To Other Campaigns");?>
   </TD>
   <TD>
-    <SELECT NAME=priority><%
+    <SELECT NAME=priority><?php
       for($pcnt=1;$pcnt <= count($prios);$pcnt++) {
         print "<OPTION VALUE=" . $pcnt;
         if ($_POST['priority'] == $pcnt) {
           print " SELECTED";
         }
         print ">" . $prios[$pcnt-1] . "</OPTION>";
-      }%>
+      }?>
     </SELECT>
   </TD>
 </TR>
-<TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+<TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
   <TD>
-    <%print _("Description (Long Name)");%>
+    <?php print _("Description (Long Name)");?>
   </TD>
   <TD>
-    <INPUT NAME=description VALUE="<%print $_POST['description'];%>">
-  </TD>
-</TR>
-<TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
-  <TD>
-    <%print _("Name (Short Description)");%>
-  </TD>
-  <TD>
-    <INPUT NAME=name VALUE="<%print $_POST['name'];%>">
+    <INPUT NAME=description VALUE="<?php print $_POST['description'];?>">
   </TD>
 </TR>
-<TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+<TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
   <TD>
-    <%print _("Campaign Is Active");%>
+    <?php print _("Name (Short Description)");?>
   </TD>
   <TD>
-    <INPUT TYPE=CHECKBOX NAME=active<%if ((!isset($_POST['active'])) || ($_POST['active'] == 't')) {print " CHECKED";}%>>
+    <INPUT NAME=name VALUE="<?php print $_POST['name'];?>">
   </TD>
 </TR>
-<TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
-  <TD COLSPAN=2 ALIGN=MIDDLE><%
-    if ((isset($_POST['upcamp'])) || (isset($_POST['editcamp']))) {%>
-      <INPUT TYPE=SUBMIT onclick=this.name='upcamp' VALUE="<%print _("Update");%>"><%
-    } else {%>
-      <INPUT TYPE=SUBMIT onclick=this.name='delcamp' VALUE="<%print _("Delete")%>">
-      <INPUT TYPE=SUBMIT onclick=this.name='editcamp' VALUE="<%print _("Edit/Add")%>"><%
-    }%>
+<TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
+  <TD>
+    <?php print _("Campaign Is Active");?>
+  </TD>
+  <TD>
+    <INPUT TYPE=CHECKBOX NAME=active<?php if ((!isset($_POST['active'])) || ($_POST['active'] == 't')) {print " CHECKED";}?>>
+  </TD>
+</TR>
+<TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
+  <TD COLSPAN=2 ALIGN=MIDDLE><?php
+    if ((isset($_POST['upcamp'])) || (isset($_POST['editcamp']))) {?>
+      <INPUT TYPE=SUBMIT onclick=this.name='upcamp' VALUE="<?php print _("Update");?>"><?php
+    } else {?>
+      <INPUT TYPE=SUBMIT onclick=this.name='delcamp' VALUE="<?php print _("Delete")?>">
+      <INPUT TYPE=SUBMIT onclick=this.name='editcamp' VALUE="<?php print _("Edit/Add")?>"><?php
+    }?>
   </TD>
 </TR>
 </TABLE>

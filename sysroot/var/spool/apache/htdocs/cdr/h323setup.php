@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -21,12 +21,12 @@
 if (! $db) {
   include "auth.inc";
 }
-%>
+?>
 <FORM METHOD=POST>
 <CENTER>
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <TR CLASS=list-color2>
-<%
+<?php
 if ((isset($selext)) || (isset($pbxupdate))) {
   if ($h323permit == "0.0.0.0") {
     $h323permit="allow";
@@ -58,21 +58,21 @@ if ((isset($selext)) || (isset($pbxupdate))) {
   } else {
     $h323prefix="";
   }
-%>
-<INPUT TYPE=HIDDEN NAME=exten VALUE=<%print $exten;%>>
-  <TH COLSPAN=2>H.323 Configuration For Extension <%print $exten%></TH>
+?>
+<INPUT TYPE=HIDDEN NAME=exten VALUE=<?php print $exten;?>>
+  <TH COLSPAN=2>H.323 Configuration For Extension <?php print $exten?></TH>
 </TR>
 <TR CLASS=list-color1>
   <TD>Gatekeeper ID</TD>
-  <TD><INPUT TYPE=TEXT NAME=h323gkid VALUE="<%print $h323gkid;%>"></TD>
+  <TD><INPUT TYPE=TEXT NAME=h323gkid VALUE="<?php print $h323gkid;?>"></TD>
 </TR>
 <TR CLASS=list-color2>
   <TD>Recived Prefix</TD>
-  <TD><INPUT TYPE=TEXT NAME=h323prefix VALUE="<%print $h323prefix;%>"></TD>
+  <TD><INPUT TYPE=TEXT NAME=h323prefix VALUE="<?php print $h323prefix;?>"></TD>
 </TR>
 <TR CLASS=list-color1>
   <TD>Gatekeeper IP<BR>0.0.0.0 For Any IP Or Blank To Deny Access</TD>
-  <TD><INPUT TYPE=TEXT NAME=h323permit VALUE="<%print $h323permit;%>"></TD>
+  <TD><INPUT TYPE=TEXT NAME=h323permit VALUE="<?php print $h323permit;?>"></TD>
 </TR>
 <TR CLASS=list-color2>
   <TD ALIGN=MIDDLE COLSPAN=2>
@@ -82,12 +82,12 @@ if ((isset($selext)) || (isset($pbxupdate))) {
 </TR>
 </TABLE>
 </FORM>
-<%
+<?php
 } else if (!isset($selext)){
   if ((isset($delext)) && ($exten != "")) {
     pg_query($db,"DELETE FROM users WHERE name='" . $exten . "'");
   }
-%>
+?>
   <TH COLSPAN=2>Select Extension</TH>
 </TR>
 <TR CLASS=list-color1>
@@ -99,6 +99,6 @@ if ((isset($selext)) || (isset($pbxupdate))) {
     <INPUT TYPE=SUBMIT NAME=selext VALUE="Edit H.323 Settings">
   </TABLE>
   </FORM>
-<%
+<?php
   exit;
 }

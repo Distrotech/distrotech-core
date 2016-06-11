@@ -1,4 +1,4 @@
-<%
+<?php
 include_once "/var/spool/apache/htdocs/session.inc";
 
 if (!isset($_SERVER['SERVER_NAME'])) {
@@ -50,4 +50,4 @@ if (($_POST['vboxlogoff'] == session_id()) && ($_POST['vboxlogoff'] != "")) {
 }
 
 include_once "/var/spool/apache/htdocs/ldap/auth.inc";
-%>
+?>

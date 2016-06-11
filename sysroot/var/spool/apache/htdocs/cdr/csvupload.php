@@ -1,4 +1,4 @@
-<%
+<?php
 include_once "auth.inc";
 
 $bcolor[0]=" CLASS=list-color2";
@@ -93,16 +93,16 @@ $localt['LocalArea']=_("Local Area Code");
 $localt['LocalPrefix']=_("Local Prefix");
 
 function macload($macaddr) {
-  $macaddr=strtoupper(ereg_replace(":","",$macaddr));
+  $macaddr=strtoupper(preg_replace("/:/","",$macaddr));
   return $macaddr;
 }
 
 function telnumload($tnumber) {
-  $tnumber=ereg_replace("\(","",$tnumber);
-  $tnumber=ereg_replace(")","",$tnumber);
-  $tnumber=ereg_replace("-","",$tnumber);
-  $tnumber=ereg_replace(" ","",$tnumber);
-  $tnumber=ereg_replace("\+","09",$tnumber);
+  $tnumber=preg_replace("/\(/","",$tnumber);
+  $tnumber=preg_replace("/)/","",$tnumber);
+  $tnumber=preg_replace("/-/","",$tnumber);
+  $tnumber=preg_replace("/ /","",$tnumber);
+  $tnumber=preg_replace("/\+/","00",$tnumber);
   return $tnumber;
 }
 
@@ -195,14 +195,14 @@ if (isset($csvup)) {
             $item++;
           }
           $tmp.=substr($text[$item],0,-1);
-          $tmp=ereg_replace("\"\"","\"",$tmp);
+          $tmp=preg_replace("/\"\"/","\"",$tmp);
         } else if (($text[$item][0] == "\"") && (substr($text[$item],-1) == "\"")) {
           $tmp=substr($text[$item],1,-1);
         } else {
           $tmp=$text[$item];
         }
         if ($filetype != "setup") {
-          $tmp=ereg_replace("'","''",$tmp);
+          $tmp=preg_replace("/'/","''",$tmp);
         }
         array_push($out,$tmp);
       }
@@ -549,9 +549,9 @@ if (isset($csvup)) {
         } else {
           print "<TR" . $bcolor[$rcnt % 2] . "><TD>Updateing :";
         }
-        $out[0]=ereg_replace("'","",$out[0]);
-        $out[1]=ereg_replace("'","",$out[1]);
-        $out[2]=ereg_replace("'","",$out[2]);
+        $out[0]=preg_replace("/'/","",$out[0]);
+        $out[1]=preg_replace("/'/","",$out[1]);
+        $out[2]=preg_replace("/'/","",$out[2]);
 
         
         if (($out[0] == "Setup") && ($setup[$out[1]] != "")) {
@@ -687,14 +687,14 @@ if (isset($csvup)) {
     include "/var/spool/apache/htdocs/cdr/func.inc";
   }
 } else {
-%>
+?>
   <CENTER>
   <FORM enctype="multipart/form-data" METHOD=POST>
   <TABLE WIDTH=90% cellspacing=0 cellpadding=0><TR CLASS=list-color2>
   <INPUT TYPE=HIDDEN NAME=disppage VALUE=cdr/csvupload.php>
-<%
+<?php
     if ($_POST['mmap'] == "") {
-%>
+?>
       <TD ALIGN=LEFT onmouseover="myHint.show('CU1')" onmouseout="myHint.hide()">Select Type Of File To Load</TD>
       <TD ALIGN=LEFT VALIGN=MIDDLE>
         <SELECT NAME=filetype>
@@ -703,44 +703,44 @@ if (isset($csvup)) {
         </SELECT>
       </TD>
     </TR>
-<%
+<?php
     } else {
-%>
-      <INPUT TYPE=HIDDEN NAME=filetype VALUE="<%print $_POST['mmap'];%>">
-      <TH COLSPAN=2 CLASS=heading-body>CSV <%print $ftype[$_POST['mmap']];%> Upload</TH></TR>
-<%
+?>
+      <INPUT TYPE=HIDDEN NAME=filetype VALUE="<?php print $_POST['mmap'];?>">
+      <TH COLSPAN=2 CLASS=heading-body>CSV <?php print $ftype[$_POST['mmap']];?> Upload</TH></TR>
+<?php
     }
-%>
+?>
     <TR CLASS=list-color1>
       <TD WIDTH=50% onmouseover="myHint.show('CU0')" onmouseout="myHint.hide()">
-        <%print _("CSV File To Be Loaded");%>
+        <?php print _("CSV File To Be Loaded");?>
       </TD>
       <TD WIDTH=50%>
         <INPUT TYPE=FILE NAME=topdf>
       </TD>
     </TR>
-<%
+<?php
     if ($dater[$_POST['mmap']]) {
-%>
+?>
     <TR CLASS=list-color2>
       <TD WIDTH=50% onmouseover="myHint.show('CU0')" onmouseout="myHint.hide()">
-        <%print _("Date From When To Be Activated");%>
+        <?php print _("Date From When To Be Activated");?>
       </TD>
       <TD WIDTH=50%>
-        <INPUT TYPE=TEXT NAME=validfrom VALUE="<%print date('Y-m-d H:i:s');%>">
+        <INPUT TYPE=TEXT NAME=validfrom VALUE="<?php print date('Y-m-d H:i:s');?>">
       </TD>
     <TR CLASS=list-color1>
-<%
+<?php
     } else {
-%>
+?>
     <TR CLASS=list-color2>
-<%  }%>
+<?php  }?>
       <TD COLSPAN=2 ALIGN=MIDDLE>
-        <INPUT TYPE=SUBMIT NAME=csvup VALUE="<%print _("Submit Request");%>">
+        <INPUT TYPE=SUBMIT NAME=csvup VALUE="<?php print _("Submit Request");?>">
       </TD>
     <TR>
  </FORM>
-<%
+<?php
 }
-%>
+?>
 </TABLE>

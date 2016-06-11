@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -18,7 +18,7 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 include "auth.inc";
-%>
+?>
 
 <html>
 
@@ -33,7 +33,7 @@ include "auth.inc";
 <table border="0" width="80%" cellspacing="0" cellpadding="0">
 <TR><TD ALIGN=MIDDLE>
 <FORM METHOD=POST>
-<%
+<?php
 
 $abdn="ou=Email";
 
@@ -53,14 +53,14 @@ if (isset($subscribe)) {
     }
     asort($srsort);
     reset ($srsort);
-%>
+?>
    Select Mailing List To Join
    <P><SELECT NAME=alias>
-<%
+<?php
     while (list($i,$val) = each($srsort)) {
       $dn=$info[$i]["dn"];
       $cname=$info[$i]["sendmailmtakey"][0];
-      if (! ereg("^owner",$cname)) {
+      if (! preg_match("/^owner/",$cname)) {
         print "<OPTION VALUE=\"" . $cname . "\">" . $cname . "\n";
       }
     }
@@ -69,7 +69,7 @@ if (isset($subscribe)) {
     print "Email Address<BR><INPUT TYPE=TEXT NAME=newmember><P>";
     print "<INPUT TYPE=SUBMIT NAME=subscribe VALUE=\"Subscribe\"><P>\n";
 
-%>
+?>
 </FORM>
   </TD></TR>
 </table>

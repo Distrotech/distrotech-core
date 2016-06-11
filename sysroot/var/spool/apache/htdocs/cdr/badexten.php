@@ -2,7 +2,7 @@
 <FORM NAME=delunexten METHOD=POST onsubmit="ajaxsubmit(this.name);return false;">
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <INPUT TYPE=HIDDEN NAME=ajax value=1>
-<%
+<?php
 include_once "auth.inc";
 $extensq="SELECT name,fullname,ipaddr,snommac,useragent from users 
  left outer join features on (name = exten)
@@ -10,7 +10,7 @@ $extensq="SELECT name,fullname,ipaddr,snommac,useragent from users
 if ($SUPER_USER != 1) {
   $extensq.=" LEFT OUTER JOIN astdb AS bgrp ON (bgrp.family=name AND bgrp.key='BGRP')";
 }
-$extensq.=" where (fwdu = 0 OR fwdu is null) AND (zapline = 0 OR zapline is null) AND (extract(epoch from now()) - 3600 > regseconds OR regseconds is null ) AND (not h323neighbor  OR h323neighbor is null) AND lpre.value='1'";
+$extensq.=" where (fwdu = '0' OR fwdu is null) AND (zapline = '0' OR zapline is null) AND (extract(epoch from now()) - 3600 > CAST(regseconds AS int) OR regseconds is null ) AND (not h323neighbor  OR h323neighbor is null) AND lpre.value='1'";
 if ($SUPER_USER != 1) {
   $extensq.=" AND " . $clogacl;
 }
@@ -39,7 +39,7 @@ for($tcnt=0;$tcnt<pg_num_rows($extens);$tcnt++) {
   $r=pg_fetch_array($extens,$tcnt);
   
   $todel="del" . $r[0];
-  if ($$todel == "on") {
+  if (${$todel} == "on") {
     pg_query($db,"DELETE FROM users WHERE name='" . $r[0] . "'");
     pg_query($db,"DELETE FROM features WHERE exten='" . $r[0] . "'");
     pg_query($db,"DELETE FROM astdb WHERE family='" . $r[0] . "'");
@@ -78,13 +78,13 @@ if ($_POST['print'] != "1") {
   print "<TR CLASS=list-color" . (($rcol % 2)+1) . "><TD COLSPAN=" . $colspan . " ALIGN=LEFT>" . ($rcol - 1) . " Extensions Affected</TH></TR>\n";
   $rcol++;
   print "<TR CLASS=list-color" . (($rcol % 2)+1) . "><TH COLSPAN=" . $colspan . " CLASS=heading-body>";
-  if ($SUPER_USER == 1) {%>
-    <INPUT TYPE=SUBMIT VALUE="Delete"><%
+  if ($SUPER_USER == 1) {?>
+    <INPUT TYPE=SUBMIT VALUE="Delete"><?php
   }
   print "<INPUT TYPE=BUTTON NAME=pbutton VALUE=\"" . _("Print") . "\" ONCLICK=\"printpage(document.ppage)\">";
   print "</TH></TR>";
 }
-%>
+?>
 <FORM NAME=ppage METHOD=POST><INPUT TYPE=HIDDEN NAME=print></FORM>
 </TABLE>
 </FORM>

@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -65,7 +65,7 @@ function apiquery($command) {
   for (;;) {
     $wrets=rtrim(fgets($socket,8192));
     if ($wrets != "") {
-      list($key,$val)=split(": ",$wrets);
+      list($key,$val)=preg_split("/: /",$wrets);
       if (($key == "Response") && ($val == "Error")) {
         break;
       } else {
@@ -114,7 +114,7 @@ function getagentstatus($agent,$socket) {
   for (;;) {
     $wrets=rtrim(fgets($socket,8192));
     if ($wrets != "") {
-      list($key,$val)=split(": ",$wrets);
+      list($key,$val)=preg_split("/: /",$wrets);
       if (($key == "Response") && ($val == "Error")) {
         break;
       } else {
@@ -172,7 +172,7 @@ function getchanstatus($channel,$socket) {
   for(;;) {
     $wrets=rtrim(fgets($socket,8192));
     if ($wrets != "") {
-      list($key,$val)=split(": ",$wrets);
+      list($key,$val)=preg_split("/: /",$wrets);
       if (($key != "Response") && ($pcnt > 0)) {
         $chaninf[$key]=$val;
       } else if ($val == "Error") {
@@ -182,7 +182,7 @@ function getchanstatus($channel,$socket) {
       $chaninf=array();
       break;
     } else {
-      if (ereg("^([^/]+)/([0-9]{4})",$chaninf['Channel'],$datainf)) {
+      if (preg_match("/^([^/]+)/([0-9]{4})/",$chaninf['Channel'],$datainf)) {
         if (($datainf[2] == $channel) || ($chaninf['Channel'] == $channel)) {
           break;
         }
@@ -213,4 +213,4 @@ function apihangupchan($channel,$socket) {
   fputs($socket,"Channel: " . $channel . "\r\n");
   fputs($socket,"\r\n");  
 }
-%>
+?>

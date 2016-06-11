@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -46,31 +46,31 @@
 
   if ($_POST['print'] < 2) {
   $colspan=10;
-%>
+?>
 <CENTER>
 <FORM NAME=pform METHOD=POST>
 <INPUT TYPE=HIDDEN NAME=print>
-<INPUT TYPE=HIDDEN NAME=disppage VALUE="<%print $_SESSION['disppage']%>">
-<INPUT TYPE=HIDDEN NAME=time_year VALUE="<%print $time_year;%>">
-<INPUT TYPE=HIDDEN NAME=time_month VALUE="<%print $time_month;%>">
-<INPUT TYPE=HIDDEN NAME=time_day VALUE="<%print $time_day;%>">
-<INPUT TYPE=HIDDEN NAME=time_hour VALUE="<%print $time_hour;%>">
-<INPUT TYPE=HIDDEN NAME=time_min VALUE="<%print $time_min;%>">
-<INPUT TYPE=HIDDEN NAME=time_sec VALUE="<%print $time_sec;%>">
-<INPUT TYPE=HIDDEN NAME=mtime_year VALUE="<%print $mtime_year;%>">
-<INPUT TYPE=HIDDEN NAME=mtime_month VALUE="<%print $mtime_month;%>">
-<INPUT TYPE=HIDDEN NAME=mtime_day VALUE="<%print $mtime_day;%>">
-<INPUT TYPE=HIDDEN NAME=mtime_hour VALUE="<%print $mtime_hour;%>">
-<INPUT TYPE=HIDDEN NAME=mtime_min VALUE="<%print $mtime_min;%>">
-<INPUT TYPE=HIDDEN NAME=mtime_sec VALUE="<%print $mtime_sec;%>">
-<INPUT TYPE=HIDDEN NAME=exten VALUE="<%print $exten;%>">
-<INPUT TYPE=HIDDEN NAME=fqueue VALUE="<%print $fqueue;%>">
-<INPUT TYPE=HIDDEN NAME=date VALUE="<%print $date;%>">
+<INPUT TYPE=HIDDEN NAME=disppage VALUE="<?php print $_SESSION['disppage']?>">
+<INPUT TYPE=HIDDEN NAME=time_year VALUE="<?php print $time_year;?>">
+<INPUT TYPE=HIDDEN NAME=time_month VALUE="<?php print $time_month;?>">
+<INPUT TYPE=HIDDEN NAME=time_day VALUE="<?php print $time_day;?>">
+<INPUT TYPE=HIDDEN NAME=time_hour VALUE="<?php print $time_hour;?>">
+<INPUT TYPE=HIDDEN NAME=time_min VALUE="<?php print $time_min;?>">
+<INPUT TYPE=HIDDEN NAME=time_sec VALUE="<?php print $time_sec;?>">
+<INPUT TYPE=HIDDEN NAME=mtime_year VALUE="<?php print $mtime_year;?>">
+<INPUT TYPE=HIDDEN NAME=mtime_month VALUE="<?php print $mtime_month;?>">
+<INPUT TYPE=HIDDEN NAME=mtime_day VALUE="<?php print $mtime_day;?>">
+<INPUT TYPE=HIDDEN NAME=mtime_hour VALUE="<?php print $mtime_hour;?>">
+<INPUT TYPE=HIDDEN NAME=mtime_min VALUE="<?php print $mtime_min;?>">
+<INPUT TYPE=HIDDEN NAME=mtime_sec VALUE="<?php print $mtime_sec;?>">
+<INPUT TYPE=HIDDEN NAME=exten VALUE="<?php print $exten;?>">
+<INPUT TYPE=HIDDEN NAME=fqueue VALUE="<?php print $fqueue;?>">
+<INPUT TYPE=HIDDEN NAME=date VALUE="<?php print $date;?>">
 </FORM>
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
 <TR CLASS=list-color2>
-<TH COLSPAN=<%print $colspan;%> CLASS=heading-body>
-<%print $reptitle;%>
+<TH COLSPAN=<?php print $colspan;?> CLASS=heading-body>
+<?php print $reptitle;?>
 </TH>
 </TR>
 <TR CLASS=list-color1>
@@ -90,7 +90,7 @@
 <TH ALIGN=RIGHT CLASS=heading-body2 WIDTH=5%>Avg.</TH>
 <TH ALIGN=RIGHT CLASS=heading-body2 WIDTH=5%>Cost</TH>
 </TR>
-<%
+<?php
 } else {
   print printcsv(array($reptitle));
   print printcsv(array(($fqueue == "")?"Agent":"Time","Tot. Calls","Tot. Time","Tot. Avg.","In Calls","In Time","In Avg.",
@@ -175,4 +175,4 @@
     }
     print "</TABLE>";
   }
-%>
+?>

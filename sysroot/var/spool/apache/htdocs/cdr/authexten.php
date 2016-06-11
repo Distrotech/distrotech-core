@@ -1,11 +1,11 @@
 <CENTER>
 <FORM METHOD=POST NAME=authexten onsubmit="ajaxsubmit(this.name);return false;">
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
-<%
+<?php
 include_once "auth.inc";
 $extens=pg_query($db,"SELECT name,fullname,ipaddr,snommac from users left outer join features on (name = exten) 
 			left outer join astdb as lpre on (lpre.family = 'LocalPrefix' and lpre.key = substr(name,0,3))
-                         where autoauth = 1 AND lpre.value='1' order by name");
+                         where autoauth = '1' AND lpre.value='1' order by name");
 
 if ($_POST['print'] != "1") {
   $colspan=5;
@@ -27,7 +27,7 @@ for($tcnt=0;$tcnt<pg_num_rows($extens);$tcnt++) {
   $r=pg_fetch_array($extens,$tcnt);
   
   $toauth="auth" . $r[0];
-  if ($$toauth == "on") {
+  if (${$toauth} == "on") {
     pg_query($db,"UPDATE features SET autoauth='0' WHERE exten='" . $r[0] . "'");
     continue;
   }
@@ -57,7 +57,7 @@ if ($_POST['print'] != "1") {
   print "<TR CLASS=list-color" . (($rcol % 2)+1) . "><TH COLSPAN=" . $colspan . " CLASS=heading-body>
 <INPUT TYPE=SUBMIT onclick=this.name='authexten' VALUE=\"Authorise\"><INPUT TYPE=BUTTON NAME=pbutton VALUE=\"" . _("Print") . "\" ONCLICK=\"printpage(document.ppage)\"></TH></TR>";
 }
-%>
+?>
 </FORM>
 </TABLE>
 <FORM NAME=ppage METHOD=POST>

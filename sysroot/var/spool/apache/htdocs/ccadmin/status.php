@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -49,66 +49,66 @@ if ((isset($_POST['id'])) && (!isset($_POST['listid'])) && (!isset($_POST['updb'
 }
 
 
-%>
+?>
 <FORM NAME=ladmin METHOD=POST onsubmit="ajaxsubmit(this.name);return false">
 <CENTER>
 <TABLE border=0 width=90% cellspacing=0 cellpadding=0>
-<%
+<?php
 
 if ((!isset($_POST['id'])) && (!isset($_POST['listid'])) && (!isset($_POST['updb']))) {
   unset($_SESSION['campid']);
   unset($_SESSION['listid']);
-  $getcamp=pg_query($db,"SELECT id,description||' ('||name||')' FROM campaign LEFT OUTER JOIN camp_admin ON (campaign.id=camp_admin.campaign AND camp_admin.userid='" . $_SERVER['PHP_AUTH_USER'] . "')" . $_SESSION['limitadmin'] . " ORDER by description,name");%>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  $getcamp=pg_query($db,"SELECT id,description||' ('||name||')' FROM campaign LEFT OUTER JOIN camp_admin ON (campaign.id=camp_admin.campaign AND camp_admin.userid='" . $_SERVER['PHP_AUTH_USER'] . "')" . $_SESSION['limitadmin'] . " ORDER by description,name");?>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TH COLSPAN=2 CLASS=heading-body>
-      <%print _("Select A Campaign To Edit Field Names");%>
+      <?php print _("Select A Campaign To Edit Field Names");?>
     </TH>
   </TR>
-  <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+  <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
     <TD WIDTH=50%>
-      <%print _("Select Campaign To Configure Lists");%>
+      <?php print _("Select Campaign To Configure Lists");?>
     </TD>
     <TD>
       <SELECT NAME=id onchange=ajaxsubmit(this.form.name)>
-        <OPTION VALUE=""></OPTION><%
+        <OPTION VALUE=""></OPTION><?php
         for($ccnt=0;$ccnt<pg_num_rows($getcamp);$ccnt++) {
-          list($cid,$cname)=pg_fetch_array($getcamp,$ccnt);%>
-          <OPTION VALUE="<%print $cid;%>"><%print $cname%></OPTION><%
-        }%>
+          list($cid,$cname)=pg_fetch_array($getcamp,$ccnt);?>
+          <OPTION VALUE="<?php print $cid;?>"><?php print $cname?></OPTION><?php
+        }?>
     </TD>
-  </TR><%
+  </TR><?php
 } else if ((isset($_SESSION['campid'])) && (!isset($_SESSION['listid']))) {
-    $getlist=pg_query($db,"SELECT id,description FROM list WHERE campaign=" . $_SESSION['campid'] . "ORDER by description");%>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+    $getlist=pg_query($db,"SELECT id,description FROM list WHERE campaign=" . $_SESSION['campid'] . "ORDER by description");?>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TH COLSPAN=2 CLASS=heading-body>
-        <%print _("Select List To Edit Fields From Campaign") . " " . $_SESSION['campname'];%>
+        <?php print _("Select List To Edit Fields From Campaign") . " " . $_SESSION['campname'];?>
       </TH>
     </TR>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TD WIDTH=50%>
-        <%print _("Select List");%>
+        <?php print _("Select List");?>
       </TD>
       <TD>
         <SELECT NAME=listid onchange=ajaxsubmit(this.form.name)>
-          <OPTION VALUE=""></OPTION><%
+          <OPTION VALUE=""></OPTION><?php
           for($ccnt=0;$ccnt<pg_num_rows($getlist);$ccnt++) {
-            list($cid,$cname)=pg_fetch_array($getlist,$ccnt);%>
-            <OPTION VALUE="<%print $cid;%>"><%print $cname%></OPTION><%
-          }%>
+            list($cid,$cname)=pg_fetch_array($getlist,$ccnt);?>
+            <OPTION VALUE="<?php print $cid;?>"><?php print $cname?></OPTION><?php
+          }?>
       </TD>
-    </TR><%
-} else {%>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+    </TR><?php
+} else {?>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TH COLSPAN=3 CLASS=heading-body>
-         <%print _("Editing Status Codes For") . " " . $_SESSION['listname'] . " " . _("List For Campaign") . " " . $_SESSION['campname'];%>
+         <?php print _("Editing Status Codes For") . " " . $_SESSION['listname'] . " " . _("List For Campaign") . " " . $_SESSION['campname'];?>
       </TH>
-    </TR><%
+    </TR><?php
     $testdbtbl=pg_query($db,"SELECT id,option,closed FROM status WHERE listid=" . $_SESSION['listid'] . "AND campid=" . $_SESSION['campid']);
-    if (pg_num_rows($testdbtbl) > 0) {%>
-      <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+    if (pg_num_rows($testdbtbl) > 0) {?>
+      <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
         <TH COLSPAN=3 CLASS=heading-body2>Existing Information</TH>
       </TR>
-      <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+      <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
         <TH ALIGN=LEFT WIDTH=15% CLASS=heading-body2>
           Delete
         </TH>
@@ -118,26 +118,26 @@ if ((!isset($_POST['id'])) && (!isset($_POST['listid'])) && (!isset($_POST['updb
         <TH ALIGN=LEFT CLASS=heading-body2>
           Close Contact
         </TH>
-      </TR><%
+      </TR><?php
     }
     for($dtrcnt=0;$dtrcnt < pg_num_rows($testdbtbl);$dtrcnt++) {
-      list($delid,$doption,$closec)=pg_fetch_array($testdbtbl,$dtrcnt);%>
-      <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+      list($delid,$doption,$closec)=pg_fetch_array($testdbtbl,$dtrcnt);?>
+      <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
         <TD>
-          <INPUT TYPE=CHECKBOX NAME="del<%print $delid;%>">
+          <INPUT TYPE=CHECKBOX NAME="del<?php print $delid;?>">
         </TD>
         <TD>
-          <%print $doption;%>
+          <?php print $doption;?>
         </TD>
         <TD>
-          <%print (($closec == "t")?"Yes":"No");%>
+          <?php print (($closec == "t")?"Yes":"No");?>
         </TD>
       </TR>
-<%  }%>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+<?php  }?>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TH COLSPAN=3 CLASS=heading-body2>Add New Option</TH>
     </TR>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TD WIDTH=50%>Add</TD>
       <TD>
         <INPUT TYPE=TEXT NAME=status>
@@ -146,14 +146,14 @@ if ((!isset($_POST['id'])) && (!isset($_POST['listid'])) && (!isset($_POST['updb
           <INPUT TYPE=CHECKBOX NAME="closed">
         </TD>
     </TR>
-    <TR<%print $bcolor[$rcnt % 2];$rcnt++;%>>
+    <TR<?php print $bcolor[$rcnt % 2];$rcnt++;?>>
       <TD COLSPAN=3 ALIGN=MIDDLE>
-        <INPUT TYPE=SUBMIT NAME=updb VALUE="<%print _("Update");%>">
+        <INPUT TYPE=SUBMIT NAME=updb VALUE="<?php print _("Update");?>">
       </TD>
     </TR>
-<%
+<?php
 }
-%>
+?>
 </TABLE>
 </FORM>
 

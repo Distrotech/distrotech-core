@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -18,9 +18,9 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
   include "ulogauth.php";
-%>
+?>
 <link rel=stylesheet type=text/css href=/style.php>
-<%  
+<?php  
   $mintime="$time_year-$time_month-$time_day $time_hour:$time_min:$time_sec";
   $query="DELETE FROM mail_from WHERE time < \"$mintime\"";
   $dresult=mysql_query($query);
@@ -29,4 +29,4 @@
   $dresult=mysql_query($query);
   $pcnt=$pcnt+mysql_affected_rows();
   print "Deleted $pcnt Entries";
-%>
+?>

@@ -1,7 +1,7 @@
 <CENTER>
 <FORM METHOD=POST NAME=editagentf onsubmit="ajaxsubmit(this.name);return false">
 <TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -29,7 +29,7 @@ $users=pg_query("SELECT username,description,admin,id FROM reseller WHERE
 
 $num=pg_num_rows($users); 
 $_SESSION['disppage']="cshop/addagent.php";
-%>
+?>
 <TR CLASS=list-color2>
 <TH COLSPAN=2 CLASS=heading-body>Edit Reseller Or Operator</TH>
 </TR>
@@ -37,7 +37,7 @@ $_SESSION['disppage']="cshop/addagent.php";
 <TD WIDTH=50%>Select Operator Or Reseller To Edit</TD>
 <TD VALIGN=MIDDLE>
 <SELECT NAME=edituser>
-<%
+<?php
 
 for ($i=0; $i < $num; $i++) {
   $r = pg_fetch_row($users,$i);
@@ -49,7 +49,7 @@ for ($i=0; $i < $num; $i++) {
   }
   print $r[0] . ")</OPTION>\n";
 }
-%>
+?>
 </SELECT></TD></TR>
 <TR CLASS=list-color2><TD ALIGN=MIDDLE COLSPAN=2><INPUT TYPE=SUBMIT></TH></TR>
 </FORM>

@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -24,7 +24,7 @@ if (!isset($_SESSION['auth'])) {
   if (!isset($euser)) {
     $euser=$PHP_AUTH_USER;
   }
-%>
+?>
 <html>
 <head>
 <title>e4l Configuration</title>
@@ -32,7 +32,7 @@ if (!isset($_SESSION['auth'])) {
 <link rel="stylesheet" type="text/css" href="/style.php">
 </head>
 <body>
-<%
+<?php
   include "../ldap/pgauth.inc";
   if (! $db) {
     print "A Database Error Has Occured ...";
@@ -120,35 +120,35 @@ if (!isset($_SESSION['auth'])) {
     pg_query($db,"REINDEX TABLE " . $euser . "_Props FORCE;");
   }
 
-%>
+?>
 
 <FORM METHOD=POST>
 <CENTER>
 <TABLE WIDTH=90% cellspacing="0" cellpadding="0">
 <TR CLASS=list-color2><TH COLSPAN=2>
-<%
+<?php
   if ($ADMIN_USER == "admin") {
     print "Editing ";
   } else {
     print "Viewing ";
   }
-%>
+?>
 Exchange 4 Linux Profile</TH></TR>
 
 <TR CLASS=list-color1>
-<%
+<?php
   if ($ADMIN_USER == "admin") {
-    if ($tblnum != 2) {%>
+    if ($tblnum != 2) {?>
       <TD>Create e4l Profile</TD>
       <TD><INPUT TYPE=SUBMIT NAME=ce4l></TD>
-<%
+<?php
     } else {
-%>
+?>
       <TD>Recreate e4l Profile</TD>
       <TD><INPUT TYPE=SUBMIT NAME=ce4l></TD>
-<%
+<?php
     }
-%>
+?>
   <TR  CLASS=list-color2>
     <TD>Delete e4l Profile</TD>
     <TD><INPUT TYPE=SUBMIT NAME=dele4l></TD>
@@ -158,6 +158,6 @@ Exchange 4 Linux Profile</TH></TR>
     <TD><INPUT TYPE=SUBMIT NAME=ree4l></TD>
   
   </TR></TABLE></FORM>
-<%
+<?php
   }
-%>
+?>

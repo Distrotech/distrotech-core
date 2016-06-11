@@ -69,4 +69,4 @@ $rateq="SELECT rate from users left outer join tariffrate on (tariffcode=tariff)
                         "ORDER by length(prefix) DESC LIMIT 1";
 $ratequery=odbcquery($rateq);
 $agi->set_variable("DTRATE",$ratequery[0]);
-%>
+?>

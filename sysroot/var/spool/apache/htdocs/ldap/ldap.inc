@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -21,12 +21,12 @@
   $rdn="cn=root";
 
   if ($ldtype == "user") {
-    $abdn="ou=Users,cn=$baseou";
+    $abdn="ou=Users,cn=" . $_POST['baseou'];
   } else if ($ldtype == "abook") {
-    $abdn="ou=Entries,cn=$baseou";
+    $abdn="ou=Entries,cn=" . $_POST['baseou'];
   }
 
-  if ($baseou == "system") {
+  if ($_POST['baseou'] == "system") {
     $ldtype="user";
     if ($_SESSION['utype'] != "system" ) {
       $abdn="o=" . $_SESSION['utype'] . ",ou=Users";
@@ -35,41 +35,41 @@
     }
   }
 
-  if ($baseou == "server") {
+  if ($_POST['baseou'] == "server") {
     $ldtype="user";
     $abdn="ou=Servers";
   }
 
-  if ($baseou == "mserver") {
+  if ($_POST['baseou'] == "mserver") {
     $ldtype="user";
     $abdn="ou=Email";
   }
 
-  if ($baseou == "trust") {
+  if ($_POST['baseou'] == "trust") {
     $ldtype="user";
     $abdn="ou=Trusts";
   }
 
-  if ($baseou == "snom") {
+  if ($_POST['baseou'] == "snom") {
     $ldtype="snom";
     $abdn="ou=Snom";
   }
 
-  if ($baseou == "pdc") {
+  if ($_POST['baseou'] == "pdc") {
     $ldtype="pdc";
     $abdn="ou=Idmap";
   }
 
-  if ($baseou != "snom") {
+  if ($_POST['baseou'] != "snom") {
     $descrip["userPassword"]=_("Password");
   }
 
-  if ($baseou == "mserver") {
+  if ($_POST['baseou'] == "mserver") {
     $descrip["cn"]=_("Hostname Of Server");
   } else {
     $descrip["cn"]=_("Common Name (Unique Name For Contact)");
   }
-  if (($baseou != "snom") && ($baseou != "trust") && ($baseou != "mserver")) {
+  if (($_POST['baseou'] != "snom") && ($_POST['baseou'] != "trust") && ($_POST['baseou'] != "mserver")) {
     $descrip["title"]=_("Title");
     $descrip["givenName"]=_("Firstname");
     $descrip["sn"]=_("Surname");
@@ -80,7 +80,7 @@
     $descrip["jpegPhoto"]="Users Photograph (JPEG)";
 */
   
-    if (($baseou != "snom") && ($baseou != "trust") && ($baseou != "mserver")) {
+    if (($_POST['baseou'] != "snom") && ($_POST['baseou'] != "trust") && ($_POST['baseou'] != "mserver")) {
       $descrip["mail"]=_("Email address");
       $descrip["initials"]=_("Initials");
       $descrip["preferredLanguage"]=_("Prefered Language");
@@ -105,19 +105,19 @@
       }
       $descrip["homePostalAddress"]=_("Home Address");
 //      $descrip["sambaSID"]=_("SID");
-    } else if (($baseou != "trust") && ($baseou != "mserver")){
+    } else if (($_POST['baseou'] != "trust") && ($_POST['baseou'] != "mserver")){
       $descrip["telephoneNumber"]=_("Telephone Number");
-    } else if ($baseou == "trust") {
+    } else if ($_POST['baseou'] == "trust") {
       $descrip["uid"]=_("UID");
       $descrip["sambasid"]=_("SID");
-    } else if ($baseou == "mserver") {
+    } else if ($_POST['baseou'] == "mserver") {
       $descrip["cn"]=_("Hostname");
       $descrip["uid"]=_("Login");
       $descrip["ipHostNumber"]=_("IP Address");
       $descrip["l"]=_("Location");
       $descrip["description"]=_("Description");
     }
-    if (($baseou != "snom") && ($baseou != "trust") && ($baseou != "mserver")) {
+    if (($_POST['baseou'] != "snom") && ($_POST['baseou'] != "trust") && ($_POST['baseou'] != "mserver")) {
       $label["o"]=_("Work Information");
       $descrip["o"]=_("Organization");
       $descrip["ou"]=_("Division");
@@ -132,14 +132,14 @@
   $reqat["abook"]=array("cn","sn");
   $reqat["snom"]=array("cn");
 
-  if ($baseou != "") {
+  if ($_POST['baseou'] != "") {
     $reqat["user"]=array("sn","cn","givenName","mail");
   } else {
     $reqat["user"]=array("uid");
   }
 
   $dnattr["abook"]=array();
-  if ($baseou != "") {
+  if ($_POST['baseou'] != "") {
     $dnattr["user"]=array("cn");
   } else {
     $dnattr["user"]=array("uid");
@@ -194,7 +194,7 @@
 
   $attrhide["pdc"]=array("userPassword","uid","accountSuspended");
 
-  if ($baseou != "") {
+  if ($_POST['baseou'] != "") {
     $attrhide["user"]=array("c");
   } else {
     $attrhide["user"]=array("userPassword","uid","pwdLastSet","logonTime","logoffTime","kickoffTime",
@@ -208,4 +208,4 @@
   while(list($idx)=each($darr)) {
     array_push($atrib,$idx);
   }
-%>
+?>

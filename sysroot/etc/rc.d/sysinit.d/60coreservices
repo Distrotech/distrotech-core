@@ -41,15 +41,6 @@ if [ -e /etc/named.conf ];then
   (ulimit -n 65535;/usr/sbin/named > /dev/null 2>&1) &
 fi;
 
-#Start DHCP As Soon As Posible
-if [ ! -d /var/state/dhcp ];then
-  mkdir -p /var/state/dhcp
-fi;
-touch /var/state/dhcp/dhcpd.leases /var/state/dhcp/dhcpd6.leases
-if [ -e /etc/dhcpd.conf ];then
-  (ulimit -n 65535;/usr/sbin/dhcpd > /dev/null 2>&1) &
-fi;
-
 #Start SNMP
 /usr/sbin/snmpd -c /etc/snmpd.conf UDP:161 UDP6:161
 

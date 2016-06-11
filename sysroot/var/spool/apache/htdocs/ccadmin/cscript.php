@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -25,29 +25,29 @@ if ($_POST['mmap'] != "") {
   $data_tb=strtolower("contactdata_" . $camps . "_" . $listn);
 }
 
-%>
+?>
 <CENTER>
 <TABLE border=0 width=90% cellspacing=0 cellpadding=0>
   <TR CLASS=list-color2>
     <TH CLASS=heading-body>
-      <%print _("Script For") . " " . $camp . " (" . $camps . ") " . _("Campaign") . " [" . $listn . " " . _("List") . "]";%>
+      <?php print _("Script For") . " " . $camp . " (" . $camps . ") " . _("Campaign") . " [" . $listn . " " . _("List") . "]";?>
     </TH>
   </TR>
   <TR CLASS=list-color1>
     <TD>
-<%
+<?php
 include "scriptp.inc";
 print getscripthtml($text,$htmlscript);
-%>
+?>
     </TD>
   </TR>
   <TR CLASS=list-color2>
     <TH CLASS=heading-body2>
-      Database Table Setup <%print $data_tb;%>
+      Database Table Setup <?php print $data_tb;?>
     </TD>
   </TR>
   <TR CLASS=list-color1>
-    <TD><%
+    <TD><?php
       $testdb=pg_query($db,"SELECT * from information_schema.tables where table_catalog='asterisk' and table_name='" . $data_tb . "'");
       if (pg_num_rows($testdb) == 1) {
         print "Database Table Exists<BR>";
@@ -72,7 +72,7 @@ print getscripthtml($text,$htmlscript);
         pg_query("ALTER TABLE " . $data_tb . " ADD " . $trow . " " . $ttype);
         print "Adding Database Field " . $trow . "<BR>";
       }
-%>
+?>
     </TD>
   </TR>
 </TABLE>

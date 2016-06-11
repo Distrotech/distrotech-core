@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -23,27 +23,27 @@ include_once "auth.inc";
 $getdata="SELECT distinct ivr,officehours from ivrconf";
 $qgetdata=pg_query($db,$getdata);
 
-%>
+?>
 
 <CENTER>
 <FORM METHOD=POST NAME=ivrform onsubmit="ajaxsubmit(this.name);return false">
 <TABLE WIDTH=90% CELLPADDING=0 CELLSPACING=0>
 <TR CLASS=list-color2>
-  <TH CLASS=heading-body COLSPAN=2><%print _("Asterisk PBX IVR Configuration");%></TH>
+  <TH CLASS=heading-body COLSPAN=2><?php print _("Asterisk PBX IVR Configuration");?></TH>
 </TR>
 <INPUT TYPE=HIDDEN NAME=disppage VALUE="cdr/ivrconf.php">
 
 <TR CLASS=list-color1>
-<TD onmouseover="myHint.show('DA0')" onmouseout="myHint.hide()"><%print _("Select DDI Route To Delete");%></TD>
+<TD onmouseover="myHint.show('DA0')" onmouseout="myHint.hide()"><?php print _("Select DDI Route To Delete");?></TD>
 <TD><SELECT NAME=ivr>
-<OPTION VALUE=""><%print _("Add New IVR DDI");%></OPTION>
-<%
+<OPTION VALUE=""><?php print _("Add New IVR DDI");?></OPTION>
+<?php
 $dnum=pg_num_rows($qgetdata);
 for($i=0;$i<$dnum;$i++){
   $getdata=pg_fetch_array($qgetdata,$i);
   print "<OPTION VALUE=" . $getdata[0] . ">" . $getdata[0] . "->" . $getdata[1] . "(" . $getdata[2] . ")</OPTION>"; 
 }
-%>
+?>
 </SELECT>
 </TR>
 <TR CLASS=list-color2>
@@ -61,7 +61,7 @@ for($i=0;$i<$dnum;$i++){
 </TR>
 <TR CLASS=list-color2>
   <TD ALIGN=MIDDLE COLSPAN=2>
-     <INPUT TYPE=SUBMIT VALUE="<%print _("Add/Edit");%>">
+     <INPUT TYPE=SUBMIT VALUE="<?php print _("Add/Edit");?>">
   </TD>
 </TR>
 </TABLE>

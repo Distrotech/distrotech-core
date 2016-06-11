@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -19,7 +19,7 @@
 */
 
 /*
- * Start the session if not started 
+ * Start the session if not started
  */
 include_once "session.inc";
 $sessid=session_id();
@@ -98,14 +98,14 @@ $cdrauthok["cdr/cclist.php"]=true;
  */
 include "/var/spool/apache/htdocs/browser.php";
 $br = new Browser;
-if (($br->Platform == "Windows") && ($br->Name != "Safari") && ($br->Name != "Firefox")){%>
+if (($br->Platform == "Windows") && ($br->Name != "Safari") && ($br->Name != "Firefox")){?>
   <SCRIPT>
     alert("Please install Mozilla Firefox the admin site only works with Mozilla.\nYou are about to be redierected to the download page.");
-  </SCRIPT><%
-  if (is_file("/var/spool/samba/share/firefox.exe")) {%>
-    <meta http-equiv="Refresh" content="1;url=/share/firefox.exe"><%
-  } else {%>
-    <meta http-equiv="Refresh" content="1;url=http://www.mozilla.com"><%
+  </SCRIPT><?php
+  if (is_file("/var/spool/samba/share/firefox.exe")) {?>
+    <meta http-equiv="Refresh" content="1;url=/share/firefox.exe"><?php
+  } else {?>
+    <meta http-equiv="Refresh" content="1;url=http://www.mozilla.com"><?php
   }
   exit;
 }
@@ -142,7 +142,7 @@ if (($_POST['nomenu'] == 1) && (isset($_SESSION['poppage']))) {
   $showpage=$_SESSION['disppage'];
 }
 
-if (ereg("(^[a-zA-Z]+)\/",$showpage,$dispdata)) {
+if (preg_match("/(^[a-zA-Z]+)\//",$showpage,$dispdata)) {
   if ((!isset($_SERVER['PHP_AUTH_USER'])) || (!isset($_SERVER['PHP_AUTH_PW']))) {
     exit;
   }
@@ -159,7 +159,7 @@ if (ereg("(^[a-zA-Z]+)\/",$showpage,$dispdata)) {
     }
     $laction=$_SESSION['server'] . "auth/";
   }
-} else if (!ereg("(^[a-zA-Z]+)",$showpage,$dispdata)) {
+} else if (!preg_match("/(^[a-zA-Z]+)/",$showpage,$dispdata)) {
   exit;
 }
 
@@ -168,17 +168,17 @@ if (ereg("(^[a-zA-Z]+)\/",$showpage,$dispdata)) {
  */
 if ($_POST['ajax']) {
   unset($_POST['ajax']);
-  if (($_SESSION['showmenu'] == "asetup") && ($_SESSION['classi'] != "")) {%>
+  if (($_SESSION['showmenu'] == "asetup") && ($_SESSION['classi'] != "")) {?>
     <SCRIPT>
-    <%include "/var/spool/apache/htdocs/auth/menu_items_user.php";%>
-    </SCRIPT><%
-  } else if ($showpage == "mrtg/index.html") {%>
+    <?php include "/var/spool/apache/htdocs/auth/menu_items_user.php";?>
+    </SCRIPT><?php
+  } else if ($showpage == "mrtg/index.html") {?>
 <SCRIPT>
   var alinks = outputdiv.getElementsByTagName('A');
   for (var i=0;i<alinks.length;i++) {
     alinks[i].href="javascript:AJAX.senddata('main-body','loadpage','"+alinks[i].href+"')";
   }
-</SCRIPT><%
+</SCRIPT><?php
   }
   if (is_file("/var/spool/apache/htdocs/" . $showpage)) {
     include "/var/spool/apache/htdocs/" . $showpage;
@@ -189,31 +189,31 @@ if ($_POST['ajax']) {
 /*
  * This is not a CSV return print < 2 but could be a print page popup == 1
  */
-if ($_POST['print'] !=2) {%>
+if ($_POST['print'] !=2) {?>
   <html>
   <head>
-  <TITLE>Server Administration Interface (<%print $_SERVER['SERVER_NAME'];%>)</TITLE>
-  <link rel="stylesheet" href="/style.php<%print $_SESSION['sname'];%>">
+  <TITLE>Server Administration Interface (<?php print $_SERVER['SERVER_NAME'];?>)</TITLE>
+  <link rel="stylesheet" href="/style.php<?php print $_SESSION['sname'];?>">
       <script language="JavaScript" src="/ajax.js" type="text/javascript"></script>
       <script language="JavaScript" src="/autocomplete.js" type="text/javascript"></script>
       <script language="JavaScript" src="/formsubmit.js" type="text/javascript"></script>
-      <script language="JavaScript" src="/java_popups.php<%print $_SESSION['sname'];%>" type="text/javascript"></script><%
+      <script language="JavaScript" src="/java_popups.php<?php print $_SESSION['sname'];?>" type="text/javascript"></script><?php
 
   /*
    * This is not a print popup page and needs a menu/logo structure,forms and JScript to support it
    */
   if (($_POST['print'] != "1") && ($_POST['nomenu'] != "1")) {
 //    print_r($_SERVER);
-    if ((is_file(".." . $_SERVER['SCRIPT_URL'] . "menu_items.php")) || ($_SERVER['SCRIPT_FILENAME'] == "/var/spool/apache/htdocs/index.php")) {%>
+    if ((is_file(".." . $_SERVER['SCRIPT_URL'] . "menu_items.php")) || ($_SERVER['SCRIPT_FILENAME'] == "/var/spool/apache/htdocs/index.php")) {?>
 
-      <script language="JavaScript" src="<%print $_SERVER['SCRIPT_URL'];%>menu_items.php" type="text/javascript"></script><%
-    } else if ($_SERVER['PHP_AUTH_USER'] == "") {%>
+      <script language="JavaScript" src="<?php print $_SERVER['SCRIPT_URL'];?>menu_items.php" type="text/javascript"></script><?php
+    } else if ($_SERVER['PHP_AUTH_USER'] == "") {?>
 
-      <script language="JavaScript" src="/menu_items.php" type="text/javascript"></script><%
-    } else {%>
-      <script language="JavaScript" src="/auth/menu_items.php" type="text/javascript"></script><%
+      <script language="JavaScript" src="/menu_items.php" type="text/javascript"></script><?php
+    } else {?>
+      <script language="JavaScript" src="/auth/menu_items.php" type="text/javascript"></script><?php
 
-    }%>
+    }?>
 
       <script language="JavaScript" src="/menu_tpl.js" type="text/javascript"></script>
       <script language="JavaScript" src="/menu.js" type="text/javascript"></script>
@@ -223,7 +223,7 @@ if ($_POST['print'] !=2) {%>
       self.resizeTo(screen.width,screen.height);
       self.moveTo(0,0);
     </SCRIPT>
-      <DIV ID=side-bar CLASS=side-bar></DIV><%
+      <DIV ID=side-bar CLASS=side-bar></DIV><?php
 
     /*
      * Load the side menu based on context
@@ -248,7 +248,7 @@ if ($_POST['print'] !=2) {%>
       print "<DIV ID=header CLASS=head-logo>";
       include "header.html";
       print "</DIV>\n";
-    }%>
+    }?>
 
       <DIV ID=blanket></DIV>
       <div id="popUpDiv">
@@ -256,12 +256,12 @@ if ($_POST['print'] !=2) {%>
           <div id=popUpDivTitle border=0 height=20 width=100% align=RIGHT>
             <a href=javascript:popdown()><IMG SRC=/images/exit.png HEIGHT=20></A>
           </div>
-          <div id=popUpDivContent width=100% height=100%></div>
+          <div id=popUpDivContent width=100% height=100?></div>
         </div>
       </div>
       <DIV ID=menu-bar CLASS=menu-bar></DIV>
       <DIV ID=main-body CLASS=main-scroll>
-<%
+<?php
 
     /*
      * Load the appropriate body
@@ -269,14 +269,14 @@ if ($_POST['print'] !=2) {%>
 
     if (is_file("/var/spool/apache/htdocs/" . $showpage)) {
       include "/var/spool/apache/htdocs/" . $showpage;
-    }%>
+    }?>
 
     </DIV>
     <FORM NAME=vboxlogout METHOD=POST>
-      <INPUT TYPE=HIDDEN NAME=vboxlogoff VALUE="<%print session_id();%>">
+      <INPUT TYPE=HIDDEN NAME=vboxlogoff VALUE="<?php print session_id();?>">
     </FORM>
       <script language="JavaScript" src="/hints.js" type="text/javascript"></script>
-      <script language="JavaScript" src="/hints_cfg.php<%print $_SESSION['sname'];%>" type="text/javascript"></script><%
+      <script language="JavaScript" src="/hints_cfg.php<?php print $_SESSION['sname'];?>" type="text/javascript"></script><?php
 
     /*
      * Allow a logo on the left sidebar or on bottom right not both
@@ -310,32 +310,32 @@ if ($_POST['print'] !=2) {%>
      * This is a print form popup or a no menu page we need to set it up
      */
     print "</head>\n<body class=popup>\n<DIV ID=main-body CLASS=popup>\n";
-%>
+?>
       <DIV ID=blanket></DIV>
       <div id="popUpDiv">
         <div>
           <div id=popUpDivTitle border=0 height=20 width=100% align=RIGHT>
             <a href=javascript:popdown()><IMG SRC=/images/exit.png HEIGHT=20></A>
           </div>
-          <div id=popUpDivContent width=100% height=100%></div>
+          <div id=popUpDivContent width=100% height=100?></div>
         </div>
       </div>
-<%
-    include "/var/spool/apache/htdocs/" . $showpage;%>
-    </DIV><%
-    if ($_POST['print'] == "1") {%>
+<?php
+    include "/var/spool/apache/htdocs/" . $showpage;?>
+    </DIV><?php
+    if ($_POST['print'] == "1") {?>
 
       <SCRIPT>
         window.print();
-      </SCRIPT><%
-    } else {%>
+      </SCRIPT><?php
+    } else {?>
       <script language="JavaScript" src="/hints.js" type="text/javascript"></script>
-      <script language="JavaScript" src="/hints_cfg.php<%print $_SESSION['sname'];%>" type="text/javascript"></script><%
+      <script language="JavaScript" src="/hints_cfg.php<?php print $_SESSION['sname'];?>" type="text/javascript"></script><?php
     }
-  }%>
+  }?>
 
   </body>
-  </html><%
+  </html><?php
 } else {
   /*
    * This CSV Page Return CSV
@@ -343,8 +343,8 @@ if ($_POST['print'] !=2) {%>
   header("Content-type: application/ms-excel");
   include "/var/spool/apache/htdocs/" . $showpage;
 }
-if ($_POST['print'] != 2) {%>
-  <FORM METHOD=POST NAME=loadpage<%if ($laction != "") {print " ACTION=" . $laction;}%>>
+if ($_POST['print'] != 2) {?>
+  <FORM METHOD=POST NAME=loadpage<?php if ($laction != "") {print " ACTION=" . $laction;}?>>
     <INPUT TYPE=HIDDEN NAME=utype>
     <INPUT TYPE=HIDDEN NAME=showmenu>
     <INPUT TYPE=HIDDEN NAME=classi>
@@ -354,7 +354,7 @@ if ($_POST['print'] != 2) {%>
     <INPUT TYPE=HIDDEN NAME=print>
     <INPUT TYPE=HIDDEN NAME=nomenu>
   </FORM>
-<%
+<?php
 }
 ob_end_flush();
-%>
+?>

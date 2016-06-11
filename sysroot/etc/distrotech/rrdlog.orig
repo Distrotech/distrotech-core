@@ -56,7 +56,7 @@ $sth=$dbh->prepare("SELECT ip_protocol,count(id) FROM packet_filter WHERE local_
 $sth->execute;
 $numFields=$sth->{'NUM_OF_FIELDS'};
 while($ref=$sth->fetchrow_arrayref) {
-  $proto{$$ref[0]}=$$ref[1];
+  $proto{${$ref[0]}}=${$ref[1]};
 }
 
 $out="";

@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -17,7 +17,7 @@
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-%>
+?>
 <CENTER>
 <FORM METHOD=POST NAME=mlog onsubmit="ajaxsubmit(this.name);return false;">>
 <INPUT TYPE=HIDDEN NAME=disppage VALUE="logs/mlog.php">
@@ -35,7 +35,7 @@
 <TH><FONT SIZE=1>Year</TH></TR>
 <TR CLASS=list-color1><TD><FONT SIZE=1>
   <SELECT NAME=time_day>
-<%
+<?php
   include "uloginc.php";
 
   if (! isset($slog)) {
@@ -53,11 +53,11 @@
       print "    <OPTION SELECTED VALUE=$dom>$dom\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=time_month>
-<%
+<?php
   $mon_name['1']="January";
   $mon_name['2']="Febuary";
   $mon_name['3']="March";
@@ -91,11 +91,11 @@
       print "    <OPTION SELECTED VALUE=$month>$month\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=time_year>
-<%
+<?php
   for($year=2000;$year <= 2050;$year++) {
     if (($year != $cur_date['year']) && ($year != $time_year)){
       print "    <OPTION VALUE=$year>$year\n";
@@ -103,7 +103,7 @@
       print "    <OPTION SELECTED VALUE=$year>$year\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD></TR>
 <TR CLASS=list-color2 WIDTH=100%>
@@ -112,7 +112,7 @@
 <TH><FONT SIZE=1>Second</TH></TR>
 <TR CLASS=list-color1><TD><FONT SIZE=1>
   <SELECT NAME=time_hour>
-<%
+<?php
   for($hour=0;$hour < 24;$hour++) {
     print "    <OPTION VALUE=$hour";
     if ($hour == $time_hour) {
@@ -120,11 +120,11 @@
     }
     print ">$hour\n";
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=time_min>
-<%
+<?php
   for($minute=0;$minute < 60;$minute++) {
     print "    <OPTION VALUE=$minute";
     if ($minute == $time_min) {
@@ -132,11 +132,11 @@
     }
     print ">$minute\n";
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=time_sec>
-<%
+<?php
   for($second=0;$second < 60;$second++) {
     print "    <OPTION VALUE=$second";
     if ($second == $time_sec) {
@@ -144,7 +144,7 @@
     }
     print ">$second\n";
   }
-%>
+?>
   </SELECT>
 </TABLE></TD></TR>
 <TR><TD><FONT SIZE=1>
@@ -157,7 +157,7 @@
 <TH><FONT SIZE=1>Year</TH></TR>
 <TR CLASS=list-color2><TD><FONT SIZE=1>
   <SELECT NAME=mtime_day>
-<%
+<?php
   if (! isset($slog)) {
     $cur_date=getdate();
   }
@@ -168,11 +168,11 @@
       print "    <OPTION SELECTED VALUE=$dom>$dom\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=mtime_month>
-<%
+<?php
   for($month=1;$month <= 12;$month++) {
     if (($month != $cur_date['mon']) && ($mtime_month != $month)){
       print "    <OPTION VALUE=$month>$month\n";
@@ -180,11 +180,11 @@
       print "    <OPTION SELECTED VALUE=$month>$month\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=mtime_year>
-<%
+<?php
   for($year=2000;$year <= 2050;$year++) {
     if (($year != $cur_date['year']) && ($year != $mtime_year)){
       print "    <OPTION VALUE=$year>$year\n";
@@ -192,7 +192,7 @@
       print "    <OPTION SELECTED VALUE=$year>$year\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD></TR>
 <TR CLASS=list-color1 WIDTH=100%>
@@ -201,7 +201,7 @@
 <TH><FONT SIZE=1>Second</TH></TR>
 <TR CLASS=list-color2><TD><FONT SIZE=1>
   <SELECT NAME=mtime_hour>
-<%
+<?php
   for($hour=0;$hour < 24;$hour++) {
     if (($hour != $cur_date['hours']) && ($mtime_hour != $hour)){
       print "    <OPTION VALUE=$hour>$hour\n";
@@ -209,11 +209,11 @@
       print "    <OPTION SELECTED VALUE=$hour>$hour\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=mtime_min>
-<%
+<?php
   for($minute=0;$minute < 60;$minute++) {
     if (($minute != $cur_date['minutes']) && ($mtime_min != $minute)) {
       print "    <OPTION VALUE=$minute>$minute\n";
@@ -221,11 +221,11 @@
       print "    <OPTION SELECTED VALUE=$minute>$minute\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=mtime_sec>
-<%
+<?php
   for($second=0;$second < 60;$second++) {
     if (($second != $cur_date['seconds']) && ($mtime_sec != $second)){
       print "    <OPTION VALUE=$second>$second\n";
@@ -233,7 +233,7 @@
       print "    <OPTION SELECTED VALUE=$second>$second\n";
     }
   }
-%>
+?>
   </SELECT>
 </TABLE></TD></TR>
 
@@ -245,7 +245,7 @@
 
 <TD><FONT SIZE=1>Address
 </TD>
-<TD><FONT SIZE=1><INPUT NAME=emailaddr<%if (isset($emailaddr)) {print " VALUE=\"" . $emailaddr . "\"";}%>>
+<TD><FONT SIZE=1><INPUT NAME=emailaddr<?php if (isset($emailaddr)) {print " VALUE=\"" . $emailaddr . "\"";}?>>
 </TD></TR>
 </TABLE>
 
@@ -263,7 +263,7 @@
 <TH><FONT SIZE=1>Year</TH></TR>
 <TR CLASS=list-color2><TD><FONT SIZE=1>
   <SELECT NAME=time_day>
-<%
+<?php
   $cur_date=getdate();
   $dday=$cur_date['mday'];
   $dmon=$cur_date['mon']-1;
@@ -277,11 +277,11 @@
       print "    <OPTION SELECTED VALUE=$dom>$dom\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=time_month>
-<%
+<?php
   for($month=1;$month <= 12;$month++) {
     if ($month != $cur_date['mon'] -1) {
       print "    <OPTION VALUE=$month>$month\n";
@@ -289,11 +289,11 @@
       print "    <OPTION SELECTED VALUE=$month>$month\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=time_year>
-<%
+<?php
   for($year=2000;$year <= 2050;$year++) {
     if ($year != $cur_date['year']) {
       print "    <OPTION VALUE=$year>$year\n";
@@ -301,7 +301,7 @@
       print "    <OPTION SELECTED VALUE=$year>$year\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD></TR>
 <TR CLASS=list-color1 WIDTH=100%>
@@ -310,7 +310,7 @@
 <TH><FONT SIZE=1>Second</TH></TR>
 <TR CLASS=list-color2><TD><FONT SIZE=1>
   <SELECT NAME=time_hour>
-<%
+<?php
   for($hour=0;$hour < 24;$hour++) {
     if ($hour != $cur_date['hours']) {
       print "    <OPTION VALUE=$hour>$hour\n";
@@ -318,11 +318,11 @@
       print "    <OPTION SELECTED VALUE=$hour>$hour\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=time_min>
-<%
+<?php
   for($minute=0;$minute < 60;$minute++) {
     if ($minute != $cur_date['minutes']) {
       print "    <OPTION VALUE=$minute>$minute\n";
@@ -330,11 +330,11 @@
       print "    <OPTION SELECTED VALUE=$minute>$minute\n";
     }
   }
-%>
+?>
   </SELECT>
 </TD><TD><FONT SIZE=1>
   <SELECT NAME=time_sec>
-<%
+<?php
   for($second=0;$second < 60;$second++) {
     if ($second != $cur_date['seconds']) {
       print "    <OPTION VALUE=$second>$second\n";
@@ -342,7 +342,7 @@
       print "    <OPTION SELECTED VALUE=$second>$second\n";
     }
   }
-%>
+?>
   </SELECT>
 </TABLE></TD></TR>
 <SCRIPT>

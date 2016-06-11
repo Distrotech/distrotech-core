@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -18,30 +18,30 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-$info=strtolower($info);
+$info=strtolower($_GET['info']);
 if ($info == "usercertificate") {
   $info .=";binary";
 }
 
 include "/var/spool/apache/htdocs/ldap/ldapbind.inc";
 
-$sr=ldap_search($ds,"","(&(objectClass=officePerson)(uid=$euser)($info=*))", array($info));
+$sr=ldap_search($ds,"","(&(objectClass=officePerson)(uid=" . $_GET['euser'] . ")($info=*))", array($info));
 $ei=ldap_first_entry($ds, $sr);
 
 $cinf = ldap_get_values_len($ds, $ei,$info);
 
-if (($info == "userpkcs12") && ($keyt != "1") && (($euser == $PHP_AUTH_USER) || ($ADMIN_USER == "admin"))){
+if (($info == "userpkcs12") && ($_GET['keyt'] == "12") && (($_GET['euser'] == $PHP_AUTH_USER) || ($ADMIN_USER == "admin"))){
  header("Content-type: application/x-pkcs12");
  print $cinf[0];
-}else if (($info == "userpkcs12") && ($keyt == "1") && (($euser == $PHP_AUTH_USER) || ($ADMIN_USER == "admin"))){
+}else if (($info == "userpkcs12") && ($_GET['keyt'] == "1") && (($_GET['euser'] == $PHP_AUTH_USER) || ($ADMIN_USER == "admin"))){
  header("Content-type: application/x-rsa-key");
  $pk12=tempnam("/tmp","sslpk12");
  $pkcs12file=fopen($pk12,"w");
- fwrite($pkcs12file,$cinf[0]);   
+ fwrite($pkcs12file,$cinf[0]);
  fclose($pkcs12file);
- system("/usr/bin/openssl pkcs12 -in $pk12 -password pass:\"" . $_POST['classi'] . "\" -nocerts -nodes |/usr/bin/openssl rsa -passout pass:\"" . $_POST['classi'] . "\" -des3");
+ system("/usr/bin/openssl pkcs12 -in $pk12 -password pass:\"" . $_POST['classi'] . "\" -nocerts -nodes |/usr/bin/openssl rsa -outform PEM -passout pass:\"" . $_POST['classi'] . "\" -des3");
  unlink($pk12);
-}else if ($info == "usersmimecertificate") {
+} else if ($info == "usersmimecertificate") {
  header("Content-type: application/x-pkcs7-certificates");
  print $cinf[0];
 } else {
@@ -49,4 +49,4 @@ if (($info == "userpkcs12") && ($keyt != "1") && (($euser == $PHP_AUTH_USER) || 
  print $cinf[0];
 }
 ldap_unbind($ds);
-%>
+?>

@@ -1,4 +1,4 @@
-<%
+<?php
 include "/var/spool/apache/htdocs/auth/auth.inc";
 
 include "csvfunc.inc";
@@ -118,12 +118,12 @@ $acdstrout[16]=1;
 
 
 if (isset($getcsv)) {
-   header( "Location: /csv/" . $filetype . ".csv");
+   header( "Location: /csv/" . $_GET['filetype'] . ".csv");
 }
 
-if (isset($filetype)) {
+if (isset($_GET['filetype'])) {
   header("Content-type: application/ms-excel");
-  if ($filetype == "exten") {
+  if ($_GET['filetype'] == "exten") {
     print "Access Options\r\n";
     for($acnt=0;$acnt<=5;$acnt++) {
       print $level[$acnt] . "," . $leveld[$acnt] . "\r\n";
@@ -131,8 +131,12 @@ if (isset($filetype)) {
     print "\r\n";
     print "\r\n";
     print "EXTEN,Name,Email,Contact,DDI,PWD,VM PWD,FWD Imm,FWD Busy,FWD No Ans,FWD FAX,V. MAIL,Record,R Time,DND,Lock,C. Wait,Fax2Mail,Fax Detect,Gr,PU Gr,Access,Auth Access\r\n";
-    $users=pg_query("SELECT name,fullname,email,secret,password,callgroup,pickupgroup FROM users LEFT OUTER JOIN astdb ON (family='LocalPrefix' AND key=substring(name,1,2)) WHERE value=1 ORDER BY name");
-    for($ucnt=0;$ucnt < pg_num_rows($users);$ucnt++) {
+    $usersq="SELECT name,users.fullname,voicemail.email,secret,voicemail.password,callgroup,pickupgroup FROM users
+                       LEFT OUTER JOIN voicemail ON (name=voicemail.mailbox)
+                       LEFT OUTER JOIN astdb ON (family='LocalPrefix' AND key=substring(name,1,2))
+                     WHERE value='1' ORDER BY name";
+  $users=pg_query($db,$usersq);
+  for($ucnt=0;$ucnt < pg_num_rows($users);$ucnt++) {
       $out=array();
       $tmpout="";
       $uent=pg_fetch_array($users,$ucnt);
@@ -163,10 +167,10 @@ if (isset($filetype)) {
       }
       print substr($tmpout,0,-1) . "\r\n";
     }
-  } else if ($filetype == "elist") {
+  } else if ($_GET['filetype'] == "elist") {
     print "EXTEN,Name,Email,Contact,Office/Loc.\r\n";
     $users=pg_query("SELECT name,fullname,email,callgroup FROM users LEFT OUTER JOIN astdb ON (family='LocalPrefix' AND key=substring(name,1,2)) WHERE value=1 ORDER BY name");
- 
+
     $eoutstr=array('0','1','1','0','1');
     $etelout=array('0','0','0','1','0');
 
@@ -195,7 +199,7 @@ if (isset($filetype)) {
       }
       print substr($tmpout,0,-1) . "\r\n";
     }
-  } else if ($filetype == "snommac") {
+  } else if ($_GET['filetype'] == "snommac") {
     print "\"Exten\",\"Mac Address\",\"Locked\",\"Registrar\",\"VLAN\",\"Type\",\"Linksys Name\",\"Linksys Profile Server\",\"Linksys STUN Server\"";
     for($fkcnt=1;$fkcnt <= 54;$fkcnt++) {
       if ($fkcnt <= 12) {
@@ -268,7 +272,7 @@ if (isset($filetype)) {
       }
       print "\r\n";
     }
-  } else if ($filetype == "snompbook") {
+  } else if ($_GET['filetype'] == "snompbook") {
     include "../ldap/auth.inc";
     $sr=ldap_search($ds,"ou=snom","(&(cn=*)(telephonenumber=*))",array("cn","telephonenumber"));
     $info = ldap_get_entries($ds, $sr);
@@ -276,7 +280,7 @@ if (isset($filetype)) {
       $info[$i]["telephonenumber"][0]=telformat($info[$i]["telephonenumber"][0]);
       print "\"" . $info[$i]["cn"][0] . "\",\"" . $info[$i]["telephonenumber"][0] . "\"\r\n";
     }
-  } else if ($filetype == "protocol") {
+  } else if ($_GET['filetype'] == "protocol") {
     print "EXTEN,Nat,DTMF,Relaxed Auth.,Reinvite,Forwarding,Keepalive,GK IP Access,GK ID,Recived Prefix,Audio 1,Audio 2,Audio 3,Video 1,Video 2,Video 3,Use IAX,TDM Port,NO VOIP,TDM RX Gain,TDM TX Gain\r\n";
     $users=pg_query("SELECT name,nat,dtmfmode,insecure,canreinvite,cancallforward,qualify,h323permit,h323gkid,h323prefix,allow FROM users LEFT OUTER JOIN astdb ON (family='LocalPrefix' AND key=substring(name,1,2)) WHERE value=1 ORDER BY name");
     for($ucnt=0;$ucnt < pg_num_rows($users);$ucnt++) {
@@ -317,7 +321,7 @@ if (isset($filetype)) {
       }
       print substr($tmpout,0,-1) . "\r\n";
     }
-  } else if ($filetype == "acd") {
+  } else if ($_GET['filetype'] == "acd") {
     $acdq="SELECT queue_table.name,description,strategy,timeout,wrapuptime,memberdelay,servicelevel,weight,maxlen,retry,announce_frequency,announce_holdtime,
                               announce_round_seconds,autopausedelay,playmusiconhold,users.password,users.email,tout.value,penalty.value,delay.value
                           FROM queue_table 
@@ -344,7 +348,7 @@ if (isset($filetype)) {
       }
       print "\r\n";
     }
-  } else if ($filetype == "ibroute") {
+  } else if ($_GET['filetype'] == "ibroute") {
     $ibroute=pg_query($db,"SELECT route.key,route.value,proto.value,rewrite.value FROM astdb AS route 
                     LEFT OUTER JOIN astdb AS proto ON (proto.key=route.key AND proto.family='LocalRouteProto') 
                     LEFT OUTER JOIN astdb AS rewrite ON (rewrite.key=route.key AND rewrite.family='LocalRewrite') WHERE 
@@ -363,7 +367,7 @@ if (isset($filetype)) {
       }
       print "\r\n";
     }
-  } else if ($filetype == "agents") {
+  } else if ($_GET['filetype'] == "agents") {
     print "Queue,Agent,Penalty,Loged In\r\n";
     $agents=pg_query($db,"SELECT queue.family,substring(queue.key from position('/' in queue.key)+1),agent.value,CASE WHEN (queue.value = '-1') THEN 'No' ELSE 'Yes' END FROM astdb AS queue 
                                   LEFT OUTER JOIN astdb AS agent ON (agent.family = 'Q'||queue.family AND agent.key=queue.key) 
@@ -384,7 +388,7 @@ if (isset($filetype)) {
       }
       print "\r\n";
     }    
-  } else if ($filetype == "setup") {
+  } else if ($_GET['filetype'] == "setup") {
     $setupq=pg_query($db,"SELECT family,key,value from astdb WHERE family = 'Setup' OR family='LocalArea' OR family='DDI' 
                                  OR (family = 'Q799' AND key='QAPENALTY') OR family = 'LocalPrefix' ORDER by family DESC,key");
     print "Family,Key,Value\r\n";
@@ -399,7 +403,7 @@ if (isset($filetype)) {
       }
       print "\r\n";
     }    
-  } else if ($filetype == "console") {
+  } else if ($_GET['filetype'] == "console") {
     $conq=pg_query($db,"SELECT name,console.context,console.count FROM users LEFT OUTER JOIN console ON (name=console.mailbox) 
                                      LEFT OUTER JOIN astdb on (astdb.key=substring(name,1,2) AND astdb.family='LocalPrefix') 
                                    WHERE astdb.value='1' order by name");
@@ -418,7 +422,7 @@ if (isset($filetype)) {
       }
       print "\r\n";
     }
-  } else if ($filetype == "gsmchan") {
+  } else if ($_GET['filetype'] == "gsmchan") {
     $gsmq=pg_query($db,"SELECT router,channel,calltime,starttime,endtime,regex,expires FROM gsmchannels ORDER BY router,channel");
 
     print "Router,Channel,Call Time,Start Time,End Time,Match Pattern,Expires\r\n";
@@ -435,7 +439,7 @@ if (isset($filetype)) {
       }
       print "\r\n";
     }
-  } else if ($filetype == "speeddial") {
+  } else if ($_GET['filetype'] == "speeddial") {
     $sdialq=pg_query($db,"SELECT number,dest,discrip FROM speed_dial ORDER BY discrip");
 
     print "Number,Dest,Discription\r\n";
@@ -452,7 +456,7 @@ if (isset($filetype)) {
       }
       print "\r\n";
     }
-  } else if ($filetype == "zapsetup") {
+  } else if ($_GET['filetype'] == "zapsetup") {
     $dbtab[0]="zapgroup";
     $dbtab[1]="zapspan";
     $dbtab[2]="zapchan";
@@ -477,7 +481,7 @@ if (isset($filetype)) {
     }
   } 
 } else {
-%>
+?>
 
 
 <CENTER>
@@ -500,6 +504,6 @@ if (isset($filetype)) {
  </TABLE>
  </FORM>
 
-<%
+<?php
 }
-%>
+?>

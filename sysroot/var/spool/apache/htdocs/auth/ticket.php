@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -19,13 +19,13 @@
 */
 
 $colspan=4;
-%>
-<META HTTP-EQUIV="Refresh" CONTENT="5; URL=<%print "/ticket/scp/tickets.php?id=" . $ticket;%>">
+?>
+<META HTTP-EQUIV="Refresh" CONTENT="5; URL=<?php print "/ticket/scp/tickets.php?id=" . $ticket;?>">
 
 
 <CENTER>
 <CENTER><TABLE CELLPADDING=0 CELLSPACING=0 WIDTH=90%>
-<%
+<?php
 $col=1;
 print "<TR CLASS=list-color" . (($col % 2) +1) . "><TH CLASS=heading-body COLSPAN=" . ($colspan) . ">";
 print "Hi There Im Ticket No " . $ticket;
@@ -33,5 +33,5 @@ print "</TH></TR>\n";
 $col++;
 print "<TR CLASS=list-color" . (($col % 2) +1) . "><TH CLASS=heading-body COLSPAN=" . ($colspan) . "><A HREF=/ticket/scp/tickets.php?id=" . $ticket . ">";
 print "Im Not Ready For You Yet Taking You To Old System ...</A></TH></TR>";
-%>
+?>
 </TABLE>

@@ -1,4 +1,4 @@
-<%
+<?php
 function graph_do($name,$max,$period,$classi) {
   $valname[0]="Max";
   $valname[1]="Average";
@@ -63,31 +63,30 @@ if ($classi != "") {
   }
   $classi="-" . $classi;
 }
-%>
+?>
 <META HTTP-EQUIV="Refresh" CONTENT="300;url=/auth">
 <META HTTP-EQUIV="Cache-Control" content="no-cache">
 <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
-<META HTTP-EQUIV="Expires" CONTENT="<%print gmdate("D, d M Y G:i:s T");%>">
+<META HTTP-EQUIV="Expires" CONTENT="<?php print gmdate("D, d M Y G:i:s T");?>">
 
-<H1>Voip Status Graphs<%print $gtitle;%></H1> 
-<HR>The statistics were last updated <B><%
+<H1>Voip Status Graphs<?php print $gtitle;?></H1>
+<HR>The statistics were last updated <B><?php
 $last=rrd_last("/var/spool/apache/htdocs/mrtg/voip" . $classi . ".rrd");
 print date("D M j G:i:s T Y",$last);
-%></B>
+?></B>
 
 <HR>
 <B>`Daily' Graph (5 Minute Average)</B><BR>
-<%graph_do($name,$max,1,$classi);%>
+<?php graph_do($name,$max,1,$classi);?>
 
 <HR>
 <B>`Weekly' Graph (30 Minute Average)</B><BR>
-<%graph_do($name,$max,7,$classi);%>
+<?php graph_do($name,$max,7,$classi);?>
 
 <HR>
 <B>`Monthly' Graph (2 Hour Average)</B><BR>
-<%graph_do($name,$max,30,$classi);%>
+<?php graph_do($name,$max,30,$classi);?>
 
 <HR>
 <B>`Yearly' Graph (1 Day Average)</B><BR>
-<%graph_do($name,$max,365,$classi);%>
-
+<?php graph_do($name,$max,365,$classi);?>

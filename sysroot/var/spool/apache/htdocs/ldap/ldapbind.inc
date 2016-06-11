@@ -1,4 +1,4 @@
-<%
+<?php
 /*
 #    Copyright (C) 2002  <Gregory Hinton Nietsky>
 #    Copyright (C) 2005  <ZA Telecomunications>
@@ -38,4 +38,4 @@ if ($ds && ldap_bind($ds,$LDAP_LIMIT_DN,$LDAP_LIMIT_PW) && ($_SERVER['PHP_AUTH_U
   $ldn=$LDAP_LIMIT_DN;
   $ADMIN_USER="pleb";
 }
-%>
+?>

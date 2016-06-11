@@ -1,4 +1,4 @@
-<%
+<?php
 include_once "/var/spool/apache/htdocs/session.inc";
 include_once "/var/spool/apache/htdocs/ldap/auth.inc";
 
@@ -67,4 +67,4 @@ while(list($memcnt,$amember) = each($ccadmin[0]['member'])) {
 }    
 $_SESSION['valid']=$validmem;
 */
-%>
+?>
