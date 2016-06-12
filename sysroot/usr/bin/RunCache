@@ -8,6 +8,7 @@ failcount=0
 while : ; do
 	echo "Running: squid -N -s -Y >> $logfile 2>&1"
 	echo "Startup: `date`" >> $logfile
+	chown nobody.nogroup /var/spool/squid/swap.state*
 	start=`date '+%d%H%M%S'`
 	squid -N -s -Y >> $logfile 2>&1
 	stop=`date '+%d%H%M%S'`

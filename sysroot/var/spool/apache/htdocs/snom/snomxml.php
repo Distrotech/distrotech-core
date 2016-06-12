@@ -246,7 +246,7 @@ if ($phone != "300") {
       $kdef[6]="dest 900";
       $kdef[7]="dest 901";
 
-      $fkeys=pg_query($db,"SELECT substr(key,5),value FROM astdb WHERE family='" . $exten . "' AND key ~ '^fkey[0-9]+\$' ORDER BY lpad(substr(key,5),3,0)");
+      $fkeys=pg_query($db,"SELECT substr(key,5),value FROM astdb WHERE family='" . $exten . "' AND key ~ '^fkey[0-9]+\$' ORDER BY lpad(substr(key,5),3,'0')");
       $lastfk=0;
       for($row=0;$row < pg_num_rows($fkeys);$row++) {
         $rdat=pg_fetch_array($fkeys,$row);
@@ -255,34 +255,34 @@ if ($phone != "300") {
         }
         for($lkey=$lastfk;$lkey<=$rdat[0]-1;$lkey++) {
   	  if (($lkey < 12) && ($kdef[$lkey] != "")) {
-            print "    <fkey idx=\"" . $lkey . "\" context=\"1\" perm=\"R\">" . $kdef[$lkey] . "</fkey>\n";
+            print "    <fkey idx=\"" . $lkey . "\" context=\"1\" perm=\"!\">" . $kdef[$lkey] . "</fkey>\n";
             $kdone[$lkey]=1;
           } else {
-            print "    <fkey idx=\"" . $lkey . "\" context=\"1\" perm=\"R\">line</fkey>\n";
+            print "    <fkey idx=\"" . $lkey . "\" context=\"1\" perm=\"!\">line</fkey>\n";
           }
         }
         $lastfk=$rdat[0]+1;
         if ($rdat[1] == "1") {
-          print "    <fkey idx=\"" . $rdat[0] . "\" context=\"1\" perm=\"R\">line</fkey>\n";
+          print "    <fkey idx=\"" . $rdat[0] . "\" context=\"1\" perm=\"!\">line</fkey>\n";
         } else if ($rdat[1] == "700") {
-          print "    <fkey idx=\"" . $rdat[0] . "\" context=\"active\" perm=\"R\">orbit 700</fkey>\n";
+          print "    <fkey idx=\"" . $rdat[0] . "\" context=\"active\" perm=\"!\">orbit 700</fkey>\n";
         } else if ((($rdat[1] > 700) && ($rdat[1] < 750)) || (($rdat[1] >= 900) && ($rdat[1] <= 999))) {
-          print "    <fkey idx=\"" . $rdat[0] . "\" context=\"1\" perm=\"R\">dest " . $rdat[1] . "</fkey>\n";
+          print "    <fkey idx=\"" . $rdat[0] . "\" context=\"1\" perm=\"!\">dest " . $rdat[1] . "</fkey>\n";
         } else {
-          print "    <fkey idx=\"" . $rdat[0] . "\" context=\"1\" perm=\"R\">";
+          print "    <fkey idx=\"" . $rdat[0] . "\" context=\"1\" perm=\"!\">";
           print "blf &lt;sip:" . $rdat[1] . "@192.168.150.1;user=phone&gt;|*8";
           print "</fkey>\n";
         }
       }
       for($lkey=$lastfk;$lkey< 54;$lkey++) {
-          print "    <fkey idx=\"" . $lkey . "\" context=\"1\" perm=\"R\">line</fkey>\n";
+          print "    <fkey idx=\"" . $lkey . "\" context=\"1\" perm=\"!\">line</fkey>\n";
       }
       for($kcnt=0;$kcnt<12;$kcnt++) {
         if (! $kdone[$kcnt]) {
           if ($kdef[$kcnt]) {
-            print "    <fkey idx=\"" . $kcnt . "\" context=\"1\" perm=\"R\">" . $kdef[$kcnt] . "</fkey>\n";
+            print "    <fkey idx=\"" . $kcnt . "\" context=\"1\" perm=\"!\">" . $kdef[$kcnt] . "</fkey>\n";
           } else {
-            print "    <fkey idx=\"" . $kcnt . "\" context=\"1\" perm=\"R\">line</fkey>\n";
+            print "    <fkey idx=\"" . $kcnt . "\" context=\"1\" perm=\"!\">line</fkey>\n";
           }
         }
       }
@@ -308,7 +308,7 @@ for($row=0;$row < pg_num_rows($pbook);$row++) {
   print "tu_" . $row . "&: " . $rdat[1] . "\n";
   print "tc_" . $row . "&: " . $rdat[2] . "\n";
   print "to_" . $row . "&: line1\n";
-}  
+}
 
 $gdbquery="SELECT lpad(substr(key,7),2,'0'),value FROM astdb WHERE family='" . $exten . "' AND key ~ '^speed\-([0-9]+)|([*#])' ORDER BY lpad(substr(key,7),2,'0')";
 $qgetdata=pg_query($db,$gdbquery);

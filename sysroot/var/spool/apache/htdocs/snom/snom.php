@@ -52,7 +52,7 @@ if (pg_num_rows($getphone) == 0) {
   }
 }
 
-list($exten,$pass,$name,$domain,$usermode,$nat,$dtmfmode,$vlantag,$dndsetting,$pwchange,$encrypt,$transport,$dispname)=pg_fetch_array($getphone,0);
+list($exten,$pass,$name,$domain,$usermode,$nat,$dtmfmode,$vlantag,$dndsetting,$pwchange,$encrypt,$transport,$dispname)=@pg_fetch_array($getphone,0);
 
 if ($pwchange == "t") {
   if (! isset($agi)) {

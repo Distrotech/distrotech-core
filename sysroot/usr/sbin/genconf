@@ -9398,7 +9398,7 @@ __EOS__
   fi;
   /sbin/ip link set dev sit1.${lcnt} up
   sleep 2
-  /sbin/ip -6 route add ::/0 via fe80::\${ip6prefix} dev sit1.${lcnt} metric \${METRIC}
+  /sbin/ip -6 route add ::/0 dev sit1.${lcnt} metric \${METRIC}
 
   (cat <<EOF
 server $dnsconf{'DynServ'}
@@ -10362,7 +10362,8 @@ peer_connect_timeout 30 seconds
 read_timeout 15 minutes
 request_timeout 30 seconds
 client_lifetime 1 day
-half_closed_clients on
+half_closed_clients off
+dns_v4_first on
 pconn_timeout 120 seconds
 shutdown_lifetime 30 seconds
 auth_param basic realm Access To Internet
@@ -17757,7 +17758,7 @@ __EOB__
     }
 
     print SIX24 <<__EOB__;
-/sbin/ip -6 route add ::/0 via fe80::${gwout} dev sit1 metric 1 > /dev/null 2>&1
+/sbin/ip -6 route add ::/0 dev sit1 metric 1 > /dev/null 2>&1
 
 killall -HUP radvd;
 sleep 3;
@@ -17959,7 +17960,9 @@ sub printdhclient {
 
   foreach $iface (@ints) {
     if ($iface eq $sysconf{'Internal'}) {
-      print DHC<<__EOB__;
+      @idata=split(/\|/,$interface{$iface});
+      if ((@idata[1] eq "0.0.0.0") && (@idata[2] eq "32")) {
+        print DHC<<__EOB__;
 interface "$iface" {
   send host-name "$dnsconf{'Hostname'}";
   send fqdn.fqdn "$dnsconf{'Hostname'}";
@@ -17970,6 +17973,7 @@ interface "$iface" {
 }
 
 __EOB__
+      }
     } elsif (index($iface,"gtun") eq -1) {
       @idata=split(/\|/,$interface{$iface});
 
