@@ -6,6 +6,7 @@ include "../ldap/ldapbind.inc";
 header('Content-type: text/xml');
 
 $mac=strtoupper($_GET['mac']);
+$phone= $_GET['phone'];
 
 $auth_ussr=@ldap_search($ds,"ou=snom","(&(objectClass=person)(cn=snom))");
 
@@ -54,6 +55,10 @@ if (pg_num_rows($getphone) == 0) {
 
 list($exten,$pass,$name,$domain,$usermode,$nat,$dtmfmode,$vlantag,$dndsetting,$pwchange,$encrypt,$transport,$dispname)=@pg_fetch_array($getphone,0);
 
+if ($domain == "") {
+  $domain = $_SERVER['HTTP_HOST'];
+}
+
 if ($pwchange == "t") {
   if (! isset($agi)) {
     require_once("/var/lib/asterisk/agi-bin/phpagi/phpagi-asmanager.php");
@@ -79,13 +84,9 @@ if ($netport == "") {
   $netport="auto";
 }
 
-if ($domain == "" ) {
-  $domain=$SERVER_NAME;
-}
-
 $uadata=explode(";",$_SERVER['HTTP_USER_AGENT']);
 $curver=trim($uadata[3]," )");
-$linver="snom" . $_GET['phone'] . " linux 3.38";
+$linver="snom" . $phone . " linux 3.38";
 
 if ($sipver[0] < 8) {
   print "language&: English(UK)\n";
@@ -93,8 +94,8 @@ if ($sipver[0] < 8) {
   print "admin_mode_password&: 1234\n";
   print "update_policy&: auto_update\n";
 
-  if (($SERVER_NAME != "") && ($_GET['phone'] != "") && (is_file("snom" . $_GET['phone'] . "-fw.php"))) {
-    print "firmware_status&: http://" . $SERVER_NAME . "/snom/snom" . $_GET['phone'] . "-fw.php\n";
+  if (($SERVER_NAME != "") && ($phone != "") && (is_file("snom" . $phone . "-fw.php"))) {
+    print "firmware_status&: http://" . $SERVER_NAME . "/snom/snom" . $phone . "-fw.php\n";
   };
   if (($vlantag != "") && ($vlantag > 1)) {
     print "vlan&: " . $vlantag . " 5\n";
