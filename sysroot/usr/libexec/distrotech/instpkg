@@ -31,8 +31,9 @@ do_yuminstall() {
     x86_64)yum -y --installroot=${YINSTROOT} --exclude="*.x86_32 *.i686" install $@;;
     x86_32)yum -y --installroot=${YINSTROOT} --exclude="*.x86_64 *.i686" install $@;;
     i[3-6]86)yum -y --installroot=${YINSTROOT} --exclude="*.x86_64 *.x86_32" install $@;;
-    arm|armv7l)yum -y --installroot=${YINSTROOT} --exclude="*.armv6l" install $@;;
-    armv6|armv6l)yum -y --installroot=${YINSTROOT} --exclude="*.armv7l" install $@;;
+    arm|armv7l)yum -y --installroot=${YINSTROOT} --exclude="*.armv6l *armv5tel" install $@;;
+    armv6|armv6l)yum -y --installroot=${YINSTROOT} --exclude="*.armv7l *armv5tel" install $@;;
+    armv5|armvtel)yum -y --installroot=${YINSTROOT} --exclude="*.armv7l *armv6l" install $@;;
     ppc)yum -y --installroot=${YINSTROOT} --exclude="*.ppc64" install $@;;
     ppc64)yum -y --installroot=${YINSTROOT} --exclude="*.ppc" install $@;;
     mips)yum -y --installroot=${YINSTROOT} --exclude="*.mips64" install $@;;
@@ -95,6 +96,7 @@ fi;
 case ${ARCH} in
   arm|armv7*)echo "armv7l-distrotech-linux-gnu" > /etc/rpm/platform;;
   armv6*)echo "armv6l-distrotech-linux-gnu" > /etc/rpm/platform;;
+  armv5*)echo "armv5tel-distrotech-linux-gnu" > /etc/rpm/platform;;
   arm64)echo "aarch64-distrotech-linux-gnu" > /etc/rpm/platform;;
   mips)echo "mips32-distrotech-linux-gnu" > /etc/rpm/platform;;
   *)echo "${ARCH}-distrotech-linux-gnu" > /etc/rpm/platform;;
