@@ -68,6 +68,6 @@ if [ ! -e /etc/samba/private/secrets.tdb.bak ];then
  elif [ -e /etc/samba/private/secrets.tdb ];then
   /usr/bin/tdbbackup -v /etc/samba/private/secrets.tdb  > /dev/null 2>&1
 fi;
-/usr/sbin/winbindd &
-/usr/sbin/nmbd -D &
-/usr/sbin/smbd -D &
+/usr/sbin/winbindd -l /var/log &
+/usr/sbin/nmbd -D -l /var/log &
+/usr/sbin/smbd -D -l /var/log &

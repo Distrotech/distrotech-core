@@ -11407,7 +11407,7 @@ sub printcrontab() {
   }
   print CT "\n#Server Set Options\n";
   printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","*","*","/usr/bin/nice -n 20 /usr/bin/logcheck.sh");
-  printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","/usr/sbin/logrotate /etc/logrotate.conf");
+  printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","(if [ ! -d /var/log/old ];then mkdir /var/log/old;fi;/usr/sbin/logrotate /etc/logrotate.conf)");
   printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","(killall dhcpd;sleep 2;killall -9 dhcpd;/usr/sbin/dhcpd;if [ -s /etc/dhcpd6.conf ];then /usr/sbin/dhcpd -6 -cf /etc/dhcpd6.conf; fi)");
 #  printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","*/4","*","kill -HUP `head -1 /var/run/sendmail.pid`");
   printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","/usr/bin/updatedb --output=/var/db/locate --prunepaths='/proc /dev /sys /tmp /var/tmp /mnt/dev /var/spool/mail /var/spool/mail /var/spool/mailscanner /var/web'");
@@ -11437,7 +11437,7 @@ sub printcrontab() {
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","2-23","*","(rm /var/spool/apache/htdocs/ns/config/ifup.*;/var/spool/apache/htdocs/ns/config/bwup.*;/usr/sbin/genconf)");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","*/4","*","/usr/sbin/quotasetup");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","(openssl ca -gencrl -out /etc/ipsec.d/crls/crl.pem -config /etc/openssl/ca.conf;cp /etc/ipsec.d/crls/crl.pem /etc/ipsec.d/certs/`openssl crl -noout -hash -in /etc/ipsec.d/crls/crl.pem`.r0;openssl crl -in /etc/ipsec.d/crls/crl.pem -text  > /var/spool/apache/htdocs/ns/config/crl.txt;/usr/sbin/pkistore)");
-    printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","(killall -9 smbd nmbd;/usr/sbin/nmbd -D;/usr/sbin/smbd -D)");
+    printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","0","*","(killall -9 smbd nmbd;/usr/sbin/nmbd -D -l /var/log;/usr/sbin/smbd -D -l /var/log)");
 
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","0","*/1","*","(ulimit -n 65535;/usr/sbin/nscd -i passwd -i group -i hosts)");
     printf CT ("%-5s %-6s * * %-8s %s > /dev/null 2>&1\n","*","*","*","(if [ ! \"`pidof slapd`\" ];then /etc/rc.d/rc.ldap ;fi)");

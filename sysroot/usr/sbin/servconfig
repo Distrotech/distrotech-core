@@ -108,11 +108,11 @@ if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstco
   fi;
 
   if [ ! "`pidof nmbd`" ];then
-    /usr/sbin/nmbd -D &
+    /usr/sbin/nmbd -D -l /var/log &
   fi;
 
   if [ ! "`pidof smbd`" ];then
-    /usr/sbin/smbd -D &
+    /usr/sbin/smbd -D -l /var/log &
   fi;
 
   if [ ! "`pidof racoon`" ] && [ ! -e /var/run/ppp-reroute ];then
@@ -229,7 +229,7 @@ if [ ! -e networksentry-lite ] && [ ! -e /etc/.install ] && [ ! -e /tmp/.firstco
 
   #Start Windows Authentication
   if [ ! -e /etc/.networksentry-lite ] && [ ! "`pidof winbindd`" ];then
-    /usr/sbin/winbindd > /dev/null 2>&1 &
+    /usr/sbin/winbindd -l /var/log > /dev/null 2>&1 &
   fi;
 
   #Start Email
@@ -562,7 +562,7 @@ if [ -e networksentry-lite ] ;then
     if [ ! -d /etc/samba/private/secrets.tdb ];then
       smbpasswd -w admin
     fi;
-    /usr/sbin/winbindd > /dev/null 2>&1 &
+    /usr/sbin/winbindd -l /var/log > /dev/null 2>&1 &
 
     /usr/sbin/named > /dev/null 2>&1
 
@@ -1437,13 +1437,13 @@ if [ "$SMFDIFF" ] && [ ! -e /tmp/.firstconfig ] && [ ! -e networksentry-lite ];t
   awk '($1 == "FileServer") && ($2 == "Share") && ($7 == "true") && ($6 != "users") {print "if [ ! -d \"/var/spool/samba/"$4"\" ];then\nmkdir \"/var/spool/samba/"$4"\";\nfi\nchown root."$6" \"/var/spool/samba/"$4"\";\nchmod 2775 \"/var/spool/samba/"$4"\""}' $CONF_FILE |sh
   awk '($1 == "FileServer") && ($2 == "Share") && ($7 == "false") {print "if [ ! -d \"/var/spool/samba/"$4"\" ];then\nmkdir \"/var/spool/samba/"$4"\";\nfi\nchown root."$6" \"/var/spool/samba/"$4"\";\nchmod 2770 \"/var/spool/samba/"$4"\""}' $CONF_FILE |sh
 
-  killall -9 nmbd > /dev/null 2>&1
-  killall -9 smbd > /dev/null 2>&1
+  killall -9 nmbd -l /var/log > /dev/null 2>&1
+  killall -9 smbd -l /var/log > /dev/null 2>&1
   /bin/kill -9 `cat /var/lock/winbindd.pid 2>/dev/null` > /dev/null 2>&1
   rm /var/lock/winbindd*.tdb  > /dev/null 2>&1
-  /usr/sbin/winbindd > /dev/null 2>&1 &
-  /usr/sbin/nmbd > /dev/null 2>&1 &
-  /usr/sbin/smbd > /dev/null 2>&1 &
+  /usr/sbin/winbindd -l /var/log > /dev/null 2>&1 &
+  /usr/sbin/nmbd -l /var/log > /dev/null 2>&1 &
+  /usr/sbin/smbd -l /var/log > /dev/null 2>&1 &
 fi;
 
 if [ -e krb5.conf ] && [ -e /etc/krb5.conf ];then 
@@ -1846,8 +1846,8 @@ if [ -e networksentry-full ] && [ ! -e /tmp/.firstconfig ];then
     if [ -x /usr/sbin/sqlpasswd ];then
       killall -9 winbindd smbd sendmail
       /bin/su - root -c "/usr/sbin/sqlpasswd > /dev/null 2>&1"
-      /usr/sbin/winbindd > /dev/null 2>&1 &
-      /usr/sbin/smbd -D > /dev/null 2>&1 &
+      /usr/sbin/winbindd -l /var/log > /dev/null 2>&1 &
+      /usr/sbin/smbd -D -l /var/log > /dev/null 2>&1 &
       /etc/rc.d/rc.mail
       touch /etc/httpd/httpd.conf
       AST_RESTART=1
