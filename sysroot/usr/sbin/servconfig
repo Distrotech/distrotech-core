@@ -2495,13 +2495,13 @@ fi;
 
 if [ "$CTFDIFF" ];then
   if [ -e /var/spool/cron/crontabs/root ];then
-    /usr/bin/crontab -d root
+    /usr/bin/crontab -d -u root
     if [ -e /var/spool/cron/crontabs/root ];then
       rm /var/spool/cron/crontabs/root
     fi;
   fi;
   if [ -e /var/spool/cron/crontabs/admin ];then
-    /usr/bin/crontab -d admin
+    /usr/bin/crontab -d -u admin
     if [ -e /var/spool/cron/crontabs/root ];then
       rm /var/spool/cron/crontabs/root
     fi;
