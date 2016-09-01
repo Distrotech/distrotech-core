@@ -71,12 +71,19 @@ if (($queue == "799") || ($defqueue != $queue)) {
       $AAREC="0";
     }
 
+    if ($AAVMAIL == "on") {
+      $AAVMAIL="1";
+    } else {
+      $AAVMAIL="0";
+    }
+
     pg_query($db,"UPDATE astdb SET value='" . $AAPenalty . "' WHERE family='Setup' AND key='AAPenalty'");
     pg_query($db,"UPDATE astdb SET value='" . $AATimeout . "' WHERE family='Setup' AND key='AATimeout'");
     pg_query($db,"UPDATE astdb SET value='" . $AANext . "' WHERE family='Setup' AND key='AANext'");
     pg_query($db,"UPDATE astdb SET value='" . $AANOPROMPT . "' WHERE family='Setup' AND key='AANOPROMPT'");
     pg_query($db,"UPDATE astdb SET value='" . $AAMOH . "' WHERE family='Setup' AND key='AAMOH'");
     pg_query($db,"UPDATE astdb SET value='" . $AAREC . "' WHERE family='Setup' AND key='AAREC'");
+    pg_query($db,"UPDATE astdb SET value='" . $AAVMAIL . "' WHERE family='Setup' AND key='AAVMAIL'");
     pg_query($db,"UPDATE astdb SET value='" . $AADelay . "' WHERE family='Setup' AND key='AADelay'");
 
 
@@ -121,6 +128,10 @@ if (($queue == "799") || ($defqueue != $queue)) {
   if ($origdata["AAREC"] == "") {
     $origdata["AAREC"]="0";
     pg_query("INSERT INTO astdb (family,key,value) VALUES ('Setup','AAREC','0')");
+  }
+  if ($origdata["AAVMAIL"] == "") {
+    $origdata["AAVMAIL"]="0";
+    pg_query("INSERT INTO astdb (family,key,value) VALUES ('Setup','AAVMAIL','0')");
   }
   if ($origdata["AADelay"] == "") {
     $origdata["AADelay"]="2";
@@ -307,6 +318,10 @@ if (isset($queue)) {
     <TR <?php print $bcolor[$rcol];$i++;$rcol=$i % 2;?>>
       <TD onmouseover="myHint.show('QS11')" onmouseout="myHint.hide()" COLSPAN=3><?php print _("Music On Hold When Calling Reception");?></TD>
       <TD COLSPAN=3><INPUT TYPE=CHECKBOX NAME=AAMOH<?php if ($origdata["AAMOH"] == "1") {print " CHECKED";}?>></TD>
+    </TR>
+    <TR <?php print $bcolor[$rcol];$i++;$rcol=$i % 2;?>>
+      <TD onmouseover="myHint.show('QS12')" onmouseout="myHint.hide()" COLSPAN=3><?php print _("Timeout To Voicmail");?></TD>
+      <TD COLSPAN=3><INPUT TYPE=CHECKBOX NAME=AAVMAIL<?php if ($origdata["AAVMAIL"] == "1") {print " CHECKED";}?>></TD>
     </TR>
     <TR <?php print $bcolor[$rcol];$i++;$rcol=$i % 2;?>>
       <TD onmouseover="myHint.show('QS11')" onmouseout="myHint.hide()" COLSPAN=3><?php print _("Record Inbound Calls");?></TD>
